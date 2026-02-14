@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- SEO -->
+  <title>الخط الأول للخدمات اللوجستية | تشغيل الميل الأخير متعدد المنصات في السعودية</title>
+  <meta name="description" content="مشغّل 3PL للميل الأخير في السعودية—تشغيل متعدد المنصات، 18 مدينة، وأكثر من 6.5 مليون طلب ناجح في 2025. تشغيل أساطيل وسائقين وضبط SLA للشركات والمنصات." />
+
+  <style>
+    :root{
+      --primary:#C2410C;      /* dark orange */
+      --secondary:#F97316;    /* orange */
+      --bg:#FFF7ED;
+      --ink:#0F172A;
+      --muted:#475569;
+      --card:#ffffff;
+      --border:rgba(15,23,42,.10);
+      --shadow: 0 12px 30px rgba(15,23,42,.10);
+      --radius:18px;
+      --max:1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      background:linear-gradient(180deg, var(--bg), #fff);
+      color:var(--ink);
+      line-height:1.8;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:var(--max); margin:0 auto; padding:0 18px;}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:.6rem; padding:12px 18px; border-radius:999px;
+      border:1px solid transparent; font-weight:700; cursor:pointer;
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+    .btn-primary{background:var(--primary); color:#fff; box-shadow:0 10px 25px rgba(194,65,12,.25);}
+    .btn-primary:hover{transform:translateY(-1px); background:#b13a0a;}
+    .btn-primary:disabled{opacity:.6; cursor:not-allowed;}
+    .btn-ghost{background:transparent; border-color:rgba(255,255,255,.35); color:#fff;}
+    .btn-ghost:hover{background:rgba(255,255,255,.12)}
+    .tag{
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:6px 10px; border-radius:999px;
+      background:rgba(249,115,22,.12);
+      border:1px solid rgba(249,115,22,.25);
+      color:#9a3412;
+      font-weight:700;
+      font-size:.9rem;
+    }
+
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:50;
+      background:rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(15,23,42,.08);
+    }
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 0;
+      gap:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: radial-gradient(circle at 30% 30%, var(--secondary), var(--primary));
+      box-shadow: 0 10px 18px rgba(194,65,12,.20);
+    }
+    nav ul{list-style:none; display:flex; gap:16px; margin:0; padding:0; flex-wrap:wrap;}
+    nav a{
+      padding:8px 10px; border-radius:12px;
+      color:var(--ink);
+      font-weight:700;
+    }
+    nav a:hover{background:rgba(15,23,42,.06)}
+    .nav-cta{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
+    /* Hero */
+    .hero{
+      position:relative;
+      color:#fff;
+      overflow:hidden;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(900px 380px at 75% 15%, rgba(249,115,22,.55), transparent 60%),
+        radial-gradient(900px 420px at 10% 10%, rgba(194,65,12,.55), transparent 60%),
+        linear-gradient(135deg, #0b1220, #111827 40%, #0b1220);
+    }
+    .hero .wrap{
+      padding:56px 0 34px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:26px;
+      align-items:center;
+    }
+    @media (max-width: 900px){
+      .hero .wrap{grid-template-columns:1fr}
+    }
+    .hero h1{
+      margin:12px 0 10px;
+      font-size: clamp(28px, 3.4vw, 48px);
+      line-height:1.25;
+      letter-spacing:.2px;
+    }
+    .hero p{
+      margin:0 0 18px;
+      color:rgba(255,255,255,.85);
+      font-weight:600;
+    }
+    .hero .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .trust{
+      margin-top:14px;
+      color:rgba(255,255,255,.72);
+      font-size:.95rem;
+      font-weight:600;
+    }
+    .hero-card{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: 0 18px 35px rgba(0,0,0,.22);
+    }
+    .hero-card h3{margin:0 0 8px; font-size:1.05rem}
+    .hero-card ul{margin:0; padding:0 18px 0 0}
+    .hero-card li{color:rgba(255,255,255,.80); font-weight:600}
+
+    /* Sections */
+    section{padding:46px 0;}
+    .section-title{
+      margin:0 0 8px;
+      font-size: clamp(20px, 2.2vw, 30px);
+      line-height:1.35;
+    }
+    .section-lead{
+      margin:0 0 22px;
+      color:var(--muted);
+      font-weight:650;
+      max-width: 75ch;
+    }
+
+    /* Cards / grids */
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+    .grid-4{grid-template-columns: repeat(4, minmax(0,1fr));}
+    .grid-3{grid-template-columns: repeat(3, minmax(0,1fr));}
+    @media (max-width: 980px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width: 640px){.grid-4,.grid-3{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:16px;
+      box-shadow: 0 10px 25px rgba(15,23,42,.06);
+    }
+    .card strong{display:block; font-size:1.25rem}
+    .card small{color:var(--muted); font-weight:700}
+
+    .service{
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .icon{
+      width:42px; height:42px; border-radius:14px;
+      background: rgba(249,115,22,.14);
+      border:1px solid rgba(249,115,22,.25);
+      display:grid; place-items:center;
+      flex: 0 0 42px;
+      font-weight:900;
+      color:#9a3412;
+    }
+    .service h4{margin:0 0 4px}
+    .service p{margin:0; color:var(--muted); font-weight:650}
+
+    /* Feature list */
+    .feature-list{margin:0; padding:0; list-style:none; display:grid; gap:10px;}
+    .feature{
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      background:#fff;
+      box-shadow: 0 10px 24px rgba(15,23,42,.05);
+    }
+    .feature b{display:block; margin-bottom:4px}
+    .feature span{color:var(--muted); font-weight:650}
+
+    /* Coverage */
+    .chips{display:flex; flex-wrap:wrap; gap:10px;}
+    .chip{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(15,23,42,.04);
+      border:1px solid rgba(15,23,42,.10);
+      font-weight:800;
+      color:#0f172a;
+      font-size:.95rem;
+    }
+    .map-placeholder{
+      margin-top:14px;
+      border-radius: var(--radius);
+      border:1px dashed rgba(15,23,42,.25);
+      background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(194,65,12,.06));
+      padding:16px;
+      color:var(--muted);
+      font-weight:750;
+    }
+
+    /* CTA strip */
+    .cta{
+      background: linear-gradient(135deg, rgba(249,115,22,.16), rgba(194,65,12,.12));
+      border-top:1px solid rgba(15,23,42,.08);
+      border-bottom:1px solid rgba(15,23,42,.08);
+    }
+    .cta .box{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: var(--shadow);
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .cta h3{margin:0}
+    .cta p{margin:0; color:var(--muted); font-weight:650; max-width:70ch}
+
+    /* Form */
+    form{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    label{display:block; font-weight:800; margin:10px 0 6px}
+    input, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,.14);
+      outline:none;
+      font-size:1rem;
+      font-family: inherit;
+      background:#fff;
+    }
+    input:focus, textarea:focus{border-color: rgba(194,65,12,.55); box-shadow:0 0 0 4px rgba(249,115,22,.12)}
+    textarea{min-height:110px; resize:vertical}
+    .form-grid{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;}
+    @media (max-width: 720px){.form-grid{grid-template-columns:1fr}}
+    .form-actions{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .note{color:var(--muted); font-weight:650; font-size:.95rem}
+    .success{
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background: rgba(34,197,94,.12);
+      border:1px solid rgba(34,197,94,.25);
+      color:#14532d;
+      font-weight:850;
+    }
+    .error{
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background: rgba(239,68,68,.12);
+      border:1px solid rgba(239,68,68,.25);
+      color:#7f1d1d;
+      font-weight:850;
+    }
+
+    footer{
+      padding:26px 0;
+      color:rgba(15,23,42,.70);
+      font-weight:650;
+    }
+    .footer-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .footer-links{display:flex; gap:12px; flex-wrap:wrap;}
+    .footer-links a{padding:6px 10px; border-radius:12px; background:rgba(15,23,42,.04); border:1px solid rgba(15,23,42,.08);}
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div style="font-size:1.02rem;">الخط الأول</div>
+          <div style="font-size:.86rem;color:rgba(15,23,42,.70);font-weight:800;">للخدمات اللوجستية</div>
+        </div>
+      </div>
+
+      <nav aria-label="التنقل الرئيسي">
+        <ul>
+          <li><a href="#top">الرئيسية</a></li>
+          <li><a href="#what">ماذا نفعل</a></li>
+          <li><a href="#why">لماذا الخط الأول</a></li>
+          <li><a href="#coverage">التغطية</a></li>
+          <li><a href="#partners">الشراكات</a></li>
+          <li><a href="#contact">تواصل معنا</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-cta">
+        <a class="btn btn-primary" href="#contact">اطلب عرض تشغيل (RFP)</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="wrap">
+        <div>
+          <span class="tag">مشغّل 3PL متعدد المنصات داخل المملكة</span>
+          <h1>تشغيل الميل الأخير… عندما يكون التنفيذ هو الفارق.</h1>
+          <p>
+            الخط الأول مشغّل 3PL متعدد المنصات داخل المملكة، ندير الأساطيل والسائقين وتشغيل المدن
+            لضمان تسليم سريع ومستقر وفق مؤشرات أداء (SLA) وجودة قابلة للقياس.
+          </p>
+
+          <div class="actions">
+            <a class="btn btn-primary" href="#contact">اطلب عرض تشغيل (RFP)</a>
+            <a class="btn btn-ghost" href="#contact">تواصل مع فريق الشراكات</a>
+          </div>
+
+          <div class="trust">
+            يمكن مشاركة تفاصيل الأداء والعقود تحت اتفاقية عدم إفصاح (NDA) عند الحاجة.
+          </div>
+        </div>
+
+        <aside class="hero-card" aria-label="ملخص تشغيلي">
+          <h3>لماذا يختارنا الشركاء؟</h3>
+          <ul>
+            <li>تشغيل مدن بعمق عبر فرق ميدانية وإدارة مناطق</li>
+            <li>إدارة ذروة فعلية بخطط موارد للمواسم وفترات الضغط</li>
+            <li>SLA كمبدأ يومي: متابعة، تصحيح، وتحسين مستمر</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section aria-label="الأرقام التشغيلية">
+    <div class="container">
+      <h2 class="section-title">أرقام تشغيلية تعكس واقعًا… لا وعودًا.</h2>
+      <p class="section-lead">مؤشرات مختصرة تساعدك على تقييم الحجم والقدرة التشغيلية بسرعة.</p>
+
+      <div class="grid grid-4">
+        <div class="card">
+          <strong>+6.5 مليون</strong>
+          <small>طلب ناجح (2025)</small>
+        </div>
+        <div class="card">
+          <strong>18</strong>
+          <small>مدينة تشغيل</small>
+        </div>
+        <div class="card">
+          <strong>7+</strong>
+          <small>شراكات تشغيلية متعددة المنصات</small>
+        </div>
+        <div class="card">
+          <strong>حتى 35,000</strong>
+          <small>طلب/يوم قدرة ذروة تشغيلية</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE DO -->
+  <section id="what" aria-label="ماذا نفعل">
+    <div class="container">
+      <h2 class="section-title">من الطلب الرقمي… إلى تنفيذ ميداني منضبط.</h2>
+      <p class="section-lead">
+        نقدم تشغيلًا متكاملًا للميل الأخير يشمل تشغيل المدن، إدارة السائقين، تشغيل الأساطيل، إدارة الذروة،
+        وضبط مؤشرات SLA—لمنصات التوصيل والشركات التي تحتاج ذراع تنفيذ ميداني موثوق.
+      </p>
+
+      <div class="grid grid-3">
+        <div class="card service">
+          <div class="icon">🏙️</div>
+          <div>
+            <h4>تشغيل المدن وإطلاق التوسع</h4>
+            <p>إطلاق مدينة جديدة وفق خطة موارد وهيكلة مناطق وجاهزية للذروة.</p>
+          </div>
+        </div>
+
+        <div class="card service">
+          <div class="icon">🧑‍✈️</div>
+          <div>
+            <h4>إدارة السائقين والأداء</h4>
+            <p>Onboarding، تدريب، التزام، وتحفيز مرتبط بمؤشرات SLA.</p>
+          </div>
+        </div>
+
+        <div class="card service">
+          <div class="icon">🚚</div>
+          <div>
+            <h4>تشغيل الأسطول والجاهزية</h4>
+            <p>جاهزية وصيانة وانضباط تشغيلي وتحسين استخدام الموارد.</p>
+          </div>
+        </div>
+
+        <div class="card service">
+          <div class="icon">⚡</div>
+          <div>
+            <h4>إدارة الذروة والمواسم</h4>
+            <p>خطط سعة وموارد لفترات الضغط وتقليل الإلغاءات والتأخير.</p>
+          </div>
+        </div>
+
+        <div class="card service">
+          <div class="icon">🎯</div>
+          <div>
+            <h4>الجودة ومؤشرات SLA</h4>
+            <p>متابعة يومية، إجراءات تصحيح، وتحسين مستمر قابل للقياس.</p>
+          </div>
+        </div>
+
+        <div class="card service">
+          <div class="icon">📊</div>
+          <div>
+            <h4>تقارير وتحسين مستمر</h4>
+            <p>تقارير تشغيل دورية وتحليل أسباب الخلل وخطط تحسين تنفيذية.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why" aria-label="لماذا الخط الأول">
+    <div class="container">
+      <h2 class="section-title">لأن جودة التنفيذ لا تُدار بالوعود… تُدار بالنظام.</h2>
+      <p class="section-lead">
+        خبرتنا التشغيلية تركّز على الاستقرار، الانضباط، وإدارة الذروة—لتحويل التشغيل من "محاولة" إلى "منظومة".
+      </p>
+
+      <ul class="feature-list">
+        <li class="feature">
+          <b>تشغيل متعدد المنصات</b>
+          <span>مرونة أعلى وتقليل الاعتماد على مصدر واحد.</span>
+        </li>
+        <li class="feature">
+          <b>تكلفة استبدال تشغيلية مرتفعة</b>
+          <span>الشبكات تُبنى بالوقت والانضباط؛ والبدائل السريعة غالبًا مكلفة.</span>
+        </li>
+        <li class="feature">
+          <b>إدارة ذروة فعلية</b>
+          <span>خطط موارد للمواسم وفترات الضغط بدل حلول مؤقتة.</span>
+        </li>
+        <li class="feature">
+          <b>SLA كمبدأ يومي</b>
+          <span>متابعة، تصحيح، وتحسين مستمر على مستوى المدينة والمنطقة.</span>
+        </li>
+        <li class="feature">
+          <b>تشغيل مدن بعمق</b>
+          <span>فرق ميدانية، إدارة مناطق، وضبط نقاط الضعف تشغيلًا لا نظريًا.</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COVERAGE -->
+  <section id="coverage" aria-label="التغطية">
+    <div class="container">
+      <h2 class="section-title">تشغيل فعلي في مدن محورية داخل المملكة.</h2>
+      <p class="section-lead">
+        ندير عمليات تشغيل في شبكة مدن تشمل (على سبيل المثال): الرياض، جدة، مكة، المدينة، الطائف، الدمام،
+        الخبر، بريدة، الخرج، حفر الباطن، تبوك، حائل، أبها، خميس مشيط، نجران… وغيرها ضمن نطاق التشغيل.
+      </p>
+
+      <div class="chips" aria-label="قائمة المدن">
+        <span class="chip">الرياض</span><span class="chip">جدة</span><span class="chip">مكة</span><span class="chip">المدينة</span>
+        <span class="chip">الطائف</span><span class="chip">الدمام</span><span class="chip">الخبر</span><span class="chip">بريدة</span>
+        <span class="chip">الخرج</span><span class="chip">حفر الباطن</span><span class="chip">تبوك</span><span class="chip">حائل</span>
+        <span class="chip">أبها</span><span class="chip">خميس مشيط</span><span class="chip">نجران</span>
+      </div>
+
+      <div class="map-placeholder">
+        <strong>مكان خريطة المملكة (اختياري):</strong>
+        أضف خريطة Google/Mapbox مع نقاط المدن عند توفر عنوان/نطاقات نشر مناسبة.
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section id="partners" aria-label="الشراكات">
+    <div class="container">
+      <h2 class="section-title">شراكات تشغيلية متعددة المنصات</h2>
+      <p class="section-lead">
+        نعمل كشريك تشغيل ميداني لمنصات توصيل رائدة داخل المملكة ضمن نماذج تشغيل مختلفة حسب المدينة ونطاق الخدمة.
+      </p>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <strong>نماذج تشغيل مرنة</strong>
+          <div class="note">تشغيل حسب المدينة/النطاق/الفترة مع ضبط SLA.</div>
+        </div>
+        <div class="card">
+          <strong>قابلية توسع</strong>
+          <div class="note">إطلاق + تثبيت + تحسين… ثم توسع تدريجي منظم.</div>
+        </div>
+        <div class="card">
+          <strong>حوكمة تشغيلية</strong>
+          <div class="note">مؤشرات واضحة، تقارير دورية، وإجراءات تصحيح.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="cta" aria-label="دعوة لاتخاذ إجراء">
+    <div class="container">
+      <div class="box">
+        <div>
+          <h3>هل تبحث عن شريك تشغيل يرفع الجودة ويثبت التنفيذ؟</h3>
+          <p>شاركنا نطاق المدن وحجم التشغيل المطلوب، وسنقترح نموذج تشغيل وخطة SLA واضحة.</p>
+        </div>
+        <a class="btn btn-primary" href="#contact">احجز اجتماعًا تشغيليًا (30 دقيقة)</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" aria-label="تواصل معنا">
+    <div class="container">
+      <h2 class="section-title">تواصل مع الخط الأول… وابدأ تشغيلًا أكثر ثباتًا.</h2>
+      <p class="section-lead">
+        شاركنا نطاق المدن وحجم التشغيل (يومي/شهري) وأهداف SLA، وسنعود لك بتصور نموذج تشغيل وخطة موارد واضحة.
+      </p>
+
+      <div class="grid grid-3" style="margin-bottom:14px;">
+        <div class="card">
+          <strong>شراكات وتشغيل (B2B)</strong>
+          <div class="note">تقييم مدن + نموذج تشغيل + SLA</div>
+        </div>
+        <div class="card">
+          <strong>توسع مدينة جديدة</strong>
+          <div class="note">خطة إطلاق + جاهزية ذروة</div>
+        </div>
+        <div class="card">
+          <strong>مستثمرين</strong>
+          <div class="note">NDA + Data Room (حسب التوافق)</div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <form id="rfpForm">
+        <div class="form-grid">
+          <div>
+            <label for="name">الاسم</label>
+            <input id="name" name="name" type="text" placeholder="مثال: أحمد" required />
+          </div>
+          <div>
+            <label for="company">اسم الشركة</label>
+            <input id="company" name="company" type="text" placeholder="مثال: شركة XYZ" required />
+          </div>
+          <div>
+            <label for="email">البريد الإلكتروني</label>
+            <input id="email" name="email" type="email" placeholder="name@company.com" required />
+          </div>
+          <div>
+            <label for="phone">رقم الجوال</label>
+            <input id="phone" name="phone" type="text" placeholder="05xxxxxxxx" />
+          </div>
+          <div>
+            <label for="type">نوع الطلب</label>
+            <input id="type" name="type" type="text" placeholder="شراكة تشغيل / توسع مدينة / مستثمر" />
+          </div>
+          <div>
+            <label for="cities">المدن المستهدفة</label>
+            <input id="cities" name="cities" type="text" placeholder="الرياض، جدة..." />
+          </div>
+          <div>
+            <label for="volume">حجم التشغيل التقريبي</label>
+            <input id="volume" name="volume" type="number" placeholder="طلبات/يوم أو طلبات/شهر" />
+          </div>
+          <div>
+            <label for="details">ملخص المتطلبات</label>
+            <textarea id="details" name="details" placeholder="SLA المطلوب، ساعات التشغيل، أي ملاحظات..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="submitBtn" type="submit">إرسال</button>
+          <span class="note">يمكن مشاركة تفاصيل الأداء والعقود تحت NDA عند الحاجة.</span>
+        </div>
+
+        <div class="success" id="successMsg">
+          تم استلام طلبك بنجاح ✅ سنراجع التفاصيل ونعود إليك خلال يوم عمل.
+        </div>
+
+        <div class="error" id="errorMsg">
+          حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى.
+        </div>
+
+        <div class="note" style="margin-top:10px;">
+          بريد التواصل: <b>hello@firstline.logistics</b> — هاتف: <b>+966 50 XXXX XXXX</b>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-row">
+      <div>© الخط الأول للخدمات اللوجستية — جميع الحقوق محفوظة.</div>
+      <div class="footer-links">
+        <a href="#top">الرئيسية</a>
+        <a href="#what">الخدمات</a>
+        <a href="#contact">تواصل معنا</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const form = document.getElementById('rfpForm');
+  const successMsg = document.getElementById('successMsg');
+  const errorMsg = document.getElementById('errorMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    
+    // إخفاء الرسائل السابقة
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
+    
+    // تعطيل الزر أثناء الإرسال
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الإرسال...';
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        successMsg.style.display = 'block';
+        successMsg.scrollIntoView({behavior:'smooth', block:'center'});
+        form.reset();
+      } else {
+        errorMsg.style.display = 'block';
+        errorMsg.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      errorMsg.style.display = 'block';
+      errorMsg.scrollIntoView({behavior:'smooth', block:'center'});
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'إرسال';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+==========================================================================
+【AI HANDOVER NOTE】
+1. DESIGN PHILOSOPHY:
+   - Institutional Excellence: A design system built for the 'Execution Layer' of the delivery economy. It emphasizes stability, precision, and trust through a modular, grid-based layout (Bento Surfaces).
+   - Visual Style: 'Industrial Sophistication'. Combining the physicality of logistics (sharp borders, subtle rim-lights) with high-end SaaS aesthetics (glassmorphism in overlays, deep slate gradients).
+   - Rationale: First Line Logistics targets institutional partners and investors; the UI must feel as disciplined and scalable as their operational model.
+
+2. TYPOGRAPHY:
+   - Sans (Plus Jakarta Sans): Chosen for its modern, geometric character that conveys authority and efficiency. High-weight headers (700+) mirror the bold logo typography.
+   - Mono (JetBrains Mono): Used exclusively for metrics (35K orders, 150M+ SAR) and operational IDs to reinforce the data-driven, 'governance-grade' nature of the business.
+
+3. COLOR SYSTEM:
+   - Brand Hue: The primary teal (#4FB5AB) is mapped to --primary using oklch(0.72 0.13 188). This hue (188) represents reliability and professional technology.
+   - Mapping: --primary is the main brand teal. --accent uses a softer version for hover states, while --sidebar uses a deep slate-teal to match the professional gradient found in company branding.
+   - Semantic Logic: Success (150 hue) for growth metrics, Destructive (25 hue) for risk management alerts, and Warning (50 hue) for peak capacity indicators.
+
+4. USAGE GUIDE:
+   - Layout: Use a 'Centered Container' for narrative sections and 'Full-width Grid' for the Operating Cities and Dashboard metrics.
+   - Effects: Apply a 1px 'rim-light' (border-t with low opacity white) on primary cards to create a subtle 3D depth, symbolizing the 'physicality' of logistics.
+   - Rule: All data visualizations (charts) must strictly use the chart_1 to chart_5 sequence to maintain visual hierarchy across investor reports.
+==========================================================================
+*/
+
+:root {
+  /* Typography */
+  --font-sans: "Noto Sans Arabic", "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Core UI Tokens */
+  /* نظام الألوان المستنبط من شعار فيرست لاين */
+  --background: oklch(0.99 0.002 220); /* أبيض نظيف */
+  --foreground: oklch(0.18 0.08 220); /* أزرق داكن من الشعار #1A3C4D */
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.18 0.08 220);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.18 0.08 220);
+  --primary: oklch(0.25 0.12 220); /* أزرق داكن من الشعار */
+  --primary-foreground: oklch(0.98 0.01 220); /* أبيض نظيف */
+  --secondary: oklch(0.45 0.02 240); /* رمادي متوسط */
+  --secondary-foreground: oklch(0.98 0.01 240);
+  --muted: oklch(0.96 0.01 220); /* رمادي فاتح */
+  --muted-foreground: oklch(0.45 0.03 220);
+  --accent: oklch(0.55 0.15 200); /* أزرق سماوي للتمييز #00C1D4 */
+  --accent-foreground: oklch(0.98 0.01 200);
+  --destructive: oklch(0.60 0.18 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --border: oklch(0.89 0.01 188);
+  --input: oklch(0.89 0.01 188);
+  --ring: oklch(0.72 0.13 188);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.72 0.13 188);
+  --chart-2: oklch(0.60 0.12 200);
+  --chart-3: oklch(0.50 0.10 210);
+  --chart-4: oklch(0.85 0.10 180);
+  --chart-5: oklch(0.75 0.08 190);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.98 0.01 188);
+  --sidebar-foreground: oklch(0.25 0.03 188);
+  --sidebar-primary: oklch(0.72 0.13 188);
+  --sidebar-primary-foreground: oklch(0.98 0.01 188);
+  --sidebar-accent: oklch(0.94 0.02 188);
+  --sidebar-accent-foreground: oklch(0.25 0.03 188);
+  --sidebar-border: oklch(0.92 0.01 188);
+  --sidebar-ring: oklch(0.72 0.13 188);
+}
+
+.dark {
+  /* الوضع المظلم - مستنبط من شعار فيرست لاين */
+  --background: oklch(0.10 0.08 220); /* أزرق داكن جداً من الشعار */
+  --foreground: oklch(0.95 0.01 220); /* أبيض نظيف */
+  --card: oklch(0.15 0.06 220); /* أزرق داكن أفتح قليلاً */
+  --card-foreground: oklch(0.95 0.01 220);
+  --popover: oklch(0.10 0.08 220);
+  --popover-foreground: oklch(0.95 0.01 220);
+  --primary: oklch(0.60 0.18 200); /* أزرق سماوي مضيء */
+  --primary-foreground: oklch(0.10 0.08 220); /* أزرق داكن */
+  --secondary: oklch(0.30 0.04 240); /* رمادي متوسط */
+  --secondary-foreground: oklch(0.95 0.01 240);
+  --muted: oklch(0.20 0.05 220);
+  --muted-foreground: oklch(0.70 0.03 220);
+  --accent: oklch(0.65 0.18 200); /* أزرق سماوي للتمييز */
+  --accent-foreground: oklch(0.10 0.08 220);
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --border: oklch(0.25 0.03 188);
+  --input: oklch(0.25 0.03 188);
+  --ring: oklch(0.75 0.15 188);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.75 0.15 188);
+  --chart-2: oklch(0.65 0.14 200);
+  --chart-3: oklch(0.55 0.12 210);
+  --chart-4: oklch(0.80 0.10 180);
+  --chart-5: oklch(0.70 0.10 190);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.12 0.02 188);
+  --sidebar-foreground: oklch(0.92 0.01 188);
+  --sidebar-primary: oklch(0.75 0.15 188);
+  --sidebar-primary-foreground: oklch(0.12 0.02 188);
+  --sidebar-accent: oklch(0.20 0.03 188);
+  --sidebar-accent-foreground: oklch(0.94 0.01 188);
+  --sidebar-border: oklch(0.20 0.03 188);
+  --sidebar-ring: oklch(0.75 0.15 188);
+}
+
+@theme inline {
+  /* Shadcn Core Mapping */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts Mapping */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar Mapping */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  code, pre {
+    @apply font-mono;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
+  }
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Arabic Typography Improvements */
+.arabic-text {
+  font-family: "Noto Sans Arabic", sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+.arabic-heading {
+  font-family: "Noto Sans Arabic", sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* خلفيات مستوحاة من شعار فيرست لاين */
+@layer components {
+  .first-line-gradient {
+    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/80;
+  }
+  
+  .first-line-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 50px 50px, 30px 30px;
+  }
+  
+  .first-line-hero-bg {
+    @apply bg-gradient-to-br from-primary via-primary/95 to-primary/85;
+    background-image: 
+      linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  }
+  
+  .first-line-card-bg {
+    @apply bg-card/95 backdrop-blur-sm;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .first-line-section-bg {
+    background: linear-gradient(135deg, 
+      hsl(var(--background)) 0%, 
+      hsl(var(--muted)/0.3) 50%, 
+      hsl(var(--background)) 100%);
+  }
+  
+  /* تأثيرات خاصة للأزرار */
+  .first-line-button {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .first-line-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  
+  /* خلفية للهيدر */
+  .first-line-header {
+    @apply bg-background/95 backdrop-blur-md;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  /* خلفية شعار الشركة */
+  .company-logo-watermark {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    height: 120px;
+    background-image: url('/images/first_line_vertical_with_header_logo_1.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* خلفية شعار في الصفحات */
+  .page-with-logo-bg {
+    position: relative;
+  }
+  
+  .page-with-logo-bg::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background-image: url('/images/first_line_vertical_with_header_logo_1.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 0;
+  }
+}

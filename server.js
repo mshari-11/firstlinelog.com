@@ -1,15 +1,17 @@
 // server.js
-// Express backend to handle contact form submissions and store them in Azure Cosmos DB
+// Express backend for React app + contact form API
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// خدمة الملفات الثابتة (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public')));
+// خدمة الملفات الثابتة (React build dist)
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -55,6 +57,15 @@ app.post('/api/contact', async (req, res) => {
     console.error('Error saving submission:', err);
     res.status(500).json({ success: false, error: 'خطأ في حفظ البيانات' });
   }
+});
+
+// SPA Routing - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      res.status(404).send('Not found');
+    }
+  });
 });
 
 app.listen(port, () => {

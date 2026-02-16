@@ -1,3 +1,4 @@
+// Auto-deployed via Vercel CI/CD - Last update: Feb 2026
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";

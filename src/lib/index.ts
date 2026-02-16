@@ -32,6 +32,8 @@ export interface PlatformData {
   id: string;
   name: string;
   category?: string;
+  logo?: string;
+  coming_soon?: boolean;
 }
 
 /**

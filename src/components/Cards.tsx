@@ -91,16 +91,31 @@ export function ServiceCard({ title, description, icon }: { title: string; descr
 export function PlatformCard({ platform }: { platform: PlatformData }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="px-6 py-4 bg-secondary/50 border border-border rounded-xl flex items-center justify-between group hover:bg-secondary transition-all cursor-default flex-row-reverse"
+      whileHover={{ scale: platform.coming_soon ? 1 : 1.05 }}
+      className="relative p-6 bg-secondary/50 border border-border rounded-2xl flex flex-col items-center justify-center group hover:bg-secondary transition-all cursor-default text-center h-[200px]"
     >
-      <span className="font-bold text-foreground group-hover:text-primary transition-colors">
+      {platform.logo && (
+        <img
+          src={platform.logo}
+          alt={platform.name}
+          className="w-24 h-24 object-contain mb-4 group-hover:scale-110 transition-transform"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+      )}
+      <h4 className="font-bold text-foreground group-hover:text-primary transition-colors mb-2">
         {platform.name}
-      </span>
+      </h4>
       {platform.category && (
-        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-muted rounded text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {platform.category}
-        </span>
+        </p>
+      )}
+      {platform.coming_soon && (
+        <div className="absolute top-3 right-3 px-2 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
+          <span className="text-xs font-bold text-yellow-600">قريباً</span>
+        </div>
       )}
     </motion.div>
   );

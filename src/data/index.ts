@@ -56,13 +56,14 @@ export const METRICS: MetricData[] = [
  * قائمة المنصات الشريكة التي يتم تشغيلها
  */
 export const PLATFORMS: PlatformData[] = [
-  { id: "p1", name: "هنقرستيشن", category: "توصيل طعام" },
-  { id: "p2", name: "جاهز", category: "توصيل طعام" },
-  { id: "p3", name: "مرسول", category: "توصيل كل شيء" },
-  { id: "p4", name: "تويو", category: "خدمات لوجستية" },
-  { id: "p5", name: "نون", category: "تجارة إلكترونية" },
-  { id: "p6", name: "نينجا", category: "توصيل سريع" },
-  { id: "p7", name: "كريم", category: "نقل ذكي" },
+  { id: "p1", name: "هنقرستيشن", category: "توصيل طعام", logo: "https://firstlinelog.skywork.website/images/%D8%AE%D8%AF%D9%85%D8%A9-%D8%A7%D9%84%D8%B9%D9%85%D9%84%D8%A7%D8%A1-%D9%87%D9%86%D9%82%D8%B1%D8%B3%D8%AA%D9%8A%D8%B4%D9%86.jpg" },
+  { id: "p2", name: "جاهز", category: "توصيل طعام", logo: "https://firstlinelog.skywork.website/images/images_5326.png" },
+  { id: "p3", name: "مرسول", category: "توصيل كل شيء", logo: "https://firstlinelog.skywork.website/images/%D8%B4%D8%B1%D9%83%D8%A7%D8%AA-%D8%AA%D9%88%D8%B5%D9%8A%D9%84-%D8%B7%D9%84%D8%A8%D8%A7%D8%AA-%D8%A7%D9%84%D9%85%D8%B7%D8%A7%D8%B9%D9%85-%D9%81%D9%8A-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9-1722690188-0.webp" },
+  { id: "p4", name: "ذا شيفز", category: "توصيل طعام", logo: "https://firstlinelog.skywork.website/images/%D8%A3%D8%B4%D9%87%D8%B1-10-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%D8%A7%D8%AA-%D8%AA%D9%88%D8%B5%D9%8A%D9%84-%D8%A7%D9%84%D8%B7%D8%B9%D8%A7%D9%85-%D9%81%D9%8A-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9-2025-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82-The-chefz.jpg" },
+  { id: "p5", name: "نينجا", category: "توصيل سريع", logo: "https://firstlinelog.skywork.website/images/Gux53J6XkAAKnf4.png" },
+  { id: "p6", name: "تويو", category: "خدمات لوجستية", logo: "https://firstlinelog.skywork.website/images/images%20(1).png" },
+  { id: "p7", name: "كيتا", category: "توصيل طعام", logo: "https://firstlinelog.skywork.website/images/images.jpg" },
+  { id: "p8", name: "أمازون", category: "تجارة إلكترونية", logo: "https://firstlinelog.skywork.website/images/517hY12cdLL.jpg", coming_soon: true },
 ];
 
 /**

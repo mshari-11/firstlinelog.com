@@ -99,3 +99,9 @@ Thumbs.db
 # --- Uploaded Files ---
 uploaded_files/
 
+# --- Private Documentation ---
+docs/*PRIVATE*.md
+docs/*SECRET*.md
+*_PRIVATE.md
+*_SECRET.md
+

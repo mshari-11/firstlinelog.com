@@ -30,28 +30,35 @@
 
 ---
 
-### 2. [تكامل Claude AI](./CLAUDE_AI_INTEGRATION.md)
-**ملف تقني** يشرح كيفية دمج Claude 3 Opus في النظام.
+### 2. [تكامل Claude AI](./CLAUDE_AI_INTEGRATION.ar.md) | [English Version](./CLAUDE_AI_INTEGRATION.md)
+**ملف تقني شامل** يشرح كيفية دمج Claude 3 Opus في النظام.
 
 **المحتويات:**
 - ✅ API Configuration وإعدادات البيئة
-- ✅ Use Cases (توليد الكود، الدعم الفني، تحليل البيانات)
-- ✅ أمثلة عملية للتكامل (TypeScript)
+- ✅ 5 Use Cases (توليد الكود، الدعم الفني، تحليل البيانات، Excel، العقود)
+- ✅ أمثلة عملية كاملة بـ TypeScript
 - ✅ معالجة ملفات Excel بالذكاء الاصطناعي
 - ✅ Rate Limits و Best Practices
 - ✅ الأمان والخصوصية
 - ✅ تقدير التكلفة (~$225/شهر)
+- ✅ أكواد جاهزة للاستخدام
+- ✅ اختبارات Unit Tests
+
+**الإصدارات:**
+- **[العربية](./CLAUDE_AI_INTEGRATION.ar.md)** - نسخة كاملة ومفصلة
+- **[English](./CLAUDE_AI_INTEGRATION.md)** - Technical reference
 
 **API Key:**
 - احصل على Claude API Key من: https://console.anthropic.com/
 - أضفها في ملف `.env` كـ `CLAUDE_API_KEY`
-- راجع ملف `CLAUDE_API_INTEGRATION.md` للتفاصيل
+- راجع الملف للتفاصيل الكاملة
 
 **متى تستخدم هذا الملف:**
 - عند البدء بتطوير ميزات AI
 - لفهم كيفية استخدام Claude API
 - لكتابة الكود التلقائي (Prisma ORM)
 - لبناء Chatbot للمناديب
+- لتحليل البيانات وإنشاء التقارير
 
 ---
 

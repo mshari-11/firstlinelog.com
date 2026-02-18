@@ -83,28 +83,41 @@
 
 ---
 
-### 4. [إعداد النطاق (Domain Setup)](./DOMAIN_SETUP.md)
-**دليل خطوة بخطوة** لربط النطاق www.fll.sa مع Cloudflare.
+### 4. [إعداد النطاق (Domain Setup)](./DOMAIN_SETUP.ar.md) | [English Version](./DOMAIN_SETUP.md)
+**دليل شامل خطوة بخطوة** لربط النطاق www.fll.sa مع Cloudflare.
 
 **المحتويات:**
-- ✅ إعداد Cloudflare (Nameservers, DNS)
-- ✅ إعداد SSL/TLS (Full Strict, HSTS)
-- ✅ Page Rules (Force HTTPS, Caching)
-- ✅ تحسين الأداء (Minify, Brotli, CDN)
-- ✅ الأمان (WAF, Bot Protection, DDoS)
-- ✅ ربط مع Vercel/Netlify
+- ✅ إنشاء حساب Cloudflare وإضافة النطاق
+- ✅ تحديث Nameservers بالتفصيل
+- ✅ إعداد سجلات DNS (A, CNAME, TXT)
+- ✅ إعداد SSL/TLS كامل (Full Strict, Origin Certificate, HSTS)
+- ✅ Page Rules (Force HTTPS, Caching, Redirects)
+- ✅ تحسين الأداء (Minify, Brotli, HTTP/3)
+- ✅ الأمان المتقدم (WAF, Bot Protection, DDoS, Rate Limiting)
+- ✅ الربط مع Vercel/Netlify
 - ✅ اختبار شامل (DNS, SSL, Performance)
-- ✅ استكشاف الأخطاء (Troubleshooting)
+- ✅ حل المشاكل الشائعة
 - ✅ Checklist النهائي
+
+**الإصدارات:**
+- **[العربية](./DOMAIN_SETUP.ar.md)** - دليل كامل ومفصل
+- **[English/العربي](./DOMAIN_SETUP.md)** - Bilingual version
 
 **النطاقات:**
 ```
-Primary: fll.sa
-WWW: www.fll.sa
+النطاق الرئيسي: fll.sa
+النطاق الفرعي: www.fll.sa
 Skywork: firstlinelog.skywork.website
 ```
 
 **متى تستخدم هذا الملف:**
+- عند إعداد النطاق لأول مرة
+- لحل مشاكل DNS أو SSL
+- لتحسين أداء الموقع
+- للتحقق من الأمان
+- لإعداد Cloudflare Enterprise
+
+---
 - عند إعداد النطاق لأول مرة
 - لحل مشاكل DNS أو SSL
 - لتحسين أداء الموقع

@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Send, Globe, ShieldCheck } from "lucide-react";
+import { Mail, MapPin, Phone, Send, Globe, ShieldCheck, Loader2 } from "lucide-react";
 import { IMAGES } from "@/assets/images";
 import { InquiryType } from "@/lib/index.ts";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ const contactFormSchema = z.object({
   })
 });
 const Contact = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof contactFormSchema>>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -39,10 +41,29 @@ const Contact = () => {
       message: ""
     }
   });
-  function onSubmit(values: z.infer<typeof contactFormSchema>) {
-    console.log(values);
-    toast.success("تم إرسال طلبك بنجاح. سيتواصل معك فريقنا قريباً.");
-    form.reset();
+  async function onSubmit(values: z.infer<typeof contactFormSchema>) {
+    setIsSubmitting(true);
+    try {
+      if (supabase) {
+        const { error } = await supabase
+          .from("contact_submissions")
+          .insert({
+            name: values.name,
+            company: values.company,
+            inquiry_type: values.inquiryType,
+            city: values.city,
+            message: values.message,
+          });
+        if (error) throw error;
+      }
+      toast.success("تم إرسال طلبك بنجاح. سيتواصل معك فريقنا قريباً.");
+      form.reset();
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error("حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
   return <div className="flex flex-col min-h-screen bg-background page-with-logo-bg" dir="rtl">
       {/* Hero Section */}
@@ -155,9 +176,13 @@ const Contact = () => {
                               <FormMessage />
                             </FormItem>} />
 
-                        <Button type="submit" className="w-full py-6 text-lg font-semibold group">
-                          <Send className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1 rotate-180" />
-                          إرسال الاستفسار
+                        <Button type="submit" className="w-full py-6 text-lg font-semibold group" disabled={isSubmitting}>
+                          {isSubmitting ? (
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          ) : (
+                            <Send className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1 rotate-180" />
+                          )}
+                          {isSubmitting ? "جاري الإرسال..." : "إرسال الاستفسار"}
                         </Button>
                       </form>
                     </Form>

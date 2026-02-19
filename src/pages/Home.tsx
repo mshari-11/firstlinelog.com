@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ShieldCheck, Layers, Zap, BarChart3, Truck, Users, CheckCircle2, TrendingUp, Rocket, Info, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTE_PATHS, MetricData, PlatformData, CityData, ServiceData, BenefitData } from "@/lib/index";
-import { METRICS, PLATFORMS, CITIES, SERVICES, WHY_FIRST_LINE } from "@/data/index";
+import { useMetrics, usePlatforms, useCities, useServices, useBenefits } from "@/hooks/use-site-data";
 import { MetricCard, ServiceCard, PlatformCard, CityCard } from "@/components/Cards";
 import { IMAGES } from "@/assets/images";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,12 @@ const getServiceIcon = (iconName: string) => {
   }
 };
 export default function Home() {
+  const { data: metrics = [] } = useMetrics();
+  const { data: platforms = [] } = usePlatforms();
+  const { data: cities = [] } = useCities();
+  const { data: services = [] } = useServices();
+  const { data: benefits = [] } = useBenefits();
+
   return <div className="flex flex-col w-full overflow-hidden page-with-logo-bg" dir="rtl">
       <section className="relative min-h-[90vh] flex items-center pt-20 first-line-hero-bg">
         <div className="absolute inset-0 z-0 first-line-pattern">
@@ -76,7 +82,7 @@ export default function Home() {
       <section className="py-24 first-line-section-bg">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {METRICS.map((metric: MetricData) => <MetricCard key={metric.label} metric={metric} />)}
+            {metrics.map((metric: MetricData) => <MetricCard key={metric.label} metric={metric} />)}
           </div>
           <motion.p initial={{
           opacity: 0
@@ -103,7 +109,7 @@ export default function Home() {
               </motion.p>
               
               <div className="grid sm:grid-cols-2 gap-8">
-                {WHY_FIRST_LINE.map((item: BenefitData, index: number) => {
+                {benefits.map((item: BenefitData, index: number) => {
                 const icons = [<ShieldCheck key="1" />, <Layers key="2" />, <Zap key="3" />, <BarChart3 key="4" />];
                 return <motion.div key={item.title} variants={fadeInUp} className="space-y-3">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -130,7 +136,7 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((service: ServiceData) => <ServiceCard key={service.title} title={service.title} description={service.description} icon={getServiceIcon(service.iconName)} />)}
+            {services.map((service: ServiceData) => <ServiceCard key={service.title} title={service.title} description={service.description} icon={getServiceIcon(service.iconName)} />)}
           </div>
         </div>
       </section>
@@ -149,7 +155,7 @@ export default function Home() {
             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PLATFORMS.slice(0, 8).map((platform: PlatformData) => <PlatformCard key={platform.id} platform={platform} />)}
+            {platforms.slice(0, 8).map((platform: PlatformData) => <PlatformCard key={platform.id} platform={platform} />)}
           </div>
         </div>
       </section>
@@ -164,7 +170,7 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">تنفيذ مباشر عبر 16 مركزاً استراتيجياً في المملكة العربية السعودية.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {CITIES.map((city: CityData) => <CityCard key={city.name} city={city} />)}
+            {cities.map((city: CityData) => <CityCard key={city.name} city={city} />)}
           </div>
         </div>
       </section>

@@ -99,3 +99,6 @@ Thumbs.db
 # --- Uploaded Files ---
 uploaded_files/
 
+# --- Supabase CLI temp ---
+supabase/.temp/
+

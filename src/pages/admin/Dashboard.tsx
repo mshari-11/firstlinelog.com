@@ -2,7 +2,9 @@
  * الداشبورد الرئيسي - لوحة إدارة فيرست لاين
  */
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+import ChatWidget from "@/components/chat/ChatWidget";
 import {
   Users, Package, DollarSign, AlertCircle,
   TrendingUp, TrendingDown, Clock, CheckCircle2,
@@ -117,6 +119,7 @@ const kpiConfig = [
 ];
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalCouriers: 0, activeCouriers: 0, todayOrders: 0,
     pendingComplaints: 0, monthRevenue: 0, pendingApprovals: 0,
@@ -418,6 +421,15 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* مساعد فيرست لاين الذكي */}
+      {user && (
+        <ChatWidget
+          userRole={(user.role as "admin" | "owner" | "staff") || "admin"}
+          userId={user.id}
+          userName={user.name}
+        />
+      )}
     </div>
   );
 }

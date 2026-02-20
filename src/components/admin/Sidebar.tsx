@@ -5,7 +5,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import {
   LayoutDashboard, Users, FileSpreadsheet, ClipboardList,
-  MessageSquare, DollarSign, Settings, LogOut, ChevronRight,
+  MessageSquare, DollarSign, LogOut, ChevronRight,
   Bell, Car, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,6 @@ const navItems = [
   { label: "الشكاوى والطلبات", icon: MessageSquare, path: "/admin/complaints" },
   { label: "المركبات", icon: Car, path: "/admin/vehicles" },
   { label: "الأقسام والموظفين", icon: Building2, path: "/admin/staff" },
-  { label: "الإعدادات", icon: Settings, path: "/admin/settings" },
 ];
 
 // ألوان هوية فيرست لاين

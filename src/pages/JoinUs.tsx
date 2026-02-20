@@ -110,9 +110,11 @@ const JoinUs = () => {
                     مكافآت أداء بناءً على معايير الجودة
                   </li>
                 </ul>
-                <Button className="w-full group/btn" size="lg">
-                  قدم الآن
-                  <ArrowLeft className="mr-2 w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
+                <Button className="w-full group/btn" size="lg" asChild>
+                  <Link to="/courier/register">
+                    قدم الآن
+                    <ArrowLeft className="mr-2 w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

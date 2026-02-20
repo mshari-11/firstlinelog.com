@@ -179,7 +179,7 @@ export function Layout({
                 الفرص
               </h4>
               <ul className="space-y-4 text-base font-medium">
-                <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">سجل كقائد مركبة</Link></li>
+                <li><Link to="/courier/register" className="hover:text-primary transition-colors">سجل كقائد مركبة</Link></li>
                 <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">شراكات الأساطيل</Link></li>
                 <li><Link to={ROUTE_PATHS.CONTACT} className="hover:text-primary transition-colors">الاستفسارات المهنية</Link></li>
               </ul>

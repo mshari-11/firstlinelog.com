@@ -52,23 +52,35 @@ const getServiceIcon = (iconName: string) => {
 };
 export default function Home() {
   return <div className="flex flex-col w-full overflow-hidden page-with-logo-bg" dir="rtl">
-      <section className="relative min-h-[90vh] flex items-center pt-20 first-line-hero-bg">
-        <div className="absolute inset-0 z-0 first-line-pattern">
-          <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022649704129810432_First_Line_Logistics_Infographic_2025.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="العمليات اللوجستية" className="w-full opacity-10 mix-blend-overlay h-[814.5px] object-cover" />
+      <section className="relative min-h-screen flex items-center justify-center bg-slate-950 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1663900108404-a05e8bf82cda?w=1920&q=80" alt="الرياض" className="w-full h-full object-cover opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-background" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-4xl">
-            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.2]">
-              نحن لا نوصّل الطلبات… <br />
-              <span className="text-primary">نحن نُدير التنفيذ.</span>
+            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-xl md:text-7xl font-bold tracking-tight mb-6 text-white">
+              الخط الأول للخدمات اللوجستية{" "}
+              <span className="block">شريك التشغيل في الميل الأخير للمنصات الرقمية في المملكة العربية السعودية</span>
             </motion.h1>
 
-            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="text-xl text-muted-foreground mb-10 max-w-3xl leading-relaxed">
-              الخط الأول مشغّل وطني للميل الأخير (3PL) متعدد المنصات، يدير تشغيل الأساطيل والسائقين وتشغيل المدن لمصلحة منصات التوصيل داخل المملكة — بجودة قابلة للقياس، وقابلية توسّع حقيقية.
+            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="mb-10 max-w-3xl text-white text-base text-right">
+              نُدير تنفيذ عمليات التوصيل بالنيابة عن أبرز تطبيقات التوصيل، عبر نموذج تشغيل Multi-Platform 3PL يرفع الكفاءة، يضمن جودة التنفيذ، ويمنح المنصات قدرة توسع أسرع داخل المدن الرئيسية.
             </motion.p>
 
-            
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-start">
+              <Link to={ROUTE_PATHS.CONTACT}>
+                <Button size="lg" className="rounded-full px-8 font-bold bg-primary text-white hover:bg-primary/90">
+                  تواصل معنا <ArrowLeft className="w-4 h-4 mr-2" />
+                </Button>
+              </Link>
+              <Link to={ROUTE_PATHS.SERVICES}>
+                <Button variant="outline" size="lg" className="rounded-full px-8 font-bold border-white/30 text-white hover:bg-white/10">
+                  اكتشف نموذج التشغيل
+                </Button>
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>

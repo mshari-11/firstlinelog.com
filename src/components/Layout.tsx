@@ -41,25 +41,28 @@ export function Layout({
     name: "خدماتنا",
     path: ROUTE_PATHS.SERVICES
   }, {
-    name: "للمستثمرين",
+    name: "الأخبار",
+    path: ROUTE_PATHS.NEWS
+  }, {
+    name: "المستثمرين",
     path: ROUTE_PATHS.INVESTORS
   }, {
-    name: "انضم إلينا",
-    path: ROUTE_PATHS.JOIN_US
+    name: "اتصل بنا",
+    path: ROUTE_PATHS.CONTACT
   }];
   return <div dir="rtl" className="min-h-screen flex flex-col bg-background selection:bg-primary/20 selection:text-primary font-sans">
       {/* رأس الصفحة (Header) */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "first-line-header py-3 shadow-lg" : "bg-transparent py-5"}`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "first-line-header py-3 shadow-lg bg-primary" : "bg-primary py-5"}`}>
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link to={ROUTE_PATHS.HOME} className="flex items-center gap-3 group">
             <div className="relative w-20 h-20 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
               <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022644365418352640_first_line_correct_logos_1.jpg?image_process=quality,q_90/resize,w_1280/format,webp" alt="فيرست لاين لوجستيكس" className="w-full transition-transform duration-500 group-hover:scale-105 filter brightness-110 h-[81.89999389648438px] object-cover" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold leading-none tracking-tight text-foreground xl:text-[32px] text-center">
+              <span className="text-xl font-bold leading-none tracking-tight text-white xl:text-[32px] text-center">
                 First Line
               </span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-[0.1em] leading-tight">
+              <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.1em] leading-tight">
                 Logistics
               </span>
             </div>
@@ -69,11 +72,12 @@ export function Layout({
           <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map(link => <NavLink key={link.path} to={link.path} className={({
             isActive
-          }) => `text-sm font-semibold transition-colors hover:text-primary ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+          }) => `font-semibold transition-colors hover:text-primary ${isActive ? "text-white" : "text-white"}`}>
                 {link.name}
               </NavLink>)}
-            <Button asChild variant="default" size="sm" className="rounded-full px-6 font-bold">
-              <Link to={ROUTE_PATHS.CONTACT}>اتصل بنا</Link>
+            <a href="https://first-line-logistics-skywork.vercel.app" className="font-semibold text-white hover:text-primary transition-colors">EN</a>
+            <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-bold border-white/30 text-white hover:bg-white/10">
+              <Link to={ROUTE_PATHS.LOGIN}>تسجيل الدخول</Link>
             </Button>
           </nav>
 

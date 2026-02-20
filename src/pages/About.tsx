@@ -1,57 +1,45 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, Eye, Users, Shield, Zap, TrendingUp, ArrowLeft } from "lucide-react";
+import { Shield, Target, Eye, Zap, Search, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ROUTE_PATHS } from "@/lib/index";
 import { IMAGES } from "@/assets/images";
-import { Button } from "@/components/ui/button";
+import { ROUTE_PATHS } from "@/lib/index";
 
 const springPresets = {
-  gentle: {
-    type: "spring",
-    stiffness: 120,
-    damping: 20,
-  },
-  smooth: {
-    type: "spring", 
-    stiffness: 100,
-    damping: 15,
-  },
+  gentle: { stiffness: 300, damping: 35 },
+  smooth: { stiffness: 200, damping: 40 },
 };
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
 };
 
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const coreValues = [
+const values = [
   {
+    title: "الانضباط",
+    description: "الالتزام الصارم بالبروتوكولات التشغيلية والمواعيد المحددة.",
     icon: Shield,
-    title: "الموثوقية",
-    description: "نضمن تنفيذ العمليات بأعلى معايير الجودة والانضباط.",
   },
   {
-    icon: Users,
-    title: "الشراكة",
-    description: "نبني علاقات استراتيجية طويلة المدى مع عملائنا.",
+    title: "الشفافية",
+    description: "تقارير مفتوحة وقائمة على البيانات لتعزيز الثقة المؤسسية.",
+    icon: Search,
   },
   {
+    title: "السلامة التشغيلية",
+    description: "نهج لا يقبل المساومة تجاه رفاهية السائقين وسلامة الأسطول.",
+    icon: Shield,
+  },
+  {
+    title: "سرعة القرار",
+    description: "استجابة مرنة لذروة الطلب وتحولات السوق المتسارعة.",
     icon: Zap,
-    title: "الكفاءة",
-    description: "نحسن العمليات باستمرار لتحقيق أفضل النتائج.",
   },
   {
-    icon: TrendingUp,
-    title: "النمو المستدام",
-    description: "نركز على النمو المتوازن والمستدام للجميع.",
+    title: "جودة الخدمة",
+    description: "إنفاذ متسق لاتفاقيات مستوى الخدمة (SLA) في جميع مدن العمل.",
+    icon: Target,
   },
 ];
 
@@ -62,39 +50,32 @@ const About: React.FC = () => {
       <section className="relative pt-32 pb-24 md:pt-48 md:pb-36 bg-slate-950">
         <div className="absolute inset-0 z-0">
           <img
-            src={IMAGES.CORPORATE_MEETING_2}
-            alt="فريق فيرست لاين"
+            src={IMAGES.WAREHOUSE_OPS_7}
+            alt="عمليات فيرست لاين"
             className="w-full h-full object-cover opacity-30"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-background" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial="initial"
             animate="animate"
-            variants={staggerContainer}
-            className="text-center text-white max-w-4xl mx-auto"
+            variants={fadeInUp}
+            transition={springPresets.smooth}
+            className="max-w-3xl text-right"
           >
-            <motion.h1
-              variants={fadeInUp}
-              transition={springPresets.gentle}
-              className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
-            >
-              من نحن
-            </motion.h1>
-            <motion.p
-              variants={fadeInUp}
-              transition={{ ...springPresets.gentle, delay: 0.1 }}
-              className="text-xl opacity-90 leading-relaxed"
-            >
-              الخط الأول للخدمات اللوجستية - شريكك الاستراتيجي في عالم التوصيل الرقمي
-            </motion.p>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              الخط الأول… طبقة التنفيذ داخل منظومة الاقتصاد الرقمي.
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-300 leading-relaxed font-light">
+              لسنا تطبيقاً ولا منصة تملك الطلب. نحن مشغّل تنفيذ ميداني يضمن أن الطلب الرقمي يتحول إلى تجربة تسليم دقيقة، مستقرة، قابلة للتوسع.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* قسم معلومات الشركة */}
+      {/* قسم الرسالة والرؤية */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           {/* مقدمة عن الشركة */}
@@ -193,7 +174,7 @@ const About: React.FC = () => {
           </div>
           
           {/* قسم الإحصائيات */}
-          <div className="bg-muted/30 rounded-2xl p-8 mb-16">
+          <div className="bg-muted/30 rounded-2xl p-8">
             <h3 className="text-2xl font-bold text-center mb-8">📊 ماذا نُقدّم؟</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
@@ -216,15 +197,27 @@ const About: React.FC = () => {
           </div>
           
           {/* قسم لماذا نحن */}
-          <div className="text-center">
+          <div className="mt-16 text-center">
             <h3 className="text-2xl font-bold mb-6">🇸🇦 لماذا نحن؟</h3>
             <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               لأننا لا نعمل على هامش الاقتصاد الرقمي، بل نُمثّل الطبقة التشغيلية الحيوية التي تربط التطبيقات بالميدان — ونمكّن آلاف السعوديين من العمل في قطاع واعد ومتسارع النمو.
             </p>
-            <p className="text-lg text-muted-foreground mb-8">
-              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة، المملكة العربية السعودية.
-            </p>
           </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={springPresets.smooth}
+              className="relative rounded-2xl overflow-hidden shadow-2xl order-1 lg:order-2"
+            >
+              <img
+                src={IMAGES.CORPORATE_MEETING_1}
+                alt="التخطيط المؤسسي"
+                className="w-full aspect-[4/3] object-cover"
+              />
+              <div className="absolute inset-0 border border-primary/10 rounded-2xl pointer-events-none" />
+            </motion.div>
         </div>
       </section>
 
@@ -234,29 +227,26 @@ const About: React.FC = () => {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">قيمنا الجوهرية</h2>
             <p className="text-muted-foreground">
-              القيم التي توجه عملنا وتحدد هويتنا كشركة رائدة في قطاع اللوجستيات.
+              ثقافتنا التشغيلية مبنية على خمسة مبادئ أساسية تقود كل عملية توصيل وكل قرار استراتيجي نتخذه.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {coreValues.map((value, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {values.map((value, index) => (
               <motion.div
                 key={value.title}
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: true }}
                 variants={fadeInUp}
-                transition={{
-                  ...springPresets.gentle,
-                  delay: index * 0.1,
-                }}
-                className="text-center space-y-4"
+                transition={{ ...springPresets.gentle, delay: index * 0.1 }}
+                className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-md transition-all group text-right"
               >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <value.icon className="w-8 h-8 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary transition-colors">
+                  <value.icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
                 </div>
-                <h3 className="text-xl font-bold">{value.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <h3 className="text-xl font-semibold mb-3">{value.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {value.description}
                 </p>
               </motion.div>
@@ -265,34 +255,60 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* قسم الدعوة للعمل */}
+      {/* قسم الاستراتيجية المؤسسية */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto">
-            <motion.div
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              transition={springPresets.gentle}
-            >
+          <div className="bg-slate-900 rounded-3xl overflow-hidden flex flex-col lg:flex-row shadow-2xl">
+            <div className="lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center space-y-8 text-right">
+              <span className="text-primary font-mono text-sm tracking-wider uppercase">الحياد الاستراتيجي</span>
+              <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
+                شريك تنفيذ لعصر المنصات المتعددة
+              </h2>
+              <p className="text-slate-400 text-lg">
+                تعمل فيرست لاين لوجستيكس كمشغل 3PL سعودي محايد. نحن لا ننافس المنصات على الطلب؛ بل نحل مشكلة ندرة التنفيذ من خلال توفير شبكات سائقين مستقرة وعالية القدرة في أكثر من 16 مدينة.
+              </p>
+              <div className="pt-4">
+                <Link
+                  to={ROUTE_PATHS.PLATFORMS}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  استكشف خدمات المنصات
+                  <ChevronLeft className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="lg:w-1/2 relative min-h-[400px]">
               <img
-                src={IMAGES.CORPORATE_MEETING_1}
-                alt="التخطيط المؤسسي"
-                className="w-full aspect-[4/3] object-cover rounded-2xl mb-8"
+                src={IMAGES.WAREHOUSE_OPS_7}
+                alt="النطاق التشغيلي"
+                className="absolute inset-0 w-full h-full object-cover grayscale opacity-60"
               />
-            </motion.div>
-            
-            <h2 className="text-3xl font-bold mb-8">جاهز لتوسيع نطاق عملياتك؟</h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة، المملكة العربية السعودية.
-            </p>
-            <Button asChild size="lg" className="px-8">
-              <Link to={ROUTE_PATHS.INVESTORS} className="flex items-center gap-2">
-                نظرة عامة للمستثمرين
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-            </Button>
+              <div className="absolute inset-0 bg-gradient-to-l from-slate-900 via-transparent to-transparent" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* قسم الدعوة لاتخاذ إجراء (CTA) */}
+      <section className="py-24 border-t border-border bg-card">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-8">جاهز لتوسيع نطاق عملياتك؟</h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة، المملكة العربية السعودية.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              to={ROUTE_PATHS.CONTACT}
+              className="bg-primary text-primary-foreground px-10 py-4 rounded-full font-bold hover:shadow-lg hover:shadow-primary/20 transition-all"
+            >
+              تواصل مع فريقنا
+            </Link>
+            <Link
+              to={ROUTE_PATHS.INVESTORS}
+              className="bg-secondary text-secondary-foreground px-10 py-4 rounded-full font-bold hover:bg-secondary/80 transition-all"
+            >
+              نظرة عامة للمستثمرين
+            </Link>
           </div>
         </div>
       </section>

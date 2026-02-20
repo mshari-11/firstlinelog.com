@@ -39,10 +39,29 @@ const mockCouriers: Courier[] = [
 
 export default function AdminCouriers() {
   const [couriers, setCouriers] = useState<Courier[]>(mockCouriers);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => { fetchCouriers(); }, []);
+
+  async function fetchCouriers() {
+    if (!supabase) { setLoading(false); return; }
+    try {
+      const { data, error } = await supabase
+        .from("couriers")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && data && data.length > 0) {
+        setCouriers(data as Courier[]);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filtered = couriers.filter((c) => {
     const matchSearch = c.full_name.includes(search) || c.phone.includes(search);

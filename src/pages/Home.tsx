@@ -94,7 +94,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div className="inline-block">
-              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022644365418352640_first_line_correct_logos_1.jpg?image_process=quality,q_90/resize,w_1280/format,webp" alt="FIRST LINE LOGISTICS" className="h-8 opacity-20" />
+              <img src="/images/logo.webp" alt="FIRST LINE LOGISTICS" className="h-8 opacity-20" />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">

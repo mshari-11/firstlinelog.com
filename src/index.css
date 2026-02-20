@@ -243,7 +243,7 @@
 /* خلفيات مستوحاة من شعار فيرست لاين */
 @layer components {
   .first-line-gradient {
-    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/80;
+    background: linear-gradient(to bottom right, oklch(0.25 0.12 220), oklch(0.25 0.12 220 / 0.9), oklch(0.25 0.12 220 / 0.8));
   }
   
   .first-line-pattern {
@@ -254,11 +254,12 @@
   }
   
   .first-line-hero-bg {
-    @apply bg-gradient-to-br from-primary via-primary/95 to-primary/85;
-    background-image: 
+    background: 
       linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%),
       radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%),
+      linear-gradient(to bottom right, oklch(0.25 0.12 220), oklch(0.25 0.12 220 / 0.95), oklch(0.25 0.12 220 / 0.85));
+    color: white;
   }
   
   .first-line-card-bg {

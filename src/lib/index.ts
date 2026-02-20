@@ -12,6 +12,20 @@ export const ROUTE_PATHS = {
   INVESTORS: "/investors",
   JOIN_US: "/join-us",
   CONTACT: "/contact",
+  TEAM: "/team",
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
+  LOGIN: "/login",
+  // Admin Dashboard
+  ADMIN: "/admin",
+  ADMIN_DRIVERS: "/admin/drivers",
+  ADMIN_ORDERS: "/admin/orders",
+  ADMIN_REPORTS: "/admin/reports",
+  // Driver Dashboard
+  DRIVER: "/driver",
+  DRIVER_ORDERS: "/driver/orders",
+  DRIVER_EARNINGS: "/driver/earnings",
+  DRIVER_PROFILE: "/driver/profile",
 } as const;
 
 /**

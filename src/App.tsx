@@ -5,9 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
+import { AuthProvider } from "@/hooks/useAuth";
 import { ROUTE_PATHS } from "@/lib/index";
 
+// الصفحات العامة
 import Home from "@/pages/Home";
+import Login from "@/pages/Login";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
 import ForPlatforms from "@/pages/ForPlatforms";
@@ -15,92 +18,82 @@ import Governance from "@/pages/Governance";
 import Investors from "@/pages/Investors";
 import JoinUs from "@/pages/JoinUs";
 import Contact from "@/pages/Contact";
+import Team from "@/pages/Team";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 
-/**
- * إعداد عميل TanStack Query لإدارة حالات البيانات
- */
+// لوحة تحكم الإدارة
+import { AdminLayout } from "@/components/dashboard/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminDrivers from "@/pages/admin/AdminDrivers";
+import AdminOrders from "@/pages/admin/AdminOrders";
+import AdminReports from "@/pages/admin/AdminReports";
+
+// لوحة تحكم السائق
+import { DriverLayout } from "@/components/driver/DriverLayout";
+import DriverDashboard from "@/pages/driver/DriverDashboard";
+import DriverOrders from "@/pages/driver/DriverOrders";
+import DriverEarnings from "@/pages/driver/DriverEarnings";
+import DriverProfile from "@/pages/driver/DriverProfile";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 دقائق
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-/**
- * المكون الرئيسي للتطبيق (App)
- * يدير التوجيه (Routing) وموفري الحالة (Providers) لموقع فيرست لاين لوجستيكس
- * يدعم اللغة العربية ونظام RTL بشكل كامل
- */
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* مكونات الإشعارات العامة */}
         <Toaster />
         <Sonner position="top-center" richColors closeButton dir="rtl" />
         
         <BrowserRouter>
-          {/* مكون التخطيط الرئيسي الذي يحتوي على الهيدر والفوتر */}
-          <Layout>
+          <AuthProvider>
             <Routes>
-              {/* الصفحة الرئيسية */}
-              <Route
-                path={ROUTE_PATHS.HOME}
-                element={<Home />}
-              />
-              
-              {/* صفحة من نحن */}
-              <Route
-                path={ROUTE_PATHS.ABOUT}
-                element={<About />}
-              />
-              
-              {/* صفحة الخدمات */}
-              <Route
-                path={ROUTE_PATHS.SERVICES}
-                element={<Services />}
-              />
-              
-              {/* صفحة خدمات المنصات */}
-              <Route
-                path={ROUTE_PATHS.PLATFORMS}
-                element={<ForPlatforms />}
-              />
-              
-              {/* صفحة الحوكمة والامتثال */}
-              <Route
-                path={ROUTE_PATHS.GOVERNANCE}
-                element={<Governance />}
-              />
-              
-              {/* صفحة علاقات المستثمرين */}
-              <Route
-                path={ROUTE_PATHS.INVESTORS}
-                element={<Investors />}
-              />
-              
-              {/* صفحة انضم إلينا (للسائقين والشركاء) */}
-              <Route
-                path={ROUTE_PATHS.JOIN_US}
-                element={<JoinUs />}
-              />
-              
-              {/* صفحة اتصل بنا */}
-              <Route
-                path={ROUTE_PATHS.CONTACT}
-                element={<Contact />}
-              />
-              
-              {/* توجيه افتراضي للصفحات غير الموجودة إلى الصفحة الرئيسية */}
-              <Route
-                path="*"
-                element={<Home />}
-              />
+              {/* ==================== لوحة تحكم الإدارة (بدون Layout العام) ==================== */}
+              <Route path={ROUTE_PATHS.ADMIN} element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="drivers" element={<AdminDrivers />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="reports" element={<AdminReports />} />
+              </Route>
+
+              {/* ==================== لوحة تحكم السائق (بدون Layout العام) ==================== */}
+              <Route path={ROUTE_PATHS.DRIVER} element={<DriverLayout />}>
+                <Route index element={<DriverDashboard />} />
+                <Route path="orders" element={<DriverOrders />} />
+                <Route path="earnings" element={<DriverEarnings />} />
+                <Route path="profile" element={<DriverProfile />} />
+              </Route>
+
+              {/* ==================== الصفحات العامة (مع Layout) ==================== */}
+              <Route path="*" element={
+                <Layout>
+                  <Routes>
+                    <Route path={ROUTE_PATHS.HOME} element={<Home />} />
+                    <Route path={ROUTE_PATHS.ABOUT} element={<About />} />
+                    <Route path={ROUTE_PATHS.SERVICES} element={<Services />} />
+                    <Route path={ROUTE_PATHS.PLATFORMS} element={<ForPlatforms />} />
+                    <Route path={ROUTE_PATHS.GOVERNANCE} element={<Governance />} />
+                    <Route path={ROUTE_PATHS.INVESTORS} element={<Investors />} />
+                    <Route path={ROUTE_PATHS.JOIN_US} element={<JoinUs />} />
+                    <Route path={ROUTE_PATHS.CONTACT} element={<Contact />} />
+                    <Route path={ROUTE_PATHS.TEAM} element={<Team />} />
+                    <Route path={ROUTE_PATHS.PRIVACY} element={<Privacy />} />
+                    <Route path={ROUTE_PATHS.TERMS} element={<Terms />} />
+                    <Route path={ROUTE_PATHS.LOGIN} element={<Login />} />
+                    <Route path="*" element={<Home />} />
+                  </Routes>
+                </Layout>
+              } />
             </Routes>
-          </Layout>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

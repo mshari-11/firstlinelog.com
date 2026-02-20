@@ -132,8 +132,8 @@ export default function AdminDashboard() {
     if (!supabase) { setLoading(false); return; }
     try {
       const [couriersRes, ordersRes, complaintsRes, approvalsRes] = await Promise.all([
-        supabase.from("couriers").select("id, status", { count: "exact" }),
-        supabase.from("orders").select("id", { count: "exact" }).gte("created_at", new Date().toISOString().split("T")[0]),
+        supabase.from("couriers_2026_02_17_21_00").select("id, status", { count: "exact" }),
+        supabase.from("orders_2026_02_17_21_00").select("id", { count: "exact" }).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("complaints_requests").select("id", { count: "exact" }).eq("status", "open"),
         supabase.from("approval_workflows").select("id", { count: "exact" }).eq("status", "pending"),
       ]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronLeft, MapPin, Mail, ExternalLink } from "lucide-react";
+import { Menu, X, ChevronLeft, MapPin, Mail, ExternalLink, LogIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTE_PATHS, CURRENT_YEAR } from "@/lib/index";
 import { IMAGES } from "@/assets/images";
@@ -75,6 +75,9 @@ export function Layout({
             <Button asChild variant="default" size="sm" className="rounded-full px-6 font-bold">
               <Link to={ROUTE_PATHS.CONTACT}>اتصل بنا</Link>
             </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-full px-5 font-bold gap-2">
+              <Link to="/admin/login"><LogIn size={15} />تسجيل الدخول</Link>
+            </Button>
           </nav>
 
           {/* زر قائمة الهاتف */}
@@ -108,6 +111,9 @@ export function Layout({
                 </NavLink>)}
               <Button asChild variant="default" size="lg" className="mt-4 w-full rounded-xl font-bold text-lg">
                 <Link to={ROUTE_PATHS.CONTACT}>تواصل معنا الآن</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full rounded-xl font-bold text-lg gap-2">
+                <Link to="/admin/login"><LogIn size={18} />تسجيل الدخول</Link>
               </Button>
             </nav>
 

@@ -57,15 +57,15 @@ export default function AdminOrders() {
   useEffect(() => {
     async function fetchOrders() {
       const { data, error } = await supabase
-        .from("orders")
-        .select(`*, couriers(full_name)`)
+        .from("orders_2026_02_17_21_00")
+        .select(`*, couriers_2026_02_17_21_00(full_name)`)
         .order("created_at", { ascending: false })
         .limit(100);
 
       if (!error && data && data.length > 0) {
         const mapped = data.map((o: any) => ({
           id: `#${o.id}`,
-          courier_name: o.couriers?.full_name || "غير محدد",
+          courier_name: o.couriers_2026_02_17_21_00?.full_name || "غير محدد",
           platform: o.platform,
           customer_name: o.customer_name || "غير محدد",
           customer_phone: o.customer_phone || "",

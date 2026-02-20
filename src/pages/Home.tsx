@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ShieldCheck, Layers, Zap, BarChart3, Truck, Users, CheckCircle2, TrendingUp, Rocket, Info, Globe } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Layers, Zap, BarChart3, Truck, Users, CheckCircle2, TrendingUp, Rocket, Info, Globe, LogIn, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTE_PATHS, MetricData, PlatformData, CityData, ServiceData, BenefitData } from "@/lib/index";
 import { useMetrics, usePlatforms, useCities, useServices, useBenefits } from "@/hooks/use-site-data";
@@ -171,6 +171,62 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {cities.map((city: CityData) => <CityCard key={city.name} city={city} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* منظومة فيرست لاين - Quick Access */}
+      <section className="py-20 relative overflow-hidden" style={{ background: "oklch(0.08 0.06 220)" }}>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "oklch(0.92 0.02 220)" }}>
+              منظومة فيرست لاين الرقمية
+            </h2>
+            <p className="text-lg" style={{ color: "oklch(0.55 0.04 210)" }}>
+              كل أقسام التشغيل في مكان واحد — اضغط للوصول
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { label: "لوحة التحكم", path: "/services/dashboard", icon: "📊", color: "oklch(0.65 0.18 200)" },
+              { label: "المناديب", path: "/services/couriers", icon: "👥", color: "oklch(0.65 0.15 200)" },
+              { label: "الطلبات", path: "/services/orders", icon: "📦", color: "oklch(0.70 0.15 150)" },
+              { label: "المركبات", path: "/services/vehicles", icon: "🚛", color: "oklch(0.65 0.15 50)" },
+              { label: "المالية", path: "/services/finance", icon: "💰", color: "oklch(0.70 0.15 130)" },
+              { label: "الشكاوى", path: "/services/complaints", icon: "💬", color: "oklch(0.65 0.15 300)" },
+              { label: "Excel", path: "/services/excel", icon: "📋", color: "oklch(0.60 0.15 160)" },
+              { label: "الموظفين", path: "/services/staff", icon: "🏢", color: "oklch(0.60 0.14 270)" },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+                <Link
+                  to={item.path}
+                  className="flex flex-col items-center gap-3 p-6 rounded-2xl border transition-all hover:-translate-y-1 hover:shadow-xl group"
+                  style={{
+                    background: "oklch(0.13 0.06 220)",
+                    borderColor: "oklch(0.22 0.05 210 / 0.4)",
+                  }}
+                >
+                  <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                  <span className="text-sm font-medium" style={{ color: "oklch(0.80 0.02 220)" }}>{item.label}</span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-4 mt-10">
+            <Button asChild size="lg" className="gap-2" style={{ background: "oklch(0.65 0.18 200)" }}>
+              <Link to="/admin/login">
+                <LogIn className="w-5 h-5" />
+                دخول لوحة الإدارة
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="gap-2 border-white/20 text-white hover:bg-white/10">
+              <Link to="/courier/register">
+                <UserPlus className="w-5 h-5" />
+                تسجيل كمندوب توصيل
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

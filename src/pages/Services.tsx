@@ -31,36 +31,42 @@ const services = [
     description: "إطلاق وتشغيل مدن جديدة بسرعة، مع جاهزية موارد وخطة تشغيل وإدارة جودة منذ اليوم الأول.",
     includes: ["فرق ميدانية", "توزيع مناطق", "خطط ذروة", "إدارة يومية"],
     icon: MapPin,
+    link: "/services/dashboard",
   },
   {
     title: "إدارة السائقين والموارد البشرية التشغيلية",
     description: "استقطاب، تدريب، جدولة، وتحفيز السائقين وفق مؤشرات أداء واضحة.",
     includes: ["التزام سلوكي", "جودة تسليم", "تقليل الإلغاءات"],
     icon: Users,
+    link: "/services/couriers",
   },
   {
     title: "إدارة الأسطول والتشغيل اليومي",
     description: "تشغيل مركبات ضمن نموذج مرن (تأجير/تشغيل) مع ضبط التكاليف والجاهزية.",
     includes: ["جاهزية يومية", "متابعة تشغيل", "تنظيم احتياج المدينة"],
     icon: Truck,
+    link: "/services/vehicles",
   },
   {
     title: "إدارة الذروة والمواسم",
     description: "خطط موارد للذروة (رمضان/عطل/مواسم) لضمان الاستمرارية وعدم تدهور SLA.",
     includes: ["سعة إضافية", "توزيع مناوبات", "متابعة دقيقة"],
     icon: Zap,
+    link: "/services/orders",
   },
   {
     title: "مؤشرات الأداء والجودة (SLA & Quality)",
     description: "إطار جودة وتشغيل قابل للقياس والتحسين.",
     includes: ["تقارير", "مراقبة يومية", "إجراءات تصحيح"],
     icon: ShieldCheck,
+    link: "/services/complaints",
   },
   {
     title: "التقارير والحوكمة التشغيلية",
     description: "شفافية تشغيلية ترفع ثقة الشريك وتسرّع القرارات.",
     includes: ["تقارير دورية", "متابعة التزام", "تحليل مشاكل"],
     icon: BarChart3,
+    link: "/services/finance",
   },
 ];
 
@@ -121,26 +127,35 @@ const Services: React.FC = () => {
                 viewport={{ once: true }}
                 variants={fadeInUp}
                 transition={{ ...springPresets.gentle, delay: index * 0.1 }}
-                className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-lg transition-all group"
               >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary transition-colors">
-                  <service.icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
-                </div>
-                
-                <h3 className="text-xl font-semibold mb-4 text-right">{service.title}</h3>
-                <p className="text-muted-foreground mb-6 leading-relaxed text-right">
-                  {service.description}
-                </p>
-                
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-primary mb-3">يشمل:</p>
-                  {service.includes.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
+                <Link
+                  to={service.link}
+                  className="block bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-lg transition-all group hover:-translate-y-1 h-full"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary transition-colors">
+                    <service.icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-4 text-right">{service.title}</h3>
+                  <p className="text-muted-foreground mb-6 leading-relaxed text-right">
+                    {service.description}
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-primary mb-3">يشمل:</p>
+                    {service.includes.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-2 text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>اعرف المزيد</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>

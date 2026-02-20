@@ -34,6 +34,16 @@ import AdminVehicles from "@/pages/admin/Vehicles";
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 
+// Service Sub-pages
+import CouriersService from "@/pages/services/CouriersService";
+import OrdersService from "@/pages/services/OrdersService";
+import VehiclesService from "@/pages/services/VehiclesService";
+import FinanceService from "@/pages/services/FinanceService";
+import ComplaintsService from "@/pages/services/ComplaintsService";
+import ExcelService from "@/pages/services/ExcelService";
+import DashboardService from "@/pages/services/DashboardService";
+import StaffService from "@/pages/services/StaffService";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -62,6 +72,16 @@ export default function App() {
             <Route element={<Layout><Investors /></Layout>} path={ROUTE_PATHS.INVESTORS} />
             <Route element={<Layout><JoinUs /></Layout>} path={ROUTE_PATHS.JOIN_US} />
             <Route element={<Layout><Contact /></Layout>} path={ROUTE_PATHS.CONTACT} />
+
+            {/* ===== صفحات الخدمات الفرعية ===== */}
+            <Route path="/services/couriers" element={<Layout><CouriersService /></Layout>} />
+            <Route path="/services/orders" element={<Layout><OrdersService /></Layout>} />
+            <Route path="/services/vehicles" element={<Layout><VehiclesService /></Layout>} />
+            <Route path="/services/finance" element={<Layout><FinanceService /></Layout>} />
+            <Route path="/services/complaints" element={<Layout><ComplaintsService /></Layout>} />
+            <Route path="/services/excel" element={<Layout><ExcelService /></Layout>} />
+            <Route path="/services/dashboard" element={<Layout><DashboardService /></Layout>} />
+            <Route path="/services/staff" element={<Layout><StaffService /></Layout>} />
 
             {/* ===== تسجيل دخول الإدارة ===== */}
             <Route path="/admin/login" element={

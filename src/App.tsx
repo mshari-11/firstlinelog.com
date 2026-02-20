@@ -1,4 +1,3 @@
-// Auto-deployed via Vercel CI/CD - Last update: Feb 2026
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Layout } from "@/components/Layout";
 import { ROUTE_PATHS } from "@/lib/index";
 
+// الصفحات العامة (الأصلية)
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
@@ -16,7 +16,7 @@ import Investors from "@/pages/Investors";
 import JoinUs from "@/pages/JoinUs";
 import Contact from "@/pages/Contact";
 
-// Admin
+// نظام الإدارة
 import { AuthProvider } from "@/lib/admin/auth";
 import { AdminLayout } from "@/components/admin/Layout";
 import { PermissionGuard } from "@/components/admin/PermissionGuard";
@@ -30,11 +30,11 @@ import AdminExcel from "@/pages/admin/Excel";
 import AdminComplaints from "@/pages/admin/Complaints";
 import AdminVehicles from "@/pages/admin/Vehicles";
 
-// Courier
+// بوابة المناديب
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 
-// Service Sub-pages
+// صفحات الخدمات الفرعية
 import CouriersService from "@/pages/services/CouriersService";
 import OrdersService from "@/pages/services/OrdersService";
 import VehiclesService from "@/pages/services/VehiclesService";
@@ -63,7 +63,7 @@ export default function App() {
         
         <BrowserRouter>
           <Routes>
-            {/* ===== الموقع العام ===== */}
+            {/* ===== الموقع العام (التصميم الأصلي بدون أي تغيير) ===== */}
             <Route element={<Layout><Home /></Layout>} path={ROUTE_PATHS.HOME} />
             <Route element={<Layout><About /></Layout>} path={ROUTE_PATHS.ABOUT} />
             <Route element={<Layout><Services /></Layout>} path={ROUTE_PATHS.SERVICES} />
@@ -73,21 +73,19 @@ export default function App() {
             <Route element={<Layout><JoinUs /></Layout>} path={ROUTE_PATHS.JOIN_US} />
             <Route element={<Layout><Contact /></Layout>} path={ROUTE_PATHS.CONTACT} />
 
-            {/* ===== صفحات الخدمات الفرعية ===== */}
-            <Route path="/services/couriers" element={<Layout><CouriersService /></Layout>} />
-            <Route path="/services/orders" element={<Layout><OrdersService /></Layout>} />
-            <Route path="/services/vehicles" element={<Layout><VehiclesService /></Layout>} />
-            <Route path="/services/finance" element={<Layout><FinanceService /></Layout>} />
-            <Route path="/services/complaints" element={<Layout><ComplaintsService /></Layout>} />
-            <Route path="/services/excel" element={<Layout><ExcelService /></Layout>} />
-            <Route path="/services/dashboard" element={<Layout><DashboardService /></Layout>} />
-            <Route path="/services/staff" element={<Layout><StaffService /></Layout>} />
+            {/* ===== صفحات الخدمات الفرعية (تصميم مستقل) ===== */}
+            <Route path="/services/couriers" element={<CouriersService />} />
+            <Route path="/services/orders" element={<OrdersService />} />
+            <Route path="/services/vehicles" element={<VehiclesService />} />
+            <Route path="/services/finance" element={<FinanceService />} />
+            <Route path="/services/complaints" element={<ComplaintsService />} />
+            <Route path="/services/excel" element={<ExcelService />} />
+            <Route path="/services/dashboard" element={<DashboardService />} />
+            <Route path="/services/staff" element={<StaffService />} />
 
             {/* ===== تسجيل دخول الإدارة ===== */}
             <Route path="/admin/login" element={
-              <AuthProvider>
-                <AdminLogin />
-              </AuthProvider>
+              <AuthProvider><AdminLogin /></AuthProvider>
             } />
 
             {/* ===== تسجيل المناديب ===== */}
@@ -95,48 +93,34 @@ export default function App() {
 
             {/* ===== بوابة المندوب ===== */}
             <Route path="/courier/portal" element={
-              <AuthProvider>
-                <CourierPortal />
-              </AuthProvider>
+              <AuthProvider><CourierPortal /></AuthProvider>
             } />
 
             {/* ===== لوحة الإدارة ===== */}
             <Route path="/admin" element={
-              <AuthProvider>
-                <AdminLayout />
-              </AuthProvider>
+              <AuthProvider><AdminLayout /></AuthProvider>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="couriers" element={
-                <PermissionGuard permission="couriers">
-                  <AdminCouriers />
-                </PermissionGuard>
+                <PermissionGuard permission="couriers"><AdminCouriers /></PermissionGuard>
               } />
               <Route path="orders" element={
-                <PermissionGuard permission="orders">
-                  <AdminOrders />
-                </PermissionGuard>
+                <PermissionGuard permission="orders"><AdminOrders /></PermissionGuard>
               } />
               <Route path="excel" element={
-                <PermissionGuard permission="excel">
-                  <AdminExcel />
-                </PermissionGuard>
+                <PermissionGuard permission="excel"><AdminExcel /></PermissionGuard>
               } />
               <Route path="finance" element={
-                <PermissionGuard permission="finance">
-                  <AdminFinance />
-                </PermissionGuard>
+                <PermissionGuard permission="finance"><AdminFinance /></PermissionGuard>
               } />
               <Route path="complaints" element={
-                <PermissionGuard permission="complaints">
-                  <AdminComplaints />
-                </PermissionGuard>
+                <PermissionGuard permission="complaints"><AdminComplaints /></PermissionGuard>
               } />
               <Route path="vehicles" element={<AdminVehicles />} />
               <Route path="staff" element={<AdminStaff />} />
             </Route>
 
-            {/* fallback */}
+            {/* توجيه افتراضي */}
             <Route path="*" element={<Layout><Home /></Layout>} />
           </Routes>
         </BrowserRouter>

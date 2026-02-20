@@ -16,6 +16,15 @@ import Investors from "@/pages/Investors";
 import JoinUs from "@/pages/JoinUs";
 import Contact from "@/pages/Contact";
 
+// Admin
+import { AuthProvider } from "@/lib/admin/auth";
+import { AdminLayout } from "@/components/admin/Layout";
+import { PermissionGuard } from "@/components/admin/PermissionGuard";
+import AdminLogin from "@/pages/admin/Login";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminFinance from "@/pages/admin/Finance";
+import AdminStaff from "@/pages/admin/Staff";
+
 /**
  * إعداد عميل TanStack Query لإدارة حالات البيانات
  */
@@ -38,69 +47,45 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* مكونات الإشعارات العامة */}
         <Toaster />
         <Sonner position="top-center" richColors closeButton dir="rtl" />
         
         <BrowserRouter>
-          {/* مكون التخطيط الرئيسي الذي يحتوي على الهيدر والفوتر */}
-          <Layout>
-            <Routes>
-              {/* الصفحة الرئيسية */}
-              <Route
-                path={ROUTE_PATHS.HOME}
-                element={<Home />}
-              />
-              
-              {/* صفحة من نحن */}
-              <Route
-                path={ROUTE_PATHS.ABOUT}
-                element={<About />}
-              />
-              
-              {/* صفحة الخدمات */}
-              <Route
-                path={ROUTE_PATHS.SERVICES}
-                element={<Services />}
-              />
-              
-              {/* صفحة خدمات المنصات */}
-              <Route
-                path={ROUTE_PATHS.PLATFORMS}
-                element={<ForPlatforms />}
-              />
-              
-              {/* صفحة الحوكمة والامتثال */}
-              <Route
-                path={ROUTE_PATHS.GOVERNANCE}
-                element={<Governance />}
-              />
-              
-              {/* صفحة علاقات المستثمرين */}
-              <Route
-                path={ROUTE_PATHS.INVESTORS}
-                element={<Investors />}
-              />
-              
-              {/* صفحة انضم إلينا (للسائقين والشركاء) */}
-              <Route
-                path={ROUTE_PATHS.JOIN_US}
-                element={<JoinUs />}
-              />
-              
-              {/* صفحة اتصل بنا */}
-              <Route
-                path={ROUTE_PATHS.CONTACT}
-                element={<Contact />}
-              />
-              
-              {/* توجيه افتراضي للصفحات غير الموجودة إلى الصفحة الرئيسية */}
-              <Route
-                path="*"
-                element={<Home />}
-              />
-            </Routes>
-          </Layout>
+          <Routes>
+            {/* ===== الموقع العام ===== */}
+            <Route element={<Layout><Home /></Layout>} path={ROUTE_PATHS.HOME} />
+            <Route element={<Layout><About /></Layout>} path={ROUTE_PATHS.ABOUT} />
+            <Route element={<Layout><Services /></Layout>} path={ROUTE_PATHS.SERVICES} />
+            <Route element={<Layout><ForPlatforms /></Layout>} path={ROUTE_PATHS.PLATFORMS} />
+            <Route element={<Layout><Governance /></Layout>} path={ROUTE_PATHS.GOVERNANCE} />
+            <Route element={<Layout><Investors /></Layout>} path={ROUTE_PATHS.INVESTORS} />
+            <Route element={<Layout><JoinUs /></Layout>} path={ROUTE_PATHS.JOIN_US} />
+            <Route element={<Layout><Contact /></Layout>} path={ROUTE_PATHS.CONTACT} />
+
+            {/* ===== لوحة الإدارة ===== */}
+            <Route path="/admin/login" element={
+              <AuthProvider>
+                <AdminLogin />
+              </AuthProvider>
+            } />
+            <Route path="/admin" element={
+              <AuthProvider>
+                <AdminLayout />
+              </AuthProvider>
+            }>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="finance" element={
+                <PermissionGuard permission="finance">
+                  <AdminFinance />
+                </PermissionGuard>
+              } />
+              <Route path="staff" element={<AdminStaff />} />
+              {/* صفحات أخرى تضاف هنا */}
+            </Route>
+
+            {/* fallback */}
+            <Route path="*" element={<Layout><Home /></Layout>} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

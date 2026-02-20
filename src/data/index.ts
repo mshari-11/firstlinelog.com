@@ -31,7 +31,7 @@ export const METRICS: MetricData[] = [
   },
   {
     label: "المدن التشغيلية",
-    value: "18",
+    value: "16",
     suffix: "مدينة",
     description: "نطاق التغطية الجغرافية عبر المملكة العربية السعودية.",
     icon: "MapPin",
@@ -49,6 +49,27 @@ export const METRICS: MetricData[] = [
     suffix: "طلب",
     description: "القدرة التشغيلية القصوى خلال أوقات الذروة والمواسم.",
     icon: "Zap",
+  },
+  {
+    label: "متوسط الطلبات اليومية",
+    value: "25,000",
+    suffix: "طلب",
+    description: "متوسط الحجم التشغيلي اليومي عبر شبكتنا اللوجستية.",
+    icon: "TrendingUp",
+  },
+  {
+    label: "الحصة السوقية المستهدفة",
+    value: "6",
+    suffix: "%",
+    description: "هدف الحصة السوقية في ذروة الأداء بحلول 2025.",
+    icon: "Target",
+  },
+  {
+    label: "مستوى الخدمة",
+    value: "TIER-1",
+    suffix: "3PL",
+    description: "مشغل خدمات لوجستية من الطرف الثالث من الفئة الأولى.",
+    icon: "Award",
   },
 ];
 

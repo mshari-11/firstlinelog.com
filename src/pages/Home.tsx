@@ -59,15 +59,17 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-background" />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-6xl w-full">
-            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-xl md:text-7xl xl:text-7xl font-bold tracking-tight mb-6 text-white">
-              الخط الأول للخدمات اللوجستية{" "}
-              <br />
-              <span className="text-white xl:text-2xl">شريك التشغيل في الميل الأخير للمنصات الرقمية في المملكة العربية السعودية</span>
+        <div className="container mx-auto px-4 relative z-10 pt-24">
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-4xl mx-auto md:mx-0 md:mr-auto text-right">
+            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-white">
+              الخط الأول للخدمات اللوجستية
             </motion.h1>
 
-            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="mb-10 max-w-3xl text-white text-base text-right">
+            <motion.h2 variants={fadeInUp} transition={springPresets.smooth} className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-white/90 mb-6">
+              شريك التشغيل في الميل الأخير للمنصات الرقمية في المملكة العربية السعودية
+            </motion.h2>
+
+            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="mb-10 max-w-3xl text-white/80 text-sm md:text-base text-right leading-relaxed">
               نُدير تنفيذ عمليات التوصيل بالنيابة عن أبرز تطبيقات التوصيل، عبر نموذج تشغيل Multi-Platform 3PL يرفع الكفاءة، يضمن جودة التنفيذ، ويمنح المنصات قدرة توسع أسرع داخل المدن الرئيسية.
             </motion.p>
 
@@ -90,7 +92,12 @@ export default function Home() {
       {/* Metrics Section */}
       <section className="py-24 first-line-section-bg">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="text-center mb-12">
+            <div className="inline-block">
+              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022644365418352640_first_line_correct_logos_1.jpg?image_process=quality,q_90/resize,w_1280/format,webp" alt="FIRST LINE LOGISTICS" className="h-8 opacity-20" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {METRICS.map((metric: MetricData) => <MetricCard key={metric.label} metric={metric} />)}
           </div>
           <motion.p initial={{
@@ -183,7 +190,7 @@ export default function Home() {
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {PLATFORMS.slice(0, 8).map((platform: PlatformData) => <PlatformCard key={platform.id} platform={platform} />)}
           </div>
           <div className="text-center mt-6">

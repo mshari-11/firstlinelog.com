@@ -55,15 +55,15 @@ export function Layout({
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "first-line-header py-3 shadow-lg bg-primary" : "bg-primary py-5"}`}>
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link to={ROUTE_PATHS.HOME} className="flex items-center gap-3 group">
-            <div className="relative w-20 h-20 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022644365418352640_first_line_correct_logos_1.jpg?image_process=quality,q_90/resize,w_1280/format,webp" alt="فيرست لاين لوجستيكس" className="w-full transition-transform duration-500 group-hover:scale-105 filter brightness-110 h-[81.89999389648438px] object-cover" />
+            <div className="relative w-14 h-14 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+              <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022644365418352640_first_line_correct_logos_1.jpg?image_process=quality,q_90/resize,w_1280/format,webp" alt="فيرست لاين لوجستيكس" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold leading-none tracking-tight text-white xl:text-[32px] text-center">
+              <span className="text-xl font-bold leading-none tracking-tight text-white">
                 First Line
               </span>
-              <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.1em] leading-tight">
-                Logistics
+              <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em] leading-tight">
+                LOGISTICS
               </span>
             </div>
           </Link>

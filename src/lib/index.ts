@@ -15,6 +15,9 @@ export const ROUTE_PATHS = {
   CONTACT: "/contact",
   LOGIN: "/login",
   UNIFIED_LOGIN: "/unified-login",
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
+  COMPLIANCE: "/compliance",
 } as const;
 
 /**

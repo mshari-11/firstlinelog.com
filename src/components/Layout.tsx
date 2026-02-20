@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronLeft, MapPin, Mail, ExternalLink } from "lucide-react";
+import { Menu, X, ChevronLeft, MapPin, Mail, ExternalLink, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTE_PATHS, CURRENT_YEAR } from "@/lib/index";
 import { IMAGES } from "@/assets/images";
@@ -172,9 +172,9 @@ export function Layout({
               </h4>
               <ul className="space-y-4 text-base font-medium">
                 <li><Link to={ROUTE_PATHS.ABOUT} className="hover:text-primary transition-colors flex items-center gap-2">من نحن</Link></li>
-                <li><Link to={ROUTE_PATHS.PLATFORMS} className="hover:text-primary transition-colors flex items-center gap-2">للمنصات</Link></li>
-                <li><Link to={ROUTE_PATHS.GOVERNANCE} className="hover:text-primary transition-colors flex items-center gap-2">الحوكمة والامتثال</Link></li>
-                <li><Link to={ROUTE_PATHS.INVESTORS} className="hover:text-primary transition-colors flex items-center gap-2">علاقات المستثمرين</Link></li>
+                <li><Link to={ROUTE_PATHS.SERVICES} className="hover:text-primary transition-colors flex items-center gap-2">خدماتنا</Link></li>
+                <li><Link to={ROUTE_PATHS.ABOUT} className="hover:text-primary transition-colors flex items-center gap-2">الأخبار</Link></li>
+                <li><Link to={ROUTE_PATHS.INVESTORS} className="hover:text-primary transition-colors flex items-center gap-2">المستثمرين</Link></li>
               </ul>
             </div>
 
@@ -191,40 +191,34 @@ export function Layout({
 
             <div>
               <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-r-2 border-primary/30 pr-3">
-                المركز الإقليمي
+                التواصل
               </h4>
-              <ul className="space-y-6 text-base text-sidebar-foreground/70 font-medium">
-                <li className="flex gap-3">
-                  <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <div className="space-y-4 text-base font-medium">
+                <div className="flex items-center gap-3">
+                  <Mail className="text-primary flex-shrink-0" />
+                  <a href="mailto:info@firstlinelog.com" className="hover:text-primary transition-colors">info@firstlinelog.com</a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="text-primary flex-shrink-0" />
                   <span>جدة، المملكة العربية السعودية</span>
-                </li>
-                <li className="flex gap-3">
-                  <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>info@firstlinelog.com</span>
-                </li>
-                <li>
-                  <Button asChild variant="outline" className="mt-2 border-white/10 hover:bg-white/5 w-full justify-between px-6">
-                    
-                  </Button>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="pt-10 border-t border-sidebar-border/50 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex flex-col gap-2 items-center md:items-start">
-              <p className="text-xs text-sidebar-foreground/50 font-bold">
-                &copy; {CURRENT_YEAR} First Line Logistics | جدة، المملكة العربية السعودية. جميع الحقوق محفوظة.
-              </p>
-              <p className="text-[10px] text-sidebar-foreground/30 font-medium">
-                مصادر البيانات: أبحاث السوق · البيانات التشغيلية لفيرست لاين لوجستيكس
-              </p>
-            </div>
-            
-            <div className="flex gap-8 text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-black">
-              <a href="#" className="hover:text-primary transition-colors">سياسة الخصوصية</a>
-              <a href="#" className="hover:text-primary transition-colors">شروط الخدمة</a>
-              <a href="#" className="hover:text-primary transition-colors">الامتثال</a>
+          <div className="border-t border-sidebar-border pt-12">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="text-sm text-sidebar-foreground/60 font-medium">
+                &copy; {CURRENT_YEAR} الخط الأول للخدمات اللوجستية. جميع الحقوق محفوظة.
+              </div>
+              <div className="flex items-center gap-6 text-sm font-medium">
+                <Link to="#" className="hover:text-primary transition-colors">سياسة الخصوصية</Link>
+                <Link to="#" className="hover:text-primary transition-colors">شروط الاستخدام</Link>
+                <Link to="#" className="hover:text-primary transition-colors">الامتثال والحوكمة</Link>
+                <a href="#" className="hover:text-primary transition-colors flex items-center gap-2">
+                  <Globe size={16} /> English
+                </a>
+              </div>
             </div>
           </div>
         </div>

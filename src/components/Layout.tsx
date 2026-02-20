@@ -52,16 +52,16 @@ export function Layout({
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "first-line-header py-3 shadow-lg" : "bg-transparent py-5"}`}>
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link to={ROUTE_PATHS.HOME} className="flex items-center gap-3 group">
-            <div className="flex flex-col items-center">
+            <div className="w-20 h-20 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+              <img src="/images/first_line_correct_logos_1.jpg" alt="فيرست لاين لوجستيكس" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-110" />
+            </div>
+            <div className="flex flex-col">
               <span className="text-xl font-bold leading-none tracking-tight text-foreground xl:text-[32px]">
                 First Line
               </span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-[0.3em] leading-tight mt-1">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-[0.1em] leading-tight">
                 Logistics
               </span>
-            </div>
-            <div className="relative w-12 h-12 overflow-hidden rounded-lg bg-[#1a2e44]/80 flex items-center justify-center shadow-md">
-              <img src="/images/first_line_correct_logos_1.jpg" alt="فيرست لاين لوجستيكس" className="w-10 h-10 object-contain transition-transform duration-500 group-hover:scale-110" />
             </div>
           </Link>
 
@@ -154,7 +154,7 @@ export function Layout({
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 overflow-hidden rounded-lg bg-white/10 flex items-center justify-center shadow-lg">
-                  <img src="/images/first_line_correct_logos_1.jpg" alt="First Line" className="w-10 h-10 object-contain" />
+                  <img src="/images/first_line_correct_logos_1.jpg" alt="First Line" className="w-full h-12 object-cover" />
                 </div>
                 <span className="text-2xl font-bold tracking-tight">First Line</span>
               </div>
@@ -185,7 +185,7 @@ export function Layout({
                 الفرص
               </h4>
               <ul className="space-y-4 text-base font-medium">
-                <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">سجل كقائد مركبة</Link></li>
+                <li><Link to="/courier/register" className="hover:text-primary transition-colors">سجل كقائد مركبة</Link></li>
                 <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">شراكات الأساطيل</Link></li>
                 <li><Link to={ROUTE_PATHS.CONTACT} className="hover:text-primary transition-colors">الاستفسارات المهنية</Link></li>
               </ul>

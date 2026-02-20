@@ -1,24 +1,30 @@
 /**
  * الداشبورد الرئيسي - لوحة إدارة فيرست لاين
- * يعرض KPIs وإحصائيات النظام
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Users, Package, DollarSign, AlertCircle,
   TrendingUp, TrendingDown, Clock, CheckCircle2,
-  Bike, Star, ArrowUpRight
+  Bike, ArrowUpRight
 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar
+} from "recharts";
 
-interface KPI {
-  label: string;
-  value: string | number;
-  change?: number;
-  icon: React.ElementType;
-  color: string;
-  bg: string;
-}
+// ألوان هوية فيرست لاين
+const C = {
+  bg: "oklch(0.10 0.06 220)",
+  card: "oklch(0.15 0.06 220)",
+  cardBorder: "oklch(0.22 0.05 210 / 0.5)",
+  cyan: "oklch(0.65 0.18 200)",
+  cyanSoft: "oklch(0.60 0.18 200 / 0.12)",
+  blue: "oklch(0.25 0.12 220)",
+  textPrimary: "oklch(0.92 0.02 220)",
+  textMuted: "oklch(0.55 0.06 210)",
+  textSub: "oklch(0.70 0.04 215)",
+};
 
 interface DashboardStats {
   totalCouriers: number;
@@ -29,7 +35,6 @@ interface DashboardStats {
   pendingApprovals: number;
 }
 
-// بيانات تجريبية للرسوم البيانية
 const ordersChartData = [
   { day: "السبت", orders: 142 },
   { day: "الأحد", orders: 198 },
@@ -49,20 +54,76 @@ const revenueChartData = [
   { month: "فبراير", revenue: 128000 },
 ];
 
+const kpiConfig = [
+  {
+    key: "totalCouriers",
+    label: "إجمالي المناديب",
+    fallback: 47,
+    change: 8,
+    icon: Users,
+    color: "oklch(0.65 0.18 200)",
+    bg: "oklch(0.60 0.18 200 / 0.10)",
+    border: "oklch(0.60 0.18 200 / 0.25)",
+  },
+  {
+    key: "todayOrders",
+    label: "طلبات اليوم",
+    fallback: 245,
+    change: 12,
+    icon: Package,
+    color: "oklch(0.72 0.13 150)",
+    bg: "oklch(0.60 0.15 150 / 0.10)",
+    border: "oklch(0.60 0.15 150 / 0.25)",
+  },
+  {
+    key: "monthRevenue",
+    label: "إيرادات الشهر",
+    fallback: 128000,
+    change: 24,
+    icon: DollarSign,
+    color: "oklch(0.72 0.13 188)",
+    bg: "oklch(0.60 0.13 188 / 0.10)",
+    border: "oklch(0.60 0.13 188 / 0.25)",
+    format: (v: number) => `${v.toLocaleString("ar-SA")} ر.س`,
+  },
+  {
+    key: "pendingComplaints",
+    label: "شكاوى معلقة",
+    fallback: 7,
+    change: -3,
+    icon: AlertCircle,
+    color: "oklch(0.65 0.20 25)",
+    bg: "oklch(0.55 0.20 25 / 0.10)",
+    border: "oklch(0.55 0.20 25 / 0.25)",
+  },
+  {
+    key: "activeCouriers",
+    label: "مناديب نشطون الآن",
+    fallback: 38,
+    icon: Bike,
+    color: "oklch(0.72 0.15 280)",
+    bg: "oklch(0.60 0.15 280 / 0.10)",
+    border: "oklch(0.60 0.15 280 / 0.25)",
+  },
+  {
+    key: "pendingApprovals",
+    label: "اعتمادات بانتظار",
+    fallback: 4,
+    icon: Clock,
+    color: "oklch(0.80 0.16 85)",
+    bg: "oklch(0.70 0.16 85 / 0.10)",
+    border: "oklch(0.70 0.16 85 / 0.25)",
+  },
+];
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
-    totalCouriers: 0,
-    activeCouriers: 0,
-    todayOrders: 0,
-    pendingComplaints: 0,
-    monthRevenue: 0,
-    pendingApprovals: 0,
+    totalCouriers: 0, activeCouriers: 0, todayOrders: 0,
+    pendingComplaints: 0, monthRevenue: 0, pendingApprovals: 0,
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   async function fetchStats() {
     if (!supabase) { setLoading(false); return; }
@@ -73,7 +134,6 @@ export default function AdminDashboard() {
         supabase.from("complaints_requests").select("id", { count: "exact" }).eq("status", "open"),
         supabase.from("approval_workflows").select("id", { count: "exact" }).eq("status", "pending"),
       ]);
-
       const couriers = couriersRes.data || [];
       setStats({
         totalCouriers: couriersRes.count || 0,
@@ -90,56 +150,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const kpis: KPI[] = [
-    {
-      label: "إجمالي المناديب",
-      value: loading ? "..." : stats.totalCouriers || 47,
-      change: 8,
-      icon: Users,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10 border-blue-500/20",
-    },
-    {
-      label: "طلبات اليوم",
-      value: loading ? "..." : stats.todayOrders || 245,
-      change: 12,
-      icon: Package,
-      color: "text-green-400",
-      bg: "bg-green-500/10 border-green-500/20",
-    },
-    {
-      label: "إيرادات الشهر",
-      value: loading ? "..." : `${(stats.monthRevenue || 128000).toLocaleString("ar-SA")} ر.س`,
-      change: 24,
-      icon: DollarSign,
-      color: "text-orange-400",
-      bg: "bg-orange-500/10 border-orange-500/20",
-    },
-    {
-      label: "شكاوى معلقة",
-      value: loading ? "..." : stats.pendingComplaints || 7,
-      change: -3,
-      icon: AlertCircle,
-      color: "text-red-400",
-      bg: "bg-red-500/10 border-red-500/20",
-    },
-    {
-      label: "مناديب نشطون الآن",
-      value: loading ? "..." : stats.activeCouriers || 38,
-      icon: Bike,
-      color: "text-purple-400",
-      bg: "bg-purple-500/10 border-purple-500/20",
-    },
-    {
-      label: "اعتمادات بانتظار",
-      value: loading ? "..." : stats.pendingApprovals || 4,
-      icon: Clock,
-      color: "text-yellow-400",
-      bg: "bg-yellow-500/10 border-yellow-500/20",
-    },
-  ];
-
-  // آخر الطلبات (تجريبية)
   const recentOrders = [
     { id: "#10234", courier: "أحمد محمد", platform: "جاهز", status: "تم التسليم", time: "منذ 5 دقائق" },
     { id: "#10233", courier: "خالد العمري", platform: "مرسول", status: "في الطريق", time: "منذ 12 دقيقة" },
@@ -148,10 +158,10 @@ export default function AdminDashboard() {
     { id: "#10230", courier: "عمر الشمري", platform: "Shopify", status: "تم التسليم", time: "منذ 31 دقيقة" },
   ];
 
-  const statusColor: Record<string, string> = {
-    "تم التسليم": "text-green-400 bg-green-500/10",
-    "في الطريق": "text-blue-400 bg-blue-500/10",
-    "قيد الاستلام": "text-yellow-400 bg-yellow-500/10",
+  const statusStyle: Record<string, { color: string; bg: string }> = {
+    "تم التسليم": { color: "oklch(0.72 0.13 150)", bg: "oklch(0.60 0.15 150 / 0.12)" },
+    "في الطريق": { color: "oklch(0.65 0.18 200)", bg: "oklch(0.60 0.18 200 / 0.12)" },
+    "قيد الاستلام": { color: "oklch(0.80 0.16 85)", bg: "oklch(0.70 0.16 85 / 0.12)" },
   };
 
   return (
@@ -159,92 +169,147 @@ export default function AdminDashboard() {
       {/* الترويسة */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">لوحة التحكم</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
-            {new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          <h1 className="text-2xl font-bold" style={{ color: C.textPrimary }}>
+            لوحة التحكم
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
+            {new Date().toLocaleDateString("ar-SA", {
+              weekday: "long", year: "numeric", month: "long", day: "numeric",
+            })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: C.card, border: `1px solid ${C.cardBorder}` }}>
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-slate-400 text-sm">النظام يعمل</span>
+          <span className="text-sm" style={{ color: C.textSub }}>النظام يعمل</span>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className={`border rounded-2xl p-5 ${kpi.bg}`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className={`p-2.5 rounded-xl bg-slate-900/50`}>
-                <kpi.icon size={20} className={kpi.color} />
-              </div>
-              {kpi.change !== undefined && (
-                <div className={`flex items-center gap-1 text-xs font-medium ${kpi.change > 0 ? "text-green-400" : "text-red-400"}`}>
-                  {kpi.change > 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                  {Math.abs(kpi.change)}%
+        {kpiConfig.map((kpi) => {
+          const rawValue = stats[kpi.key as keyof DashboardStats] || kpi.fallback;
+          const displayValue = loading
+            ? "..."
+            : kpi.format
+            ? kpi.format(rawValue as number)
+            : rawValue;
+
+          return (
+            <div
+              key={kpi.key}
+              className="rounded-2xl p-5"
+              style={{
+                background: kpi.bg,
+                border: `1px solid ${kpi.border}`,
+              }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div
+                  className="p-2.5 rounded-xl"
+                  style={{ background: "oklch(0.10 0.06 220 / 0.5)" }}
+                >
+                  <kpi.icon size={20} style={{ color: kpi.color }} />
                 </div>
-              )}
+                {kpi.change !== undefined && (
+                  <div
+                    className="flex items-center gap-1 text-xs font-medium"
+                    style={{ color: kpi.change > 0 ? "oklch(0.72 0.13 150)" : "oklch(0.65 0.20 25)" }}
+                  >
+                    {kpi.change > 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                    {Math.abs(kpi.change)}%
+                  </div>
+                )}
+              </div>
+              <p className="text-2xl font-bold mb-1" style={{ color: C.textPrimary }}>
+                {displayValue}
+              </p>
+              <p className="text-sm" style={{ color: C.textMuted }}>{kpi.label}</p>
             </div>
-            <p className="text-2xl font-bold text-white mb-1">{kpi.value}</p>
-            <p className="text-slate-400 text-sm">{kpi.label}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* الرسوم البيانية */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* طلبات الأسبوع */}
-        <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: C.card, border: `1px solid ${C.cardBorder}` }}
+        >
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-white font-semibold">طلبات الأسبوع</h3>
-            <span className="text-slate-500 text-xs">آخر 7 أيام</span>
+            <h3 className="font-semibold" style={{ color: C.textPrimary }}>طلبات الأسبوع</h3>
+            <span className="text-xs" style={{ color: C.textMuted }}>آخر 7 أيام</span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={ordersChartData}>
               <defs>
                 <linearGradient id="ordersGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#00C1D4" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#00C1D4" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="day" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.05 210 / 0.4)" />
+              <XAxis dataKey="day" tick={{ fill: "oklch(0.55 0.06 210)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "oklch(0.55 0.06 210)", fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip
-                contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "12px", color: "#fff" }}
-                labelStyle={{ color: "#94a3b8" }}
+                contentStyle={{
+                  background: "oklch(0.15 0.06 220)",
+                  border: "1px solid oklch(0.22 0.05 210 / 0.6)",
+                  borderRadius: "12px",
+                  color: "oklch(0.92 0.02 220)",
+                }}
+                labelStyle={{ color: "oklch(0.55 0.06 210)" }}
               />
-              <Area type="monotone" dataKey="orders" name="الطلبات" stroke="#f97316" strokeWidth={2} fill="url(#ordersGrad)" dot={false} />
+              <Area type="monotone" dataKey="orders" name="الطلبات" stroke="#00C1D4" strokeWidth={2} fill="url(#ordersGrad)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* الإيرادات الشهرية */}
-        <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: C.card, border: `1px solid ${C.cardBorder}` }}
+        >
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-white font-semibold">الإيرادات الشهرية</h3>
-            <span className="text-slate-500 text-xs">آخر 6 أشهر</span>
+            <h3 className="font-semibold" style={{ color: C.textPrimary }}>الإيرادات الشهرية</h3>
+            <span className="text-xs" style={{ color: C.textMuted }}>آخر 6 أشهر</span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={revenueChartData} barSize={28}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.05 210 / 0.4)" />
+              <XAxis dataKey="month" tick={{ fill: "oklch(0.55 0.06 210)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis
+                tick={{ fill: "oklch(0.55 0.06 210)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              />
               <Tooltip
-                contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "12px", color: "#fff" }}
+                contentStyle={{
+                  background: "oklch(0.15 0.06 220)",
+                  border: "1px solid oklch(0.22 0.05 210 / 0.6)",
+                  borderRadius: "12px",
+                  color: "oklch(0.92 0.02 220)",
+                }}
                 formatter={(v: number) => [`${v.toLocaleString("ar-SA")} ر.س`, "الإيراد"]}
               />
-              <Bar dataKey="revenue" fill="#f97316" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="revenue" fill="#00C1D4" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* آخر الطلبات */}
-      <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+      <div
+        className="rounded-2xl p-5"
+        style={{ background: C.card, border: `1px solid ${C.cardBorder}` }}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-white font-semibold">آخر الطلبات</h3>
-          <button className="flex items-center gap-1 text-orange-400 text-sm hover:text-orange-300 transition-colors">
+          <h3 className="font-semibold" style={{ color: C.textPrimary }}>آخر الطلبات</h3>
+          <button
+            className="flex items-center gap-1 text-sm transition-colors"
+            style={{ color: C.cyan }}
+          >
             عرض الكل
             <ArrowUpRight size={15} />
           </button>
@@ -252,41 +317,66 @@ export default function AdminDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700/50">
-                <th className="text-right text-slate-500 text-xs font-medium pb-3">رقم الطلب</th>
-                <th className="text-right text-slate-500 text-xs font-medium pb-3">المندوب</th>
-                <th className="text-right text-slate-500 text-xs font-medium pb-3">المنصة</th>
-                <th className="text-right text-slate-500 text-xs font-medium pb-3">الحالة</th>
-                <th className="text-right text-slate-500 text-xs font-medium pb-3">الوقت</th>
+              <tr style={{ borderBottom: `1px solid ${C.cardBorder}` }}>
+                {["رقم الطلب", "المندوب", "المنصة", "الحالة", "الوقت"].map((h) => (
+                  <th key={h} className="text-right text-xs font-medium pb-3" style={{ color: C.textMuted }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="space-y-1">
-              {recentOrders.map((order) => (
-                <tr key={order.id} className="border-b border-slate-800/50 hover:bg-slate-700/20 transition-colors">
-                  <td className="py-3 text-sm font-mono text-slate-300">{order.id}</td>
-                  <td className="py-3 text-sm text-slate-200">{order.courier}</td>
-                  <td className="py-3">
-                    <span className="text-xs bg-slate-700/60 text-slate-300 px-2.5 py-1 rounded-lg">{order.platform}</span>
-                  </td>
-                  <td className="py-3">
-                    <span className={`text-xs px-2.5 py-1 rounded-lg font-medium ${statusColor[order.status] || "text-slate-400 bg-slate-700/50"}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="py-3 text-xs text-slate-500">{order.time}</td>
-                </tr>
-              ))}
+            <tbody>
+              {recentOrders.map((order) => {
+                const s = statusStyle[order.status] || { color: C.textMuted, bg: "transparent" };
+                return (
+                  <tr
+                    key={order.id}
+                    style={{ borderBottom: `1px solid oklch(0.18 0.05 220 / 0.5)` }}
+                  >
+                    <td className="py-3 text-sm font-mono" style={{ color: C.textSub }}>{order.id}</td>
+                    <td className="py-3 text-sm" style={{ color: C.textPrimary }}>{order.courier}</td>
+                    <td className="py-3">
+                      <span
+                        className="text-xs px-2.5 py-1 rounded-lg"
+                        style={{ background: "oklch(0.20 0.05 220)", color: C.textSub }}
+                      >
+                        {order.platform}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className="text-xs px-2.5 py-1 rounded-lg font-medium"
+                        style={{ color: s.color, background: s.bg }}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-xs" style={{ color: C.textMuted }}>{order.time}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* الاعتمادات المعلقة */}
-      <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-5">
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background: "oklch(0.80 0.16 85 / 0.05)",
+          border: "1px solid oklch(0.70 0.16 85 / 0.20)",
+        }}
+      >
         <div className="flex items-center gap-3 mb-4">
-          <Clock size={18} className="text-yellow-400" />
-          <h3 className="text-white font-semibold">اعتمادات تنتظر مراجعتك</h3>
-          <span className="bg-yellow-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">4</span>
+          <Clock size={18} style={{ color: "oklch(0.80 0.16 85)" }} />
+          <h3 className="font-semibold" style={{ color: C.textPrimary }}>اعتمادات تنتظر مراجعتك</h3>
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: "oklch(0.80 0.16 85)", color: "oklch(0.10 0.06 220)" }}
+          >
+            4
+          </span>
         </div>
         <div className="space-y-2">
           {[
@@ -294,17 +384,33 @@ export default function AdminDashboard() {
             { title: "طلب إجازة - أحمد محمد", by: "أحمد محمد", time: "منذ 5 ساعات" },
             { title: "تعديل راتب - خالد العمري", by: "قسم المالية", time: "منذ يوم" },
           ].map((item, i) => (
-            <div key={i} className="flex items-center justify-between bg-slate-800/40 rounded-xl px-4 py-3">
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-xl px-4 py-3"
+              style={{ background: C.card }}
+            >
               <div>
-                <p className="text-white text-sm font-medium">{item.title}</p>
-                <p className="text-slate-500 text-xs mt-0.5">{item.by} · {item.time}</p>
+                <p className="text-sm font-medium" style={{ color: C.textPrimary }}>{item.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>{item.by} · {item.time}</p>
               </div>
               <div className="flex gap-2">
-                <button className="px-3 py-1.5 bg-green-500/15 text-green-400 text-xs rounded-lg hover:bg-green-500/25 transition-colors flex items-center gap-1">
+                <button
+                  className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1 transition-colors"
+                  style={{
+                    background: "oklch(0.60 0.15 150 / 0.15)",
+                    color: "oklch(0.72 0.13 150)",
+                  }}
+                >
                   <CheckCircle2 size={13} />
                   اعتماد
                 </button>
-                <button className="px-3 py-1.5 bg-red-500/15 text-red-400 text-xs rounded-lg hover:bg-red-500/25 transition-colors">
+                <button
+                  className="px-3 py-1.5 text-xs rounded-lg transition-colors"
+                  style={{
+                    background: "oklch(0.55 0.20 25 / 0.15)",
+                    color: "oklch(0.65 0.20 25)",
+                  }}
+                >
                   رفض
                 </button>
               </div>

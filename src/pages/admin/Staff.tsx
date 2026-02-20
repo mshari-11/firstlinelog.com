@@ -180,11 +180,11 @@ export default function AdminStaff() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">الأقسام والموظفين</h1>
-          <p className="text-slate-400 text-sm mt-0.5">إدارة الموظفين وتحديد صلاحياتهم</p>
+          <p className="text-blue-300/60 text-sm mt-0.5">إدارة الموظفين وتحديد صلاحياتهم</p>
         </div>
         <button
           onClick={() => activeTab === "staff" ? setShowAddModal(true) : setShowAddDeptModal(true)}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+          className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
         >
           <Plus size={16} />
           {activeTab === "staff" ? "إضافة موظف" : "إضافة قسم"}
@@ -199,7 +199,7 @@ export default function AdminStaff() {
           { label: "غير نشطين", value: staff.length - activeCount, color: "red", icon: ShieldOff },
           { label: "الأقسام", value: departments.length, color: "orange", icon: Building2 },
         ].map(k => (
-          <div key={k.label} className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50">
+          <div key={k.label} className="bg-blue-950/60 rounded-2xl p-4 border border-blue-700/30">
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3",
               k.color === "blue" && "bg-blue-500/15",
               k.color === "green" && "bg-green-500/15",
@@ -210,17 +210,17 @@ export default function AdminStaff() {
                 k.color === "blue" && "text-blue-400",
                 k.color === "green" && "text-green-400",
                 k.color === "red" && "text-red-400",
-                k.color === "orange" && "text-orange-400",
+                k.color === "orange" && "text-cyan-400",
               )} />
             </div>
             <p className="text-2xl font-bold text-white">{k.value}</p>
-            <p className="text-slate-400 text-xs mt-0.5">{k.label}</p>
+            <p className="text-blue-300/60 text-xs mt-0.5">{k.label}</p>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-800/50 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-blue-950/50 p-1 rounded-xl w-fit">
         {[
           { key: "staff", label: "الموظفون" },
           { key: "departments", label: "الأقسام" },
@@ -232,7 +232,7 @@ export default function AdminStaff() {
               "px-5 py-2 rounded-lg text-sm font-medium transition-all",
               activeTab === tab.key
                 ? "bg-orange-500 text-white shadow"
-                : "text-slate-400 hover:text-white"
+                : "text-blue-300/60 hover:text-white"
             )}
           >{tab.label}</button>
         ))}
@@ -250,7 +250,7 @@ export default function AdminStaff() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="بحث بالاسم أو القسم..."
-                className="w-full bg-slate-800/60 border border-slate-700/50 rounded-xl py-2.5 pr-9 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-orange-500/50"
+                className="w-full bg-blue-950/60 border border-blue-700/30 rounded-xl py-2.5 pr-9 pl-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
               />
             </div>
 
@@ -286,10 +286,10 @@ export default function AdminStaff() {
               />
             ) : (
               <div className="h-full bg-slate-800/40 rounded-2xl border border-slate-700/30 flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 bg-slate-700/50 rounded-2xl flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-blue-900/50 rounded-2xl flex items-center justify-center mb-4">
                   <Shield size={28} className="text-slate-500" />
                 </div>
-                <p className="text-slate-400 font-medium">اختر موظفاً</p>
+                <p className="text-blue-300/60 font-medium">اختر موظفاً</p>
                 <p className="text-slate-600 text-sm mt-1">لتعديل صلاحياته</p>
               </div>
             )}
@@ -332,14 +332,14 @@ function StaffCard({ member, selected, onClick, onToggleActive }: {
       className={cn(
         "p-4 rounded-xl border cursor-pointer transition-all",
         selected
-          ? "bg-orange-500/10 border-orange-500/40"
-          : "bg-slate-800/60 border-slate-700/40 hover:border-slate-600"
+          ? "bg-cyan-500/10 border-cyan-500/40"
+          : "bg-blue-950/60 border-slate-700/40 hover:border-slate-600"
       )}
     >
       <div className="flex items-start gap-3">
         <div className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0",
-          member.is_active ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white" : "bg-slate-700 text-slate-400"
+          member.is_active ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white" : "bg-slate-700 text-blue-300/60"
         )}>
           {member.name.charAt(0) || "م"}
         </div>
@@ -350,11 +350,11 @@ function StaffCard({ member, selected, onClick, onToggleActive }: {
               <span className="text-xs bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded-md">معطّل</span>
             )}
           </div>
-          <p className="text-slate-400 text-xs">{member.job_title_ar}</p>
+          <p className="text-blue-300/60 text-xs">{member.job_title_ar}</p>
           <p className="text-slate-500 text-xs">{member.department_name}</p>
         </div>
         <div className="text-left shrink-0">
-          <p className="text-orange-400 text-xs font-medium">{permCount} صلاحية</p>
+          <p className="text-cyan-400 text-xs font-medium">{permCount} صلاحية</p>
         </div>
       </div>
     </div>
@@ -374,14 +374,14 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
   const dept = departments.find(d => d.id === member.department_id);
 
   return (
-    <div className="bg-slate-800/60 rounded-2xl border border-slate-700/50 overflow-hidden">
+    <div className="bg-blue-950/60 rounded-2xl border border-blue-700/30 overflow-hidden">
       {/* رأس اللوحة */}
-      <div className="p-5 border-b border-slate-700/50 flex items-center gap-4">
+      <div className="p-5 border-b border-blue-700/30 flex items-center gap-4">
         <div className={cn(
           "w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold",
           member.is_active
             ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white"
-            : "bg-slate-700 text-slate-400"
+            : "bg-slate-700 text-blue-300/60"
         )}>
           {member.name.charAt(0)}
         </div>
@@ -395,17 +395,17 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
               {member.is_active ? "نشط" : "معطّل"}
             </span>
           </div>
-          <p className="text-slate-400 text-sm">{member.job_title_ar} {dept ? `• ${dept.name_ar}` : ""}</p>
+          <p className="text-blue-300/60 text-sm">{member.job_title_ar} {dept ? `• ${dept.name_ar}` : ""}</p>
           <p className="text-slate-500 text-xs">{member.email}</p>
         </div>
-        <button onClick={onClose} className="text-slate-500 hover:text-slate-300 p-1.5 rounded-lg hover:bg-slate-700 transition-colors">
+        <button onClick={onClose} className="text-slate-500 hover:text-blue-100 p-1.5 rounded-lg hover:bg-slate-700 transition-colors">
           <X size={16} />
         </button>
       </div>
 
       {/* أزرار سريعة */}
       <div className="px-5 py-3 border-b border-slate-700/40 flex items-center gap-3">
-        <p className="text-slate-400 text-sm flex-1">إدارة الصلاحيات</p>
+        <p className="text-blue-300/60 text-sm flex-1">إدارة الصلاحيات</p>
         <button
           onClick={onGrantAll}
           className="flex items-center gap-1.5 text-xs bg-green-500/15 hover:bg-green-500/25 text-green-400 px-3 py-1.5 rounded-lg transition-colors"
@@ -439,13 +439,13 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
       <div className="px-5 pb-5 grid grid-cols-2 gap-3">
         <div className="bg-slate-900/50 rounded-xl p-3">
           <p className="text-slate-500 text-xs mb-1">صلاحية الاعتماد</p>
-          <p className={cn("text-sm font-medium", member.can_approve ? "text-green-400" : "text-slate-400")}>
+          <p className={cn("text-sm font-medium", member.can_approve ? "text-green-400" : "text-blue-300/60")}>
             {member.can_approve ? `✓ نعم — حتى ${member.approval_limit?.toLocaleString("ar")} ر.س` : "✗ لا"}
           </p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-3">
           <p className="text-slate-500 text-xs mb-1">الصلاحيات الممنوحة</p>
-          <p className="text-orange-400 text-sm font-medium">
+          <p className="text-cyan-400 text-sm font-medium">
             {Object.values(member.permissions).filter(Boolean).length} / {ALL_PERMISSIONS.length}
           </p>
         </div>
@@ -468,9 +468,9 @@ function PermissionToggle({ perm, granted, onToggle }: {
     green:  "bg-green-500/15 text-green-400 border-green-500/30",
     yellow: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
     red:    "bg-red-500/15 text-red-400 border-red-500/30",
-    orange: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+    orange: "bg-orange-500/15 text-cyan-400 border-cyan-500/30",
     pink:   "bg-pink-500/15 text-pink-400 border-pink-500/30",
-    slate:  "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    slate:  "bg-slate-500/15 text-blue-300/60 border-slate-500/30",
   };
 
   return (
@@ -523,10 +523,10 @@ function DepartmentsTab({ departments, staff, showAddModal, onCloseAdd, onRefres
           {departments.map(dept => {
             const deptStaff = staff.filter(s => s.department_id === dept.id);
             return (
-              <div key={dept.id} className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5">
+              <div key={dept.id} className="bg-blue-950/60 border border-blue-700/30 rounded-2xl p-5">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 bg-orange-500/15 rounded-xl flex items-center justify-center shrink-0">
-                    <Building2 size={18} className="text-orange-400" />
+                    <Building2 size={18} className="text-cyan-400" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-white font-semibold">{dept.name_ar}</h3>
@@ -540,7 +540,7 @@ function DepartmentsTab({ departments, staff, showAddModal, onCloseAdd, onRefres
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400">{deptStaff.length} موظف</span>
+                  <span className="text-blue-300/60">{deptStaff.length} موظف</span>
                   <div className="flex -space-x-2 space-x-reverse">
                     {deptStaff.slice(0, 4).map(s => (
                       <div
@@ -552,7 +552,7 @@ function DepartmentsTab({ departments, staff, showAddModal, onCloseAdd, onRefres
                       </div>
                     ))}
                     {deptStaff.length > 4 && (
-                      <div className="w-7 h-7 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-slate-400">
+                      <div className="w-7 h-7 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-blue-300/60">
                         +{deptStaff.length - 4}
                       </div>
                     )}
@@ -649,11 +649,11 @@ function AddStaffModal({ departments, onClose, onSaved }: {
         <ModalField label="كلمة المرور" value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} type="password" span />
         <ModalField label="المسمى الوظيفي" value={form.job_title_ar} onChange={v => setForm(f => ({ ...f, job_title_ar: v }))} />
         <div>
-          <label className="text-slate-400 text-xs mb-1.5 block">القسم</label>
+          <label className="text-blue-300/60 text-xs mb-1.5 block">القسم</label>
           <select
             value={form.department_id}
             onChange={e => setForm(f => ({ ...f, department_id: e.target.value }))}
-            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500/50"
+            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
           >
             <option value="">— بدون قسم —</option>
             {departments.map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
@@ -667,7 +667,7 @@ function AddStaffModal({ departments, onClose, onSaved }: {
             onChange={e => setForm(f => ({ ...f, can_approve: e.target.checked }))}
             className="accent-orange-500 w-4 h-4"
           />
-          <label htmlFor="can_approve" className="text-slate-300 text-sm">صلاحية الاعتماد</label>
+          <label htmlFor="can_approve" className="text-blue-100 text-sm">صلاحية الاعتماد</label>
           {form.can_approve && (
             <ModalField
               label=""
@@ -680,11 +680,11 @@ function AddStaffModal({ departments, onClose, onSaved }: {
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-700 rounded-xl transition-colors">إلغاء</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm text-blue-300/60 hover:text-white border border-slate-700 rounded-xl transition-colors">إلغاء</button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-5 py-2 text-sm bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+          className="px-5 py-2 text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
         >
           {saving ? "جارٍ الحفظ..." : <><UserPlus size={15} /> إضافة موظف</>}
         </button>
@@ -719,21 +719,21 @@ function AddDepartmentModal({ onClose, onSaved }: { onClose: () => void; onSaved
         <ModalField label="اسم القسم بالعربية" value={form.name_ar} onChange={v => setForm(f => ({ ...f, name_ar: v }))} />
         <ModalField label="اسم القسم بالإنجليزية" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} />
         <div>
-          <label className="text-slate-400 text-xs mb-1.5 block">الوصف</label>
+          <label className="text-blue-300/60 text-xs mb-1.5 block">الوصف</label>
           <textarea
             value={form.description}
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
             rows={3}
-            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500/50 resize-none"
+            className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan-500/50 resize-none"
           />
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-700 rounded-xl transition-colors">إلغاء</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm text-blue-300/60 hover:text-white border border-slate-700 rounded-xl transition-colors">إلغاء</button>
         <button
           onClick={handleSave}
           disabled={saving || !form.name_ar}
-          className="px-5 py-2 text-sm bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl font-medium transition-colors"
+          className="px-5 py-2 text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-white rounded-xl font-medium transition-colors"
         >
           {saving ? "جارٍ الحفظ..." : "إضافة القسم"}
         </button>
@@ -766,13 +766,13 @@ function ModalField({ label, value, onChange, type = "text", span = false, place
 }) {
   return (
     <div className={span ? "col-span-2" : ""}>
-      {label && <label className="text-slate-400 text-xs mb-1.5 block">{label}</label>}
+      {label && <label className="text-blue-300/60 text-xs mb-1.5 block">{label}</label>}
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-orange-500/50"
+        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
       />
     </div>
   );
@@ -781,14 +781,14 @@ function ModalField({ label, value, onChange, type = "text", span = false, place
 function EmptyStaff({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="text-center py-12 bg-slate-800/30 rounded-2xl border border-slate-700/30">
-      <div className="w-14 h-14 bg-slate-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <div className="w-14 h-14 bg-blue-900/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
         <Users size={24} className="text-slate-500" />
       </div>
-      <p className="text-slate-400 font-medium mb-1">لا يوجد موظفون</p>
+      <p className="text-blue-300/60 font-medium mb-1">لا يوجد موظفون</p>
       <p className="text-slate-600 text-sm mb-4">ابدأ بإضافة أول موظف</p>
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm mx-auto transition-colors"
+        className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-sm mx-auto transition-colors"
       >
         <UserPlus size={15} /> إضافة موظف
       </button>

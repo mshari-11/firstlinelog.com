@@ -1,5 +1,5 @@
 /**
- * تخطيط لوحة الإدارة - يحتوي الشريط الجانبي والمحتوى
+ * تخطيط لوحة الإدارة - بهوية فيرست لاين
  */
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -18,10 +18,35 @@ export function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
-          <p className="text-slate-500 text-sm">جارٍ التحميل...</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "oklch(0.10 0.06 220)" }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          {/* شعار */}
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-2"
+            style={{ background: "oklch(0.18 0.08 220)" }}
+          >
+            <img
+              src="/images/first_line_professional_english_1.png"
+              alt="FL"
+              className="w-10 h-10 object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+          <div
+            className="w-8 h-8 rounded-full border-2 animate-spin"
+            style={{
+              borderColor: "oklch(0.65 0.18 200 / 0.3)",
+              borderTopColor: "oklch(0.65 0.18 200)",
+            }}
+          />
+          <p className="text-sm" style={{ color: "oklch(0.55 0.06 210)" }}>
+            جارٍ التحميل...
+          </p>
         </div>
       </div>
     );
@@ -30,9 +55,12 @@ export function AdminLayout() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex" dir="rtl">
+    <div
+      className="min-h-screen flex page-with-logo-bg"
+      dir="rtl"
+      style={{ background: "oklch(0.10 0.06 220)" }}
+    >
       <AdminSidebar />
-      {/* المحتوى الرئيسي - مع هامش للشريط الجانبي */}
       <main className="flex-1 mr-64 min-h-screen overflow-x-hidden">
         <Outlet />
       </main>

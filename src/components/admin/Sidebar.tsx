@@ -1,5 +1,5 @@
 /**
- * الشريط الجانبي لوحة الإدارة
+ * الشريط الجانبي لوحة الإدارة - بهوية فيرست لاين
  */
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
@@ -22,6 +22,19 @@ const navItems = [
   { label: "الإعدادات", icon: Settings, path: "/admin/settings" },
 ];
 
+// ألوان هوية فيرست لاين
+const C = {
+  bg: "oklch(0.12 0.06 220)",
+  bgCard: "oklch(0.16 0.05 220 / 0.6)",
+  border: "1px solid oklch(0.22 0.05 210 / 0.5)",
+  cyan: "oklch(0.65 0.18 200)",
+  cyanBg: "oklch(0.60 0.18 200 / 0.12)",
+  textPrimary: "oklch(0.92 0.02 220)",
+  textMuted: "oklch(0.55 0.06 210)",
+  textNav: "oklch(0.60 0.04 220)",
+  hover: "oklch(0.18 0.05 220)",
+};
+
 export function AdminSidebar() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -39,16 +52,32 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="fixed right-0 top-0 h-full w-64 bg-slate-900 border-l border-slate-800 flex flex-col z-50" dir="rtl">
+    <aside
+      className="fixed right-0 top-0 h-full w-64 flex flex-col z-50"
+      dir="rtl"
+      style={{ background: C.bg, borderLeft: C.border }}
+    >
       {/* الشعار */}
-      <div className="p-5 border-b border-slate-800">
+      <div className="p-5" style={{ borderBottom: C.border }}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">FL</span>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "oklch(0.20 0.09 220)" }}
+          >
+            <img
+              src="/images/first_line_professional_english_1.png"
+              alt="FL"
+              className="w-8 h-8 object-contain opacity-90"
+              onError={(e) => {
+                const el = e.target as HTMLImageElement;
+                el.style.display = "none";
+                el.parentElement!.innerHTML = '<span style="color:oklch(0.65 0.18 200);font-weight:700;font-size:13px">FL</span>';
+              }}
+            />
           </div>
           <div>
-            <p className="text-white font-semibold text-sm leading-tight">فيرست لاين</p>
-            <p className="text-slate-500 text-xs">لوحة الإدارة</p>
+            <p className="font-bold text-sm" style={{ color: C.textPrimary }}>فيرست لاين</p>
+            <p className="text-xs" style={{ color: C.textMuted }}>لوحة الإدارة</p>
           </div>
         </div>
       </div>
@@ -59,46 +88,92 @@ export function AdminSidebar() {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 group",
-                isActive
-                  ? "bg-orange-500/15 text-orange-400 font-medium"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-              )
+            style={({ isActive }) =>
+              isActive
+                ? { background: C.cyanBg, color: C.cyan, fontWeight: 600, display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", fontSize: "14px", transition: "all 0.15s" }
+                : { color: C.textNav, display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", fontSize: "14px", transition: "all 0.15s" }
             }
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              if (!el.style.fontWeight || el.style.fontWeight !== "600") {
+                el.style.background = C.hover;
+                el.style.color = C.textPrimary;
+              }
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              if (el.style.fontWeight !== "600") {
+                el.style.background = "transparent";
+                el.style.color = C.textNav;
+              }
+            }}
           >
-            <item.icon size={18} className="shrink-0" />
-            <span className="flex-1">{item.label}</span>
-            <ChevronRight size={14} className="opacity-0 group-hover:opacity-50 -rotate-180 transition-all" />
+            <item.icon size={18} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>{item.label}</span>
+            <ChevronRight size={14} style={{ opacity: 0.3, transform: "rotate(180deg)" }} />
           </NavLink>
         ))}
       </nav>
 
-      {/* معلومات المستخدم */}
-      <div className="p-3 border-t border-slate-800 space-y-2">
+      {/* أسفل السايدبار */}
+      <div className="p-3 space-y-2" style={{ borderTop: C.border }}>
         {/* التنبيهات */}
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 text-sm transition-all">
+        <button
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all"
+          style={{ color: C.textNav }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = C.hover;
+            (e.currentTarget as HTMLElement).style.color = C.textPrimary;
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+            (e.currentTarget as HTMLElement).style.color = C.textNav;
+          }}
+        >
           <Bell size={18} />
           <span>التنبيهات</span>
-          <span className="mr-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">3</span>
+          <span
+            className="mr-auto text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+            style={{ background: C.cyan, color: "oklch(0.10 0.08 220)" }}
+          >
+            3
+          </span>
         </button>
 
         {/* المستخدم */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800/50">
-          <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">
-              {user?.full_name?.charAt(0) || "A"}
+        <div
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+          style={{ background: C.bgCard }}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, oklch(0.65 0.18 200), oklch(0.45 0.15 220))" }}
+          >
+            <span className="text-xs font-bold" style={{ color: "oklch(0.10 0.08 220)" }}>
+              {user?.full_name?.charAt(0) || "م"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">{user?.full_name || "المدير"}</p>
-            <p className="text-slate-500 text-xs">{roleLabel[user?.role || "admin"]}</p>
+            <p className="text-xs font-semibold truncate" style={{ color: C.textPrimary }}>
+              {user?.full_name || "المدير"}
+            </p>
+            <p className="text-xs" style={{ color: C.textMuted }}>
+              {roleLabel[user?.role || "admin"]}
+            </p>
           </div>
           <button
             onClick={handleSignOut}
-            className="text-slate-500 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10"
+            className="p-1 rounded-lg transition-all"
+            style={{ color: "oklch(0.50 0.04 220)" }}
             title="تسجيل الخروج"
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "oklch(0.65 0.20 25)";
+              (e.currentTarget as HTMLElement).style.background = "oklch(0.55 0.20 25 / 0.1)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "oklch(0.50 0.04 220)";
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+            }}
           >
             <LogOut size={15} />
           </button>

@@ -144,7 +144,7 @@ export default function Finance() {
     { label: "في الانتظار",  value: formatCurrency(stats.totalPending),  count: stats.pendingCount,  color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20", icon: Clock },
     { label: "موافق عليه",   value: formatCurrency(stats.totalApproved), count: stats.approvedCount, color: "text-blue-400",   bg: "bg-blue-400/10",   border: "border-blue-400/20",   icon: CheckCircle2 },
     { label: "مدفوع",        value: formatCurrency(stats.totalPaid),     count: stats.paidCount,     color: "text-green-400", bg: "bg-green-400/10",  border: "border-green-400/20",  icon: Wallet },
-    { label: "إجمالي الفترة", value: formatCurrency(stats.totalPending + stats.totalApproved + stats.totalPaid), count: records.length, color: "text-orange-400", bg: "bg-orange-400/10", border: "border-orange-400/20", icon: DollarSign },
+    { label: "إجمالي الفترة", value: formatCurrency(stats.totalPending + stats.totalApproved + stats.totalPaid), count: records.length, color: "text-cyan-400", bg: "bg-orange-400/10", border: "border-orange-400/20", icon: DollarSign },
   ];
 
   return (
@@ -153,17 +153,17 @@ export default function Finance() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">المالية والرواتب</h1>
-          <p className="text-slate-400 mt-1">إدارة مستحقات المناديب والمدفوعات</p>
+          <p className="text-blue-300/60 mt-1">إدارة مستحقات المناديب والمدفوعات</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchFinanceData}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-blue-100 rounded-lg transition-colors text-sm"
           >
             <RefreshCw size={14} />
             تحديث
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors text-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg transition-colors text-sm">
             <Plus size={14} />
             إضافة سجل
           </button>
@@ -175,7 +175,7 @@ export default function Finance() {
         {kpis.map((k) => (
           <div key={k.label} className={`bg-slate-800 border ${k.border} rounded-xl p-5`}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-slate-400 text-sm">{k.label}</span>
+              <span className="text-blue-300/60 text-sm">{k.label}</span>
               <div className={`${k.bg} p-2 rounded-lg`}>
                 <k.icon size={16} className={k.color} />
               </div>
@@ -191,13 +191,13 @@ export default function Finance() {
         <div className="flex flex-wrap items-center gap-4">
           {/* البحث */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300/60" />
             <input
               type="text"
               placeholder="ابحث عن مندوب..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg pr-9 pl-4 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-orange-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg pr-9 pl-4 py-2 text-sm text-white placeholder-blue-400/50 focus:outline-none focus:border-cyan-500"
             />
           </div>
 
@@ -210,7 +210,7 @@ export default function Finance() {
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   statusFilter === s
                     ? "bg-orange-500 text-white"
-                    : "bg-slate-700 text-slate-400 hover:text-white"
+                    : "bg-slate-700 text-blue-300/60 hover:text-white"
                 }`}
               >
                 {s === "all" ? "الكل" : statusConfig[s].label}
@@ -218,7 +218,7 @@ export default function Finance() {
             ))}
           </div>
 
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm mr-auto">
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-blue-100 rounded-lg transition-colors text-sm mr-auto">
             <Download size={14} />
             تصدير
           </button>
@@ -229,10 +229,10 @@ export default function Finance() {
       <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-20 text-blue-300/60">
             <DollarSign size={40} className="mb-3 opacity-30" />
             <p>لا توجد سجلات مالية</p>
           </div>
@@ -241,13 +241,13 @@ export default function Finance() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-700 bg-slate-900/50">
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">المندوب</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">الفترة</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">الإيراد الإجمالي</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">الخصومات</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">صافي الراتب</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">الحالة</th>
-                  <th className="text-right text-slate-400 text-xs font-medium px-4 py-3">إجراءات</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">المندوب</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">الفترة</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">الإيراد الإجمالي</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">الخصومات</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">صافي الراتب</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">الحالة</th>
+                  <th className="text-right text-blue-300/60 text-xs font-medium px-4 py-3">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,17 +259,17 @@ export default function Finance() {
                   const StatusIcon = status.icon;
 
                   return (
-                    <tr key={record.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                    <tr key={record.id} className="border-b border-blue-700/30 hover:bg-blue-900/30 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-400 font-bold text-sm">
+                          <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400 font-bold text-sm">
                             {record.courier_name?.charAt(0) || "؟"}
                           </div>
                           <span className="text-white text-sm font-medium">{record.courier_name}</span>
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="text-slate-300 text-sm">{formatDate(record.period_start)}</div>
+                        <div className="text-blue-100 text-sm">{formatDate(record.period_start)}</div>
                         <div className="text-slate-500 text-xs">حتى {formatDate(record.period_end)}</div>
                       </td>
                       <td className="px-4 py-4">
@@ -294,7 +294,7 @@ export default function Finance() {
                             className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
                             title="عرض التفاصيل"
                           >
-                            <Eye size={14} className="text-slate-300" />
+                            <Eye size={14} className="text-blue-100" />
                           </button>
                           {record.payment_status === "pending" && (
                             <button
@@ -333,13 +333,13 @@ export default function Finance() {
             <div className="flex items-center justify-between p-6 border-b border-slate-700">
               <div>
                 <h3 className="text-lg font-bold text-white">{selectedRecord.courier_name}</h3>
-                <p className="text-slate-400 text-sm mt-0.5">
+                <p className="text-blue-300/60 text-sm mt-0.5">
                   {formatDate(selectedRecord.period_start)} — {formatDate(selectedRecord.period_end)}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-slate-400"
+                className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-blue-300/60"
               >
                 <XCircle size={18} />
               </button>
@@ -350,14 +350,14 @@ export default function Finance() {
               {/* الإيرادات */}
               <div className="bg-green-400/5 border border-green-400/20 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">الإيراد الإجمالي</span>
+                  <span className="text-blue-300/60 text-sm">الإيراد الإجمالي</span>
                   <span className="text-green-400 font-bold">{formatCurrency(selectedRecord.gross_revenue)}</span>
                 </div>
               </div>
 
               {/* الخصومات */}
               <div className="bg-slate-700/40 rounded-xl p-4 space-y-2.5">
-                <h4 className="text-slate-400 text-xs font-medium mb-3 flex items-center gap-2">
+                <h4 className="text-blue-300/60 text-xs font-medium mb-3 flex items-center gap-2">
                   <TrendingDown size={12} className="text-red-400" />
                   الخصومات
                 </h4>
@@ -370,7 +370,7 @@ export default function Finance() {
                   { label: "خصومات أخرى",   value: selectedRecord.other_deductions },
                 ].filter(d => d.value > 0).map(d => (
                   <div key={d.label} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">{d.label}</span>
+                    <span className="text-blue-300/60">{d.label}</span>
                     <span className="text-red-400">- {formatCurrency(d.value)}</span>
                   </div>
                 ))}
@@ -379,14 +379,14 @@ export default function Finance() {
               {/* صافي الراتب */}
               <div className="bg-orange-400/10 border border-orange-400/20 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300 font-medium">صافي المستحق</span>
-                  <span className="text-orange-400 font-bold text-xl">{formatCurrency(selectedRecord.net_payout)}</span>
+                  <span className="text-blue-100 font-medium">صافي المستحق</span>
+                  <span className="text-cyan-400 font-bold text-xl">{formatCurrency(selectedRecord.net_payout)}</span>
                 </div>
               </div>
 
               {/* الحالة والملاحظات */}
               {selectedRecord.notes && (
-                <div className="text-slate-400 text-sm bg-slate-700/30 rounded-lg p-3">
+                <div className="text-blue-300/60 text-sm bg-blue-900/30 rounded-lg p-3">
                   <span className="text-slate-500 text-xs block mb-1">ملاحظات</span>
                   {selectedRecord.notes}
                 </div>
@@ -420,7 +420,7 @@ export default function Finance() {
                 )}
                 <button
                   onClick={() => setSelectedRecord(null)}
-                  className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm transition-colors"
+                  className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-blue-100 rounded-lg text-sm transition-colors"
                 >
                   إغلاق
                 </button>

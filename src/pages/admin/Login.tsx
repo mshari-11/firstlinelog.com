@@ -18,9 +18,9 @@ type Screen = "login" | "register" | "forgot" | "otp" | "success";
 /* ─── ألوان الخلفية الديكورية ─── */
 const BG = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    <div className="absolute -top-60 -right-60 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl" />
-    <div className="absolute -bottom-60 -left-60 w-96 h-96 bg-orange-600/8 rounded-full blur-3xl" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-700/20 rounded-full blur-3xl" />
+    <div className="absolute -top-60 -right-60 w-96 h-96 bg-cyan-500/8 rounded-full blur-3xl" />
+    <div className="absolute -bottom-60 -left-60 w-96 h-96 bg-cyan-600/8 rounded-full blur-3xl" />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-3xl" />
   </div>
 );
 
@@ -36,18 +36,18 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm text-slate-300 font-medium">{label}</label>
+      <label htmlFor={id} className="block text-sm text-blue-100 font-medium">{label}</label>
       <div className="relative">
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300/60">
           <Icon size={17} />
         </div>
         <input
           id={id} type={type} value={value} autoComplete={autoComplete}
           onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          className={`w-full h-11 bg-slate-800/70 border rounded-xl text-white text-sm
-            placeholder:text-slate-600 pr-10 pl-4 outline-none transition-all
-            focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500
-            ${error ? "border-red-500/60" : "border-slate-700/80"}`}
+          className={`w-full h-11 bg-blue-950/70 border rounded-xl text-white text-sm
+            placeholder:text-blue-300/40 pr-10 pl-4 outline-none transition-all
+            focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400
+            ${error ? "border-red-500/60" : "border-blue-700/40"}`}
         />
         {rightSlot && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2">{rightSlot}</div>
@@ -78,8 +78,8 @@ function Btn({ children, loading, disabled, onClick, type = "submit", variant = 
     <button type={type} disabled={loading || disabled} onClick={onClick}
       className={`w-full h-11 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50
         ${variant === "primary"
-          ? "bg-orange-500 hover:bg-orange-400 text-white shadow-lg shadow-orange-500/20"
-          : "bg-slate-700/60 hover:bg-slate-700 text-slate-300 border border-slate-600/60"}`}>
+          ? "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20"
+          : "bg-slate-700/60 hover:bg-slate-700 text-blue-100 border border-slate-600/60"}`}>
       {loading
         ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/><span>يرجى الانتظار...</span></>
         : children}
@@ -198,22 +198,22 @@ export default function AdminLogin() {
 
   /* ════════════════ RENDER ════════════════ */
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-[oklch(0.10_0.06_220)] flex items-center justify-center p-4" dir="rtl">
       <BG />
 
       <div className="relative w-full max-w-md">
 
         {/* ── الشعار ── */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mb-3 shadow-xl shadow-orange-500/30">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl mb-3 shadow-xl shadow-cyan-500/30">
             <span className="text-white font-black text-xl tracking-tight">FL</span>
           </div>
           <h1 className="text-xl font-bold text-white">First Line Logistics</h1>
-          <p className="text-slate-500 text-xs mt-0.5">لوحة إدارة المناديب</p>
+          <p className="text-blue-300/60 text-xs mt-0.5">لوحة إدارة المناديب</p>
         </div>
 
         {/* ── البطاقة ── */}
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-7 shadow-2xl">
+        <div className="bg-blue-950/50 backdrop-blur-xl border border-blue-700/30 rounded-2xl p-7 shadow-2xl">
 
           {/* ════ شاشة تسجيل الدخول ════ */}
           {screen === "login" && (
@@ -229,7 +229,7 @@ export default function AdminLogin() {
                   icon={Lock} autoComplete="current-password"
                   rightSlot={
                     <button type="button" onClick={() => setShowPass(!showPass)}
-                      className="text-slate-500 hover:text-slate-300 transition-colors">
+                      className="text-blue-300/60 hover:text-blue-100 transition-colors">
                       {showPass ? <EyeOff size={17}/> : <Eye size={17}/>}
                     </button>
                   }
@@ -237,7 +237,7 @@ export default function AdminLogin() {
 
                 <div className="flex justify-end">
                   <button type="button" onClick={() => go("forgot")}
-                    className="text-xs text-orange-400 hover:text-orange-300 transition-colors">
+                    className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
                     نسيت كلمة المرور؟
                   </button>
                 </div>
@@ -249,11 +249,11 @@ export default function AdminLogin() {
                 </Btn>
               </form>
 
-              <div className="mt-4 pt-4 border-t border-slate-700/50 text-center">
-                <p className="text-xs text-slate-500">
+              <div className="mt-4 pt-4 border-t border-blue-700/30 text-center">
+                <p className="text-xs text-blue-300/60">
                   ليس لديك حساب؟{" "}
                   <button onClick={() => go("register")}
-                    className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
+                    className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
                     إنشاء حساب جديد
                   </button>
                 </p>
@@ -266,7 +266,7 @@ export default function AdminLogin() {
             <>
               <div className="flex items-center gap-2 mb-6">
                 <button onClick={() => go("login")}
-                  className="text-slate-500 hover:text-white transition-colors">
+                  className="text-blue-300/60 hover:text-white transition-colors">
                   <ArrowRight size={18}/>
                 </button>
                 <h2 className="text-base font-semibold text-white">إنشاء حساب جديد</h2>
@@ -290,7 +290,7 @@ export default function AdminLogin() {
                   placeholder="8 أحرف على الأقل" icon={Lock}
                   rightSlot={
                     <button type="button" onClick={() => setShowRegPass(!showRegPass)}
-                      className="text-slate-500 hover:text-slate-300 transition-colors">
+                      className="text-blue-300/60 hover:text-blue-100 transition-colors">
                       {showRegPass ? <EyeOff size={17}/> : <Eye size={17}/>}
                     </button>
                   }
@@ -313,7 +313,7 @@ export default function AdminLogin() {
                 </Btn>
               </form>
 
-              <p className="text-xs text-slate-600 text-center mt-4">
+              <p className="text-xs text-blue-300/40 text-center mt-4">
                 بالتسجيل أنت توافق على سياسة الخصوصية وشروط الاستخدام
               </p>
             </>
@@ -324,15 +324,15 @@ export default function AdminLogin() {
             <>
               <div className="flex items-center gap-2 mb-6">
                 <button onClick={() => go("login")}
-                  className="text-slate-500 hover:text-white transition-colors">
+                  className="text-blue-300/60 hover:text-white transition-colors">
                   <ArrowRight size={18}/>
                 </button>
                 <h2 className="text-base font-semibold text-white">استعادة كلمة المرور</h2>
               </div>
 
-              <div className="bg-slate-700/30 rounded-xl p-4 mb-5 flex gap-3">
-                <KeyRound size={18} className="text-orange-400 shrink-0 mt-0.5"/>
-                <p className="text-slate-400 text-xs leading-relaxed">
+              <div className="bg-blue-900/30 rounded-xl p-4 mb-5 flex gap-3">
+                <KeyRound size={18} className="text-cyan-400 shrink-0 mt-0.5"/>
+                <p className="text-blue-200/70 text-xs leading-relaxed">
                   أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق لإعادة تعيين كلمة المرور.
                 </p>
               </div>
@@ -359,24 +359,24 @@ export default function AdminLogin() {
           {screen === "otp" && (
             <>
               <div className="text-center mb-6">
-                <div className="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <ShieldCheck size={26} className="text-orange-400"/>
+                <div className="w-14 h-14 bg-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <ShieldCheck size={26} className="text-cyan-400"/>
                 </div>
                 <h2 className="text-base font-semibold text-white">أدخل رمز التحقق</h2>
-                <p className="text-slate-500 text-xs mt-1">
-                  أُرسل رمز إلى <span className="text-orange-400">{forgotEmail}</span>
+                <p className="text-blue-300/60 text-xs mt-1">
+                  أُرسل رمز إلى <span className="text-cyan-400">{forgotEmail}</span>
                 </p>
               </div>
 
               <form onSubmit={handleOtp} className="space-y-4">
                 {/* حقل OTP الكبير */}
                 <div className="space-y-1.5">
-                  <label className="block text-sm text-slate-300 font-medium">رمز التحقق (6 أرقام)</label>
+                  <label className="block text-sm text-blue-100 font-medium">رمز التحقق (6 أرقام)</label>
                   <input
                     type="text" inputMode="numeric" maxLength={6}
                     value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ""))}
                     placeholder="_ _ _ _ _ _"
-                    className="w-full h-14 bg-slate-800/70 border border-slate-700/80 rounded-xl text-white text-2xl font-mono text-center tracking-[0.5em] outline-none transition-all focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500"
+                    className="w-full h-14 bg-blue-950/70 border border-blue-700/40 rounded-xl text-white text-2xl font-mono text-center tracking-[0.5em] outline-none transition-all focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400"
                   />
                 </div>
 
@@ -389,12 +389,12 @@ export default function AdminLogin() {
                 {/* إعادة إرسال */}
                 <div className="text-center">
                   {otpCooldown > 0 ? (
-                    <p className="text-xs text-slate-500">
-                      إعادة الإرسال بعد <span className="text-orange-400 font-mono">{otpCooldown}s</span>
+                    <p className="text-xs text-blue-300/60">
+                      إعادة الإرسال بعد <span className="text-cyan-400 font-mono">{otpCooldown}s</span>
                     </p>
                   ) : (
                     <button type="button" onClick={resendOtp}
-                      className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1 mx-auto transition-colors">
+                      className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mx-auto transition-colors">
                       <RefreshCw size={12}/> إعادة إرسال الرمز
                     </button>
                   )}
@@ -410,14 +410,14 @@ export default function AdminLogin() {
                 <CheckCircle2 size={32} className="text-green-400"/>
               </div>
               <h2 className="text-lg font-semibold text-white mb-2">تم إنشاء الحساب!</h2>
-              <p className="text-slate-400 text-sm mb-1">
+              <p className="text-blue-200/70 text-sm mb-1">
                 تحقق من بريدك الإلكتروني لتفعيل الحساب.
               </p>
-              <p className="text-slate-500 text-xs mb-6">
+              <p className="text-blue-300/60 text-xs mb-6">
                 {regEmail}
               </p>
               <button onClick={() => go("login")}
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white text-sm font-medium px-6 py-2.5 rounded-xl transition-colors">
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-medium px-6 py-2.5 rounded-xl transition-colors">
                 <LogIn size={15}/> الذهاب لتسجيل الدخول
               </button>
             </div>
@@ -449,13 +449,13 @@ function PasswordStrength({ password }: { password: string }) {
     <div className="space-y-2">
       <div className="flex gap-1">
         {[1,2,3,4].map(i => (
-          <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= score ? colors[score] : "bg-slate-700"}`}/>
+          <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= score ? colors[score] : "bg-blue-800"}`}/>
         ))}
       </div>
       <div className="flex items-center justify-between">
         <div className="flex flex-wrap gap-x-3 gap-y-1">
           {checks.map(c => (
-            <span key={c.label} className={`text-xs flex items-center gap-1 ${c.pass ? "text-green-400" : "text-slate-600"}`}>
+            <span key={c.label} className={`text-xs flex items-center gap-1 ${c.pass ? "text-green-400" : "text-blue-300/40"}`}>
               <span>{c.pass ? "✓" : "○"}</span>{c.label}
             </span>
           ))}

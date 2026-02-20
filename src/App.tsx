@@ -24,25 +24,26 @@ import AdminLogin from "@/pages/admin/Login";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminFinance from "@/pages/admin/Finance";
 import AdminStaff from "@/pages/admin/Staff";
+import AdminCouriers from "@/pages/admin/Couriers";
+import AdminOrders from "@/pages/admin/Orders";
+import AdminExcel from "@/pages/admin/Excel";
+import AdminComplaints from "@/pages/admin/Complaints";
+import AdminVehicles from "@/pages/admin/Vehicles";
 
-/**
- * إعداد عميل TanStack Query لإدارة حالات البيانات
- */
+// Courier
+import CourierRegister from "@/pages/courier/Register";
+import CourierPortal from "@/pages/courier/Portal";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 دقائق
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-/**
- * المكون الرئيسي للتطبيق (App)
- * يدير التوجيه (Routing) وموفري الحالة (Providers) لموقع فيرست لاين لوجستيكس
- * يدعم اللغة العربية ونظام RTL بشكل كامل
- */
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -62,25 +63,57 @@ export default function App() {
             <Route element={<Layout><JoinUs /></Layout>} path={ROUTE_PATHS.JOIN_US} />
             <Route element={<Layout><Contact /></Layout>} path={ROUTE_PATHS.CONTACT} />
 
-            {/* ===== لوحة الإدارة ===== */}
+            {/* ===== تسجيل دخول الإدارة ===== */}
             <Route path="/admin/login" element={
               <AuthProvider>
                 <AdminLogin />
               </AuthProvider>
             } />
+
+            {/* ===== تسجيل المناديب ===== */}
+            <Route path="/courier/register" element={<CourierRegister />} />
+
+            {/* ===== بوابة المندوب ===== */}
+            <Route path="/courier/portal" element={
+              <AuthProvider>
+                <CourierPortal />
+              </AuthProvider>
+            } />
+
+            {/* ===== لوحة الإدارة ===== */}
             <Route path="/admin" element={
               <AuthProvider>
                 <AdminLayout />
               </AuthProvider>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="couriers" element={
+                <PermissionGuard permission="couriers">
+                  <AdminCouriers />
+                </PermissionGuard>
+              } />
+              <Route path="orders" element={
+                <PermissionGuard permission="orders">
+                  <AdminOrders />
+                </PermissionGuard>
+              } />
+              <Route path="excel" element={
+                <PermissionGuard permission="excel">
+                  <AdminExcel />
+                </PermissionGuard>
+              } />
               <Route path="finance" element={
                 <PermissionGuard permission="finance">
                   <AdminFinance />
                 </PermissionGuard>
               } />
+              <Route path="complaints" element={
+                <PermissionGuard permission="complaints">
+                  <AdminComplaints />
+                </PermissionGuard>
+              } />
+              <Route path="vehicles" element={<AdminVehicles />} />
               <Route path="staff" element={<AdminStaff />} />
-              {/* صفحات أخرى تضاف هنا */}
             </Route>
 
             {/* fallback */}

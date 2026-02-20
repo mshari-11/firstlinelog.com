@@ -3,7 +3,7 @@
  * تدعم: تسجيل دخول | إنشاء حساب | نسيت كلمة المرور | OTP
  */
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
@@ -133,7 +133,22 @@ export default function AdminLogin() {
     setError(""); setLoading(true);
     const res = await signIn(email, password);
     if (res.error) { setError(res.error); setLoading(false); }
-    else navigate("/admin/dashboard");
+    else {
+      // التوجيه حسب الدور
+      const { data: { user: authUser } } = await supabase!.auth.getUser();
+      if (authUser) {
+        const { data: profile } = await supabase!
+          .from("users_2026_02_17_21_00")
+          .select("role")
+          .eq("id", authUser.id)
+          .single();
+        if (profile?.role === "courier") {
+          navigate("/courier/portal");
+          return;
+        }
+      }
+      navigate("/admin/dashboard");
+    }
   }
 
   /* ══ إنشاء حساب ══ */
@@ -256,6 +271,13 @@ export default function AdminLogin() {
                     className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
                     إنشاء حساب جديد
                   </button>
+                </p>
+                <p className="text-xs text-blue-300/60 mt-2">
+                  مندوب توصيل؟{" "}
+                  <Link to="/courier/register"
+                    className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+                    سجّل كمندوب جديد
+                  </Link>
                 </p>
               </div>
             </>

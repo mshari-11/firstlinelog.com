@@ -1,7 +1,8 @@
 /**
  * صفحة إدارة الطلبات
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import {
   Package, Search, Filter, Clock, CheckCircle2,
   XCircle, Bike, MapPin, Phone, MoreVertical,
@@ -39,14 +40,48 @@ const mockOrders: Order[] = [
   { id: "#10234", courier_name: "أحمد محمد", platform: "مرسول", customer_name: "سلمى الشريف", customer_phone: "0509998877", address: "الرياض، حي السلام", status: "returned", amount: 40, created_at: "11:55" },
 ];
 
-const platforms = ["الكل", "جاهز", "مرسول", "نون", "صاحب", "Shopify"];
+const platforms = ["الكل", "jahez", "hungerstation", "toyor", "marsool", "mrsool", "noon", "amazon"];
+const platformLabels: Record<string, string> = {
+  "الكل": "الكل", jahez: "جاهز", hungerstation: "هنقرستيشن",
+  toyor: "طيور", marsool: "مرسول", mrsool: "مرسول برو",
+  noon: "نون", amazon: "أمازون"
+};
 
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("الكل");
+  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = mockOrders.filter((o) => {
+  useEffect(() => {
+    async function fetchOrders() {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`*, couriers(full_name)`)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (!error && data && data.length > 0) {
+        const mapped = data.map((o: any) => ({
+          id: `#${o.id}`,
+          courier_name: o.couriers?.full_name || "غير محدد",
+          platform: o.platform,
+          customer_name: o.customer_name || "غير محدد",
+          customer_phone: o.customer_phone || "",
+          address: o.delivery_address || "",
+          status: o.status,
+          amount: o.amount || 0,
+          created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+        }));
+        setOrders(mapped);
+      }
+      setLoading(false);
+    }
+    fetchOrders();
+  }, []);
+
+  const filtered = orders.filter((o) => {
     const matchSearch = o.id.includes(search) || o.courier_name.includes(search) || o.customer_name.includes(search);
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     const matchPlatform = platformFilter === "الكل" || o.platform === platformFilter;
@@ -54,10 +89,10 @@ export default function AdminOrders() {
   });
 
   const stats = {
-    total: mockOrders.length,
-    delivered: mockOrders.filter((o) => o.status === "delivered").length,
-    active: mockOrders.filter((o) => ["pending", "picked_up", "on_way"].includes(o.status)).length,
-    failed: mockOrders.filter((o) => o.status === "failed" || o.status === "returned").length,
+    total: orders.length,
+    delivered: orders.filter((o) => o.status === "delivered").length,
+    active: orders.filter((o) => ["pending", "picked_up", "on_way"].includes(o.status)).length,
+    failed: orders.filter((o) => o.status === "failed" || o.status === "returned").length,
   };
 
   return (

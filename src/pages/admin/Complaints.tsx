@@ -1,7 +1,8 @@
 /**
  * صفحة الشكاوى والطلبات
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import {
   MessageSquare, Search, AlertCircle, CheckCircle2,
   Clock, XCircle, ChevronDown, Send, User, Tag
@@ -53,8 +54,34 @@ export default function AdminComplaints() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [selected, setSelected] = useState<Complaint | null>(null);
   const [reply, setReply] = useState("");
+  const [complaints, setComplaints] = useState<Complaint[]>(mockComplaints);
 
-  const filtered = mockComplaints.filter((c) => {
+  useEffect(() => {
+    async function fetchComplaints() {
+      const { data, error } = await supabase
+        .from("complaints_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        const mapped = data.map((c: any) => ({
+          id: c.id,
+          type: c.request_type || "complaint",
+          title: c.subject || "بدون عنوان",
+          description: c.description || "",
+          courier_name: c.submitted_by || "غير محدد",
+          status: c.status || "open",
+          priority: c.priority || "medium",
+          created_at: new Date(c.created_at).toLocaleDateString("ar-SA"),
+          response: c.resolution_notes || "",
+        }));
+        setComplaints(mapped);
+      }
+    }
+    fetchComplaints();
+  }, []);
+
+  const filtered = complaints.filter((c) => {
     const matchSearch = c.title.includes(search) || c.submitted_by.includes(search);
     const matchStatus = statusFilter === "all" || c.status === statusFilter;
     const matchType = typeFilter === "all" || c.type === typeFilter;
@@ -62,9 +89,9 @@ export default function AdminComplaints() {
   });
 
   const stats = {
-    open: mockComplaints.filter((c) => c.status === "open").length,
-    inProgress: mockComplaints.filter((c) => c.status === "in_progress").length,
-    resolved: mockComplaints.filter((c) => c.status === "resolved").length,
+    open: complaints.filter((c) => c.status === "open").length,
+    inProgress: complaints.filter((c) => c.status === "in_progress").length,
+    resolved: complaints.filter((c) => c.status === "resolved").length,
   };
 
   return (

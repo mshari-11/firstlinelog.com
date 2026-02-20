@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Truck, Plus, Search, Car, Bike, Package } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 const mockVehicles = [
   { id: 1, plate: 'ABC-1234', type: 'دراجة نارية', brand: 'هوندا', year: 2022, courier: 'أحمد محمد', city: 'الرياض', status: 'active', lastService: '2025-12-01' },
@@ -24,18 +25,44 @@ const typeIcon = (type: string) => {
 export default function Vehicles() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [vehicles, setVehicles] = useState(mockVehicles);
 
-  const filtered = mockVehicles.filter(v => {
+  useEffect(() => {
+    async function fetchVehicles() {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*, couriers(full_name, city)')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        const mapped = data.map((v: any) => ({
+          id: v.id,
+          plate: v.plate_number || '',
+          type: v.vehicle_type || 'دراجة نارية',
+          brand: v.brand || '',
+          year: v.year || 2022,
+          courier: v.couriers?.full_name || 'غير محدد',
+          city: v.couriers?.city || '',
+          status: v.status || 'active',
+          lastService: v.last_service_date || '',
+        }));
+        setVehicles(mapped);
+      }
+    }
+    fetchVehicles();
+  }, []);
+
+  const filtered = vehicles.filter(v => {
     const matchSearch = v.plate.includes(search) || v.courier.includes(search) || v.brand.includes(search);
     const matchStatus = statusFilter === 'all' || v.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
   const stats = {
-    total: mockVehicles.length,
-    active: mockVehicles.filter(v => v.status === 'active').length,
-    maintenance: mockVehicles.filter(v => v.status === 'maintenance').length,
-    inactive: mockVehicles.filter(v => v.status === 'inactive').length,
+    total: vehicles.length,
+    active: vehicles.filter(v => v.status === 'active').length,
+    maintenance: vehicles.filter(v => v.status === 'maintenance').length,
+    inactive: vehicles.filter(v => v.status === 'inactive').length,
   };
 
   return (

@@ -10,7 +10,7 @@ import {
   Truck, Package, Clock, CheckCircle2, XCircle,
   LogOut, User, MapPin, Phone, AlertTriangle
 } from "lucide-react";
-import ChatWidget from "@/components/chat/ChatWidget";
+
 
 interface CourierInfo {
   full_name: string;
@@ -191,14 +191,6 @@ export default function CourierPortal() {
         </div>
       </main>
 
-      {/* مساعد فيرست لاين الذكي */}
-      {user && (
-        <ChatWidget
-          userRole="courier"
-          userId={user.id}
-          userName={courier?.full_name}
-        />
-      )}
     </div>
   );
 }

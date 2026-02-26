@@ -143,7 +143,7 @@ export default function RegisterPage() {
                                                                       </div>div>
                                                                       <span className="text-xs text-gray-500 mt-1">{label}</span>span>
                                                     </div>div>
-                                      {i < 2 && <div className={`h-0.5 flex-1 mx-1 mb-4 ${step > n ? "bg-green-600" : "bg-gray-700"}`} />}
+                                        {(i < 2) && <div className={`h-0.5 flex-1 mx-1 mb-4 ${step > n ? "bg-green-600" : "bg-gray-700"}`} />}
                                     </div>div>
                                   ))}
                     </div>div>

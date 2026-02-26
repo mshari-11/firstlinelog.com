@@ -46,7 +46,14 @@ export default function LoginPage() {
                 .single();
 
             const userRole = profile?.role ?? "staff";
-            const destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard";
+        let destination: string;
+                    if (roleFromQuery === "admin" || roleFromQuery === "staff") {
+                                  destination = "/admin/dashboard";
+                    } else if (roleFromQuery === "driver") {
+                                  destination = "/courier/portal";
+                    } else {
+                                  destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard";
+                    }
             navigate(destination);
         } catch (err: any) {
             const msg = err?.message ?? "";

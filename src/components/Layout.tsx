@@ -97,7 +97,7 @@ export function Layout({
                                                                         دخول المندوبين
                                                       </Link>
                                       </div>
-                        </div></div>
+                        </div>
           </nav>
 
           {/* زر قائمة الهاتف */}

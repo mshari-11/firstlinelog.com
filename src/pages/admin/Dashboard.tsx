@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
-import ChatWidget from "@/components/chat/ChatWidget";
+
 import {
   Users, Package, DollarSign, AlertCircle,
   TrendingUp, TrendingDown, Clock, CheckCircle2,
@@ -422,14 +422,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* مساعد فيرست لاين الذكي */}
-      {user && (
-        <ChatWidget
-          userRole={(user.role as "admin" | "owner" | "staff") || "admin"}
-          userId={user.id}
-          userName={user.name}
-        />
-      )}
     </div>
   );
 }

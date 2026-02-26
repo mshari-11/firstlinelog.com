@@ -79,25 +79,25 @@ export function Layout({
             {/* ── قائمة تسجيل الدخول حسب الدور ── */}
                         <div className="relative group">
                                       <Button variant="outline" size="sm" className="rounded-full px-5 font-bold border-white/30 text-white hover:bg-white/10 flex items-center gap-1.5">
-                                                      <span>دخول</span>span>
-                                                      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10L6 8z"/></svg>svg>
-                                      </Button>Button>
+                                                      <span>دخول</span>
+                                                      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10L6 8z"/></svg>
+                                      </Button>
                           {/* القائمة المنسدلة */}
                                       <div className="absolute left-0 top-full mt-2 w-44 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                                       <Link to="/unified-login?role=admin" className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors border-b border-white/5">
                                                                         <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
                                                                         دخول الإدارة
-                                                      </Link>Link>
+                                                      </Link>
                                                       <Link to="/unified-login?role=staff" className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors border-b border-white/5">
                                                                         <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
                                                                         دخول الموظفين
-                                                      </Link>Link>
+                                                      </Link>
                                                       <Link to="/login?role=driver" className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors">
                                                                         <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
                                                                         دخول المندوبين
-                                                      </Link>Link>
-                                      </div>div>
-                        </div>div></div>
+                                                      </Link>
+                                      </div>
+                        </div></div>
           </nav>
 
           {/* زر قائمة الهاتف */}

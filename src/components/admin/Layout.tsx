@@ -39,7 +39,7 @@ export function AdminLayout() {
                                                                                 (e.target as HTMLImageElement).style.display = "none";
                                                               }}
                                                             />
-                                  </div>div>
+                                  </div>
                                   <div
                                                 className="w-8 h-8 rounded-full border-2 animate-spin"
                                                 style={{
@@ -49,9 +49,9 @@ export function AdminLayout() {
                                               />
                                   <p className="text-sm" style={{ color: "oklch(0.55 0.06 210)" }}>
                                               ...جارٍ التحميل
-                                  </p>p>
-                        </div>div>
-                </div>div>
+                                  </p>
+                        </div>
+                </div>
               );
   }
   
@@ -66,7 +66,7 @@ export function AdminLayout() {
                 <AdminSidebar />
                 <main className="flex-1 mr-64 min-h-screen overflow-x-hidden">
                         <Outlet />
-                </main>main>
+                </main>
           
             {/* المساعد الذكي - يظهر فقط للأدوار الإدارية */}
                 <ChatWidget
@@ -74,6 +74,6 @@ export function AdminLayout() {
                           userId={user.id}
                           userName={user.name || user.email}
                         />
-          </div>div>
+          </div>
         );
 }</div>

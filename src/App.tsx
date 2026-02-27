@@ -73,6 +73,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/unified-login" element={<UnifiedLogin />} />
+                      <Route path="/forgot-password" element={<LoginPage />} />
 
             {/* ===== صفحات الخدمات الفرعية ===== */}
             <Route path="/services/couriers" element={<CouriersService />} />

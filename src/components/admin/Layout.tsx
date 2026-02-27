@@ -1,4 +1,4 @@
-/**
+h/**
  * تخطيط لوحة الإدارة - بهوية فيرست لاين
  * يحتوي على المساعد الذكي لجميع صفحات الإدارة
  * المساعد الذكي لا يظهر في صفحات المندوبين والسائقين
@@ -72,7 +72,7 @@ export function AdminLayout() {
                 <ChatWidget
                           userRole={user.role || "staff"}
                           userId={user.id}
-                          userName={user.name || user.email}
+                                            userName={user.full_name || user.email}
                         />
           </div>
         );

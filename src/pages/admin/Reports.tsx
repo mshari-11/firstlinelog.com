@@ -86,8 +86,8 @@ export default function Reports() {
     try {
       if (supabase) {
         const [ordersRes, couriersRes] = await Promise.all([
-          supabase.from("orders").select("id, status", { count: "exact" }),
-          supabase.from("couriers").select("id", { count: "exact" }),
+                  supabase.from("orders_2026_02_17_21_00").select("id, status", { count: "exact" }),
+                  supabase.from("couriers_2026_02_17_21_00").select("id", { count: "exact" }),
         ]);
         const orders = ordersRes.data || [];
         setStats({

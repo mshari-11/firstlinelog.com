@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ShieldCheck, Layers, Zap, BarChart3, Truck, Users, CheckCircle2, TrendingUp, Rocket, Info, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTE_PATHS, MetricData, PlatformData, CityData, ServiceData, BenefitData } from "@/lib/index";
-import { useMetrics, usePlatforms, useCities, useServices, useBenefits } from "@/hooks/use-site-data";
+import { METRICS, PLATFORMS, CITIES, SERVICES, WHY_FIRST_LINE } from "@/data/index";
 import { MetricCard, ServiceCard, PlatformCard, CityCard } from "@/components/Cards";
 import { IMAGES } from "@/assets/images";
 import { Button } from "@/components/ui/button";
@@ -51,38 +51,54 @@ const getServiceIcon = (iconName: string) => {
   }
 };
 export default function Home() {
-  const { data: metrics = [] } = useMetrics();
-  const { data: platforms = [] } = usePlatforms();
-  const { data: cities = [] } = useCities();
-  const { data: services = [] } = useServices();
-  const { data: benefits = [] } = useBenefits();
-
   return <div className="flex flex-col w-full overflow-hidden page-with-logo-bg" dir="rtl">
-      <section className="relative min-h-[90vh] flex items-center pt-20 first-line-hero-bg">
-        <div className="absolute inset-0 z-0 first-line-pattern">
-          <img src="https://static-us-img.skywork.ai/prod/user/head_picture/2022649704129810432_First_Line_Logistics_Infographic_2025.png?image_process=quality,q_90/resize,w_1280/format,webp" alt="العمليات اللوجستية" className="w-full opacity-10 mix-blend-overlay h-[814.5px] object-cover" />
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center bg-slate-950 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1663900108404-a05e8bf82cda?w=1920&q=80" alt="الرياض" className="w-full h-full object-cover opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-background" />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-4xl">
-            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.2]">
-              نحن لا نوصّل الطلبات… <br />
-              <span className="text-primary">نحن نُدير التنفيذ.</span>
+        <div className="container mx-auto px-4 relative z-10 pt-24">
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-4xl mx-auto md:mx-0 md:mr-auto text-right">
+            <motion.h1 variants={fadeInUp} transition={springPresets.smooth} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 text-white">
+              الخط الأول للخدمات اللوجستية
             </motion.h1>
 
-            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="text-xl text-muted-foreground mb-10 max-w-3xl leading-relaxed">
-              الخط الأول مشغّل وطني للميل الأخير (3PL) متعدد المنصات، يدير تشغيل الأساطيل والسائقين وتشغيل المدن لمصلحة منصات التوصيل داخل المملكة — بجودة قابلة للقياس، وقابلية توسّع حقيقية.
+            <motion.h2 variants={fadeInUp} transition={springPresets.smooth} className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-white/90 mb-6">
+              شريك التشغيل في الميل الأخير للمنصات الرقمية في المملكة العربية السعودية
+            </motion.h2>
+
+            <motion.p variants={fadeInUp} transition={springPresets.smooth} className="mb-10 max-w-3xl text-white/80 text-sm md:text-base text-right leading-relaxed">
+              نُدير تنفيذ عمليات التوصيل بالنيابة عن أبرز تطبيقات التوصيل، عبر نموذج تشغيل Multi-Platform 3PL يرفع الكفاءة، يضمن جودة التنفيذ، ويمنح المنصات قدرة توسع أسرع داخل المدن الرئيسية.
             </motion.p>
 
-            
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-start">
+              <Button size="lg" asChild className="px-8">
+                <Link to={ROUTE_PATHS.CONTACT} className="flex items-center gap-2">
+                  تواصل معنا <ArrowLeft className="w-4 h-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="px-8 bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Link to={ROUTE_PATHS.SERVICES}>
+                  اكتشف نموذج التشغيل
+                </Link>
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
+      {/* Metrics Section */}
       <section className="py-24 first-line-section-bg">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {metrics.map((metric: MetricData) => <MetricCard key={metric.label} metric={metric} />)}
+          <div className="text-center mb-12">
+            <div className="inline-block">
+              <img src="/images/logo.webp" alt="FIRST LINE LOGISTICS" className="h-8 opacity-20" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {METRICS.map((metric: MetricData) => <MetricCard key={metric.label} metric={metric} />)}
           </div>
           <motion.p initial={{
           opacity: 0
@@ -97,56 +113,76 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 border-y border-border rounded-[1111px] bg-[rgb(255,255,255)]">
+      {/* ماذا نفعل Section */}
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div initial="hidden" whileInView="visible" viewport={{
-            once: true
-          }} variants={staggerContainer}>
-              <motion.h2 variants={fadeInUp} className="text-4xl font-bold mb-6">لأن التنفيذ هو ما يحمي سمعة المنصة.</motion.h2>
-              <motion.p variants={fadeInUp} className="text-lg text-muted-foreground mb-12">
-                نموذجنا: Multi‑Platform 3PL. المنصات تملك الطلب والتجربة الرقمية. نحن نمتلك الانضباط التنفيذي على الأرض.
-              </motion.p>
-              
-              <div className="grid sm:grid-cols-2 gap-8">
-                {benefits.map((item: BenefitData, index: number) => {
-                const icons = [<ShieldCheck key="1" />, <Layers key="2" />, <Zap key="3" />, <BarChart3 key="4" />];
-                return <motion.div key={item.title} variants={fadeInUp} className="space-y-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                        {icons[index % icons.length]}
-                      </div>
-                      <h3 className="font-bold text-lg">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    </motion.div>;
-              })}
-              </div>
-            </motion.div>
-
-            
-          </div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center max-w-4xl mx-auto">
+            <h2 className="text-4xl font-bold mb-6">ماذا نفعل؟</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              نقدم تشغيلاً ميدانياً متكاملاً لعمليات الميل الأخير للمنصات، يشمل إدارة التشغيل اليومي، مراقبة الأداء، وتطبيق معايير الخدمة (SLA) عبر أسطول موحد ومنهجية تشغيل واضحة.
+            </p>
+          </motion.div>
         </div>
       </section>
 
+      {/* نموذج تشغيل متعدد المنصات Section */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl font-bold mb-4">نموذجنا: Multi‑Platform 3PL</h2>
-            <p className="text-lg text-muted-foreground">
-              المنصات تملك الطلب والتجربة الرقمية. نحن نمتلك الانضباط التنفيذي على الأرض: تشغيل المدن، إدارة السائقين، تشغيل الأسطول، وضبط مؤشرات SLA.
-            </p>
+          <div className="text-center max-w-5xl mx-auto mb-16">
+            <h2 className="text-4xl font-bold mb-6">نموذج تشغيل متعدد المنصات</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service: ServiceData) => <ServiceCard key={service.title} title={service.title} description={service.description} icon={getServiceIcon(service.iconName)} />)}
+          <div className="text-right space-y-6 text-muted-foreground leading-relaxed max-w-5xl mx-auto">
+            <p className="text-lg">
+              نعمل كشريك تشغيل مستقل يخدم عدة منصات في وقت واحد من خلال بنية تشغيلية موحدة. يتيح هذا النموذج تحقيق كثافة تشغيل أعلى، مرونة أفضل في إدارة الذروة، واستقرار أكبر في الأداء.
+            </p>
+
+            <div className="bg-primary/5 rounded-lg p-6 border border-primary/10">
+              <h3 className="text-xl font-bold text-foreground mb-4 text-right">نقاط سريعة:</h3>
+              <ul className="space-y-3 text-base text-right">
+                <li>• تكامل تشغيلي وتقني مع المنصات</li>
+                <li>• توزيع مرن للموارد حسب الطلب</li>
+                <li>• متابعة يومية لمعايير SLA</li>
+                <li>• قابلية توسع عبر المدن</li>
+              </ul>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-muted/30 rounded-lg p-6">
+                <h4 className="text-lg font-bold text-foreground mb-3 text-right">هذا النموذج يمنحنا:</h4>
+                <ul className="space-y-2 text-sm text-right">
+                  <li>• توزيعًا متوازنًا للطلبات بين المنصات</li>
+                  <li>• كثافة تشغيلية أعلى في المدن الرئيسية</li>
+                  <li>• استقرارًا تشغيليًا يقلل من مخاطر الاعتماد على عميل واحد</li>
+                  <li>• مرونة في إدارة الذروة والمواسم</li>
+                </ul>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-6">
+                <h4 className="text-lg font-bold text-foreground mb-3 text-right xl:text-[28px]">كيف نخلق القيمة للمنصات؟</h4>
+                <ul className="space-y-2 text-sm text-right">
+                  <li>• تقليل التكاليف التشغيلية الثابتة</li>
+                  <li>• رفع جودة التنفيذ والالتزام بالمواعيد</li>
+                  <li>• توفير مرونة في التوسع الجغرافي</li>
+                  <li>• تحسين تجربة العميل النهائي</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="text-right bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-6 border">
+              <h4 className="text-xl font-bold text-foreground mb-3 text-right">موقعنا داخل المنظومة الرقمية</h4>
+              <p className="text-base font-medium text-primary mb-2 text-right">نحن لا ننافس التطبيقات، بل نُمكّنها.</p>
+              <p className="text-sm text-right">نُشكّل حلقة الوصل بين الطلب الرقمي والتنفيذ الفعلي، مما يجعلنا عنصرًا تشغيليًا أساسيًا في سلسلة القيمة.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-24 bg-muted/30 border-t border-border">
+      {/* شركاؤنا Section */}
+      <section className="py-16 bg-muted/30 border-t border-border">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
             <div className="max-w-2xl text-right">
-              <h2 className="text-4xl font-bold mb-4">شراكات المنصات</h2>
-              <p className="text-lg text-muted-foreground">نعمل عبر عدة منصات متنافسة من خلال نموذج تنفيذ موحد يضمن الحيادية والاحترافية.</p>
+              <h2 className="text-3xl font-bold mb-4">شركاؤنا</h2>
             </div>
             <Button variant="link" asChild className="text-primary group">
               <Link to={ROUTE_PATHS.PLATFORMS} className="flex items-center gap-2">
@@ -155,11 +191,15 @@ export default function Home() {
             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {platforms.slice(0, 8).map((platform: PlatformData) => <PlatformCard key={platform.id} platform={platform} />)}
+            {PLATFORMS.slice(0, 8).map((platform: PlatformData) => <PlatformCard key={platform.id} platform={platform} />)}
+          </div>
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground">شراكات تشغيلية وفق متطلبات تشغيلية ومعايير خدمة محددة.</p>
           </div>
         </div>
       </section>
 
+      {/* نطاق الانتشار Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-10">
           <img src={IMAGES.SAUDI_CITIES_2} alt="خارطة المدن السعودية" className="w-full h-full object-cover" />
@@ -170,31 +210,32 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">تنفيذ مباشر عبر 16 مركزاً استراتيجياً في المملكة العربية السعودية.</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {cities.map((city: CityData) => <CityCard key={city.name} city={city} />)}
+            {CITIES.map((city: CityData) => <CityCard key={city.name} city={city} />)}
           </div>
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="py-24 bg-foreground text-background">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold">هل تبحث عن ذراع تنفيذ يرفع الجودة ويثبت التشغيل؟</h2>
+              <h2 className="text-3xl font-bold">هل تبحث عن شريك تشغيل موثوق في الميل الأخير؟</h2>
               <p className="text-lg leading-relaxed opacity-80">
-                تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة. نشارك نطاق التشغيل ومؤشرات الأداء تحت اتفاقية عدم إفصاح.
+                تواصل معنا لبحث نطاق التشغيل والمدن والمتطلبات.
               </p>
             </div>
             <div className="bg-primary/20 p-8 rounded-3xl border border-primary/30 flex flex-col justify-between min-h-[300px]">
               <div>
-                <h3 className="text-2xl font-bold mb-4">احجز اجتماعاً تشغيلياً</h3>
-                <p className="opacity-80 mb-8">(30 دقيقة) لمناقشة فرص الشراكة واستراتيجيات التوسع.</p>
+                <h3 className="text-2xl font-bold mb-4">اطلب عرض تشغيلي</h3>
+                <p className="opacity-80 mb-8">نقدم عروض مخصصة حسب احتياجاتك ونطاق عملك.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild className="bg-primary text-white hover:bg-primary/90">
-                  <Link to={ROUTE_PATHS.CONTACT}>اطلب عرض تشغيل</Link>
+                  <Link to={ROUTE_PATHS.CONTACT}>تواصل معنا</Link>
                 </Button>
                 <Button variant="outline" asChild className="border-white/20 text-white hover:bg-white/10">
-                  <Link to={ROUTE_PATHS.CONTACT}>تواصل مع فريق الشراكات</Link>
+                  <Link to={ROUTE_PATHS.ABOUT}>اعرف المزيد</Link>
                 </Button>
               </div>
             </div>

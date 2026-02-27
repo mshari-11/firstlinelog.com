@@ -10,6 +10,7 @@ export const ROUTE_PATHS = {
   PLATFORMS: "/platforms",
   GOVERNANCE: "/governance",
   INVESTORS: "/investors",
+  NEWS: "/news",
   JOIN_US: "/join-us",
   CONTACT: "/contact",
   TEAM: "/team",
@@ -26,6 +27,11 @@ export const ROUTE_PATHS = {
   DRIVER_ORDERS: "/driver/orders",
   DRIVER_EARNINGS: "/driver/earnings",
   DRIVER_PROFILE: "/driver/profile",
+  LOGIN: "/login",
+  UNIFIED_LOGIN: "/unified-login",
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
+  COMPLIANCE: "/compliance",
 } as const;
 
 /**

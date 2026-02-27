@@ -86,7 +86,7 @@ export default function Finance() {
       if (finance) {
         const mapped: FinanceRecord[] = finance.map((r: any) => ({
           ...r,
-          courier_name: r.couriers_2026_02_17_21_00?.users_2026_02_17_21_00?.full_name || "غير معروف",
+                    courier_name: r.couriers_2026_02_17_21_00?.users_2026_02_17_21_00?.name || "غير معروف",
         }));
         setRecords(mapped);
 

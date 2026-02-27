@@ -135,4 +135,30 @@ export default function Vehicles() {
                     </div>
                   </td>
                   <td className="py-3 px-3 text-white font-mono">{v.plate}</td>
-                  <td className="py-3 px-3
+                  <td className="py-3 px-3">
+                    <span className="text-blue-100">{v.brand}</span>
+                    <span className="text-blue-300/50 text-xs mr-1">({v.year})</span>
+                  </td>
+                  <td className="py-3 px-3 text-blue-100">{v.courier}</td>
+                  <td className="py-3 px-3 text-blue-300/70">{v.city}</td>
+                  <td className="py-3 px-3 text-blue-300/70 text-xs">{v.lastService || '—'}</td>
+                  <td className="py-3 px-3">
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${statusMap[v.status]?.color || ''}`}>
+                      {statusMap[v.status]?.label || v.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-blue-300/50">
+            <Truck className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>لا توجد مركبات مطابقة</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

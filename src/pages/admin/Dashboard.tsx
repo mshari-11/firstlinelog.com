@@ -2,7 +2,9 @@
  * الداشبورد الرئيسي - لوحة إدارة فيرست لاين
  */
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+
 import {
   Users, Package, DollarSign, AlertCircle,
   TrendingUp, TrendingDown, Clock, CheckCircle2,
@@ -117,6 +119,7 @@ const kpiConfig = [
 ];
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalCouriers: 0, activeCouriers: 0, todayOrders: 0,
     pendingComplaints: 0, monthRevenue: 0, pendingApprovals: 0,
@@ -129,10 +132,10 @@ export default function AdminDashboard() {
     if (!supabase) { setLoading(false); return; }
     try {
       const [couriersRes, ordersRes, complaintsRes, approvalsRes] = await Promise.all([
-        supabase.from("couriers").select("id, status", { count: "exact" }),
-        supabase.from("orders").select("id", { count: "exact" }).gte("created_at", new Date().toISOString().split("T")[0]),
-        supabase.from("complaints_requests").select("id", { count: "exact" }).eq("status", "open"),
-        supabase.from("approval_workflows").select("id", { count: "exact" }).eq("status", "pending"),
+                supabase.from("couriers_2026_02_17_21_00").select("id, status", { count: "exact" }),
+                supabase.from("orders_2026_02_17_21_00").select("id", { count: "exact" }).gte("created_at", new Date().toISOString().split("T")[0]),
+                supabase.from("complaints_2026_02_17_21_00").select("id", { count: "exact" }).eq("status", "open"),
+                supabase.from("couriers_2026_02_17_21_00").select("id", { count: "exact" }).eq("status", "pending"),
       ]);
       const couriers = couriersRes.data || [];
       setStats({
@@ -418,6 +421,7 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+
     </div>
   );
 }

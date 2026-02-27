@@ -594,10 +594,10 @@ function AddStaffModal({ departments, onClose, onSaved }: {
     setError("");
 
     // إنشاء حساب في auth
-    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      email_confirm: true,
+            options: { data: { full_name: form.name, role: "staff" } },
     });
 
     if (authErr || !authData.user) {

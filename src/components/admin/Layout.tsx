@@ -76,4 +76,4 @@ export function AdminLayout() {
                         />
           </div>
         );
-}</div>
+}

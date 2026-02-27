@@ -56,7 +56,7 @@ export function Layout({ children }: LayoutProps) {
                 {link.name}
               </NavLink>
             ))}
-            <a href="https://first-line-logistics-skywork.vercel.app" className="font-semibold text-white hover:text-primary transition-colors">EN</a>
+            <a href="https://www.fll.sa" className="font-semibold text-white hover:text-primary transition-colors">EN</a>
             <div className="relative group">
               <Button variant="outline" size="sm" className="rounded-full px-5 font-bold border-white/30 text-white hover:bg-white/10 flex items-center gap-1.5">
                 <span>دخول</span>

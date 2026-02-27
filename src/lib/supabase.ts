@@ -1,9 +1,13 @@
 /**
  * إعداد عميل Supabase لموقع فيرست لاين لوجستيكس
  */
+import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY2NzYzMDEsImV4cCI6MjA1MjI1MjMwMX0.sHHPAhHlp4jOwIbnMaDhFsmMNunnNMBjLSF-6STEfMo';
+
+// Create and export the supabase client for database queries
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 

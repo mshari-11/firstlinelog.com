@@ -154,22 +154,22 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                         style={{ background: "oklch(0.65 0.18 200)" }}
                                                                       >
                                                                       <Sparkles className="w-4 h-4 text-white" />
-                                                      </div>div>
+                                                      </div>
                                                       <div>
-                                                                      <p className="text-sm font-semibold text-white">مساعد فيرست لاين</p>p>
+                                                                      <p className="text-sm font-semibold text-white">مساعد فيرست لاين</p>
                                                                       <p className="text-xs" style={{ color: "oklch(0.65 0.08 200)" }}>
                                                                                         مدعوم بـ GPT-5
-                                                                      </p>p>
-                                                      </div>div>
-                                        </div>div>
+                                                                      </p>
+                                                      </div>
+                                        </div>
                                         <button
                                                         onClick={() => setOpen(false)}
                                                         className="p-1.5 rounded-lg transition-colors hover:opacity-80"
                                                         style={{ color: "oklch(0.55 0.06 210)" }}
                                                       >
                                                       <X className="w-4 h-4" />
-                                        </button>button>
-                            </div>div>
+                                        </button>
+                            </div>
                   
                     {/* منطقة الرسائل */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -192,7 +192,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                                                   ) : (
                                                                                                     <User className="w-4 h-4 text-white" />
                                                                                                   )}
-                                                            </div>div>
+                                                            </div>
                                                             <div
                                                                                 className="max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed"
                                                                                 style={{
@@ -208,8 +208,8 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                                 }}
                                                                               >
                                                               {msg.content}
-                                                            </div>div>
-                                            </div>div>
+                                                            </div>
+                                            </div>
                                           ))}
                             
                               {loading && (
@@ -219,7 +219,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                                 style={{ background: "oklch(0.65 0.18 200)" }}
                                                                               >
                                                                               <Bot className="w-4 h-4 text-white" />
-                                                            </div>div>
+                                                            </div>
                                                             <div
                                                                                 className="rounded-2xl px-3 py-2"
                                                                                 style={{ background: "oklch(0.20 0.08 240)" }}
@@ -228,11 +228,11 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                                                     className="w-4 h-4 animate-spin"
                                                                                                     style={{ color: "oklch(0.65 0.18 200)" }}
                                                                                                   />
-                                                            </div>div>
-                                            </div>div>
+                                                            </div>
+                                            </div>
                                         )}
                                         <div ref={messagesEndRef} />
-                            </div>div>
+                            </div>
                   
                     {/* منطقة الإدخال */}
                             <div
@@ -264,10 +264,10 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                                         }}
                                                                       >
                                                                       <Send className="w-3.5 h-3.5 text-white" />
-                                                      </button>button>
-                                        </div>div>
-                            </div>div>
-                  </div>div>
+                                                      </button>
+                                        </div>
+                            </div>
+                  </div>
               )}
         
           {/* زر الفتح */}
@@ -287,9 +287,9 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                 style={{ background: "oklch(0.65 0.18 30)" }}
                                               >
                                               !
-                                  </span>span>
+                                  </span>
                       )}
-              </button>button>
-        </div>div>
+              </button>
+        </div>
       );
-}</div>
+}

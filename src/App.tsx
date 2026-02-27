@@ -31,6 +31,7 @@ import CourierPortal from "@/pages/courier/Portal";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import CouriersService from "@/pages/services/CouriersService";
+import UnifiedLogin from "@/pages/UnifiedLogin";h
 import OrdersService from "@/pages/services/OrdersService";
 import VehiclesService from "@/pages/services/VehiclesService";
 import FinanceService from "@/pages/services/FinanceService";
@@ -70,7 +71,7 @@ export default function App() {
             {/* ===== Auth ===== */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/unified-login" element={<LoginPage />} />
+            <Route path="/unified-login" element={<UnifiedLogin />} />
 
             {/* ===== صفحات الخدمات الفرعية ===== */}
             <Route path="/services/couriers" element={<CouriersService />} />

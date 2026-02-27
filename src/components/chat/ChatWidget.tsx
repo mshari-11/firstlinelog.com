@@ -292,4 +292,4 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
               </button>
         </div>
       );
-}</div>
+}

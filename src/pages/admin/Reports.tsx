@@ -5,9 +5,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  BarChart3, Package, Users, DollarSign,
-  TrendingUp, Calendar, Download, RefreshCw,
-  Filter
+  Package, Users, DollarSign,
+  TrendingUp, Download, RefreshCw
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -69,6 +68,8 @@ const courierPerformanceData = [
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("ar-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 0 }).format(amount);
 
+const FALLBACK_REVENUE = 162750;
+
 export default function Reports() {
   const [stats, setStats] = useState<ReportStats>({
     totalOrders: 0, totalRevenue: 0, totalCouriers: 0, deliveredOrders: 0,
@@ -91,7 +92,7 @@ export default function Reports() {
         const orders = ordersRes.data || [];
         setStats({
           totalOrders: ordersRes.count || 0,
-          totalRevenue: 162750,
+          totalRevenue: FALLBACK_REVENUE,
           totalCouriers: couriersRes.count || 0,
           deliveredOrders: orders.filter((o: { status: string }) => o.status === "delivered").length,
         });
@@ -99,14 +100,14 @@ export default function Reports() {
         // Fallback values when Supabase is not connected
         setStats({
           totalOrders: 1030,
-          totalRevenue: 162750,
+          totalRevenue: FALLBACK_REVENUE,
           totalCouriers: 47,
           deliveredOrders: 782,
         });
       }
     } catch (err) {
       console.error("خطأ في جلب بيانات التقارير:", err);
-      setStats({ totalOrders: 1030, totalRevenue: 162750, totalCouriers: 47, deliveredOrders: 782 });
+      setStats({ totalOrders: 1030, totalRevenue: FALLBACK_REVENUE, totalCouriers: 47, deliveredOrders: 782 });
     } finally {
       setLoading(false);
     }

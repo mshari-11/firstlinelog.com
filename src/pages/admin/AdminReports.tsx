@@ -4,11 +4,6 @@
  */
 import { motion } from "framer-motion";
 import {
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Download,
   FileSpreadsheet,
   DollarSign,
   Package,
@@ -22,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const monthlyRevenue = [
   { month: "سبتمبر", value: 820000, orders: 9200 },

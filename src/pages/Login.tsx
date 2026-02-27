@@ -1,149 +1,209 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+/**
+ * صفحة تسجيل الدخول عبر OTP - FirstLine Logistics
+ */
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
+import { sendOTP, verifyOTP } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { Phone, ArrowLeft, Loader2, Shield } from 'lucide-react';
 
-const ROLE_ROUTES: Record<string, string> = {
-    admin:   "/admin/dashboard",
-    finance: "/admin/dashboard",
-    hr:      "/admin/dashboard",
-    fleet:   "/admin/dashboard",
-    ops:     "/admin/dashboard",
-    staff:   "/admin/dashboard",
-    courier: "/courier/portal",
-};
+type Step = 'phone' | 'otp';
 
-export default function LoginPage() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const role = searchParams.get("role");
+export default function Login() {
+  const [step, setStep] = useState<Step>('phone');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-    const [email,    setEmail]    = useState("");
-    const [password, setPassword] = useState("");
-    const [error,    setError]    = useState("");
-    const [loading,  setLoading]  = useState(false);
-    const [showPass, setShowPass] = useState(false);
+  // إذا مسجل دخول يروح للرئيسية
+  useEffect(() => {
+    if (isAuthenticated) navigate('/');
+  }, [isAuthenticated, navigate]);
 
-    async function handleLogin(e: React.FormEvent) {
-        e.preventDefault();
-        if (!email || !password) {
-            setError("يرجى إدخال البريد الإلكتروني وكلمة المرور");
-            return;
-        }
-        setLoading(true);
-        setError("");
-        try {
-            if (!supabase) throw new Error("الاتصال بقاعدة البيانات غير متاح");
-            const { data, error: authError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-            if (authError) throw authError;
+  // العد التنازلي لإعادة الإرسال
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
-            const { data: profile } = await supabase
-                .from("users_2026_02_17_21_00")
-                .select("role")
-                .eq("id", data.user?.id)
-                .single();
-
-            const userRole = profile?.role ?? "staff";
-        let destination: string;
-                    if (role === "admin" || role === "staff") {
-                                  destination = "/admin/dashboard";
-                    } else if (role === "driver") {
-                                  destination = "/courier/portal";
-                    } else {
-                                  destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard";
-                    }
-            navigate(destination);
-        } catch (err: any) {
-            const msg = err?.message ?? "";
-            if (msg.includes("Invalid login credentials")) {
-                setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-            } else if (msg.includes("Email not confirmed")) {
-                setError("البريد الإلكتروني غير مفعّل. تحقق من صندوق البريد.");
-            } else {
-                setError("حدث خطأ. يرجى المحاولة مجدداً.");
-            }
-        } finally {
-            setLoading(false);
-        }
+  // إرسال OTP
+  const handleSendOTP = async () => {
+    const cleaned = phone.replace(/\s/g, '');
+    if (!cleaned || cleaned.length < 9) {
+      toast.error('أدخل رقم جوال صحيح');
+      return;
     }
 
-    return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4" dir="rtl">
-            <div className="w-full max-w-sm">
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl mb-3 shadow-xl">
-                        <span className="text-white font-black text-xl">FL</span>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white">تسجيل الدخول</h1>
-                    {role && (
-                        <p className="text-sm text-gray-400 mt-1">
-                            {role === "admin"  && "لوحة الإدارة"}
-                            {role === "staff"  && "بوابة الموظفين"}
-                            {role === "driver" && "بوابة المندوبين"}
-                        </p>
-                    )}
-                </div>
-                <form onSubmit={handleLogin} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">البريد الإلكتروني</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            placeholder="example@fll.sa"
-                            autoComplete="email"
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">كلمة المرور</label>
-                        <div className="relative">
-                            <input
-                                type={showPass ? "text" : "password"}
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                autoComplete="current-password"
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition pr-4 pl-10"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPass(!showPass)}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
-                            >
-                                {showPass ? "🙈" : "👁"}
-                            </button>
-                        </div>
-                        <div className="flex justify-end mt-1">
-                            <Link to="/forgot-password" className="text-xs text-blue-400 hover:text-blue-300 transition">
-                                نسيت كلمة المرور؟
-                            </Link>
-                        </div>
-                    </div>
-                    {error && (
-                        <div className="bg-red-900/30 border border-red-700 rounded-lg px-4 py-3">
-                            <p className="text-sm text-red-400 text-center">{error}</p>
-                        </div>
-                    )}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition text-sm"
-                    >
-                        {loading ? "جاري الدخول..." : "دخول"}
-                    </button>
-                </form>
-                {(!role || role === "driver") && (
-                    <p className="text-center text-sm text-gray-500 mt-4">
-                        مندوب جديد؟{" "}
-                        <Link to="/register" className="text-blue-400 hover:text-blue-300 transition">
-                            سجّل هنا
-                        </Link>
-                    </p>
-                )}
+    setLoading(true);
+    try {
+      const result = await sendOTP(cleaned);
+      if (result.success) {
+        setStep('otp');
+        setCountdown(60);
+        toast.success('تم إرسال رمز التحقق');
+        // في وضع التطوير، اعرض الكود
+        if (result.debug_code) {
+          console.log('Debug OTP:', result.debug_code);
+          toast.info(`رمز التطوير: ${result.debug_code}`, { duration: 10000 });
+        }
+      } else {
+        toast.error(result.error || 'فشل إرسال الرمز');
+      }
+    } catch {
+      toast.error('حدث خطأ في الاتصال');
+    }
+    setLoading(false);
+  };
+
+  // التحقق من OTP
+  const handleVerifyOTP = async (code: string) => {
+    if (code.length !== 6) return;
+    
+    setLoading(true);
+    try {
+      const result = await verifyOTP(phone.replace(/\s/g, ''), code);
+      if (result.success && result.user && result.session) {
+        login(result.user, result.session);
+        toast.success(result.message || 'تم تسجيل الدخول بنجاح');
+        navigate('/');
+      } else {
+        toast.error(result.error || 'رمز التحقق غير صحيح');
+        setOtp('');
+      }
+    } catch {
+      toast.error('حدث خطأ في الاتصال');
+    }
+    setLoading(false);
+  };
+
+  // إعادة إرسال الكود
+  const handleResend = async () => {
+    if (countdown > 0) return;
+    setOtp('');
+    await handleSendOTP();
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4" dir="rtl">
+      <Card className="w-full max-w-md shadow-xl border-0">
+        <CardHeader className="text-center pb-2">
+          {/* Logo */}
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+            <Shield className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold">
+            {step === 'phone' ? 'تسجيل الدخول' : 'رمز التحقق'}
+          </CardTitle>
+          <CardDescription className="text-base mt-1">
+            {step === 'phone'
+              ? 'أدخل رقم جوالك لتسجيل الدخول أو إنشاء حساب'
+              : `أدخل الرمز المرسل إلى ${phone}`}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-4">
+          {step === 'phone' ? (
+            /* خطوة إدخال رقم الجوال */
+            <div className="space-y-4">
+              <div className="relative">
+                <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="tel"
+                  placeholder="05xxxxxxxx"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="pr-10 text-lg h-12 text-right"
+                  dir="ltr"
+                  maxLength={15}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendOTP()}
+                />
+              </div>
+              <Button
+                onClick={handleSendOTP}
+                disabled={loading || phone.replace(/\s/g, '').length < 9}
+                className="w-full h-12 text-lg"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin ml-2" />
+                ) : null}
+                {loading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
+              </Button>
             </div>
-        </div>
-    );
+          ) : (
+            /* خطوة إدخال رمز التحقق */
+            <div className="space-y-6">
+              <div className="flex justify-center" dir="ltr">
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={(value) => {
+                    setOtp(value);
+                    if (value.length === 6) handleVerifyOTP(value);
+                  }}
+                  disabled={loading}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} className="h-14 w-12 text-xl" />
+                    <InputOTPSlot index={1} className="h-14 w-12 text-xl" />
+                    <InputOTPSlot index={2} className="h-14 w-12 text-xl" />
+                    <InputOTPSlot index={3} className="h-14 w-12 text-xl" />
+                    <InputOTPSlot index={4} className="h-14 w-12 text-xl" />
+                    <InputOTPSlot index={5} className="h-14 w-12 text-xl" />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              {loading && (
+                <div className="flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
+
+              <div className="text-center space-y-3">
+                <button
+                  onClick={handleResend}
+                  disabled={countdown > 0}
+                  className="text-sm text-primary hover:underline disabled:text-muted-foreground disabled:no-underline"
+                >
+                  {countdown > 0
+                    ? `إعادة الإرسال بعد ${countdown} ثانية`
+                    : 'إعادة إرسال الرمز'}
+                </button>
+
+                <div>
+                  <button
+                    onClick={() => {
+                      setStep('phone');
+                      setOtp('');
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  >
+                    <ArrowLeft className="h-3 w-3" />
+                    تغيير رقم الجوال
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            بتسجيل الدخول أنت توافق على شروط الاستخدام وسياسة الخصوصية
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

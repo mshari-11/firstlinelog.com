@@ -1,71 +1,60 @@
+/**
+ * إعداد عميل Supabase لموقع فيرست لاين لوجستيكس
+ */
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://djebhztfewjfyyoortvv.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Types
-export interface Courier {
-  id: string
-  full_name: string
-  full_name_ar?: string
-  national_id?: string
-  phone: string
-  status: 'active' | 'inactive' | 'suspended' | 'on_leave'
-  city?: string
-  bank_name?: string
-  join_date?: string
-  contract_type?: string
-  created_at: string
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing required environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
 
-export interface Order {
-  id: string
-  courier_id: string
-  platform: string
-  order_date: string
-  orders_count: number
-  gross_earnings: number
-  deductions: number
-  net_earnings: number
-  status: 'pending' | 'approved' | 'paid'
-  created_at: string
+// Create and export the supabase client for database queries
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+export const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+
+/**
+ * إرسال رمز التحقق OTP
+ */
+export async function sendOTP(phone: string): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  debug_code?: string;
+}> {
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/send-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+  return res.json();
 }
 
-export interface Finance {
-  id: string
-  courier_id: string
-  month: number
-  year: number
-  total_orders: number
-  gross_salary: number
-  deductions: number
-  bonus: number
-  net_salary: number
-  payment_status: 'pending' | 'approved' | 'paid'
-}
-
-export interface Complaint {
-  id: string
-  type: 'complaint' | 'request' | 'inquiry'
-  source: 'internal' | 'platform' | 'customer'
-  courier_id?: string
-  subject: string
-  description?: string
-  status: 'open' | 'in_progress' | 'resolved' | 'closed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  created_at: string
-}
-
-export interface Vehicle {
-  id: string
-  courier_id?: string
-  plate_number: string
-  vehicle_type?: string
-  brand?: string
-  model?: string
-  status: 'active' | 'maintenance' | 'inactive'
-  insurance_expiry?: string
-  registration_expiry?: string
+/**
+ * التحقق من رمز OTP وتسجيل الدخول
+ */
+export async function verifyOTP(phone: string, code: string): Promise<{
+  success?: boolean;
+  error?: string;
+  user?: {
+    id: string;
+    phone: string;
+    name: string | null;
+    role: string;
+  };
+  session?: {
+    token: string;
+    expires_at: string;
+  };
+  is_new_user?: boolean;
+  message?: string;
+}> {
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, code }),
+  });
+  return res.json();
 }

@@ -94,6 +94,21 @@ export function Layout({ children }: LayoutProps) {
                   {link.name}
                 </NavLink>
               ))}
+              <div className="flex flex-col gap-2 mt-2 border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground font-medium">تسجيل الدخول</p>
+                <Link to="/unified-login?role=admin" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
+                  دخول الإدارة
+                </Link>
+                <Link to="/unified-login?role=staff" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+                  دخول الموظفين
+                </Link>
+                <Link to="/login?role=driver" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
+                  <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+                  دخول المندوبين
+                </Link>
+              </div>
               <Button asChild variant="default" size="lg" className="mt-4 w-full rounded-xl font-bold text-lg">
                 <Link to={ROUTE_PATHS.CONTACT}>تواصل معنا الآن</Link>
               </Button>

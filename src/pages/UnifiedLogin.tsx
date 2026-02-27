@@ -1,4 +1,4 @@
-// Unified Login - Clean version without test credentials
+// Unified Login - Email + Password + Email OTP (no-reply@fll.sa)
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { User, Phone, Shield, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { User, Mail, Lock, Shield, CheckCircle, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
 
@@ -22,157 +22,189 @@ const ROLE_ROUTES: Record<string, string> = {
   courier: "/courier/portal",
 };
 
-function normalizePhone(raw: string): string {
-  const d = raw.replace(/[^0-9+]/g, "");
-  if (d.startsWith("+966")) return d;
-  if (d.startsWith("00966")) return "+" + d.slice(2);
-  if (d.startsWith("05")) return "+966" + d.slice(1);
-  if (d.startsWith("5") && d.length === 9) return "+966" + d;
-  return d;
-}
-
-function isValidSA(phone: string): boolean {
-  return /^\\+9665\\d{8}$/.test(phone);
-}
-
 export default function UnifiedLogin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const roleFromQuery = searchParams.get("role");
+  const role = searchParams.get("role");
   const { toast } = useToast();
 
-  const [phone, setPhone] = useState("");
+  const [screen, setScreen] = useState<"credentials" | "otp">("credentials");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
   }, [countdown]);
 
-  const handleSendOtp = useCallback(async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const normalized = normalizePhone(phone);
-    if (!isValidSA(normalized)) {
-      setError("رقم الهاتف غير صحيح. يجب أن يبدأ بـ 5 ويكون 9 أرقام");
+  const handleCredentials = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("\u0627\u0644\u0631\u062c\u0627\u0621 \u0625\u062f\u062e\u0627\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0648\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631");
       return;
     }
     setLoading(true);
-    setError("");
     try {
-      if (!supabase) throw new Error("الاتصال غير متاح");
-      const { error: otpErr } = await supabase.auth.signInWithOtp({ phone: normalized });
-      if (otpErr) throw otpErr;
-      setStep("otp");
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInError) {
+        setError("\u0627\u0644\u0628\u0631\u064a\u062f \u0623\u0648 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629");
+        return;
+      }
+      await supabase.auth.signOut();
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: false },
+      });
+      if (otpError) {
+        setError("\u062d\u062f\u062b \u062e\u0637\u0623 \u0623\u062b\u0646\u0627\u0621 \u0625\u0631\u0633\u0627\u0644 \u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642");
+        return;
+      }
+      setScreen("otp");
       setCountdown(60);
-      toast({ title: "تم إرسال رمز التحقق", description: "تم إرسال رمز التحقق إلى " + normalized });
-    } catch (err: any) {
-      setError(err?.message ?? "حدث خطأ أثناء إرسال الرمز");
+      toast({ title: "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642", description: email });
+    } catch (err: unknown) {
+      setError((err as Error)?.message || "\u062e\u0637\u0623");
     } finally {
       setLoading(false);
     }
-  }, [phone, toast]);
+  }, [email, password, toast]);
 
-  const handleVerifyOtp = useCallback(async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (otp.length !== 6) { setError("أدخل رمز التحقق المكون من 6 أرقام"); return; }
-    setLoading(true);
+  const handleOtp = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
+    if (otp.length !== 6) {
+      setError("\u0627\u0644\u0631\u062c\u0627\u0621 \u0625\u062f\u062e\u0627\u0644 \u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642 \u0627\u0644\u0645\u0643\u0648\u0646 \u0645\u0646 6 \u0623\u0631\u0642\u0627\u0645");
+      return;
+    }
+    setLoading(true);
     try {
-      if (!supabase) throw new Error("الاتصال غير متاح");
-      const normalized = normalizePhone(phone);
-      const { data, error: verifyErr } = await supabase.auth.verifyOtp({
-        phone: normalized, token: otp, type: "sms",
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp,
+        type: "email",
       });
-      if (verifyErr) throw verifyErr;
-      const { data: profile } = await supabase.from("users_2026_02_17_21_00").select("role").eq("id", data.user?.id).single();
-      const userRole = profile?.role ?? "staff";
-      let destination: string;
-      if (roleFromQuery === "admin" || roleFromQuery === "staff") { destination = "/admin/dashboard"; }
-      else if (roleFromQuery === "driver") { destination = "/courier/portal"; }
-      else { destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard"; }
+      if (verifyError || !data.user) {
+        setError("\u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d \u0623\u0648 \u0645\u0646\u062a\u0647\u064a");
+        return;
+      }
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+      const userRole = profile?.role ?? role ?? "staff";
+      const destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard";
       navigate(destination);
-    } catch (err: any) {
-      const msg = err?.message ?? "";
-      if (msg.includes("Invalid") || msg.includes("expired")) { setError("رمز التحقق غير صحيح أو منتهي الصلاحية"); }
-      else { setError("حدث خطأ أثناء التحقق"); }
-    } finally { setLoading(false); }
-  }, [otp, phone, roleFromQuery, navigate]);
+    } catch (err: unknown) {
+      setError((err as Error)?.message || "\u062e\u0637\u0623");
+    } finally {
+      setLoading(false);
+    }
+  }, [email, otp, role, navigate]);
+
+  const handleResend = useCallback(async () => {
+    setLoading(true);
+    try {
+      await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+      setCountdown(60);
+    } finally {
+      setLoading(false);
+    }
+  }, [email]);
+
+  const roleLabels: Record<string, string> = {
+    admin: "\u0625\u062f\u0627\u0631\u0629", staff: "\u0645\u0648\u0638\u0641", courier: "\u0645\u0646\u062f\u0648\u0628",
+    finance: "\u0645\u0627\u0644\u064a\u0629", hr: "\u0645\u0648\u0627\u0631\u062f \u0628\u0634\u0631\u064a\u0629",
+    fleet: "\u0623\u0633\u0637\u0648\u0644", ops: "\u0639\u0645\u0644\u064a\u0627\u062a",
+  };
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4" dir="rtl">
-        <motion.div className="w-full max-w-xs sm:max-w-md" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-            <CardHeader className="text-center pb-4 sm:pb-8 px-3 sm:px-6 pt-4 sm:pt-6">
-              <div className="mx-auto w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 sm:mb-4">
-                <User className="w-5 h-5 sm:w-8 sm:h-8 text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+          <Card className="shadow-lg border-0 bg-white/90 backdrop-blur">
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                <User className="w-8 h-8 text-slate-600" />
               </div>
-              <CardTitle className="text-lg sm:text-2xl font-bold text-foreground">تسجيل الدخول</CardTitle>
-              <CardDescription className="text-muted-foreground text-sm sm:text-base">
-                {step === "phone" ? "أدخل رقم هاتفك للحصول على رمز التحقق" : "أدخل رمز التحقق المرسل إلى هاتفك"}
+              <CardTitle className="text-2xl font-bold text-slate-800">\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644</CardTitle>
+              <CardDescription className="text-slate-500">
+                {screen === "credentials" ? "\u0623\u062f\u062e\u0644 \u0628\u064a\u0627\u0646\u0627\u062a\u0643 \u0644\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0645\u0646\u0635\u0629 \u0641\u064a\u0631\u0633\u062a \u0644\u0627\u064a\u0646" : `\u0623\u062f\u062e\u0644 \u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642 \u0627\u0644\u0645\u0631\u0633\u0644 \u0625\u0644\u0649 ${email}`}
               </CardDescription>
+              {role && <span className="inline-block mt-1 px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">{roleLabels[role] ?? role}</span>}
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6 pb-4 sm:pb-6">
+            <CardContent className="pt-4">
               {error && (
-                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                  <p className="text-sm text-destructive">{error}</p>
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4" /><span>{error}</span>
                 </div>
               )}
-              {step === "phone" ? (
-                <form onSubmit={handleSendOtp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">رقم الهاتف</Label>
+              {screen === "credentials" && (
+                <form onSubmit={handleCredentials} className="space-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="email">\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a</Label>
                     <div className="relative">
-                      <Phone className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input type="tel" placeholder="5xxxxxxxx أو +9665xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} className="pr-10 text-left" dir="ltr" />
+                      <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@fll.sa" className="pr-10" dir="ltr" disabled={loading} />
                     </div>
-                    <p className="text-xs text-muted-foreground">SA يقبل الصيغ: +9665xxxxxxxx، 05xxxxxxxx، 5xxxxxxxx</p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading || !phone.trim()}>
-                    {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> جاري الإرسال...</> : <><Phone className="mr-2 h-4 w-4" /> إرسال رمز التحقق</>}
+                  <div className="space-y-1">
+                    <Label htmlFor="password">\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631</Label>
+                    <div className="relative">
+                      <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" className="pr-10 pl-10" dir="ltr" disabled={loading} />
+                      <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 text-white" disabled={loading}>
+                    {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" /> \u062c\u0627\u0631\u064a...</> : "\u0645\u062a\u0627\u0628\u0639\u0629"}
                   </Button>
                 </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div className="space-y-2 flex flex-col items-center">
-                    <Label className="text-sm font-medium">رمز التحقق</Label>
-                    <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                      <InputOTPGroup dir="ltr">
-                        {[0, 1, 2, 3, 4, 5].map((i) => (<InputOTPSlot key={i} index={i} />))}
-                      </InputOTPGroup>
-                    </InputOTP>
+              )}
+              {screen === "otp" && (
+                <form onSubmit={handleOtp} className="space-y-5">
+                  <div className="text-center">
+                    <Mail className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                    <p className="text-sm text-slate-600">\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0643\u0648\u062f \u0646\u0648-\u0631\u064a\u0628\u0644\u0627\u064a \u0625\u0644\u0649: <span className="font-mono font-bold">{email}</span></p>
+                    <p className="text-xs text-slate-400">no-reply@fll.sa</p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-                    {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> جاري التحقق...</> : <><Shield className="mr-2 h-4 w-4" /> تحقق ودخول</>}
+                  <div className="space-y-2">
+                    <Label className="text-center block">\u0643\u0648\u062f \u0646\u0648-\u0631\u064a\u0628\u0644\u0627\u064a</Label>
+                    <div className="flex justify-center" dir="ltr">
+                      <InputOTP maxLength={6} value={otp} onChange={setOtp} disabled={loading}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 text-white" disabled={loading || otp.length !== 6}>
+                    {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" /> \u062c\u0627\u0631\u064a...</> : <><CheckCircle className="w-4 h-4 ml-2" /> \u062a\u0623\u0643\u064a\u062f \u0627\u0644\u062f\u062e\u0648\u0644</>}
                   </Button>
-                  <div className="text-sm text-muted-foreground text-center">
-                    لم تستلم الرمز؟{" "}
-                    <Button type="button" variant="link" onClick={() => handleSendOtp()} disabled={countdown > 0 || loading} className="p-0 h-auto text-sm">
-                      {countdown > 0 ? "إعادة الإرسال خلال " + countdown + "s" : "إعادة الإرسال"}
-                    </Button>
+                  <div className="flex items-center justify-between text-sm">
+                    <button type="button" onClick={() => { setScreen("credentials"); setOtp(""); setError(""); }} className="text-slate-500 underline">\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a</button>
+                    {countdown > 0 ? <span className="text-slate-400">\u0625\u0639\u0627\u062f\u0629 \u062e\u0644\u0627\u0644 {countdown}\u062b</span> : (
+                      <button type="button" onClick={handleResend} disabled={loading} className="text-blue-600 underline">\u0625\u0639\u0627\u062f\u0629 \u0625\u0631\u0633\u0627\u0644</button>
+                    )}
                   </div>
                 </form>
               )}
-              <div className="pt-6 border-t border-border">
-                <p className="text-xs text-muted-foreground text-center mb-3">نقطة دخول واحدة لجميع المستخدمين</p>
-                <div className="flex justify-center gap-4">
-                  <div className="flex flex-col items-center gap-1"><User className="w-4 h-4 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">مندوب</span></div>
-                  <div className="flex flex-col items-center gap-1"><Shield className="w-4 h-4 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">إدارة</span></div>
-                  <div className="flex flex-col items-center gap-1"><User className="w-4 h-4 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">موظف</span></div>
-                </div>
-              </div>
-              <div className="pt-4">
-                <p className="text-xs text-muted-foreground text-center mb-2">بحاجة لمساعدة؟{" "}<Button variant="link" className="p-0 h-auto text-xs" onClick={() => navigate("/contact")}>اتصل بالدعم التقني</Button></p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><Shield className="w-3 h-3" /><span>تشفير متقدم</span></div>
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><CheckCircle className="w-3 h-3" /><span>تحقق ثنائي</span></div>
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><Phone className="w-3 h-3" /><span>OTP آمن</span></div>
+              <div className="mt-6 pt-4 border-t border-slate-100">
+                <p className="text-center text-xs text-slate-400 mb-3">\u0646\u0642\u0637\u0629 \u062f\u062e\u0648\u0644 \u0648\u0627\u062d\u062f\u0629 \u0644\u062c\u0645\u064a\u0639 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646</p>
+                <div className="flex justify-center gap-6 text-xs text-slate-400">
+                  <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> \u062a\u0634\u0641\u064a\u0631 \u0645\u062a\u0642\u062f\u0645</span>
+                  <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> \u062a\u062d\u0642\u0642 \u062b\u0646\u0627\u0626\u064a</span>
+                  <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> OTP \u0628\u0631\u064a\u062f\u064a</span>
                 </div>
               </div>
             </CardContent>

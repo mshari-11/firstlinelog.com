@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/useAuth";
 
 const driverProfile = {
   name: "أحمد محمد الغامدي",
@@ -68,8 +67,6 @@ const item = {
 };
 
 export default function DriverProfile() {
-  const { user } = useAuth();
-
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       <motion.div variants={item}>

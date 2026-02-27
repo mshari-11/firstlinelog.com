@@ -47,9 +47,9 @@ export default function LoginPage() {
 
             const userRole = profile?.role ?? "staff";
         let destination: string;
-                    if (roleFromQuery === "admin" || roleFromQuery === "staff") {
+                    if (role === "admin" || role === "staff") {
                                   destination = "/admin/dashboard";
-                    } else if (roleFromQuery === "driver") {
+                    } else if (role === "driver") {
                                   destination = "/courier/portal";
                     } else {
                                   destination = ROLE_ROUTES[userRole] ?? "/admin/dashboard";

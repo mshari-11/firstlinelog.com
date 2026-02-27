@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "serve dist -s -l 3000"
+    "start": "npm run build && serve dist -s -l 3000"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.700.0",

@@ -1,3 +1,4 @@
+// Unified Login - Clean version without test credentials
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";

@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/admin/auth";
 import {
   LayoutDashboard, Users, FileSpreadsheet, ClipboardList,
   MessageSquare, DollarSign, Settings, LogOut, ChevronRight,
-  Bell, Car, Building2
+  Bell, Car, Building2, BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ const navItems = [
   { label: "استيراد Excel", icon: FileSpreadsheet, path: "/admin/excel" },
   { label: "الرواتب والمالية", icon: DollarSign, path: "/admin/finance" },
   { label: "الشكاوى والطلبات", icon: MessageSquare, path: "/admin/complaints" },
+  { label: "التقارير", icon: BarChart3, path: "/admin/reports" },
   { label: "المركبات", icon: Car, path: "/admin/vehicles" },
   { label: "الأقسام والموظفين", icon: Building2, path: "/admin/staff" },
   { label: "الإعدادات", icon: Settings, path: "/admin/settings" },

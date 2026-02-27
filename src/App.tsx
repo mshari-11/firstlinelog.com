@@ -26,6 +26,7 @@ import AdminExcel from "@/pages/admin/Excel";
 import AdminComplaints from "@/pages/admin/Complaints";
 import AdminVehicles from "@/pages/admin/Vehicles";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminReports from "@/pages/admin/Reports";
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 import LoginPage from "@/pages/Login";
@@ -98,6 +99,7 @@ export default function App() {
               <Route path="excel" element={<PermissionGuard permission="excel"><AdminExcel /></PermissionGuard>} />
               <Route path="finance" element={<PermissionGuard permission="finance"><AdminFinance /></PermissionGuard>} />
               <Route path="complaints" element={<PermissionGuard permission="complaints"><AdminComplaints /></PermissionGuard>} />
+              <Route path="reports" element={<PermissionGuard permission="reports"><AdminReports /></PermissionGuard>} />
               <Route path="vehicles" element={<AdminVehicles />} />
               <Route path="staff" element={<AdminStaff />} />
               {/* ✅ إعدادات النظام - للمديرين فقط */}

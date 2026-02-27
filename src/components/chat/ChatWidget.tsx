@@ -29,11 +29,6 @@ interface ChatWidgetProps {
 const ADMIN_ROLES: string[] = ["admin", "owner", "staff", "finance", "hr", "operations"];
 
 export default function ChatWidget({ userRole, userId, userName }: ChatWidgetProps) {
-    // إخفاء المساعد تماماً للمندوبين والسائقين
-  if (!ADMIN_ROLES.includes(userRole)) {
-        return null;
-  }
-
   const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
@@ -53,7 +48,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                 };
                 setMessages([welcome]);
         }
-  }, [open]);
+  }, [open, messages.length, userName]);
 
   useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -130,6 +125,11 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                 sendMessage();
         }
   };
+
+    // إخفاء المساعد تماماً للمندوبين والسائقين
+  if (!ADMIN_ROLES.includes(userRole)) {
+        return null;
+  }
 
   return (
         <div className="fixed bottom-6 left-6 z-50" dir="rtl">

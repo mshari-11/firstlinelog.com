@@ -13,7 +13,8 @@
     "start": "serve dist -s -l 3000"
   },
   "dependencies": {
-        "@neondatabase/serverless": "^0.10.4",
+    "@aws-sdk/client-ses": "^3.700.0",
+    "@"@neondatabase/serverless": "^0.10.4",
     "@hookform/resolvers": "^3.9.0",
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-accordion": "^1.2.0",

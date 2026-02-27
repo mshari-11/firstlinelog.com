@@ -17,6 +17,8 @@ export const ROUTE_PATHS = {
   PRIVACY: "/privacy",
   TERMS: "/terms",
   LOGIN: "/login",
+  UNIFIED_LOGIN: "/unified-login",
+  COMPLIANCE: "/compliance",
   // Admin Dashboard
   ADMIN: "/admin",
   ADMIN_DRIVERS: "/admin/drivers",
@@ -27,11 +29,6 @@ export const ROUTE_PATHS = {
   DRIVER_ORDERS: "/driver/orders",
   DRIVER_EARNINGS: "/driver/earnings",
   DRIVER_PROFILE: "/driver/profile",
-  LOGIN: "/login",
-  UNIFIED_LOGIN: "/unified-login",
-  PRIVACY: "/privacy",
-  TERMS: "/terms",
-  COMPLIANCE: "/compliance",
 } as const;
 
 /**

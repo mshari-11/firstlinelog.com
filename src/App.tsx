@@ -41,64 +41,64 @@ import DriverProfile from "@/pages/driver/DriverProfile";
 
 const queryClient = new QueryClient({
     defaultOptions: {
-          queries: {
-                  staleTime: 5 * 60 * 1000,
-                  retry: 1,
-                  refetchOnWindowFocus: false,
-          },
+        queries: {
+            staleTime: 5 * 60 * 1000,
+            retry: 1,
+            refetchOnWindowFocus: false,
+        },
     },
 });
 
 export default function App() {
     return (
-          <QueryClientProvider client={queryClient}>
-                  <TooltipProvider>
-                          <Toaster />
-                          <Sonner position="top-center" richColors closeButton dir="rtl" />
-                          <BrowserRouter>
-                                    <AuthProvider>
-                                                <Routes>
-                                                              <Route path={ROUTE_PATHS.ADMIN} element={<AdminLayout />}>
-                                                                              <Route index element={<AdminDashboard />} />
-                                                                              <Route path="drivers" element={<AdminDrivers />} />
-                                                                              <Route path="orders" element={<AdminOrders />} />
-                                                                              <Route path="reports" element={<AdminReports />} />
-                                                              </Route>Route>
-                                                
-                                                              <Route path={ROUTE_PATHS.DRIVER} element={<DriverLayout />}>
-                                                                              <Route index element={<DriverDashboard />} />
-                                                                              <Route path="orders" element={<DriverOrders />} />
-                                                                              <Route path="earnings" element={<DriverEarnings />} />
-                                                                              <Route path="profile" element={<DriverProfile />} />
-                                                              </Route>Route>
-                                                
-                                                              <Route path="*" element={
-                                                                                <Layout>
-                                                                                                  <Routes>
-                                                                                                                      <Route path={ROUTE_PATHS.HOME} element={<Home />} />
-                                                                                                                      <Route path={ROUTE_PATHS.ABOUT} element={<About />} />
-                                                                                                                      <Route path={ROUTE_PATHS.SERVICES} element={<Services />} />
-                                                                                                                      <Route path={ROUTE_PATHS.PLATFORMS} element={<ForPlatforms />} />
-                                                                                                                      <Route path={ROUTE_PATHS.GOVERNANCE} element={<Governance />} />
-                                                                                                                      <Route path={ROUTE_PATHS.INVESTORS} element={<Investors />} />
-                                                                                                                      <Route path={ROUTE_PATHS.JOIN_US} element={<JoinUs />} />
-                                                                                                                      <Route path={ROUTE_PATHS.CONTACT} element={<Contact />} />
-                                                                                                                      <Route path={ROUTE_PATHS.TEAM} element={<Team />} />
-                                                                                                                      <Route path={ROUTE_PATHS.PRIVACY} element={<Privacy />} />
-                                                                                                                      <Route path={ROUTE_PATHS.TERMS} element={<Terms />} />
-                                                                                                                      <Route path={ROUTE_PATHS.LOGIN} element={<Login />} />
-                                                                                                                      <Route path={ROUTE_PATHS.UNIFIED_LOGIN} element={<UnifiedLogin />} />
-                                                                                                                      <Route path="/register" element={<Register />} />
-                                                                                                                      <Route path={ROUTE_PATHS.NEWS} element={<News />} />
-                                                                                                                      <Route path={ROUTE_PATHS.COMPLIANCE} element={<Compliance />} />
-                                                                                                                      <Route path="*" element={<Home />} />
-                                                                                                    </Routes>Routes>
-                                                                                </Layout>Layout>
-                                                                } />
-                                                              </Route>Routes>
-                                                </Routes>AuthProvider>
-                                    </AuthProvider>BrowserRouter>
-                          </BrowserRouter>TooltipProvider>
-                  </TooltipProvider>QueryClientProvider>
-            );
-            }</TooltipProvider>
+        <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+                <Toaster />
+                <Sonner position="top-center" richColors closeButton dir="rtl" />
+                <BrowserRouter>
+                    <AuthProvider>
+                        <Routes>
+                            <Route path={ROUTE_PATHS.ADMIN} element={<AdminLayout />}>
+                                <Route index element={<AdminDashboard />} />
+                                <Route path="drivers" element={<AdminDrivers />} />
+                                <Route path="orders" element={<AdminOrders />} />
+                                <Route path="reports" element={<AdminReports />} />
+                            </Route>
+
+                            <Route path={ROUTE_PATHS.DRIVER} element={<DriverLayout />}>
+                                <Route index element={<DriverDashboard />} />
+                                <Route path="orders" element={<DriverOrders />} />
+                                <Route path="earnings" element={<DriverEarnings />} />
+                                <Route path="profile" element={<DriverProfile />} />
+                            </Route>
+
+                            <Route path="*" element={
+                                <Layout>
+                                    <Routes>
+                                        <Route path={ROUTE_PATHS.HOME} element={<Home />} />
+                                        <Route path={ROUTE_PATHS.ABOUT} element={<About />} />
+                                        <Route path={ROUTE_PATHS.SERVICES} element={<Services />} />
+                                        <Route path={ROUTE_PATHS.PLATFORMS} element={<ForPlatforms />} />
+                                        <Route path={ROUTE_PATHS.GOVERNANCE} element={<Governance />} />
+                                        <Route path={ROUTE_PATHS.INVESTORS} element={<Investors />} />
+                                        <Route path={ROUTE_PATHS.JOIN_US} element={<JoinUs />} />
+                                        <Route path={ROUTE_PATHS.CONTACT} element={<Contact />} />
+                                        <Route path={ROUTE_PATHS.TEAM} element={<Team />} />
+                                        <Route path={ROUTE_PATHS.PRIVACY} element={<Privacy />} />
+                                        <Route path={ROUTE_PATHS.TERMS} element={<Terms />} />
+                                        <Route path={ROUTE_PATHS.LOGIN} element={<Login />} />
+                                        <Route path={ROUTE_PATHS.UNIFIED_LOGIN} element={<UnifiedLogin />} />
+                                        <Route path="/register" element={<Register />} />
+                                        <Route path={ROUTE_PATHS.NEWS} element={<News />} />
+                                        <Route path={ROUTE_PATHS.COMPLIANCE} element={<Compliance />} />
+                                        <Route path="*" element={<Home />} />
+                                    </Routes>
+                                </Layout>
+                            } />
+                        </Routes>
+                    </AuthProvider>
+                </BrowserRouter>
+            </TooltipProvider>
+        </QueryClientProvider>
+    );
+}

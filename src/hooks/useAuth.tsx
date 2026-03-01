@@ -2,11 +2,12 @@
  * سياق المصادقة (Auth Context) لإدارة حالة تسجيل الدخول
  * FirstLine Logistics
  */
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 interface User {
   id: string;
-  phone: string;
+  phone?: string;
+  email?: string;
   name: string | null;
   role: string;
 }
@@ -23,6 +24,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (user: User, session: Session) => void;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -45,26 +47,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(parsed.user);
           setSession(parsed.session);
         } else {
+          // الجلسة منتهية
           localStorage.removeItem(STORAGE_KEY);
         }
       }
-    } catch {
+    } catch (err) {
+      console.error('Auth load error:', err);
       localStorage.removeItem(STORAGE_KEY);
     }
     setIsLoading(false);
   }, []);
 
-  const login = (userData: User, sessionData: Session) => {
+  const login = useCallback((userData: User, sessionData: Session) => {
     setUser(userData);
     setSession(sessionData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: userData, session: sessionData }));
-  };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+      user: userData, 
+      session: sessionData 
+    }));
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setSession(null);
     localStorage.removeItem(STORAGE_KEY);
-  };
+    // يمكن إضافة redirect هنا
+    window.location.href = '/';
+  }, []);
+
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      // تحديث localStorage أيضاً
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        parsed.user = updated;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      }
+      return updated;
+    });
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -75,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}
@@ -88,4 +113,17 @@ export function useAuth() {
     throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
+}
+
+// Helper hook للتحقق من الدور
+export function useRequireAuth(allowedRoles?: string[]) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  const hasAccess = isAuthenticated && (!allowedRoles || allowedRoles.includes(user?.role || ''));
+  
+  return {
+    hasAccess,
+    isLoading,
+    user,
+  };
 }

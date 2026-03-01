@@ -3,7 +3,7 @@
  * الإصدار: 2026
  */
 
-export const export const ROUTE_PATHS = {
+export const ROUTE_PATHS = {
   HOME: "/",
   ABOUT: "/about",
   SERVICES: "/services",
@@ -31,7 +31,7 @@ export const export const ROUTE_PATHS = {
   DRIVER_ORDERS: "/driver/orders",
   DRIVER_EARNINGS: "/driver/earnings",
   DRIVER_PROFILE: "/driver/profile",
-} as const;;
+} as const;
 
 /**
  * بيانات المقاييس والإحصائيات

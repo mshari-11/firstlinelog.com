@@ -13,6 +13,7 @@ import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
+import ServiceDetails from "@/pages/ServiceDetails";
 import ForPlatforms from "@/pages/ForPlatforms";
 import Governance from "@/pages/Governance";
 import Investors from "@/pages/Investors";
@@ -21,6 +22,7 @@ import Contact from "@/pages/Contact";
 import Team from "@/pages/Team";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import FAQ from "@/pages/FAQ";
 import RegisterPage from "@/pages/Register";
 import UnifiedLogin from "@/pages/UnifiedLogin";
 
@@ -145,6 +147,7 @@ export default function App() {
                     <Route path={ROUTE_PATHS.HOME} element={<Home />} />
                     <Route path={ROUTE_PATHS.ABOUT} element={<About />} />
                     <Route path={ROUTE_PATHS.SERVICES} element={<Services />} />
+                    <Route path={ROUTE_PATHS.SERVICE_DETAILS} element={<ServiceDetails />} />
                     <Route path={ROUTE_PATHS.PLATFORMS} element={<ForPlatforms />} />
                     <Route path={ROUTE_PATHS.GOVERNANCE} element={<Governance />} />
                     <Route path={ROUTE_PATHS.INVESTORS} element={<Investors />} />
@@ -153,6 +156,7 @@ export default function App() {
                     <Route path={ROUTE_PATHS.TEAM} element={<Team />} />
                     <Route path={ROUTE_PATHS.PRIVACY} element={<Privacy />} />
                     <Route path={ROUTE_PATHS.TERMS} element={<Terms />} />
+                    <Route path={ROUTE_PATHS.FAQ} element={<FAQ />} />
                     <Route path="*" element={<Home />} />
                   </Routes>
                 </Layout>

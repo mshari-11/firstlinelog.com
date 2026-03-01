@@ -3,10 +3,11 @@
  * الإصدار: 2026
  */
 
-export const ROUTE_PATHS = {
+export const export const ROUTE_PATHS = {
   HOME: "/",
   ABOUT: "/about",
   SERVICES: "/services",
+  SERVICE_DETAILS: "/services/:serviceId",
   PLATFORMS: "/platforms",
   GOVERNANCE: "/governance",
   INVESTORS: "/investors",
@@ -16,6 +17,7 @@ export const ROUTE_PATHS = {
   TEAM: "/team",
   PRIVACY: "/privacy",
   TERMS: "/terms",
+  FAQ: "/faq",
   LOGIN: "/login",
   UNIFIED_LOGIN: "/unified-login",
   COMPLIANCE: "/compliance",
@@ -29,7 +31,7 @@ export const ROUTE_PATHS = {
   DRIVER_ORDERS: "/driver/orders",
   DRIVER_EARNINGS: "/driver/earnings",
   DRIVER_PROFILE: "/driver/profile",
-} as const;
+} as const;;
 
 /**
  * بيانات المقاييس والإحصائيات

@@ -17,8 +17,8 @@ import { Layout } from "@/components/Layout";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://djebhztfewjfyyoortvv.supabase.co';
 
 const ROLE_ROUTES: Record<string, string> = {
-  admin: "/admin/dashboard",
-  super_admin: "/admin/dashboard",
+  admin: "/admin",
+  super_admin: "/admin",
   finance: "/admin-panel/finance",
   hr: "/admin-panel/staff",
   fleet: "/admin-panel/vehicles",
@@ -105,7 +105,7 @@ export default function UnifiedLogin() {
       });
       
       // التوجيه حسب الدور
-      const targetRoute = ROLE_ROUTES[data.user.role] || ROLE_ROUTES[role] || "/admin/dashboard";
+      const targetRoute = ROLE_ROUTES[data.user.role] || ROLE_ROUTES[role] || "/admin";
       navigate(targetRoute);
       
     } catch (err) {

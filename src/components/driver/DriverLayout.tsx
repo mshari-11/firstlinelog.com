@@ -2,7 +2,7 @@
  * تخطيط لوحة تحكم السائق - Driver Layout
  * FirstLine Logistics
  */
-import { useState } from "react";
+import React, { useState } from "react";
 import { NavLink, Link, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -30,8 +30,30 @@ const driverNavLinks = [
 
 export function DriverLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // حماية المصادقة
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login?role=driver", { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
+
+  if (isLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground">جاري التحقق...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleLogout = () => {
     logout();

@@ -1,4 +1,4 @@
-// vite.config.ts
+h// vite.config.ts
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
@@ -217,7 +217,7 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
-      // cdnPrefixImages(), // disabled: causes ReferenceError in production build
+      cdnPrefixImages(),
     ].filter(Boolean),
     resolve: {
       alias: {

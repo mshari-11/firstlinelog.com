@@ -217,7 +217,7 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
-      cdnPrefixImages(),
+      // cdnPrefixImages(), // disabled: causes ReferenceError in production build
     ].filter(Boolean),
     resolve: {
       alias: {

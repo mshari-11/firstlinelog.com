@@ -30,7 +30,19 @@ export const ROUTE_PATHS = {
   DRIVER: "/driver",
   DRIVER_ORDERS: "/driver/orders",
   DRIVER_EARNINGS: "/driver/earnings",
+  DRIVER_ENTITLEMENTS: "/driver/entitlements",
   DRIVER_PROFILE: "/driver/profile",
+  // Admin Panel (Full)
+  ADMIN_PANEL: "/admin-panel/dashboard",
+  ADMIN_PANEL_FINANCE: "/admin-panel/finance",
+  ADMIN_PANEL_COURIERS: "/admin-panel/couriers",
+  ADMIN_PANEL_ORDERS: "/admin-panel/orders",
+  ADMIN_PANEL_STAFF: "/admin-panel/staff",
+  ADMIN_PANEL_REPORTS: "/admin-panel/reports",
+  ADMIN_PANEL_COMPLAINTS: "/admin-panel/complaints",
+  ADMIN_PANEL_VEHICLES: "/admin-panel/vehicles",
+  ADMIN_PANEL_SETTINGS: "/admin-panel/settings",
+  ADMIN_PANEL_EXCEL: "/admin-panel/excel",
 } as const;
 
 /**

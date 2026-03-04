@@ -49,6 +49,12 @@ const adminNavLinks = [
     path: ROUTE_PATHS.ADMIN_REPORTS,
     icon: BarChart3,
   },
+  {
+    name: "لوحة الإدارة",
+    path: "/admin-panel/dashboard",
+    icon: Settings,
+    external: true,
+  },
 ];
 
 export function AdminLayout() {

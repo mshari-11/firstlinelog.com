@@ -11,16 +11,16 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "الرئيسية", icon: LayoutDashboard, path: "/admin/dashboard" },
-  { label: "المناديب", icon: Users, path: "/admin/couriers" },
-  { label: "الطلبات", icon: ClipboardList, path: "/admin/orders" },
-  { label: "استيراد Excel", icon: FileSpreadsheet, path: "/admin/excel" },
-  { label: "الرواتب والمالية", icon: DollarSign, path: "/admin/finance" },
-  { label: "الشكاوى والطلبات", icon: MessageSquare, path: "/admin/complaints" },
-  { label: "التقارير", icon: BarChart3, path: "/admin/reports" },
-  { label: "المركبات", icon: Car, path: "/admin/vehicles" },
-  { label: "الأقسام والموظفين", icon: Building2, path: "/admin/staff" },
-  { label: "الإعدادات", icon: Settings, path: "/admin/settings" },
+  { label: "الرئيسية", icon: LayoutDashboard, path: "/admin-panel/dashboard" },
+  { label: "المناديب", icon: Users, path: "/admin-panel/couriers" },
+  { label: "الطلبات", icon: ClipboardList, path: "/admin-panel/orders" },
+  { label: "استيراد Excel", icon: FileSpreadsheet, path: "/admin-panel/excel" },
+  { label: "الرواتب والمالية", icon: DollarSign, path: "/admin-panel/finance" },
+  { label: "الشكاوى والطلبات", icon: MessageSquare, path: "/admin-panel/complaints" },
+  { label: "التقارير", icon: BarChart3, path: "/admin-panel/reports" },
+  { label: "المركبات", icon: Car, path: "/admin-panel/vehicles" },
+  { label: "الأقسام والموظفين", icon: Building2, path: "/admin-panel/staff" },
+  { label: "الإعدادات", icon: Settings, path: "/admin-panel/settings" },
 ];
 
 // ألوان هوية فيرست لاين

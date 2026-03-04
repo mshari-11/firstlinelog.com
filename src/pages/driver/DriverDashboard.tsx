@@ -3,9 +3,10 @@
  * FirstLine Logistics
  */
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Package,
-  Wallet,
+  BadgeDollarSign,
   Star,
   Clock,
   TrendingUp,
@@ -14,6 +15,7 @@ import {
   CheckCircle2,
   MapPin,
   Calendar,
+  ChevronLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +23,10 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 
 const stats = [
-  { title: "طلبات اليوم", value: "12", icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
-  { title: "أرباح اليوم", value: "485 ر.س", icon: Wallet, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { title: "التقييم", value: "4.8", icon: Star, color: "text-amber-600", bg: "bg-amber-50" },
-  { title: "ساعات العمل", value: "6.5 س", icon: Clock, color: "text-purple-600", bg: "bg-purple-50" },
+  { title: "طلبات اليوم", value: "12", icon: Package, color: "text-blue-600", bg: "bg-blue-50", link: "/driver/orders" },
+  { title: "مستحقاتي", value: "اضغط للتفاصيل", icon: BadgeDollarSign, color: "text-emerald-600", bg: "bg-emerald-50", link: "/driver/entitlements" },
+  { title: "التقييم", value: "4.8", icon: Star, color: "text-amber-600", bg: "bg-amber-50", link: null },
+  { title: "ساعات العمل", value: "6.5 س", icon: Clock, color: "text-purple-600", bg: "bg-purple-50", link: null },
 ];
 
 const activeOrders = [
@@ -60,6 +62,7 @@ const item = {
 
 export default function DriverDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const maxEarnings = Math.max(...weeklyStats.map((d) => d.earnings));
 
   return (
@@ -76,10 +79,18 @@ export default function DriverDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <motion.div key={stat.title} variants={item}>
-            <Card>
+            <Card
+              className={stat.link ? "cursor-pointer hover:shadow-md hover:border-emerald-300 transition-all" : ""}
+              onClick={() => stat.link && navigate(stat.link)}
+            >
               <CardContent className="p-4">
-                <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3`}>
-                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <div className="flex items-start justify-between">
+                  <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3`}>
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                  {stat.link && (
+                    <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground rotate-180" />
+                  )}
                 </div>
                 <p className="text-xl font-bold font-mono">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-1">{stat.title}</p>
@@ -95,7 +106,16 @@ export default function DriverDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base font-bold">الطلبات النشطة</CardTitle>
-              <Badge className="bg-emerald-500 text-white text-[10px]">{activeOrders.length} طلبات</Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-emerald-500 text-white text-[10px]">{activeOrders.length} طلبات</Badge>
+                <button
+                  onClick={() => navigate("/driver/orders")}
+                  className="text-xs text-emerald-600 hover:text-emerald-800 font-medium flex items-center gap-0.5"
+                >
+                  كل الطلبات
+                  <ChevronLeft className="w-3 h-3 rotate-180" />
+                </button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {activeOrders.map((order) => (

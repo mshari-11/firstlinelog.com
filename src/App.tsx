@@ -40,6 +40,7 @@ import { DriverLayout } from "@/components/driver/DriverLayout";
 import DriverDashboard from "@/pages/driver/DriverDashboard";
 import DriverOrders from "@/pages/driver/DriverOrders";
 import DriverEarnings from "@/pages/driver/DriverEarnings";
+import DriverEntitlements from "@/pages/driver/DriverEntitlements";
 import DriverProfile from "@/pages/driver/DriverProfile";
 
 // لوحة الإدارة القديمة (Admin Panel)
@@ -103,6 +104,7 @@ export default function App() {
                 <Route index element={<DriverDashboard />} />
                 <Route path="orders" element={<DriverOrders />} />
                 <Route path="earnings" element={<DriverEarnings />} />
+                <Route path="entitlements" element={<DriverEntitlements />} />
                 <Route path="profile" element={<DriverProfile />} />
               </Route>
 

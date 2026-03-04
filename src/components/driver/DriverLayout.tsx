@@ -7,7 +7,7 @@ import { NavLink, Link, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
-  Wallet,
+  BadgeDollarSign,
   User,
   Menu,
   X,
@@ -23,8 +23,8 @@ import { Badge } from "@/components/ui/badge";
 
 const driverNavLinks = [
   { name: "الرئيسية", path: ROUTE_PATHS.DRIVER, icon: LayoutDashboard, end: true },
-  { name: "طلباتي", path: ROUTE_PATHS.DRIVER_ORDERS, icon: Package, badge: "3" },
-  { name: "أرباحي", path: ROUTE_PATHS.DRIVER_EARNINGS, icon: Wallet },
+  { name: "طلباتي", path: ROUTE_PATHS.DRIVER_ORDERS, icon: Package },
+  { name: "مستحقاتي", path: ROUTE_PATHS.DRIVER_ENTITLEMENTS, icon: BadgeDollarSign },
   { name: "حسابي", path: ROUTE_PATHS.DRIVER_PROFILE, icon: User },
 ];
 

@@ -3,6 +3,7 @@
  * FirstLine Logistics
  */
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Package,
   Users,
@@ -14,6 +15,7 @@ import {
   MapPin,
   Calendar,
   Activity,
+  ChevronLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +30,7 @@ const stats = [
     icon: Package,
     color: "text-blue-600",
     bg: "bg-blue-50",
+    link: "/admin/orders",
   },
   {
     title: "السائقين النشطين",
@@ -37,6 +40,7 @@ const stats = [
     icon: Users,
     color: "text-emerald-600",
     bg: "bg-emerald-50",
+    link: "/admin/drivers",
   },
   {
     title: "الإيرادات الشهرية",
@@ -46,6 +50,7 @@ const stats = [
     icon: TrendingUp,
     color: "text-primary",
     bg: "bg-primary/10",
+    link: "/admin-panel/finance",
   },
   {
     title: "متوسط وقت التسليم",
@@ -55,6 +60,7 @@ const stats = [
     icon: Clock,
     color: "text-amber-600",
     bg: "bg-amber-50",
+    link: "/admin/reports",
   },
 ];
 
@@ -92,6 +98,7 @@ const item = {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
       {/* العنوان */}
@@ -110,15 +117,21 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.title} variants={item}>
-            <Card className="hover:shadow-md transition-shadow">
+            <Card
+              className={`hover:shadow-md transition-shadow ${stat.link ? "cursor-pointer hover:border-primary/40" : ""}`}
+              onClick={() => stat.link && navigate(stat.link)}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-2.5 rounded-xl ${stat.bg}`}>
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
-                  <div className={`flex items-center gap-1 text-xs font-bold ${stat.trend === "up" ? "text-emerald-600" : "text-amber-600"}`}>
-                    {stat.trend === "up" ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                    {stat.change}
+                  <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-1 text-xs font-bold ${stat.trend === "up" ? "text-emerald-600" : "text-amber-600"}`}>
+                      {stat.trend === "up" ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                      {stat.change}
+                    </div>
+                    {stat.link && <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/50 rotate-180" />}
                   </div>
                 </div>
                 <p className="text-2xl font-bold tracking-tight font-mono">{stat.value}</p>
@@ -135,10 +148,19 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="text-base font-bold">آخر الطلبات</CardTitle>
-              <Badge variant="outline" className="font-mono text-xs">
-                <Activity className="w-3 h-3 ml-1" />
-                مباشر
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono text-xs">
+                  <Activity className="w-3 h-3 ml-1" />
+                  مباشر
+                </Badge>
+                <button
+                  onClick={() => navigate("/admin/orders")}
+                  className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-0.5"
+                >
+                  عرض الكل
+                  <ChevronLeft className="w-3 h-3 rotate-180" />
+                </button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

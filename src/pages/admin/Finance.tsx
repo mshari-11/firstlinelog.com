@@ -8,7 +8,7 @@ import {
   DollarSign, TrendingUp, TrendingDown, CheckCircle2,
   Clock, XCircle, Search, Filter, Download, Eye,
   ChevronDown, Wallet, CreditCard, AlertTriangle,
-  Calendar, RefreshCw, Plus
+  Calendar, RefreshCw, Plus, Bell, BellRing
 } from "lucide-react";
 
 type PaymentStatus = "pending" | "approved" | "paid" | "rejected";
@@ -64,6 +64,8 @@ export default function Finance() {
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">("all");
   const [selectedRecord, setSelectedRecord] = useState<FinanceRecord | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [sendingAlert, setSendingAlert] = useState<string | null>(null);
+  const [alertSent, setAlertSent] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchFinanceData();
@@ -108,6 +110,38 @@ export default function Finance() {
       console.error("خطأ في جلب بيانات المالية:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendBankAlert(record: FinanceRecord) {
+    if (!record.courier_id) return;
+    setSendingAlert(record.id);
+    try {
+      // إدراج تنبيه في جدول الإشعارات
+      const { error } = await supabase
+        .from("driver_notifications")
+        .insert({
+          driver_id: record.courier_id,
+          title: "تنبيه: مشكلة في الحساب البنكي",
+          message: `الحساب البنكي المسجل لديك غير صحيح أو غير فعّال. يرجى مراجعة الإدارة أو التواصل عبر: support@fll.sa`,
+          type: "bank_error",
+          read: false,
+        });
+
+      if (!error) {
+        setAlertSent(prev => new Set(prev).add(record.id));
+        setTimeout(() => {
+          setAlertSent(prev => {
+            const next = new Set(prev);
+            next.delete(record.id);
+            return next;
+          });
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("خطأ في إرسال التنبيه:", err);
+    } finally {
+      setSendingAlert(null);
     }
   }
 
@@ -314,6 +348,23 @@ export default function Finance() {
                               {updating === record.id ? "..." : "تأكيد الدفع"}
                             </button>
                           )}
+                          {/* زر تنبيه الحساب البنكي */}
+                          <button
+                            onClick={() => sendBankAlert(record)}
+                            disabled={sendingAlert === record.id}
+                            title="إرسال تنبيه خطأ الحساب البنكي"
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              alertSent.has(record.id)
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                            } disabled:opacity-50`}
+                          >
+                            {alertSent.has(record.id)
+                              ? <CheckCircle2 size={14} />
+                              : sendingAlert === record.id
+                              ? <Bell size={14} className="animate-pulse" />
+                              : <BellRing size={14} />}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -418,6 +469,14 @@ export default function Finance() {
                     تأكيد الدفع
                   </button>
                 )}
+                <button
+                  onClick={() => sendBankAlert(selectedRecord)}
+                  disabled={sendingAlert === selectedRecord.id}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors disabled:opacity-50"
+                >
+                  <BellRing size={14} />
+                  {alertSent.has(selectedRecord.id) ? "تم الإرسال ✓" : "تنبيه بنك"}
+                </button>
                 <button
                   onClick={() => setSelectedRecord(null)}
                   className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-blue-100 rounded-lg text-sm transition-colors"

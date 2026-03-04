@@ -53,8 +53,32 @@ const adminNavLinks = [
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // حماية المصادقة - إعادة التوجيه إذا لم يكن مسجل دخول
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/unified-login?role=admin", { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
+
+  // عرض شاشة تحميل أثناء التحقق
+  if (isLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground">جاري التحقق...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // لا تعرض شيئاً إذا لم يكن مسجل دخول (سيتم التوجيه)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleLogout = () => {
     logout();

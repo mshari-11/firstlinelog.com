@@ -45,7 +45,7 @@ export function PermissionGuard({ permission, children }: PermissionGuardProps) 
           <br />
           تواصل مع المدير لطلب الصلاحية.
         </p>
-        <a href="/admin/dashboard" className="mt-2 text-sm text-cyan-400 underline">العودة للرئيسية</a>a></a>
+        <a href="/admin/dashboard" className="mt-2 text-sm text-cyan-400 underline">العودة للرئيسية</a>
       </div>
     );
   }

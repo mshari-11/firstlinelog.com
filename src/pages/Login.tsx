@@ -1,291 +1,184 @@
 /**
- * صفحة تسجيل الدخول للسائقين عبر OTP
- * FirstLine Logistics
+ * صفحة تسجيل الدخول / إنشاء حساب — نظام الموظفين والمناديب
+ * FirstLine Logistics — fll.sa
+ * navy + أبيض + رمادي — نظام: هوية + كلمة مرور + OTP إيميل
  */
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Phone, ArrowLeft, Loader2, Truck, Shield } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, LogIn, UserPlus, IdCard, Globe, MapPin, Mail, Phone as PhoneIcon, Building2, CreditCard, Shield, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/Layout';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://djebhztfewjfyyoortvv.supabase.co';
+const API_BASE = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+const SUPPORT_EMAIL = 'support@fll.sa';
+const NATIONALITIES = ["سعودي","مصري","سوري","أردني","لبناني","فلسطيني","يمني","سوداني","باكستاني","هندي","بنغلاديشي","فلبيني","أخرى"];
+const CITIES = ["الرياض","جدة","مكة المكرمة","المدينة المنورة","الدمام","الخبر","الظهران","الطائف","بريدة","تبوك","خميس مشيط","حائل","الجبيل","الخرج","أبها","ينبع","القطيف","الأحساء","نجران","الباحة","عرعر","سكاكا","جازان"];
+const CONTRACTS = ["تحت كفالة الشركة","متعاقد تحت التجربة"];
+const APPS = ["هنقرستيشن","طلبات","جاهز","مرسول","كريم","أوبر","كارفور","نعناع","تطبيق آخر"];
+const BANKS = ["البنك الأهلي السعودي","بنك الرياض","بنك الراجحي","ساب","البنك السعودي الفرنسي","البنك السعودي للاستثمار","بنك الجزيرة","البنك العربي الوطني","بنك سامبا","البنك السعودي البريطاني","بنك الإنماء","البنك الأول","بنك البلاد","بنك الخليج","مصرف الإنماء","بنك آخر"];
 
-type Step = 'phone' | 'otp';
+function useCaptcha() {
+  const [q, sQ] = useState({ a: 0, b: 0, op: '+' as '+' | '-' });
+  const gen = useCallback(() => {
+    const a = Math.floor(Math.random() * 15) + 1;
+    const b = Math.floor(Math.random() * 10) + 1;
+    const op = ['+', '-'][Math.floor(Math.random() * 2)] as '+' | '-';
+    sQ({ a, b, op });
+  }, []);
+  useEffect(() => { gen(); const iv = setInterval(gen, 30000); return () => clearInterval(iv); }, [gen]);
+  const answer = q.op === '+' ? q.a + q.b : q.a - q.b;
+  return { question: `ما هو ناتج ${q.a} ${q.op} ${q.b}؟`, answer, refresh: gen };
+}
+
+async function apiPost(path: string, body: Record<string, unknown>) {
+  try {
+    const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    return { ok: r.ok, data: d };
+  } catch { return { ok: false, data: { message: 'خطأ في الاتصال بالخادم' } }; }
+}
 
 export default function Login() {
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<Step>('phone');
+  const [tab, setTab] = useState('login');
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [debugCode, setDebugCode] = useState<string | null>(null);
-  const { login, isAuthenticated } = useAuth();
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [otpMode, setOtpMode] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [agree, setAgree] = useState(false);
+  const cap = useCaptcha();
+  const { login: authLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') || 'driver';
+  const [f, sF] = useState({ nid:'', pw:'', email:'', code:'', name:'', phone:'', nat:'', city:'', contract:'', app:'', bank:'', bankAcc:'', iban:'', captcha:'' });
+  const u = (k: string, v: string) => sF(p => ({ ...p, [k]: v }));
 
-  useEffect(() => {
-    if (isAuthenticated) navigate('/driver');
-  }, [isAuthenticated, navigate]);
+  useEffect(() => { if (isAuthenticated) navigate('/driver'); }, [isAuthenticated, navigate]);
 
-  // العد التنازلي لإعادة الإرسال
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
-  // إرسال OTP
-  const handleSendOTP = useCallback(async () => {
-    const cleaned = phone.replace(/\s/g, '').replace(/[^0-9]/g, '');
-    if (!cleaned || cleaned.length < 9) {
-      toast.error('أدخل رقم جوال صحيح');
-      return;
-    }
-
+  async function doLogin() {
+    setError(''); setSuccess('');
+    if (!f.nid || !f.pw) return setError('رقم الهوية وكلمة المرور مطلوبان');
     setLoading(true);
-    setDebugCode(null);
-    
-    try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleaned }),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        setStep('otp');
-        setCountdown(60);
-        toast.success('تم إرسال رمز التحقق');
-        
-        // في وضع التطوير، اعرض الكود
-        if (result.debug_code) {
-          setDebugCode(result.debug_code);
-          console.log('Debug OTP:', result.debug_code);
-        }
-      } else {
-        toast.error(result.error || 'فشل إرسال الرمز');
-      }
-    } catch (err) {
-      console.error('Send OTP error:', err);
-      toast.error('حدث خطأ في الاتصال');
-    }
-    
+    const { ok, data } = await apiPost('/auth/login', { username: f.nid, password: f.pw });
     setLoading(false);
-  }, [phone]);
+    if (!ok) {
+      if (data.needsVerification) { setOtpEmail(data.email || f.nid); setOtpMode(true); setSuccess('يجب تأكيد الحساب — تحقق من بريدك'); }
+      else setError(data.message || 'خطأ في تسجيل الدخول');
+    } else {
+      authLogin({ id: data.username || f.nid, name: data.name, email: data.email, role: 'driver' }, { token: data.accessToken || data.token, expires_at: new Date(Date.now()+86400000).toISOString() });
+      toast.success('تم تسجيل الدخول بنجاح'); navigate('/driver');
+    }
+  }
 
-  // التحقق من OTP
-  const handleVerifyOTP = useCallback(async (code: string) => {
-    if (code.length !== 6) return;
-    
+  async function doRegister() {
+    setError('');
+    if (!f.name) return setError('الاسم الكامل مطلوب');
+    if (f.nid.length !== 10 || !/^[12]/.test(f.nid)) return setError('رقم الهوية: 10 أرقام يبدأ بـ 1 أو 2');
+    if (!f.nat) return setError('اختر الجنسية');
+    if (!f.city) return setError('اختر مدينة العمل');
+    if (!f.email || !f.email.includes('@')) return setError('البريد الإلكتروني غير صحيح');
+    if (!f.phone) return setError('رقم الهاتف مطلوب');
+    if (!f.pw || f.pw.length < 8) return setError('كلمة المرور: 8 أحرف على الأقل');
+    if (parseInt(f.captcha) !== cap.answer) return setError('إجابة سؤال التحقق غير صحيحة');
+    if (!agree) return setError('يجب الموافقة على الشروط والأحكام');
     setLoading(true);
-    
-    try {
-      const cleaned = phone.replace(/\s/g, '').replace(/[^0-9]/g, '');
-      
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleaned, code }),
-      });
-      
-      const result = await response.json();
-      
-      if (result.verified) {
-        // إنشاء بيانات المستخدم
-        const userData = {
-          id: result.user?.id || result.phone,
-          phone: result.phone,
-          name: result.user?.full_name || 'سائق',
-          role: result.user?.role || 'driver',
-        };
-        
-        const sessionData = {
-          token: result.session_token,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        };
-        
-        login(userData, sessionData);
-        toast.success(result.message || 'تم تسجيل الدخول بنجاح');
-        
-        // توجيه حسب الدور
-        if (result.is_new_user) {
-          navigate('/driver/profile');
-        } else {
-          navigate('/driver');
-        }
-      } else {
-        toast.error(result.error || 'رمز التحقق غير صحيح');
-        setOtp('');
-      }
-    } catch (err) {
-      console.error('Verify OTP error:', err);
-      toast.error('حدث خطأ في الاتصال');
-    }
-    
+    const phone = f.phone.startsWith('+') ? f.phone : '+966' + f.phone.replace(/^0/, '');
+    const { ok, data } = await apiPost('/auth/register', { username: f.nid, email: f.email, password: f.pw, name: f.name, phone });
     setLoading(false);
-  }, [phone, login, navigate]);
+    if (!ok) {
+      if ((data.message||'').includes('مسجل') || (data.message||'').includes('Exists')) setError(`رقم الهوية مرتبط ببريد آخر — تواصل مع ${SUPPORT_EMAIL}`);
+      else setError(data.message || 'خطأ في التسجيل');
+    } else { setOtpEmail(f.email); setOtpMode(true); setSuccess('تم إنشاء الحساب! تحقق من بريدك لرمز التأكيد'); }
+  }
 
-  // إعادة إرسال الكود
-  const handleResend = useCallback(async () => {
-    if (countdown > 0) return;
-    setOtp('');
-    setDebugCode(null);
-    await handleSendOTP();
-  }, [countdown, handleSendOTP]);
+  async function doVerify() {
+    if (!f.code || f.code.length < 4) return setError('أدخل رمز التحقق');
+    setLoading(true);
+    const { ok, data } = await apiPost('/auth/verify', { email: otpEmail, username: otpEmail, code: f.code });
+    setLoading(false);
+    if (!ok) setError(data.message || 'رمز غير صحيح');
+    else { setSuccess('تم تأكيد الحساب!'); setOtpMode(false); setTab('login'); toast.success('تم التأكيد'); }
+  }
 
-  return (
+  if (otpMode) return (
     <Layout>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-900 via-amber-800 to-yellow-900 px-4 py-8" dir="rtl">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-lg">
-          <CardHeader className="text-center pb-2 pt-8">
-            {/* Logo */}
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg">
-              <Truck className="h-10 w-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-slate-800">
-              {step === 'phone' ? 'دخول السائقين' : 'رمز التحقق'}
-            </CardTitle>
-            <CardDescription className="text-base mt-2 text-slate-500">
-              {step === 'phone'
-                ? 'أدخل رقم جوالك لتسجيل الدخول'
-                : `أدخل الرمز المرسل إلى ${phone}`}
-            </CardDescription>
-            {role && (
-              <span className="inline-block mt-3 px-4 py-1.5 bg-orange-50 text-orange-700 text-sm font-medium rounded-full border border-orange-200">
-                بوابة السائقين
-              </span>
-            )}
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8" dir="rtl">
+        <Card className="w-full max-w-md shadow-lg border">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-3"><User className="w-7 h-7 text-primary" /></div>
+            <CardTitle className="text-xl font-bold text-primary">تأكيد الحساب</CardTitle>
+            <CardDescription>أدخل رمز التحقق المرسل إلى <strong className="text-primary">{otpEmail}</strong></CardDescription>
           </CardHeader>
-
-          <CardContent className="pt-6 pb-8 px-6">
-            {step === 'phone' ? (
-              /* خطوة إدخال رقم الجوال */
-              <div className="space-y-5">
-                <div className="relative">
-                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <Input
-                    type="tel"
-                    placeholder="05xxxxxxxx"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pr-11 text-lg h-14 text-right border-slate-200 focus:border-orange-500 focus:ring-orange-500"
-                    dir="ltr"
-                    maxLength={15}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendOTP()}
-                  />
-                </div>
-                <Button
-                  onClick={handleSendOTP}
-                  disabled={loading || phone.replace(/\s/g, '').length < 9}
-                  className="w-full h-14 text-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/25"
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin ml-2" />
-                  ) : null}
-                  {loading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
-                </Button>
-              </div>
-            ) : (
-              /* خطوة إدخال رمز التحقق */
-              <div className="space-y-6">
-                {/* عرض كود التطوير */}
-                {debugCode && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-                    <p className="text-xs text-amber-600 mb-1">كود التطوير (للاختبار)</p>
-                    <p className="text-2xl font-mono font-bold text-amber-700 tracking-widest">{debugCode}</p>
-                  </div>
-                )}
-                
-                <div className="flex justify-center" dir="ltr">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={(value) => {
-                      setOtp(value);
-                      if (value.length === 6) handleVerifyOTP(value);
-                    }}
-                    disabled={loading}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} className="h-14 w-12 text-xl border-slate-200" />
-                      <InputOTPSlot index={1} className="h-14 w-12 text-xl border-slate-200" />
-                      <InputOTPSlot index={2} className="h-14 w-12 text-xl border-slate-200" />
-                      <InputOTPSlot index={3} className="h-14 w-12 text-xl border-slate-200" />
-                      <InputOTPSlot index={4} className="h-14 w-12 text-xl border-slate-200" />
-                      <InputOTPSlot index={5} className="h-14 w-12 text-xl border-slate-200" />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-
-                {loading && (
-                  <div className="flex justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
-                  </div>
-                )}
-
-                <div className="text-center space-y-3">
-                  <button
-                    onClick={handleResend}
-                    disabled={countdown > 0}
-                    className="text-sm text-orange-600 hover:underline disabled:text-slate-400 disabled:no-underline"
-                  >
-                    {countdown > 0
-                      ? `إعادة الإرسال بعد ${countdown} ثانية`
-                      : 'إعادة إرسال الرمز'}
-                  </button>
-
-                  <div>
-                    <button
-                      onClick={() => {
-                        setStep('phone');
-                        setOtp('');
-                        setDebugCode(null);
-                      }}
-                      className="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center gap-1"
-                    >
-                      <ArrowLeft className="h-3 w-3" />
-                      تغيير رقم الجوال
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <div className="flex justify-center gap-6 text-xs text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" />
-                  آمن
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5" />
-                  OTP عبر SMS
-                </span>
-              </div>
+          <CardContent className="space-y-4">
+            {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
+            {success && <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">{success}</div>}
+            <div className="space-y-2"><Label>رمز التحقق</Label><Input placeholder="أدخل الرمز" value={f.code} onChange={e => u('code', e.target.value)} maxLength={6} className="text-center text-2xl tracking-[0.5em] font-bold" /></div>
+            <Button onClick={doVerify} disabled={loading} className="w-full">{loading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}تأكيد الحساب</Button>
+            <div className="flex justify-center gap-4 text-sm">
+              <button onClick={async () => { const { data } = await apiPost('/auth/resend', { email: otpEmail, username: otpEmail }); setSuccess(data.message || 'تم إرسال رمز جديد'); }} className="text-primary hover:underline">إعادة إرسال الرمز</button>
+              <button onClick={() => setOtpMode(false)} className="text-muted-foreground hover:underline">رجوع</button>
             </div>
           </CardContent>
         </Card>
-        
-        {/* رابط للموظفين */}
-        <div className="absolute bottom-4 text-center w-full">
-          <a 
-            href="/unified-login?role=staff" 
-            className="text-white/70 hover:text-white text-sm underline transition-colors"
-          >
-            موظف؟ سجل دخولك بالبريد الإلكتروني
-          </a>
+      </div>
+    </Layout>
+  );
+
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-12" dir="rtl">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur">
+            <CardHeader className="text-center pb-6">
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4"><User className="w-8 h-8 text-primary" /></div>
+              <CardTitle className="text-3xl font-bold text-primary">نظام الموظفين والمناديب</CardTitle>
+              <CardDescription className="text-lg">الخط الأول للخدمات اللوجستية</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={tab} onValueChange={setTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="login" className="flex items-center gap-2"><LogIn className="w-4 h-4" />تسجيل الدخول</TabsTrigger>
+                  <TabsTrigger value="register" className="flex items-center gap-2"><UserPlus className="w-4 h-4" />إنشاء حساب جديد</TabsTrigger>
+                </TabsList>
+                {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-4">{error}</div>}
+                {success && <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm mb-4">{success}</div>}
+
+                <TabsContent value="login" className="space-y-4">
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><IdCard className="w-4 h-4" />رقم الهوية (اسم المستخدم)</Label><Input placeholder="1234567890" value={f.nid} onChange={e => u('nid', e.target.value.replace(/\D/g,''))} maxLength={10} /></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Lock className="w-4 h-4" />كلمة المرور</Label><div className="relative"><Input placeholder="أدخل كلمة المرور" type={showPw ? 'text' : 'password'} value={f.pw} onChange={e => u('pw', e.target.value)} className="pr-10" /><button onClick={() => setShowPw(!showPw)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></div>
+                  <Button onClick={doLogin} disabled={loading} className="w-full h-12 text-lg">{loading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}<LogIn className="w-4 h-4 ml-2" />تسجيل الدخول</Button>
+                  <div className="text-center"><a href="/forgot-password" className="text-sm text-primary hover:underline flex items-center justify-center gap-1"><Lock className="w-3 h-3" />نسيت كلمة المرور؟</a></div>
+                </TabsContent>
+
+                <TabsContent value="register" className="space-y-4">
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><User className="w-4 h-4" />الاسم الكامل (كما هو في الهوية)</Label><Input placeholder="أدخل الاسم الكامل" value={f.name} onChange={e => u('name', e.target.value)} /></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><IdCard className="w-4 h-4" />رقم الهوية الوطنية / رقم الإقامة النظامية</Label><Input placeholder="1234567890" value={f.nid} onChange={e => u('nid', e.target.value.replace(/\D/g,''))} maxLength={10} /><p className="text-xs text-muted-foreground">يجب أن يبدأ بـ 1 أو 2 ويكون 10 أرقام</p></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Globe className="w-4 h-4" />الجنسية</Label><Select value={f.nat} onValueChange={v => u('nat', v)}><SelectTrigger><SelectValue placeholder="اختر الجنسية" /></SelectTrigger><SelectContent>{NATIONALITIES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><MapPin className="w-4 h-4" />مدينة العمل</Label><Select value={f.city} onValueChange={v => u('city', v)}><SelectTrigger><SelectValue placeholder="اختر مدينة العمل" /></SelectTrigger><SelectContent>{CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Shield className="w-4 h-4" />حالة التعاقد</Label><Select value={f.contract} onValueChange={v => u('contract', v)}><SelectTrigger><SelectValue placeholder="اختر حالة التعاقد" /></SelectTrigger><SelectContent>{CONTRACTS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Mail className="w-4 h-4" />البريد الإلكتروني</Label><Input type="email" placeholder="example@email.com" value={f.email} onChange={e => u('email', e.target.value)} /></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Building2 className="w-4 h-4" />التطبيق الذي تعمل به</Label><Select value={f.app} onValueChange={v => u('app', v)}><SelectTrigger><SelectValue placeholder="اختر التطبيق" /></SelectTrigger><SelectContent>{APPS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><CreditCard className="w-4 h-4" />اسم البنك</Label><Select value={f.bank} onValueChange={v => u('bank', v)}><SelectTrigger><SelectValue placeholder="اختر البنك" /></SelectTrigger><SelectContent>{BANKS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><CreditCard className="w-4 h-4" />رقم الحساب البنكي</Label><Input placeholder="1234567890112345" value={f.bankAcc} onChange={e => u('bankAcc', e.target.value.replace(/\D/g,''))} /><p className="text-xs text-muted-foreground">أدخل رقم الحساب البنكي (10-20 رقم)</p></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><CreditCard className="w-4 h-4" />رقم IBAN</Label><Input placeholder="SA1234567890123456789012" value={f.iban} onChange={e => u('iban', e.target.value.toUpperCase())} /><p className="text-xs text-muted-foreground">يجب أن يبدأ بـ SA ويكون 24 حرف/رقم</p></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><PhoneIcon className="w-4 h-4" />رقم الهاتف</Label><Input placeholder="512345678" value={f.phone} onChange={e => u('phone', e.target.value.replace(/\D/g,''))} maxLength={10} /><p className="text-xs text-muted-foreground">يمكنك إدخال الرقم بصيغة: 512345678 أو 0512345678</p></div>
+                  <div className="p-3 rounded-lg bg-muted/50"><Label className="text-sm font-semibold">👤 اسم المستخدم (رقم الهوية)</Label><p className="text-sm text-primary font-semibold mt-1">{f.nid || 'سيتم تعبئته تلقائياً من رقم الهوية'}</p></div>
+                  <div className="space-y-2"><Label className="flex items-center gap-2"><Lock className="w-4 h-4" />كلمة المرور</Label><div className="relative"><Input placeholder="أدخل كلمة المرور" type={showPw ? 'text' : 'password'} value={f.pw} onChange={e => u('pw', e.target.value)} className="pr-10" /><button onClick={() => setShowPw(!showPw)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></div>
+                  <div className="p-4 rounded-lg border bg-muted/30"><Label className="text-sm font-semibold mb-2 block">🔢 سؤال التحقق (يتغير كل 30 ثانية)</Label><p className="text-lg font-bold text-primary mb-2">{cap.question}</p><Input placeholder="أدخل الإجابة" value={f.captcha} onChange={e => u('captcha', e.target.value)} /><p className="text-xs text-muted-foreground mt-1">هذا السؤال يتغير تلقائياً كل 30 ثانية</p></div>
+                  <div className="p-3 rounded-lg border bg-muted/30"><label className="flex gap-3 items-start cursor-pointer text-sm leading-relaxed"><input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="mt-1 w-4 h-4 flex-shrink-0" /><span>أتعهد بأن جميع المعلومات صحيحة ودقيقة. كما أوافق على <a href="/terms" className="text-primary font-bold hover:underline">شروط وأحكام الخدمة</a> و <a href="/privacy" className="text-primary font-bold hover:underline">سياسة الخصوصية</a> الخاصة بشركة الخط الأول للخدمات اللوجستية.</span></label></div>
+                  <Button onClick={doRegister} disabled={loading || !agree} className="w-full h-12 text-lg">{loading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}<UserPlus className="w-4 h-4 ml-2" />إنشاء الحساب</Button>
+                </TabsContent>
+              </Tabs>
+              <div className="mt-6 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm flex items-start gap-2"><Shield className="w-4 h-4 mt-0.5 flex-shrink-0" /><span>ملاحظة مهمة: جميع البيانات المدخلة ستكون محفوظة بسرية تامة ولن تستخدم إلا لأغراض العمل والتواصل الرسمي مع الشركة</span></div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>

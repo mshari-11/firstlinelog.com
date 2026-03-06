@@ -50,7 +50,7 @@ export default function AdminCouriers() {
     if (!supabase) { setLoading(false); return; }
     try {
       const { data, error } = await supabase
-                .from("couriers_2026_02_17_21_00")
+                .from("couriers")
         .select("*")
         .order("created_at", { ascending: false });
       if (!error && data && data.length > 0) {

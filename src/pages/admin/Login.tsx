@@ -138,7 +138,7 @@ export default function AdminLogin() {
       const { data: { user: authUser } } = await supabase!.auth.getUser();
       if (authUser) {
         const { data: profile } = await supabase!
-          .from("users_2026_02_17_21_00")
+          .from("users")
           .select("role")
           .eq("id", authUser.id)
           .single();

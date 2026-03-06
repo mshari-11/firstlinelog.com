@@ -54,7 +54,7 @@ export default function CourierPortal() {
 
     // بيانات المندوب
     const { data: cData } = await supabase
-      .from("couriers_2026_02_17_21_00")
+      .from("couriers")
       .select("full_name, phone, city, status, username")
       .eq("user_id", user.id)
       .single();
@@ -63,7 +63,7 @@ export default function CourierPortal() {
 
     // طلبات المندوب
     const { data: oData } = await supabase
-      .from("orders_2026_02_17_21_00")
+      .from("orders")
       .select("id, order_number, status, platform, pickup_location, delivery_location, created_at")
       .eq("courier_id", user.id)
       .order("created_at", { ascending: false })

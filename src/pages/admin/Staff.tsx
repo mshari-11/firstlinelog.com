@@ -86,7 +86,7 @@ export default function AdminStaff() {
       .from("staff_profiles")
       .select(`
         id, user_id, job_title_ar, permissions, can_approve, approval_limit, is_active, department_id,
-        users_2026_02_17_21_00 ( name, email, phone, role ),
+        users ( full_name, email, phone, role ),
         departments ( name_ar )
       `)
       .order("is_active", { ascending: false });
@@ -101,10 +101,10 @@ export default function AdminStaff() {
         approval_limit: s.approval_limit || 0,
         is_active: s.is_active,
         department_id: s.department_id,
-        name: s.users_2026_02_17_21_00?.name || "—",
-        email: s.users_2026_02_17_21_00?.email || "—",
-        phone: s.users_2026_02_17_21_00?.phone || "—",
-        role: s.users_2026_02_17_21_00?.role || "staff",
+        name: s.users?.full_name || "—",
+        email: s.users?.email || "—",
+        phone: s.users?.phone || "—",
+        role: s.users?.role || "staff",
         department_name: s.departments?.name_ar || "—",
       }));
       setStaff(mapped);
@@ -607,7 +607,7 @@ function AddStaffModal({ departments, onClose, onSaved }: {
     }
 
     // إضافة للجدول users
-    await supabase.from("users_2026_02_17_21_00").insert({
+    await supabase.from("users").insert({
       id: authData.user.id,
       name: form.name,
       email: form.email,

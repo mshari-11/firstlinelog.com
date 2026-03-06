@@ -88,7 +88,7 @@ export default function DriverEntitlements() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("finance_2026_02_17_21_00")
+        .from("finance")
         .select("*")
         .eq("courier_id", user.id)
         .eq("payment_status", "paid")

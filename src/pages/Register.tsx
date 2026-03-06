@@ -37,7 +37,7 @@ export default function RegisterPage() {
     if (!/^[a-zA-Z0-9_]+$/.test(username)) { setError('اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام و _ فقط'); return; }
     setLoading(true); setError('');
     try {
-      const { data: existing } = await supabase.from('users_2026_02_17_21_00').select('id').eq('username', username).maybeSingle();
+      const { data: existing } = await supabase.from('users').select('id').eq('username', username).maybeSingle();
       if (existing) { setError('اسم المستخدم مستخدم بالفعل'); setLoading(false); return; }
       setStep(2);
     } catch (err) { setError('حدث خطأ، حاول مرة أخرى'); } finally { setLoading(false); }

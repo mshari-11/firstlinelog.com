@@ -67,7 +67,7 @@ export default function CourierRegister() {
       if (!authData.user) throw new Error("فشل إنشاء الحساب");
 
       // إضافة في جدول المستخدمين
-      await supabase.from("users_2026_02_17_21_00").insert({
+      await supabase.from("users").insert({
         id: authData.user.id,
         email,
         name: form.name,
@@ -76,7 +76,7 @@ export default function CourierRegister() {
       });
 
       // إضافة في جدول المناديب
-      await supabase.from("couriers_2026_02_17_21_00").insert({
+      await supabase.from("couriers").insert({
         user_id: authData.user.id,
         full_name: form.name,
         phone: form.phone,

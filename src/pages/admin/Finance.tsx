@@ -76,11 +76,11 @@ export default function Finance() {
     try {
       // جلب سجلات المالية مع أسماء المناديب
       const { data: finance } = await supabase
-        .from("finance_2026_02_17_21_00")
+        .from("finance")
         .select(`
           *,
-          couriers_2026_02_17_21_00 (
-            users_2026_02_17_21_00 ( full_name )
+          couriers (
+            users ( full_name )
           )
         `)
         .order("created_at", { ascending: false });
@@ -88,7 +88,7 @@ export default function Finance() {
       if (finance) {
         const mapped: FinanceRecord[] = finance.map((r: any) => ({
           ...r,
-                    courier_name: r.couriers_2026_02_17_21_00?.users_2026_02_17_21_00?.name || "غير معروف",
+                    courier_name: r.couriers?.users?.full_name || "غير معروف",
         }));
         setRecords(mapped);
 
@@ -153,7 +153,7 @@ export default function Finance() {
       if (newStatus === "paid")     updates.paid_at     = new Date().toISOString();
 
       const { error } = await supabase
-        .from("finance_2026_02_17_21_00")
+        .from("finance")
         .update(updates)
         .eq("id", id);
 

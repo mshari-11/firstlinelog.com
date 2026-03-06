@@ -59,8 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
 
     const { data } = await supabase
-      .from("users_2026_02_17_21_00")
-      .select("id, email, role, name, department_id")
+      .from("users")
+      .select("id, email, role, full_name, department_id")
       .eq("id", userId)
       .single();
 
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.id,
         email: data.email,
         role: data.role as UserRole,
-        full_name: data.name,
+        full_name: data.full_name,
         department_id: data.department_id,
       };
 

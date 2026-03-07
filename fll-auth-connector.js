@@ -1,660 +1,179 @@
 /**
- * FLL Auth Connector v2.0
- * يربط فورمات Skywork المبنية (React) بـ AWS Auth APIs
- * لا يعدل التصميم — يعترض الفورمات ويضيف وظائف الاتصال
+ * FLL Auth Connector v3.0 — Production
  * 
- * Endpoints:
- * - POST /auth/login     → تسجيل دخول (username/email + password)
- * - POST /auth/register  → إنشاء حساب جديد
- * - POST /auth/verify    → تحقق OTP
- * - POST /auth/resend    → إعادة إرسال OTP
- * - POST /auth/forgot    → نسيت كلمة المرور
- * - POST /auth/reset     → إعادة تعيين كلمة المرور
+ * Strategy: The Skywork React bundle does client-side validation only,
+ * then calls alert("تم تسجيل الدخول بنجاح!" or "تم إنشاء الحساب بنجاح!").
+ * We intercept this alert() and replace it with real AWS Cognito API calls.
+ * 
+ * Pages:
+ * - /login          → نظام السائقين والمناديب (login + register tabs)
+ * - /unified-login  → نظام الإداريين والموظفين (login only)
  */
 
 (function() {
   'use strict';
 
-  // ==============================
-  // Configuration
-  // ==============================
-  const CONFIG = {
-    API_BASE: 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com',
-    REDIRECT: {
-      driver: '/courier-dashboard',
-      staff: '/staff-dashboard',
-      admin: '/admin-dashboard',
-      finance: '/staff-dashboard',
-      hr: '/staff-dashboard',
-      ops: '/staff-dashboard',
-      fleet: '/staff-dashboard',
-      executive: '/admin-dashboard',
-      SystemAdmin: '/admin-dashboard'
-    },
-    SESSION_KEY: 'fll_session',
-    TOKEN_KEY: 'fll_token',
-    USER_KEY: 'fll_user'
+  const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+  const REDIRECT = {
+    driver: '/courier-dashboard', staff: '/staff-dashboard',
+    admin: '/admin-dashboard', finance: '/staff-dashboard',
+    hr: '/staff-dashboard', ops: '/staff-dashboard',
+    fleet: '/staff-dashboard', executive: '/admin-dashboard',
+    SystemAdmin: '/admin-dashboard'
   };
 
-  // ==============================
-  // API Client
-  // ==============================
-  async function authAPI(endpoint, data) {
+  // --- Session ---
+  function saveSession(d) {
     try {
-      const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const json = await res.json();
-      return { ok: res.ok, status: res.status, data: json };
-    } catch (err) {
-      console.error('FLL Auth API Error:', err);
-      return { ok: false, status: 0, data: { message: 'خطأ في الاتصال بالخادم. حاول مرة أخرى.' } };
-    }
+      localStorage.setItem('fll_token', d.token || d.accessToken || '');
+      localStorage.setItem('fll_user', JSON.stringify({ username:d.username||'', email:d.email||'', name:d.name||'', groups:d.groups||[] }));
+    } catch(e) {}
+  }
+  function getSession() { try { const u=JSON.parse(localStorage.getItem('fll_user')||'null'), t=localStorage.getItem('fll_token'); return (u&&t)?{...u,token:t}:null; } catch{return null;} }
+  function clearSession() { localStorage.removeItem('fll_token'); localStorage.removeItem('fll_user'); }
+  function getRedirect(groups) { if(!groups||!groups.length) return '/'; for(const g of groups){if(REDIRECT[g]) return REDIRECT[g];} return '/'; }
+
+  // --- Toast ---
+  let _ts=null;
+  function showToast(msg, type='info', dur=4000) {
+    const o=document.getElementById('fll-toast'); if(o) o.remove();
+    if(!_ts){_ts=document.createElement('style');_ts.textContent='@keyframes fti{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes fto{from{opacity:1}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}#fll-toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:14px 32px;border-radius:12px;color:#fff;font-size:15px;font-weight:600;font-family:\"Segoe UI\",Tahoma,sans-serif;direction:rtl;box-shadow:0 8px 32px rgba(0,0,0,.3);max-width:90%;text-align:center;animation:fti .3s ease-out}';document.head.appendChild(_ts);}
+    const c={success:'#059669',error:'#dc2626',info:'#2563eb',warning:'#d97706'};
+    const t=document.createElement('div');t.id='fll-toast';t.style.background=c[type]||c.info;t.textContent=msg;document.body.appendChild(t);
+    setTimeout(()=>{t.style.animation='fto .3s ease-in forwards';setTimeout(()=>t.remove(),300);},dur);
   }
 
-  // ==============================
-  // Session Management
-  // ==============================
-  function saveSession(data) {
-    try {
-      localStorage.setItem(CONFIG.TOKEN_KEY, data.token || '');
-      localStorage.setItem(CONFIG.USER_KEY, JSON.stringify({
-        username: data.username,
-        email: data.email,
-        name: data.name,
-        groups: data.groups || []
-      }));
-      localStorage.setItem(CONFIG.SESSION_KEY, Date.now().toString());
-    } catch(e) { console.warn('Session save failed:', e); }
+  // --- Loading ---
+  function setLoad(btn,on){if(!btn)return;if(on){btn._ot=btn.textContent;btn._od=btn.disabled;btn.disabled=true;btn.style.opacity='.7';btn.textContent='جاري المعالجة...';}else{btn.disabled=btn._od||false;btn.style.opacity='1';if(btn._ot)btn.textContent=btn._ot;}}
+
+  // --- API ---
+  async function authAPI(ep, data) { try{const r=await fetch(`${API}${ep}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return{ok:r.ok,status:r.status,data:await r.json()};}catch(e){return{ok:false,status:0,data:{message:'خطأ في الاتصال بالخادم'}};} }
+
+  // --- Extract form values ---
+  function getVals() {
+    const v={};
+    document.querySelectorAll('input').forEach(inp => {
+      const val=inp.value?.trim(); if(!val) return;
+      const t=inp.type||'text', ph=(inp.placeholder||'').trim();
+      const lbl=(inp.closest('div')?.querySelector('label')?.textContent||'').trim();
+      const ctx=`${lbl} ${ph}`;
+      if(t==='password'&&!v.password) v.password=val;
+      else if(t==='password') v.confirmPassword=val;
+      else if(ctx.includes('البريد')||ctx.includes('email')||t==='email') v.email=val;
+      else if(ctx.includes('الهوية')||ctx.includes('المستخدم')||ph==='1234567890') v.username=val;
+      else if(ctx.includes('الاسم الكامل')||ctx.includes('أدخل اسمك')) v.fullName=val;
+      else if(ctx.includes('الجوال')||t==='tel') v.phone=val;
+      else if(!v.username&&t==='text') v.username=val;
+    });
+    return v;
   }
 
-  function getSession() {
-    try {
-      const user = JSON.parse(localStorage.getItem(CONFIG.USER_KEY) || 'null');
-      const token = localStorage.getItem(CONFIG.TOKEN_KEY);
-      return (user && token) ? { ...user, token } : null;
-    } catch { return null; }
-  }
-
-  function clearSession() {
-    localStorage.removeItem(CONFIG.TOKEN_KEY);
-    localStorage.removeItem(CONFIG.USER_KEY);
-    localStorage.removeItem(CONFIG.SESSION_KEY);
-  }
-
-  function getRedirectPath(groups) {
-    if (!groups || !groups.length) return '/';
-    for (const group of groups) {
-      if (CONFIG.REDIRECT[group]) return CONFIG.REDIRECT[group];
-    }
-    return '/';
-  }
-
-  // ==============================
-  // Toast Notification System
-  // ==============================
-  function showToast(message, type = 'info') {
-    // Remove any existing toast
-    const existing = document.getElementById('fll-toast');
-    if (existing) existing.remove();
-
-    const colors = {
-      success: { bg: '#059669', border: '#34d399' },
-      error: { bg: '#dc2626', border: '#f87171' },
-      info: { bg: '#2563eb', border: '#60a5fa' },
-      warning: { bg: '#d97706', border: '#fbbf24' }
-    };
-    const c = colors[type] || colors.info;
-
-    const toast = document.createElement('div');
-    toast.id = 'fll-toast';
-    toast.style.cssText = `
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 99999; padding: 14px 28px; border-radius: 12px;
-      background: ${c.bg}; color: white; font-size: 15px; font-weight: 600;
-      font-family: 'Segoe UI', Tahoma, sans-serif; direction: rtl;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid ${c.border};
-      animation: fll-toast-in 0.3s ease-out;
-      max-width: 90%; text-align: center;
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    // Add animation styles if not present
-    if (!document.getElementById('fll-toast-style')) {
-      const style = document.createElement('style');
-      style.id = 'fll-toast-style';
-      style.textContent = `
-        @keyframes fll-toast-in { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
-        @keyframes fll-toast-out { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
-      `;
-      document.head.appendChild(style);
-    }
-
-    setTimeout(() => {
-      toast.style.animation = 'fll-toast-out 0.3s ease-in forwards';
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
-  }
-
-  // ==============================
-  // Loading Overlay
-  // ==============================
-  function showLoading(button) {
-    if (!button) return () => {};
-    const original = button.textContent;
-    const originalDisabled = button.disabled;
-    button.disabled = true;
-    button.style.opacity = '0.7';
-    button.textContent = 'جاري المعالجة...';
-    return () => {
-      button.disabled = originalDisabled;
-      button.style.opacity = '1';
-      button.textContent = original;
-    };
-  }
-
-  // ==============================
-  // Form Interceptor — the core engine
-  // ==============================
-  
-  // Track which page we're on
-  let currentPath = window.location.pathname;
-  let isAttached = false;
-  let observer = null;
-
-  function getCurrentPage() {
-    const path = window.location.pathname;
-    if (path === '/login') return 'driver-login';
-    if (path === '/unified-login') return 'staff-login';
+  function findBtn() {
+    for(const b of document.querySelectorAll('button[type="submit"]')){if(b.offsetParent) return b;}
+    for(const b of document.querySelectorAll('button')){if((b.textContent.includes('تسجيل')||b.textContent.includes('إنشاء')||b.textContent.includes('دخول'))&&b.offsetParent) return b;}
     return null;
   }
 
-  // Find and attach to forms on the page
-  function attachToForms() {
-    const page = getCurrentPage();
-    if (!page) return;
-
-    // Find all form elements or form-like containers
-    const forms = document.querySelectorAll('form');
-    const buttons = document.querySelectorAll('button[type="submit"], button');
-    
-    if (page === 'driver-login') {
-      attachDriverLogin();
-    } else if (page === 'staff-login') {
-      attachStaffLogin();
+  // ==============================
+  // CORE: Intercept alert() 
+  // ==============================
+  const _alert = window.alert;
+  window.alert = function(msg) {
+    const p = window.location.pathname;
+    if (p==='/login'||p==='/unified-login') {
+      if (msg==='تم تسجيل الدخول بنجاح!') { doLogin(p); return; }
+      if (msg==='تم إنشاء الحساب بنجاح!') { doRegister(); return; }
     }
-  }
+    _alert.call(window, msg);
+  };
 
-  function attachDriverLogin() {
-    // The driver login page has tabs: "تسجيل الدخول" and "إنشاء حساب جديد"
-    // We need to intercept form submissions
-    
-    // Strategy: Listen for click events on submit buttons and intercept
-    document.addEventListener('click', handleDriverFormClick, true);
-    document.addEventListener('submit', handleDriverFormSubmit, true);
-    console.log('✅ FLL: Driver login form interceptor attached');
-  }
+  // --- Real Login ---
+  async function doLogin(page) {
+    const v = getVals();
+    const id = v.username || v.email || '';
+    const pw = v.password || '';
+    if (!id||!pw) { showToast('الرجاء إدخال البيانات المطلوبة','error'); return; }
 
-  function attachStaffLogin() {
-    document.addEventListener('click', handleStaffFormClick, true);
-    document.addEventListener('submit', handleStaffFormSubmit, true);
-    console.log('✅ FLL: Staff login form interceptor attached');
-  }
+    const btn = findBtn();
+    setLoad(btn, true);
+    showToast('جاري تسجيل الدخول...','info',10000);
 
-  // ==============================
-  // Driver Login Handlers (/login)
-  // ==============================
-  
-  async function handleDriverFormClick(e) {
-    if (window.location.pathname !== '/login') return;
-    
-    const btn = e.target.closest('button[type="submit"]');
-    if (!btn) return;
+    const r = await authAPI('/auth/login', { username: id, password: pw });
+    setLoad(btn, false);
 
-    // Find the closest form
-    const form = btn.closest('form');
-    if (!form) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    // Determine which tab is active: login or register
-    // Check for tab indicators - look at active tab trigger
-    const activeTab = document.querySelector('[role="tabpanel"]:not([hidden])') 
-      || document.querySelector('[data-state="active"][role="tabpanel"]');
-    
-    // Get all visible inputs
-    const inputs = form.querySelectorAll('input:not([type="hidden"])');
-    const inputData = {};
-    inputs.forEach(inp => {
-      const label = inp.closest('div')?.querySelector('label')?.textContent?.trim() || '';
-      const placeholder = inp.getAttribute('placeholder') || '';
-      inputData[label || placeholder || inp.name || inp.type] = inp.value;
-    });
-
-    // Determine if this is login or register based on visible fields
-    const isRegister = inputs.length > 2; // Register has more fields
-    
-    const restore = showLoading(btn);
-
-    if (isRegister) {
-      await handleDriverRegister(inputData, form, restore);
+    if (r.ok && r.data.token) {
+      saveSession(r.data);
+      // Audit log
+      try { fetch(`${API}/api/audit-log`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',actor:r.data.email||r.data.username,resource_type:page==='/login'?'driver':'staff',timestamp:new Date().toISOString()})}); } catch(e){}
+      showToast(`مرحباً ${r.data.name||r.data.username}! جاري التحويل...`,'success');
+      setTimeout(()=>{ window.location.href = getRedirect(r.data.groups); }, 1200);
+    } else if (r.status===403 && r.data.needsVerification) {
+      showToast('يجب تفعيل الحساب — تحقق من بريدك الإلكتروني','warning',6000);
     } else {
-      await handleDriverLoginSubmit(inputData, form, restore);
+      showToast(r.data.message||'بيانات الدخول غير صحيحة','error');
     }
   }
 
-  async function handleDriverFormSubmit(e) {
-    if (window.location.pathname !== '/login') return;
-    e.preventDefault();
-    e.stopPropagation();
-    // Handled by click handler
-  }
+  // --- Real Register ---
+  async function doRegister() {
+    const v = getVals();
+    if (!v.username||!v.password) { showToast('الرجاء تعبئة جميع الحقول','error'); return; }
 
-  async function handleDriverLoginSubmit(inputData, form, restore) {
-    // Extract username (national ID) and password
-    const inputs = form.querySelectorAll('input');
-    let username = '', password = '';
-    
-    inputs.forEach(inp => {
-      if (inp.type === 'password') {
-        password = inp.value;
-      } else if (inp.type === 'text' || inp.type === 'tel' || inp.type === 'number' || inp.type === 'email' || !inp.type) {
-        username = inp.value;
-      }
-    });
+    const btn = findBtn();
+    setLoad(btn, true);
+    showToast('جاري إنشاء الحساب...','info',10000);
 
-    if (!username || !password) {
-      showToast('الرجاء إدخال رقم الهوية وكلمة المرور', 'error');
-      restore();
-      return;
-    }
+    const email = v.email || `${v.username}@drivers.fll.sa`;
+    const r = await authAPI('/auth/register', { username: v.fullName||v.username, email, password: v.password });
+    setLoad(btn, false);
 
-    const result = await authAPI('/auth/login', { username, password });
-    restore();
-
-    if (result.ok) {
-      saveSession(result.data);
-      showToast('تم تسجيل الدخول بنجاح!', 'success');
-      
-      // Redirect based on groups
-      const redirectPath = getRedirectPath(result.data.groups);
-      setTimeout(() => {
-        window.location.href = redirectPath;
-      }, 800);
-    } else if (result.status === 403 && result.data.needsVerification) {
-      showToast('يجب تفعيل الحساب — تحقق من بريدك الإلكتروني', 'warning');
-      // Could show OTP verification modal here
+    if (r.ok) {
+      // Save driver profile
+      try { fetch(`${API}/api/drivers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nationalId:v.username,fullName:v.fullName||'',email,phone:v.phone||'',status:'pending',registeredAt:new Date().toISOString()})}); } catch(e){}
+      showToast('تم إنشاء الحساب! تحقق من بريدك الإلكتروني لتفعيل الحساب','success',6000);
     } else {
-      showToast(result.data.message || 'بيانات الدخول غير صحيحة', 'error');
+      showToast(r.data.message||'حدث خطأ أثناء التسجيل','error');
     }
   }
 
-  async function handleDriverRegister(inputData, form, restore) {
-    // Extract registration fields
-    const inputs = form.querySelectorAll('input');
-    const selects = form.querySelectorAll('select, [role="combobox"]');
-    
-    let fullName = '', nationalId = '', password = '', confirmPassword = '', email = '';
-    
-    // Map inputs by their label or placeholder
-    inputs.forEach((inp, idx) => {
-      const parentText = inp.closest('div')?.previousElementSibling?.textContent?.trim() || '';
-      const label = inp.closest('[class*="space-y"]')?.querySelector('label')?.textContent?.trim() || '';
-      const allText = parentText + ' ' + label + ' ' + (inp.placeholder || '');
-      
-      if (allText.includes('الاسم الكامل') || allText.includes('أدخل اسمك')) {
-        fullName = inp.value;
-      } else if (allText.includes('الهوية الوطنية') || allText.includes('1234567890')) {
-        nationalId = inp.value;
-      } else if (allText.includes('البريد') || allText.includes('email') || inp.type === 'email') {
-        email = inp.value;
-      } else if (allText.includes('تأكيد') || allText.includes('confirm')) {
-        confirmPassword = inp.value;
-      } else if (inp.type === 'password' || allText.includes('كلمة المرور')) {
-        if (!password) password = inp.value;
-        else confirmPassword = inp.value;
-      }
-    });
+  // --- Forgot Password ---
+  document.addEventListener('click', (e) => {
+    const el=e.target.closest('button,a'); if(!el) return;
+    if(el.textContent.trim().includes('نسيت كلمة المرور')){e.preventDefault();e.stopPropagation();showForgotPW();}
+  }, true);
 
-    // Validate
-    if (!fullName || !nationalId || !password) {
-      showToast('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
-      restore();
-      return;
-    }
-
-    if (confirmPassword && password !== confirmPassword) {
-      showToast('كلمتا المرور غير متطابقتين', 'error');
-      restore();
-      return;
-    }
-
-    // Use nationalId as email if no email provided (nationalId@fll.sa format)
-    if (!email) {
-      email = `${nationalId}@drivers.fll.sa`;
-    }
-
-    const result = await authAPI('/auth/register', {
-      username: fullName,
-      email: email,
-      password: password,
-      nationalId: nationalId
-    });
-    
-    restore();
-
-    if (result.ok) {
-      showToast('تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني', 'success');
-    } else {
-      showToast(result.data.message || 'حدث خطأ أثناء التسجيل', 'error');
-    }
-  }
-
-  // ==============================
-  // Staff Login Handlers (/unified-login)
-  // ==============================
-
-  async function handleStaffFormClick(e) {
-    if (window.location.pathname !== '/unified-login') return;
-    
-    const btn = e.target.closest('button[type="submit"]');
-    if (!btn) return;
-
-    const form = btn.closest('form');
-    if (!form) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    const inputs = form.querySelectorAll('input');
-    let username = '', password = '';
-    
-    inputs.forEach(inp => {
-      if (inp.type === 'password') {
-        password = inp.value;
-      } else {
-        username = inp.value;
-      }
-    });
-
-    if (!username || !password) {
-      showToast('الرجاء إدخال اسم المستخدم وكلمة المرور', 'error');
-      return;
-    }
-
-    const restore = showLoading(btn);
-    const result = await authAPI('/auth/login', { username, password });
-    restore();
-
-    if (result.ok) {
-      saveSession(result.data);
-      showToast('تم تسجيل الدخول بنجاح!', 'success');
-      
-      const redirectPath = getRedirectPath(result.data.groups);
-      setTimeout(() => {
-        window.location.href = redirectPath;
-      }, 800);
-    } else if (result.status === 403 && result.data.needsVerification) {
-      showToast('يجب تفعيل الحساب — تحقق من بريدك الإلكتروني', 'warning');
-    } else {
-      showToast(result.data.message || 'بيانات الدخول غير صحيحة', 'error');
-    }
-  }
-
-  async function handleStaffFormSubmit(e) {
-    if (window.location.pathname !== '/unified-login') return;
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  // ==============================
-  // "Forgot Password" Handler
-  // ==============================
-  function attachForgotPassword() {
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('button, a');
-      if (!link) return;
-      const text = link.textContent.trim();
-      if (text.includes('نسيت كلمة المرور')) {
-        e.preventDefault();
-        showForgotPasswordModal();
-      }
-    });
-  }
-
-  function showForgotPasswordModal() {
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'fll-forgot-modal';
-    overlay.style.cssText = `
-      position: fixed; inset: 0; z-index: 99998;
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      animation: fll-toast-in 0.2s ease-out;
-    `;
-
-    overlay.innerHTML = `
-      <div style="
-        background: white; border-radius: 16px; padding: 32px;
-        max-width: 420px; width: 90%; direction: rtl;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-      ">
-        <h3 style="margin: 0 0 8px; font-size: 20px; color: #0f2744;">استعادة كلمة المرور</h3>
-        <p style="margin: 0 0 20px; color: #64748b; font-size: 14px;">أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق</p>
-        
-        <div id="fll-forgot-step1">
-          <input id="fll-forgot-email" type="email" placeholder="البريد الإلكتروني" style="
-            width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0;
-            border-radius: 8px; font-size: 15px; direction: rtl;
-            margin-bottom: 12px; box-sizing: border-box;
-          " />
-          <button id="fll-forgot-send" style="
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
-            background: #0f2744; color: white; font-size: 15px; font-weight: 600;
-            cursor: pointer; margin-bottom: 8px;
-          ">إرسال رمز التحقق</button>
-        </div>
-
-        <div id="fll-forgot-step2" style="display: none;">
-          <input id="fll-forgot-code" type="text" placeholder="رمز التحقق" style="
-            width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0;
-            border-radius: 8px; font-size: 15px; direction: rtl;
-            margin-bottom: 12px; box-sizing: border-box; text-align: center; letter-spacing: 4px;
-          " maxlength="6" />
-          <input id="fll-forgot-newpass" type="password" placeholder="كلمة المرور الجديدة" style="
-            width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0;
-            border-radius: 8px; font-size: 15px; direction: rtl;
-            margin-bottom: 12px; box-sizing: border-box;
-          " />
-          <button id="fll-forgot-reset" style="
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
-            background: #0f2744; color: white; font-size: 15px; font-weight: 600;
-            cursor: pointer; margin-bottom: 8px;
-          ">تغيير كلمة المرور</button>
-        </div>
-
-        <button id="fll-forgot-close" style="
-          width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;
-          background: transparent; color: #64748b; font-size: 14px;
-          cursor: pointer;
-        ">إلغاء</button>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    let forgotEmail = '';
-
-    // Close
-    document.getElementById('fll-forgot-close').onclick = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-    // Step 1: Send code
-    document.getElementById('fll-forgot-send').onclick = async () => {
-      forgotEmail = document.getElementById('fll-forgot-email').value.trim();
-      if (!forgotEmail) { showToast('الرجاء إدخال البريد الإلكتروني', 'error'); return; }
-      
-      const btn = document.getElementById('fll-forgot-send');
-      const restore = showLoading(btn);
-      const result = await authAPI('/auth/forgot', { email: forgotEmail, identifier: forgotEmail });
-      restore();
-      
-      showToast(result.data.message || 'تم إرسال الرمز', 'success');
-      document.getElementById('fll-forgot-step1').style.display = 'none';
-      document.getElementById('fll-forgot-step2').style.display = 'block';
+  function showForgotPW() {
+    const x=document.getElementById('fll-fp');if(x)x.remove();
+    const ov=document.createElement('div');ov.id='fll-fp';
+    ov.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;animation:fti .2s ease-out';
+    ov.innerHTML=`<div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;direction:rtl;box-shadow:0 20px 60px rgba(0,0,0,.3);font-family:'Segoe UI',Tahoma,sans-serif"><h3 style="margin:0 0 8px;font-size:20px;color:#0f2744">استعادة كلمة المرور</h3><p style="margin:0 0 20px;color:#64748b;font-size:14px">أدخل بريدك الإلكتروني</p><div id="fps1"><input id="fpe" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;direction:rtl;margin-bottom:12px;box-sizing:border-box"><button id="fps" style="width:100%;padding:12px;border:none;border-radius:8px;background:#0f2744;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px">إرسال الرمز</button></div><div id="fps2" style="display:none"><input id="fpc" type="text" placeholder="رمز التحقق" maxlength="6" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;text-align:center;letter-spacing:4px;margin-bottom:12px;box-sizing:border-box"><input id="fpn" type="password" placeholder="كلمة المرور الجديدة" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;direction:rtl;margin-bottom:12px;box-sizing:border-box"><button id="fpr" style="width:100%;padding:12px;border:none;border-radius:8px;background:#0f2744;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px">تغيير كلمة المرور</button></div><button id="fpcl" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:transparent;color:#64748b;font-size:14px;cursor:pointer">إلغاء</button></div>`;
+    document.body.appendChild(ov);
+    let em='';
+    document.getElementById('fpcl').onclick=()=>ov.remove();
+    ov.onclick=(e)=>{if(e.target===ov)ov.remove();};
+    document.getElementById('fps').onclick=async()=>{
+      em=document.getElementById('fpe').value.trim();if(!em){showToast('أدخل البريد','error');return;}
+      const b=document.getElementById('fps');setLoad(b,true);
+      await authAPI('/auth/forgot',{email:em,identifier:em});
+      setLoad(b,false);showToast('تم إرسال الرمز','success');
+      document.getElementById('fps1').style.display='none';document.getElementById('fps2').style.display='block';
     };
-
-    // Step 2: Reset password
-    document.getElementById('fll-forgot-reset').onclick = async () => {
-      const code = document.getElementById('fll-forgot-code').value.trim();
-      const newPass = document.getElementById('fll-forgot-newpass').value;
-      if (!code || !newPass) { showToast('الرجاء إدخال الرمز وكلمة المرور الجديدة', 'error'); return; }
-      
-      const btn = document.getElementById('fll-forgot-reset');
-      const restore = showLoading(btn);
-      const result = await authAPI('/auth/reset', { identifier: forgotEmail, email: forgotEmail, code, password: newPass });
-      restore();
-      
-      if (result.ok) {
-        showToast('تم تغيير كلمة المرور بنجاح!', 'success');
-        overlay.remove();
-      } else {
-        showToast(result.data.message || 'حدث خطأ', 'error');
-      }
+    document.getElementById('fpr').onclick=async()=>{
+      const c=document.getElementById('fpc').value.trim(),p=document.getElementById('fpn').value;
+      if(!c||!p){showToast('أدخل الرمز وكلمة المرور','error');return;}
+      const b=document.getElementById('fpr');setLoad(b,true);
+      const r=await authAPI('/auth/reset',{identifier:em,email:em,code:c,password:p});
+      setLoad(b,false);
+      if(r.ok){showToast('تم تغيير كلمة المرور!','success');ov.remove();}
+      else showToast(r.data.message||'خطأ','error');
     };
   }
 
-  // ==============================
-  // Navigation Links Handler
-  // ==============================
-  function attachNavigationLinks() {
-    // Handle clicks on "تسجيل دخول" buttons on the home page
-    document.addEventListener('click', (e) => {
-      const link = e.target.closest('a[href], button');
-      if (!link) return;
-      
-      const href = link.getAttribute('href');
-      const text = link.textContent.trim();
-      
-      // Home page login buttons
-      if (text === 'تسجيل دخول' || text === 'نظام السائقين' || text === 'نظام الدخول') {
-        // Let React Router handle the /login navigation
-        return;
-      }
-      if (text === 'نظام الإداريين والموظفين' || text === 'الموظفين') {
-        // Let React Router handle the /unified-login navigation
-        return;
-      }
-    });
-  }
+  // --- Auto-redirect ---
+  (function(){const s=getSession(),p=window.location.pathname;if(s&&(p==='/login'||p==='/unified-login')){const d=getRedirect(s.groups);if(d!=='/')window.location.href=d;}})();
 
-  // ==============================
-  // Session Checker - Auto redirect if logged in
-  // ==============================
-  function checkExistingSession() {
-    const session = getSession();
-    const path = window.location.pathname;
-    
-    if (session && (path === '/login' || path === '/unified-login')) {
-      const redirectPath = getRedirectPath(session.groups);
-      if (redirectPath !== '/') {
-        window.location.href = redirectPath;
-      }
-    }
-  }
+  // --- Global ---
+  window.FLLAuth = { getSession, clearSession, logout:()=>{clearSession();window.location.href='/';}, isLoggedIn:()=>!!getSession(), getUser:()=>getSession(), getToken:()=>localStorage.getItem('fll_token') };
 
-  // ==============================
-  // SPA Route Change Observer
-  // ==============================
-  function observeRouteChanges() {
-    let lastPath = window.location.pathname;
-    
-    // Watch for route changes (React Router uses pushState)
-    const origPush = history.pushState;
-    history.pushState = function() {
-      origPush.apply(this, arguments);
-      onRouteChange();
-    };
-    
-    const origReplace = history.replaceState;
-    history.replaceState = function() {
-      origReplace.apply(this, arguments);
-      onRouteChange();
-    };
-    
-    window.addEventListener('popstate', onRouteChange);
-    
-    function onRouteChange() {
-      const newPath = window.location.pathname;
-      if (newPath !== lastPath) {
-        lastPath = newPath;
-        console.log(`📍 FLL: Route changed to ${newPath}`);
-        // Re-attach forms after route change with delay for React render
-        setTimeout(attachToForms, 500);
-        setTimeout(attachToForms, 1500);
-      }
-    }
-  }
-
-  // ==============================
-  // Initialize
-  // ==============================
-  function init() {
-    console.log('🚀 FLL Auth Connector v2.0 — Initializing...');
-    
-    // Check session
-    checkExistingSession();
-    
-    // Observe route changes (SPA)
-    observeRouteChanges();
-    
-    // Attach forgot password handler globally
-    attachForgotPassword();
-    
-    // Attach navigation links
-    attachNavigationLinks();
-    
-    // Attach to forms (with retry for React hydration)
-    setTimeout(attachToForms, 500);
-    setTimeout(attachToForms, 1500);
-    setTimeout(attachToForms, 3000);
-    
-    // Also observe DOM changes to catch React renders
-    observer = new MutationObserver(() => {
-      const page = getCurrentPage();
-      if (page && !isAttached) {
-        isAttached = true;
-        attachToForms();
-      }
-    });
-    observer.observe(document.body || document.documentElement, { 
-      childList: true, subtree: true 
-    });
-    
-    // Expose globally for debugging
-    window.FLLAuth = {
-      getSession,
-      clearSession,
-      logout: () => { clearSession(); window.location.href = '/'; },
-      isLoggedIn: () => !!getSession(),
-      getUser: () => getSession(),
-      config: CONFIG
-    };
-
-    console.log('✅ FLL Auth Connector v2.0 — Ready');
-  }
-
-  // Wait for DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  console.log('✅ FLL Auth Connector v3.0 — Alert interception active');
 })();

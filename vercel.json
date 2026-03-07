@@ -3,6 +3,10 @@
   "framework": null,
   "outputDirectory": ".",
   "rewrites": [
+    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
+    { "source": "/staff-dashboard", "destination": "/staff-dashboard.html" },
+    { "source": "/courier-dashboard", "destination": "/courier-dashboard.html" },
+    { "source": "/unauthorized", "destination": "/unauthorized.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -14,6 +18,12 @@
     },
     {
       "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/admin-dashboard.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]

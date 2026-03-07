@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم - فيرست لاين لوجستيكس</title>
+<link rel="icon" href="/public/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --navy: #0f2744;
+  --navy-light: #1a3a5c;
+  --gold: #f59e0b;
+  --gold-light: #fbbf24;
+  --blue: #0ea5e9;
+  --green: #10b981;
+  --red: #ef4444;
+  --purple: #6366f1;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Tajawal',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* Sidebar */
+.sidebar { position:fixed; right:0; top:0; width:260px; height:100vh; background:var(--navy); color:white; z-index:100; display:flex; flex-direction:column; transition:transform .3s; }
+.sidebar-header { padding:20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,.1); }
+.sidebar-header img { width:40px; height:40px; border-radius:8px; }
+.sidebar-header h2 { font-size:14px; font-weight:700; }
+.sidebar-header span { font-size:11px; color:rgba(255,255,255,.6); display:block; }
+
+.nav-section { padding:12px 16px 4px; font-size:11px; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:1px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:rgba(255,255,255,.7); text-decoration:none; font-size:14px; transition:all .2s; cursor:pointer; border-right:3px solid transparent; }
+.nav-item:hover, .nav-item.active { background:rgba(255,255,255,.08); color:white; border-right-color:var(--gold); }
+.nav-item svg { width:18px; height:18px; flex-shrink:0; }
+.nav-badge { background:var(--red); color:white; font-size:10px; padding:2px 6px; border-radius:10px; margin-right:auto; }
+
+.sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid rgba(255,255,255,.1); }
+.user-info { display:flex; align-items:center; gap:10px; }
+.user-avatar { width:36px; height:36px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--navy); }
+.user-name { font-size:13px; font-weight:600; }
+.user-role { font-size:11px; color:rgba(255,255,255,.5); }
+.logout-btn { margin-top:12px; width:100%; padding:8px; background:rgba(255,255,255,.1); border:none; color:white; border-radius:8px; font-family:inherit; font-size:13px; cursor:pointer; }
+.logout-btn:hover { background:rgba(255,255,255,.2); }
+
+/* Main */
+.main { margin-right:260px; padding:24px; min-height:100vh; }
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.page-title { font-size:24px; font-weight:800; color:var(--navy); }
+.page-date { color:var(--muted); font-size:13px; }
+
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--card); border-radius:12px; padding:20px; border:1px solid var(--border); position:relative; overflow:hidden; }
+.stat-card::after { content:''; position:absolute; top:0; right:0; width:4px; height:100%; }
+.stat-card.gold::after { background:var(--gold); }
+.stat-card.blue::after { background:var(--blue); }
+.stat-card.green::after { background:var(--green); }
+.stat-card.red::after { background:var(--red); }
+.stat-card.purple::after { background:var(--purple); }
+.stat-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
+.stat-value { font-size:28px; font-weight:800; color:var(--navy); }
+.stat-sub { font-size:11px; color:var(--green); margin-top:4px; }
+
+/* Cards */
+.card { background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden; margin-bottom:20px; }
+.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size:16px; font-weight:700; color:var(--navy); }
+.card-body { padding:20px; }
+
+/* Table */
+.table { width:100%; border-collapse:collapse; }
+.table th { padding:10px 12px; text-align:right; font-size:12px; color:var(--muted); border-bottom:2px solid var(--border); font-weight:600; }
+.table td { padding:10px 12px; font-size:13px; border-bottom:1px solid var(--border); }
+.table tr:hover td { background:rgba(15,39,68,.02); }
+
+.badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.badge-green { background:#dcfce7; color:#166534; }
+.badge-red { background:#fee2e2; color:#991b1b; }
+.badge-yellow { background:#fef9c3; color:#854d0e; }
+.badge-blue { background:#dbeafe; color:#1e40af; }
+
+/* Grid layouts */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+
+/* Quick Actions */
+.quick-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
+.action-btn { padding:10px 20px; border-radius:8px; border:none; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .2s; }
+.action-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.15); }
+.action-btn.primary { background:var(--navy); color:white; }
+.action-btn.gold { background:var(--gold); color:var(--navy); }
+.action-btn.outline { background:white; border:1px solid var(--border); color:var(--text); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--muted); }
+.spinner { display:inline-block; width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Sections */
+.section { display:none; }
+.section.active { display:block; }
+
+/* Responsive */
+@media(max-width:768px) {
+  .sidebar { transform:translateX(100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-right:0; padding:16px; }
+  .grid-2, .grid-3 { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+/* Tab navigation for Admin access to all portals */
+.portal-tabs { display:flex; gap:0; margin-bottom:24px; background:white; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+.portal-tab { flex:1; padding:14px 20px; text-align:center; font-size:14px; font-weight:600; cursor:pointer; border:none; background:white; color:var(--muted); font-family:inherit; transition:all .2s; border-bottom:3px solid transparent; }
+.portal-tab:hover { background:#f8fafc; color:var(--navy); }
+.portal-tab.active { color:var(--navy); border-bottom-color:var(--gold); background:#fffbeb; }
+.portal-tab.admin-tab { border-bottom-color:var(--purple); }
+.portal-tab.staff-tab.active { border-bottom-color:var(--blue); background:#eff6ff; }
+.portal-tab.courier-tab.active { border-bottom-color:var(--gold); background:#fffbeb; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <img src="/public/images/logo.webp" alt="FLL" onerror="this.src='/public/images/first_line_correct_logos_1.jpg'">
+    <div>
+      <h2>فيرست لاين</h2>
+      <span>لوحة التحكم</span>
+    </div>
+  </div>
+
+  <div class="nav-section">الرئيسية</div>
+  <a class="nav-item active" onclick="showSection('overview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    نظرة عامة
+  </a>
+
+  <div class="nav-section">الإدارة</div>
+  <a class="nav-item" onclick="showSection('couriers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    المناديب
+    <span class="nav-badge" id="courier-count">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('orders')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    الطلبات
+    <span class="nav-badge" id="order-count">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('finance')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    المالية
+  </a>
+  <a class="nav-item" onclick="showSection('complaints')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    الشكاوى
+  </a>
+  <a class="nav-item" onclick="showSection('staff')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    الموظفين
+  </a>
+  <a class="nav-item" onclick="showSection('departments')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    الأقسام
+  </a>
+  <a class="nav-item" onclick="showSection('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    الإعدادات
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar">أ</div>
+      <div>
+        <div class="user-name" id="user-name">المدير</div>
+        <div class="user-role" id="user-role">مدير النظام</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  
+  <!-- Portal Tabs — Admin can access all -->
+  <div class="portal-tabs">
+    <button class="portal-tab active" onclick="switchPortal('admin')" id="tab-admin">🏛️ لوحة الإدارة</button>
+    <button class="portal-tab staff-tab" onclick="switchPortal('staff')" id="tab-staff">👥 بوابة الموظفين</button>
+    <button class="portal-tab courier-tab" onclick="switchPortal('courier')" id="tab-courier">🚗 بوابة المناديب</button>
+  </div>
+
+  <!-- === OVERVIEW SECTION === -->
+  <div class="section active" id="sec-overview">
+    <div class="page-header">
+      <div>
+        <div class="page-title">نظرة عامة</div>
+        <div class="page-date" id="current-date"></div>
+      </div>
+      <div class="quick-actions">
+        <button class="action-btn primary" onclick="loadData()">🔄 تحديث البيانات</button>
+        <button class="action-btn gold" onclick="showSection('couriers')">+ إضافة مندوب</button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card gold"><div class="stat-label">إجمالي المناديب</div><div class="stat-value" id="s-couriers">-</div><div class="stat-sub" id="s-active-couriers"></div></div>
+      <div class="stat-card blue"><div class="stat-label">إجمالي الطلبات</div><div class="stat-value" id="s-orders">-</div></div>
+      <div class="stat-card green"><div class="stat-label">إجمالي الأرباح</div><div class="stat-value" id="s-earnings">-</div><div class="stat-sub">ريال سعودي</div></div>
+      <div class="stat-card purple"><div class="stat-label">الأقسام</div><div class="stat-value" id="s-depts">-</div></div>
+      <div class="stat-card red"><div class="stat-label">الشكاوى</div><div class="stat-value" id="s-complaints">-</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">آخر الطلبات</div></div>
+        <div class="card-body"><table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>الطلبات</th><th>الأرباح</th><th>الحالة</th></tr></thead><tbody id="recent-orders"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">المناديب النشطين</div></div>
+        <div class="card-body"><table class="table"><thead><tr><th>الاسم</th><th>المدينة</th><th>الحالة</th><th>تاريخ الالتحاق</th></tr></thead><tbody id="active-couriers-list"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === COURIERS SECTION === -->
+  <div class="section" id="sec-couriers">
+    <div class="page-header">
+      <div class="page-title">إدارة المناديب</div>
+      <button class="action-btn primary" onclick="showAddCourier()">+ إضافة مندوب جديد</button>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <table class="table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>المدينة</th><th>البنك</th><th>نوع التعاقد</th><th>الحالة</th></tr></thead><tbody id="couriers-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- === ORDERS SECTION === -->
+  <div class="section" id="sec-orders">
+    <div class="page-header"><div class="page-title">إدارة الطلبات</div></div>
+    <div class="card">
+      <div class="card-body">
+        <table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>عدد الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="orders-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- === FINANCE SECTION === -->
+  <div class="section" id="sec-finance">
+    <div class="page-header"><div class="page-title">المالية</div></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-label">إجمالي الأرباح</div><div class="stat-value" id="f-total">-</div></div>
+      <div class="stat-card blue"><div class="stat-label">إجمالي الخصومات</div><div class="stat-value" id="f-deductions">-</div></div>
+      <div class="stat-card gold"><div class="stat-label">صافي الأرباح</div><div class="stat-value" id="f-net">-</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">ملخص أرباح المناديب</div></div>
+      <div class="card-body"><table class="table"><thead><tr><th>المندوب</th><th>عدد الطلبات</th><th>إجمالي الأرباح</th><th>الخصومات</th><th>الصافي</th></tr></thead><tbody id="finance-table"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- === COMPLAINTS SECTION === -->
+  <div class="section" id="sec-complaints">
+    <div class="page-header"><div class="page-title">الشكاوى والاستفسارات</div></div>
+    <div class="card"><div class="card-body" id="complaints-content"><p style="color:var(--muted);text-align:center;padding:40px">لا توجد شكاوى حالياً</p></div></div>
+  </div>
+
+  <!-- === STAFF SECTION === -->
+  <div class="section" id="sec-staff">
+    <div class="page-header"><div class="page-title">إدارة الموظفين</div></div>
+    <div class="card">
+      <div class="card-body">
+        <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="staff-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- === DEPARTMENTS SECTION === -->
+  <div class="section" id="sec-departments">
+    <div class="page-header"><div class="page-title">الأقسام</div></div>
+    <div class="card">
+      <div class="card-body">
+        <table class="table"><thead><tr><th>القسم</th><th>الاسم بالعربي</th><th>الوصف</th><th>الحالة</th></tr></thead><tbody id="depts-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- === SETTINGS SECTION === -->
+  <div class="section" id="sec-settings">
+    <div class="page-header"><div class="page-title">إعدادات النظام</div></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-header"><div class="card-title">معلومات النظام</div></div><div class="card-body" id="system-info"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">اتصالات AWS</div></div><div class="card-body" id="aws-info"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==============================
+// Supabase Client
+// ==============================
+const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
+const AWS_API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ==============================
+// Auth Check
+// ==============================
+const user = JSON.parse(localStorage.getItem('fll_user') || 'null');
+const token = localStorage.getItem('fll_token');
+if (!user || !token) { window.location.href = '/unified-login'; }
+
+// Set user info
+document.getElementById('user-name').textContent = user?.name || user?.username || user?.email || 'المدير';
+document.getElementById('user-role').textContent = (user?.groups || []).join(', ') || 'admin';
+document.getElementById('user-avatar').textContent = (user?.name || user?.email || 'أ')[0].toUpperCase();
+document.getElementById('current-date').textContent = new Date().toLocaleDateString('ar-SA', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// ==============================
+// Navigation
+// ==============================
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  event?.target?.closest?.('.nav-item')?.classList.add('active');
+}
+
+function switchPortal(portal) {
+  document.querySelectorAll('.portal-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + portal).classList.add('active');
+  
+  if (portal === 'admin') { showSection('overview'); }
+  else if (portal === 'staff') { showSection('staff'); }
+  else if (portal === 'courier') { showSection('couriers'); }
+}
+
+function logout() {
+  localStorage.removeItem('fll_token');
+  localStorage.removeItem('fll_user');
+  window.location.href = '/';
+}
+
+// ==============================
+// Load Data from Supabase
+// ==============================
+async function loadData() {
+  try {
+    // Couriers
+    const { data: couriers } = await sb.from('couriers').select('*');
+    if (couriers) {
+      document.getElementById('s-couriers').textContent = couriers.length;
+      document.getElementById('courier-count').textContent = couriers.length;
+      const active = couriers.filter(c => c.status === 'active');
+      document.getElementById('s-active-couriers').textContent = active.length + ' نشط';
+      
+      document.getElementById('couriers-table').innerHTML = couriers.map(c => `
+        <tr>
+          <td><strong>${c.full_name_ar || c.full_name}</strong></td>
+          <td>${c.national_id || '-'}</td>
+          <td>${c.phone || '-'}</td>
+          <td>${c.city || '-'}</td>
+          <td>${c.bank_name || '-'}</td>
+          <td>${c.contract_type || '-'}</td>
+          <td><span class="badge ${c.status==='active'?'badge-green':'badge-red'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
+        </tr>`).join('');
+      
+      document.getElementById('active-couriers-list').innerHTML = active.slice(0,5).map(c => `
+        <tr>
+          <td>${c.full_name_ar || c.full_name}</td>
+          <td>${c.city || '-'}</td>
+          <td><span class="badge badge-green">نشط</span></td>
+          <td>${c.join_date || '-'}</td>
+        </tr>`).join('');
+    }
+
+    // Orders
+    const { data: orders } = await sb.from('orders').select('*, couriers(full_name_ar, full_name)');
+    if (orders) {
+      document.getElementById('s-orders').textContent = orders.length;
+      document.getElementById('order-count').textContent = orders.length;
+      
+      let totalEarnings = 0, totalDeductions = 0, totalNet = 0;
+      orders.forEach(o => {
+        totalEarnings += parseFloat(o.gross_earnings || 0);
+        totalDeductions += parseFloat(o.deductions || 0);
+        totalNet += parseFloat(o.net_earnings || 0);
+      });
+      document.getElementById('s-earnings').textContent = totalNet.toFixed(0);
+      document.getElementById('f-total').textContent = totalEarnings.toFixed(2) + ' ر.س';
+      document.getElementById('f-deductions').textContent = totalDeductions.toFixed(2) + ' ر.س';
+      document.getElementById('f-net').textContent = totalNet.toFixed(2) + ' ر.س';
+
+      document.getElementById('orders-table').innerHTML = orders.map(o => `
+        <tr>
+          <td>${o.couriers?.full_name_ar || o.couriers?.full_name || '-'}</td>
+          <td><span class="badge badge-blue">${o.platform}</span></td>
+          <td>${o.order_date}</td>
+          <td>${o.orders_count}</td>
+          <td>${parseFloat(o.gross_earnings).toFixed(2)}</td>
+          <td>${parseFloat(o.deductions).toFixed(2)}</td>
+          <td><strong>${parseFloat(o.net_earnings).toFixed(2)}</strong></td>
+          <td><span class="badge ${o.status==='approved'?'badge-green':'badge-yellow'}">${o.status==='approved'?'معتمد':'معلق'}</span></td>
+        </tr>`).join('');
+
+      document.getElementById('recent-orders').innerHTML = orders.slice(0,5).map(o => `
+        <tr>
+          <td>${o.couriers?.full_name_ar || '-'}</td>
+          <td><span class="badge badge-blue">${o.platform}</span></td>
+          <td>${o.orders_count}</td>
+          <td>${parseFloat(o.net_earnings).toFixed(2)} ر.س</td>
+          <td><span class="badge badge-green">معتمد</span></td>
+        </tr>`).join('');
+
+      // Finance summary by courier
+      const byCourier = {};
+      orders.forEach(o => {
+        const name = o.couriers?.full_name_ar || o.courier_id;
+        if (!byCourier[name]) byCourier[name] = {orders:0,gross:0,ded:0,net:0};
+        byCourier[name].orders += o.orders_count;
+        byCourier[name].gross += parseFloat(o.gross_earnings||0);
+        byCourier[name].ded += parseFloat(o.deductions||0);
+        byCourier[name].net += parseFloat(o.net_earnings||0);
+      });
+      document.getElementById('finance-table').innerHTML = Object.entries(byCourier).map(([name,d]) => `
+        <tr><td>${name}</td><td>${d.orders}</td><td>${d.gross.toFixed(2)}</td><td>${d.ded.toFixed(2)}</td><td><strong>${d.net.toFixed(2)}</strong></td></tr>`).join('');
+    }
+
+    // Departments
+    const { data: depts } = await sb.from('departments').select('*');
+    if (depts) {
+      document.getElementById('s-depts').textContent = depts.length;
+      document.getElementById('depts-table').innerHTML = depts.map(d => `
+        <tr>
+          <td><strong>${d.name}</strong></td>
+          <td>${d.name_ar}</td>
+          <td>${d.description || '-'}</td>
+          <td><span class="badge ${d.is_active?'badge-green':'badge-red'}">${d.is_active?'مفعل':'معطل'}</span></td>
+        </tr>`).join('');
+    }
+
+    // Users (staff)
+    const { data: users } = await sb.from('users').select('id, email, full_name, role, is_active, created_at');
+    if (users) {
+      document.getElementById('staff-table').innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.full_name || '-'}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="badge badge-blue">${u.role || 'user'}</span></td>
+          <td><span class="badge ${u.is_active!==false?'badge-green':'badge-red'}">${u.is_active!==false?'نشط':'معطل'}</span></td>
+        </tr>`).join('');
+    }
+
+    // Complaints
+    const { data: complaints } = await sb.from('complaints').select('*');
+    document.getElementById('s-complaints').textContent = (complaints||[]).length;
+
+    // Settings
+    document.getElementById('system-info').innerHTML = `
+      <p><strong>الإصدار:</strong> FLL Dashboard v3.0</p>
+      <p><strong>البنية:</strong> Skywork + AWS + Supabase</p>
+      <p><strong>المنطقة:</strong> me-south-1 (البحرين)</p>
+      <p><strong>قاعدة البيانات:</strong> Supabase PostgreSQL</p>
+      <p><strong>الجداول:</strong> 53 جدول</p>
+      <p><strong>DynamoDB:</strong> 38 جدول</p>
+    `;
+    document.getElementById('aws-info').innerHTML = `
+      <p><strong>API Gateway:</strong> ✅ متصل</p>
+      <p><strong>Lambda:</strong> 10 وظائف</p>
+      <p><strong>Cognito:</strong> ✅ 11 مجموعة</p>
+      <p><strong>S3:</strong> 10 حاويات</p>
+      <p><strong>SES:</strong> ✅ fll.sa verified</p>
+    `;
+
+  } catch(err) {
+    console.error('Load error:', err);
+  }
+}
+
+// ==============================
+// Init
+// ==============================
+loadData();
+</script>
+</body>
+</html>

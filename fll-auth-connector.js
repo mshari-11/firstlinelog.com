@@ -15,11 +15,11 @@
 
   const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
   const REDIRECT = {
-    driver: '/courier-dashboard', staff: '/staff-dashboard',
-    admin: '/admin-dashboard', finance: '/staff-dashboard',
-    hr: '/staff-dashboard', ops: '/staff-dashboard',
-    fleet: '/staff-dashboard', executive: '/admin-dashboard',
-    SystemAdmin: '/admin-dashboard'
+    driver: '/courier-dashboard.html', staff: '/staff-dashboard.html',
+    admin: '/admin-dashboard.html', finance: '/admin-dashboard.html#finance',
+    hr: '/admin-dashboard.html#staff', ops: '/admin-dashboard.html#orders',
+    fleet: '/admin-dashboard.html#couriers', executive: '/admin-dashboard.html',
+    SystemAdmin: '/admin-dashboard.html'
   };
 
   // --- Session ---

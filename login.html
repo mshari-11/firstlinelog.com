@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول — الخط الأول للخدمات اللوجستية</title>
+  <link rel="icon" href="/assets/images/favicon-32.webp" type="image/webp">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #0f2744;
+      --navy-light: #1a3a5c;
+      --gold: #f59e0b;
+      --gold-hover: #d97706;
+      --blue: #0ea5e9;
+      --purple: #6366f1;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-300: #cbd5e1;
+      --gray-500: #64748b;
+      --gray-700: #334155;
+      --red: #ef4444;
+      --green: #10b981;
+    }
+
+    body {
+      font-family: 'Noto Sans Arabic', sans-serif;
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .login-bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0f2744 0%, #1a3a5c 50%, #0f2744 100%);
+      z-index: 0;
+    }
+
+    .login-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 60%);
+      animation: float 15s ease-in-out infinite;
+    }
+
+    .login-bg::after {
+      content: '';
+      position: absolute;
+      bottom: -50%;
+      left: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 60%);
+      animation: float 20s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, -30px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 48px 36px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    }
+
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-wrap img {
+      height: 56px;
+      filter: brightness(0) invert(1);
+    }
+
+    .logo-wrap h1 {
+      color: var(--white);
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 16px;
+    }
+
+    .logo-wrap p {
+      color: var(--gray-500);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--gray-300);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 14px 16px;
+      padding-right: 44px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--gray-500);
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    }
+
+    .input-wrap .icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-500);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    .toggle-pass {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+
+    .toggle-pass:hover { color: var(--gold); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
+      color: var(--navy);
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(245,158,11,0.3);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--navy);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    .btn-primary.loading .btn-text { display: none; }
+    .btn-primary.loading .spinner { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+    }
+
+    .links a {
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    .links a:hover { color: var(--white); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      color: var(--gray-500);
+      font-size: 12px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .divider::before { margin-left: 12px; }
+    .divider::after { margin-right: 12px; }
+
+    .user-type-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .user-type-btn {
+      padding: 10px 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--gray-300);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .user-type-btn:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .user-type-btn.active {
+      border-color: var(--gold);
+      background: rgba(245,158,11,0.1);
+      color: var(--gold);
+    }
+
+    .user-type-btn .emoji {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert-error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: #fca5a5;
+    }
+
+    .alert-success {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.2);
+      color: #6ee7b7;
+    }
+
+    /* OTP Screen */
+    .otp-screen { display: none; }
+    .otp-screen.active { display: block; }
+    .login-screen.hidden { display: none; }
+
+    .otp-inputs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      direction: ltr;
+      margin: 24px 0;
+    }
+
+    .otp-inputs input {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: var(--white);
+      outline: none;
+      transition: all 0.3s;
+      font-family: 'Courier New', monospace;
+    }
+
+    .otp-inputs input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .resend-timer {
+      text-align: center;
+      color: var(--gray-500);
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .resend-timer a {
+      color: var(--gold);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .resend-timer a.disabled {
+      color: var(--gray-500);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 8px 0;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover { color: var(--white); }
+
+    @media (max-width: 480px) {
+      .card { padding: 36px 24px; }
+      .otp-inputs input { width: 42px; height: 50px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-bg"></div>
+
+  <div class="container">
+    <div class="card">
+      <!-- Login Screen -->
+      <div class="login-screen" id="loginScreen">
+        <div class="logo-wrap">
+          <img src="/assets/images/first_line_correct_logos_1.webp" alt="FLL Logo"
+               onerror="this.style.display='none'">
+          <h1>الخط الأول للخدمات اللوجستية</h1>
+          <p>سجّل الدخول للمتابعة</p>
+        </div>
+
+        <div id="alertLogin" class="alert"></div>
+
+        <div class="form-group">
+          <label>رقم الهوية / الإقامة / البريد الإلكتروني</label>
+          <div class="input-wrap">
+            <span class="icon">👤</span>
+            <input type="text" id="identifier" placeholder="أدخل رقم الهوية أو البريد"
+                   autocomplete="username" inputmode="text">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور"
+                   autocomplete="current-password">
+            <button class="toggle-pass" type="button" onclick="togglePassword()">👁️</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="loginBtn" onclick="handleLogin()">
+          <span class="btn-text">تسجيل الدخول</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div class="links">
+          <a href="#" onclick="showForgotPassword()">نسيت كلمة المرور؟</a>
+          <a href="/register.html">حساب جديد</a>
+        </div>
+
+        <div class="divider">أو سجّل دخول كـ</div>
+
+        <div class="user-type-btns">
+          <button class="user-type-btn" onclick="setPortal('driver')">
+            <span class="emoji">🚗</span>
+            مندوب
+          </button>
+          <button class="user-type-btn" onclick="setPortal('staff')">
+            <span class="emoji">👨‍💼</span>
+            موظف
+          </button>
+          <button class="user-type-btn" onclick="setPortal('admin')">
+            <span class="emoji">⚙️</span>
+            إدارة
+          </button>
+        </div>
+      </div>
+
+      <!-- OTP Screen -->
+      <div class="otp-screen" id="otpScreen">
+        <div class="logo-wrap">
+          <h1>تأكيد الدخول</h1>
+          <p id="otpMessage">أدخل رمز التحقق المرسل إلى بريدك</p>
+        </div>
+
+        <div id="alertOTP" class="alert"></div>
+
+        <div class="otp-inputs" id="otpInputs">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+        </div>
+
+        <button class="btn-primary" id="verifyBtn" onclick="handleVerifyOTP()">
+          <span class="btn-text">تأكيد الرمز</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div class="resend-timer" id="resendTimer">
+          إعادة إرسال الرمز بعد <span id="countdown">60</span> ثانية
+        </div>
+
+        <div style="text-align:center; margin-top:16px;">
+          <button class="back-btn" onclick="backToLogin()">← العودة لتسجيل الدخول</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Bridge -->
+  <script src="/api-bridge.js"></script>
+
+  <script>
+    // State
+    let currentEmail = '';
+    let selectedPortal = '';
+    let countdownInterval = null;
+
+    // Toggle password visibility
+    function togglePassword() {
+      const input = document.getElementById('password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // Set portal type
+    function setPortal(type) {
+      selectedPortal = type;
+      document.querySelectorAll('.user-type-btn').forEach(b => b.classList.remove('active'));
+      event.target.closest('.user-type-btn').classList.add('active');
+    }
+
+    // Show alert
+    function showAlert(elementId, message, type = 'error') {
+      const el = document.getElementById(elementId);
+      el.className = `alert alert-${type}`;
+      el.textContent = message;
+      el.style.display = 'block';
+      if (type === 'error') setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    // Handle Login
+    async function handleLogin() {
+      const identifier = document.getElementById('identifier').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+
+      if (!identifier || !password) {
+        showAlert('alertLogin', 'الرجاء إدخال البيانات المطلوبة');
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const result = await FLLAuth.login(identifier, password);
+
+        if (result.requireOTP || result.challenge === 'CUSTOM_CHALLENGE') {
+          currentEmail = result.email || identifier;
+          showOTPScreen();
+        } else if (result.token) {
+          redirectByRole(result.user);
+        } else {
+          showAlert('alertLogin', result.message || 'فشل تسجيل الدخول');
+        }
+      } catch (err) {
+        showAlert('alertLogin', 'خطأ في الاتصال بالخادم. حاول مرة أخرى.');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    // Redirect based on user role/group
+    function redirectByRole(user) {
+      const groups = user?.groups || [];
+      const portal = selectedPortal;
+
+      if (portal === 'driver' || groups.includes('driver')) {
+        window.location.href = 'https://drivers.fll.sa/dashboard.html';
+      } else if (portal === 'admin' || groups.includes('admin') || groups.includes('SystemAdmin') || groups.includes('995')) {
+        window.location.href = 'https://admin.fll.sa/dashboard.html';
+      } else if (groups.includes('finance')) {
+        window.location.href = 'https://staff.fll.sa/finance.html';
+      } else if (groups.includes('hr')) {
+        window.location.href = 'https://staff.fll.sa/hr.html';
+      } else if (groups.includes('ops')) {
+        window.location.href = 'https://staff.fll.sa/ops.html';
+      } else if (groups.includes('fleet')) {
+        window.location.href = 'https://staff.fll.sa/fleet.html';
+      } else {
+        window.location.href = 'https://staff.fll.sa/dashboard.html';
+      }
+    }
+
+    // Show OTP Screen
+    function showOTPScreen() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('otpScreen').classList.add('active');
+      document.getElementById('otpMessage').textContent =
+        `أدخل رمز التحقق المرسل إلى ${currentEmail.replace(/(.{2}).*(@.*)/, '$1***$2')}`;
+
+      const inputs = document.querySelectorAll('#otpInputs input');
+      inputs[0].focus();
+      startCountdown();
+    }
+
+    // Back to login
+    function backToLogin() {
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('otpScreen').classList.remove('active');
+      if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    // OTP Input handlers
+    document.querySelectorAll('#otpInputs input').forEach((input, index, inputs) => {
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val;
+        if (val && index < inputs.length - 1) inputs[index + 1].focus();
+        if (index === inputs.length - 1 && val) handleVerifyOTP();
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+        if (e.key === 'ArrowLeft' && index < inputs.length - 1) inputs[index + 1].focus();
+        if (e.key === 'ArrowRight' && index > 0) inputs[index - 1].focus();
+      });
+
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+        paste.split('').forEach((char, i) => {
+          if (inputs[i]) inputs[i].value = char;
+        });
+        if (paste.length === 6) handleVerifyOTP();
+      });
+    });
+
+    // Handle OTP Verification
+    async function handleVerifyOTP() {
+      const inputs = document.querySelectorAll('#otpInputs input');
+      const code = Array.from(inputs).map(i => i.value).join('');
+
+      if (code.length !== 6) {
+        showAlert('alertOTP', 'الرجاء إدخال الرمز كاملاً');
+        return;
+      }
+
+      const btn = document.getElementById('verifyBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const result = await FLLAuth.verifyOTP(currentEmail, code);
+
+        if (result.token || result.success) {
+          showAlert('alertOTP', 'تم التحقق بنجاح!', 'success');
+          setTimeout(() => redirectByRole(result.user || FLLAuth.getUser()), 800);
+        } else {
+          showAlert('alertOTP', result.message || 'رمز غير صحيح');
+          inputs.forEach(i => { i.value = ''; });
+          inputs[0].focus();
+        }
+      } catch (err) {
+        showAlert('alertOTP', 'خطأ في التحقق. حاول مرة أخرى.');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    // Countdown for resend
+    function startCountdown() {
+      let seconds = 60;
+      const el = document.getElementById('countdown');
+      const timer = document.getElementById('resendTimer');
+
+      timer.innerHTML = `إعادة إرسال الرمز بعد <span id="countdown">${seconds}</span> ثانية`;
+
+      countdownInterval = setInterval(() => {
+        seconds--;
+        document.getElementById('countdown').textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(countdownInterval);
+          timer.innerHTML = '<a onclick="resendOTP()">إعادة إرسال الرمز</a>';
+        }
+      }, 1000);
+    }
+
+    // Resend OTP
+    async function resendOTP() {
+      const timer = document.getElementById('resendTimer');
+      timer.innerHTML = 'جارِ الإرسال...';
+      try {
+        await FLLAuth.resendOTP(currentEmail);
+        showAlert('alertOTP', 'تم إرسال رمز جديد', 'success');
+        startCountdown();
+      } catch (err) {
+        timer.innerHTML = '<a onclick="resendOTP()">إعادة إرسال الرمز</a>';
+        showAlert('alertOTP', 'فشل إعادة الإرسال');
+      }
+    }
+
+    // Forgot password
+    function showForgotPassword() {
+      const email = prompt('أدخل البريد الإلكتروني لاستعادة كلمة المرور:');
+      if (email) {
+        FLLAuth.forgotPassword(email).then(r => {
+          if (r.success) alert('تم إرسال رابط استعادة كلمة المرور إلى بريدك');
+          else alert(r.message || 'حدث خطأ');
+        });
+      }
+    }
+
+    // Enter key support
+    document.getElementById('password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    // Check if already logged in
+    if (FLLAuth.isLoggedIn()) {
+      const user = FLLAuth.getUser();
+      if (user) redirectByRole(user);
+    }
+  </script>
+</body>
+</html>

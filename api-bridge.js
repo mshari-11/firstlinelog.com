@@ -1,11 +1,12 @@
 /**
- * FLL API Bridge - يربط التصميم الجديد بـ AWS Backend
- * ⛔ لا يعدل أي عنصر تصميمي
- * ✅ يضيف وظائف الاتصال بـ AWS APIs فقط
+ * FLL API Bridge v3.0 — يربط التصميم بـ AWS Backend
+ * ✅ جميع الـ APIs متاحة
  * 
  * APIs:
- * - Auth: https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com
+ * - Auth: /auth/* (login, register, verify, forgot, reset)
+ * - Platform: /api/* (drivers, orders, staff, complaints, fleet, etc.)
  * - AI Dashboard: https://51n1gng40f.execute-api.me-south-1.amazonaws.com
+ * - Finance: /finance/* (generate-stc-excel)
  */
 
 const FLL_CONFIG = {
@@ -15,10 +16,6 @@ const FLL_CONFIG = {
     USER_POOL_ID: 'me-south-1_aJtmQ0QrN',
     CLIENT_ID: '6n49ej8fl92i9rtotbk5o9o0d1',
     REGION: 'me-south-1'
-  },
-  SUPABASE: {
-    URL: 'https://djebhztfewjfyyoortvv.supabase.co',
-    ANON_KEY: '' // يُضاف لاحقاً
   }
 };
 
@@ -30,93 +27,51 @@ const FLLAuth = {
     const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier, password })
+      body: JSON.stringify({ username: identifier, password })
     });
     const data = await res.json();
     if (data.token) {
       localStorage.setItem('fll_token', data.token);
-      localStorage.setItem('fll_user', JSON.stringify(data.user));
+      localStorage.setItem('fll_user', JSON.stringify(data));
     }
     return data;
   },
-
   async register(userData) {
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    return (await fetch(`${FLL_CONFIG.API_BASE}/auth/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
-    });
-    return res.json();
+    })).json();
   },
-
   async verifyOTP(email, code) {
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    return (await fetch(`${FLL_CONFIG.API_BASE}/auth/verify`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code })
-    });
-    return res.json();
+    })).json();
   },
-
-  async resendOTP(email) {
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/resend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    return res.json();
-  },
-
   async forgotPassword(email) {
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    return res.json();
+    return (await fetch(`${FLL_CONFIG.API_BASE}/auth/forgot`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, identifier: email })
+    })).json();
   },
-
-  async resetPassword(email, code, newPassword) {
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code, new_password: newPassword })
-    });
-    return res.json();
+  async resetPassword(email, code, password) {
+    return (await fetch(`${FLL_CONFIG.API_BASE}/auth/reset`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, identifier: email, code, password })
+    })).json();
   },
-
-  async getMe() {
-    const token = localStorage.getItem('fll_token');
-    if (!token) return null;
-    const res = await fetch(`${FLL_CONFIG.API_BASE}/auth/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) { this.logout(); return null; }
-    return res.json();
-  },
-
   logout() {
     localStorage.removeItem('fll_token');
     localStorage.removeItem('fll_user');
     window.location.href = '/';
   },
-
-  isLoggedIn() {
-    return !!localStorage.getItem('fll_token');
-  },
-
-  getToken() {
-    return localStorage.getItem('fll_token');
-  },
-
-  getUser() {
-    try { return JSON.parse(localStorage.getItem('fll_user')); }
-    catch { return null; }
-  }
+  isLoggedIn() { return !!localStorage.getItem('fll_token'); },
+  getToken() { return localStorage.getItem('fll_token'); },
+  getUser() { try { return JSON.parse(localStorage.getItem('fll_user')); } catch { return null; } }
 };
 
 // ========================
-// API Helper with Auth
+// Platform API Client (CRUD for all DynamoDB tables)
 // ========================
 async function fllAPI(endpoint, options = {}) {
   const token = FLLAuth.getToken();
@@ -135,15 +90,56 @@ async function fllAPI(endpoint, options = {}) {
 }
 
 // ========================
-// Complaints API
+// Resource APIs (all map to /api/{resource})
 // ========================
-const FLLComplaints = {
-  async getAll() { return fllAPI('/complaints'); },
+function createResourceAPI(name) {
+  return {
+    getAll(params = {}) { 
+      const qs = new URLSearchParams(params).toString();
+      return fllAPI(`/api/${name}${qs ? '?' + qs : ''}`); 
+    },
+    getById(id) { return fllAPI(`/api/${name}/${id}`); },
+    create(data) { return fllAPI(`/api/${name}`, { method: 'POST', body: JSON.stringify(data) }); },
+    update(id, data) { return fllAPI(`/api/${name}/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    delete(id) { return fllAPI(`/api/${name}/${id}`, { method: 'DELETE' }); }
+  };
+}
+
+const FLLDrivers = createResourceAPI('drivers');
+const FLLOrders = createResourceAPI('orders');
+const FLLStaffUsers = createResourceAPI('staff-users');
+const FLLComplaints = createResourceAPI('complaints');
+const FLLVehicles = createResourceAPI('vehicles');
+const FLLNotifications = createResourceAPI('notifications');
+const FLLTasks = createResourceAPI('tasks');
+const FLLApprovals = createResourceAPI('approvals');
+const FLLDepartments = createResourceAPI('departments');
+const FLLPayoutRuns = createResourceAPI('payout-runs');
+const FLLPayoutLines = createResourceAPI('payout-lines');
+const FLLAuditLog = createResourceAPI('audit-log');
+const FLLUserProfiles = createResourceAPI('user-profiles');
+const FLLSystemSettings = createResourceAPI('system-settings');
+const FLLVehicleAssignments = createResourceAPI('vehicle-assignments');
+const FLLRoles = createResourceAPI('roles');
+const FLLPermissions = createResourceAPI('permissions');
+const FLLInvoices = createResourceAPI('invoices');
+const FLLShipments = createResourceAPI('shipments');
+const FLLAttendance = createResourceAPI('attendance');
+
+// ========================
+// Stats API
+// ========================
+const FLLStats = {
+  async getDashboard() { return fllAPI('/api/stats'); }
+};
+
+// ========================
+// Complaints API (extended)
+// ========================
+const FLLComplaintsExt = {
+  ...FLLComplaints,
   async getStats() { return fllAPI('/complaints/stats'); },
-  async getById(ticketId) { return fllAPI(`/complaints/${ticketId}`); },
   async getByDept(deptId) { return fllAPI(`/complaints/dept/${deptId}`); },
-  async create(data) { return fllAPI('/complaints', { method: 'POST', body: JSON.stringify(data) }); },
-  async update(ticketId, data) { return fllAPI(`/complaints/${ticketId}`, { method: 'PUT', body: JSON.stringify(data) }); },
   async assign(ticketId, data) { return fllAPI(`/complaints/${ticketId}/assign`, { method: 'POST', body: JSON.stringify(data) }); },
   async transfer(ticketId, data) { return fllAPI(`/complaints/${ticketId}/transfer`, { method: 'POST', body: JSON.stringify(data) }); },
   async escalate(ticketId, data) { return fllAPI(`/complaints/${ticketId}/escalate`, { method: 'POST', body: JSON.stringify(data) }); },
@@ -151,7 +147,7 @@ const FLLComplaints = {
 };
 
 // ========================
-// Fleet API
+// Fleet API (extended)
 // ========================
 const FLLFleet = {
   async getVehicles() { return fllAPI('/fleet/vehicles'); },
@@ -163,10 +159,7 @@ const FLLFleet = {
   async addMaintenance(id, data) { return fllAPI(`/fleet/vehicles/${id}/maintenance`, { method: 'POST', body: JSON.stringify(data) }); },
   async getStats() { return fllAPI('/fleet/stats'); },
   async getAssignments() { return fllAPI('/fleet/assignments'); },
-  async getDriverAssignments(driverId) { return fllAPI(`/fleet/assignments/driver/${driverId}`); },
-  async createAssignment(data) { return fllAPI('/fleet/assignments', { method: 'POST', body: JSON.stringify(data) }); },
-  async updateAssignment(id, data) { return fllAPI(`/fleet/assignments/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
-  async unassign(id) { return fllAPI(`/fleet/assignments/${id}/unassign`, { method: 'POST' }); }
+  async createAssignment(data) { return fllAPI('/fleet/assignments', { method: 'POST', body: JSON.stringify(data) }); }
 };
 
 // ========================
@@ -186,26 +179,32 @@ const FLLAI = {
 };
 
 // ========================
-// Route Guard - حماية الصفحات
+// Route Guard
 // ========================
 function requireAuth(allowedGroups = []) {
-  if (!FLLAuth.isLoggedIn()) {
-    window.location.href = '/login.html';
-    return false;
-  }
+  if (!FLLAuth.isLoggedIn()) { window.location.href = '/login'; return false; }
   if (allowedGroups.length > 0) {
     const user = FLLAuth.getUser();
     if (!user || !allowedGroups.some(g => user.groups?.includes(g))) {
-      window.location.href = '/unauthorized.html';
-      return false;
+      window.location.href = '/unauthorized'; return false;
     }
   }
   return true;
 }
 
-// Export for use
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { FLL_CONFIG, FLLAuth, FLLComplaints, FLLFleet, FLLFinance, FLLAI, fllAPI, requireAuth };
-}
+// Export globally
+window.FLL = {
+  CONFIG: FLL_CONFIG, Auth: FLLAuth, Stats: FLLStats,
+  Drivers: FLLDrivers, Orders: FLLOrders, StaffUsers: FLLStaffUsers,
+  Complaints: FLLComplaintsExt, Fleet: FLLFleet, Finance: FLLFinance,
+  Vehicles: FLLVehicles, Notifications: FLLNotifications, Tasks: FLLTasks,
+  Approvals: FLLApprovals, Departments: FLLDepartments,
+  PayoutRuns: FLLPayoutRuns, PayoutLines: FLLPayoutLines,
+  AuditLog: FLLAuditLog, UserProfiles: FLLUserProfiles,
+  SystemSettings: FLLSystemSettings, VehicleAssignments: FLLVehicleAssignments,
+  Roles: FLLRoles, Permissions: FLLPermissions, AI: FLLAI,
+  Invoices: FLLInvoices, Shipments: FLLShipments, Attendance: FLLAttendance,
+  api: fllAPI, requireAuth
+};
 
-console.log('✅ FLL API Bridge loaded — connected to AWS Backend');
+console.log('✅ FLL API Bridge v3.0 loaded — ' + Object.keys(window.FLL).length + ' modules');

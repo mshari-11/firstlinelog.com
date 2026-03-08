@@ -5,23 +5,22 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
-          { "source": "/login", "destination": "/index.html" },
-          { "source": "/unified-login", "destination": "/index.html" },
-          { "source": "/about", "destination": "/index.html" },
-          { "source": "/contact", "destination": "/index.html" },
-          { "source": "/services", "destination": "/index.html" },
-          { "source": "/news", "destination": "/index.html" },
-          { "source": "/investors", "destination": "/index.html" },
-          { "source": "/terms", "destination": "/index.html" },
-          { "source": "/privacy", "destination": "/index.html" },
-          { "source": "/compliance", "destination": "/index.html" },
-          { "source": "/operational-model", "destination": "/index.html" },
-          { "source": "/employee-services", "destination": "/index.html" },
-          { "source": "/courier-dashboard", "destination": "/index.html" },
-          { "source": "/staff-dashboard", "destination": "/index.html" },
-          { "source": "/github-management", "destination": "/index.html" }
+          { "source": "/login", "destination": "/" },
+          { "source": "/unified-login", "destination": "/" },
+          { "source": "/about", "destination": "/" },
+          { "source": "/contact", "destination": "/" },
+          { "source": "/services", "destination": "/" },
+          { "source": "/news", "destination": "/" },
+          { "source": "/investors", "destination": "/" },
+          { "source": "/terms", "destination": "/" },
+          { "source": "/privacy", "destination": "/" },
+          { "source": "/compliance", "destination": "/" },
+          { "source": "/operational-model", "destination": "/" },
+          { "source": "/employee-services", "destination": "/" },
+          { "source": "/github-management", "destination": "/" }
     ],
     "headers": [
-          { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
+          { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+          { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
     ]
 }

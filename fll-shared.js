@@ -28,3 +28,4 @@ function formatMoney(n){return parseFloat(n||0).toLocaleString('ar-SA',{minimumF
 function formatDate(d){return d?new Date(d).toLocaleDateString('ar-SA'):'—';}
 function badge(text,color){return `<span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${color==='green'?'#dcfce7':color==='red'?'#fee2e2':color==='yellow'?'#fef9c3':color==='blue'?'#dbeafe':'#f3f4f6'};color:${color==='green'?'#166534':color==='red'?'#991b1b':color==='yellow'?'#854d0e':color==='blue'?'#1e40af':'#374151'}">${text}</span>`;}
 console.log('✅ FLL Shared Module loaded');
+// deploy trigger 1772929821

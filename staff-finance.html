@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المالية - فيرست لاين لوجستيكس</title>
+<link rel="icon" href="/public/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="/fll-shared.js"></script>
+<style>
+:root{--navy:#0f2744;--gold:#f59e0b;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--purple:#6366f1;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.top-bar{background:var(--navy);color:white;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.top-bar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+.top-bar-nav{display:flex;gap:4px}
+.top-bar-nav a{color:rgba(255,255,255,.7);text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;transition:all .2s}
+.top-bar-nav a:hover,.top-bar-nav a.active{background:rgba(255,255,255,.15);color:white}
+.top-bar-actions{display:flex;align-items:center;gap:12px}
+.top-bar-actions button{background:rgba(255,255,255,.15);border:none;color:white;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
+.top-bar-actions button:hover{background:rgba(255,255,255,.25)}
+.container{max-width:1400px;margin:0 auto;padding:24px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.page-title{font-size:28px;font-weight:800;color:var(--navy)}
+.page-sub{color:var(--muted);font-size:14px;margin-top:4px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);border-right:4px solid var(--green)}
+.stat.blue{border-right-color:var(--blue)}.stat.gold{border-right-color:var(--gold)}.stat.red{border-right-color:var(--red)}.stat.purple{border-right-color:var(--purple)}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.stat-value{font-size:26px;font-weight:800;color:var(--navy)}.stat-sub{font-size:11px;color:var(--green);margin-top:2px}
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:20px;overflow:hidden}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-h h3{font-size:16px;font-weight:700;color:var(--navy)}.card-b{padding:20px}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 12px;text-align:right;font-size:12px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
+.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
+.tbl tr:hover td{background:rgba(15,39,68,.02)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-container{position:relative;height:300px;padding:10px}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--navy);color:white}.btn-gold{background:var(--gold);color:var(--navy)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.tabs{display:flex;gap:2px;background:#e2e8f0;border-radius:10px;padding:3px;margin-bottom:20px}
+.tab{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)}
+.tab.active{background:white;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<!-- Top Navigation Bar -->
+<div class="top-bar">
+  <h1>💰 المالية - فيرست لاين</h1>
+  <div class="top-bar-nav">
+    <a href="/admin-dashboard.html">🏛️ الإدارة</a>
+    <a href="/staff-finance.html" class="active">💰 المالية</a>
+    <a href="/staff-hr.html">👥 الموارد البشرية</a>
+    <a href="/staff-ops.html">📦 العمليات</a>
+    <a href="/staff-fleet.html">🚗 المركبات</a>
+  </div>
+  <div class="top-bar-actions">
+    <span id="user-name" style="font-size:13px"></span>
+    <button onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <div class="page-title">إدارة المالية</div>
+      <div class="page-sub" id="current-date"></div>
+    </div>
+    <button class="btn btn-primary" onclick="loadAll()">🔄 تحديث</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">إجمالي الأرباح</div><div class="stat-value" id="s-gross">—</div></div>
+    <div class="stat blue"><div class="stat-label">إجمالي الخصومات</div><div class="stat-value" id="s-deductions">—</div></div>
+    <div class="stat gold"><div class="stat-label">صافي الأرباح</div><div class="stat-value" id="s-net">—</div></div>
+    <div class="stat purple"><div class="stat-label">الدفعات</div><div class="stat-value" id="s-payouts">—</div></div>
+    <div class="stat red"><div class="stat-label">معلّق</div><div class="stat-value" id="s-pending">—</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('payouts',this)">الدفعات</button>
+    <button class="tab" onclick="showTab('earnings',this)">أرباح المناديب</button>
+    <button class="tab" onclick="showTab('charts',this)">الرسوم البيانية</button>
+  </div>
+
+  <!-- Payouts Tab -->
+  <div id="tab-payouts">
+    <div class="card">
+      <div class="card-h"><h3>دورات الدفع</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>الفترة</th><th>المنصة</th><th>المناديب</th><th>الإجمالي</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="payouts-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- Earnings Tab -->
+  <div id="tab-earnings" style="display:none">
+    <div class="card">
+      <div class="card-h"><h3>ملخص أرباح المناديب</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>المندوب</th><th>المنصة</th><th>عدد الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>التاريخ</th><th>الحالة</th></tr></thead><tbody id="earnings-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- Charts Tab -->
+  <div id="tab-charts" style="display:none">
+    <div class="grid-2">
+      <div class="card"><div class="card-h"><h3>الأرباح حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-platform"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h3>الأرباح حسب المندوب</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-courier"></canvas></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const user = checkAuth(); if(!user) throw 'no auth';
+setUserInfo(user);
+const db = initSupabase();
+
+function showTab(name, btn){
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).style.display='block';
+  if(btn) btn.classList.add('active');
+}
+
+let chartPlatform, chartCourier;
+
+async function loadAll(){
+  // Orders with courier names
+  const {data:orders}=await db.from('orders').select('*, couriers(full_name_ar,full_name)');
+  const {data:payouts}=await db.from('payout_runs').select('*').order('created_at',{ascending:false});
+
+  if(orders){
+    let gross=0,ded=0,net=0,pending=0;
+    orders.forEach(o=>{gross+=+(o.gross_earnings||0);ded+=+(o.deductions||0);net+=+(o.net_earnings||0);if(o.status==='pending')pending+=+(o.net_earnings||0);});
+    document.getElementById('s-gross').textContent=formatMoney(gross);
+    document.getElementById('s-deductions').textContent=formatMoney(ded);
+    document.getElementById('s-net').textContent=formatMoney(net);
+    document.getElementById('s-pending').textContent=formatMoney(pending);
+
+    // Earnings table
+    document.getElementById('earnings-tbl').innerHTML=orders.map(o=>`<tr>
+      <td><strong>${o.couriers?.full_name_ar||o.couriers?.full_name||'—'}</strong></td>
+      <td>${badge(o.platform,'blue')}</td>
+      <td>${o.orders_count}</td>
+      <td>${formatMoney(o.gross_earnings)}</td>
+      <td>${formatMoney(o.deductions)}</td>
+      <td><strong>${formatMoney(o.net_earnings)}</strong></td>
+      <td>${formatDate(o.order_date)}</td>
+      <td>${o.status==='approved'?badge('معتمد','green'):badge('معلق','yellow')}</td>
+    </tr>`).join('');
+
+    // Charts
+    const byPlatform={};
+    orders.forEach(o=>{byPlatform[o.platform]=(byPlatform[o.platform]||0)++(o.net_earnings||0);});
+    if(chartPlatform) chartPlatform.destroy();
+    chartPlatform=new Chart(document.getElementById('chart-platform'),{type:'doughnut',data:{labels:Object.keys(byPlatform),datasets:[{data:Object.values(byPlatform),backgroundColor:['#f59e0b','#0ea5e9','#10b981','#6366f1','#ef4444','#ec4899','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal'}}}}}});
+
+    const byCourier={};
+    orders.forEach(o=>{const n=o.couriers?.full_name_ar||'غير معروف';byCourier[n]=(byCourier[n]||0)++(o.net_earnings||0);});
+    if(chartCourier) chartCourier.destroy();
+    chartCourier=new Chart(document.getElementById('chart-courier'),{type:'bar',data:{labels:Object.keys(byCourier),datasets:[{label:'صافي الأرباح',data:Object.values(byCourier),backgroundColor:'#0f2744',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'Tajawal'}}},y:{ticks:{font:{family:'Tajawal'}}}}}});
+  }
+
+  if(payouts){
+    document.getElementById('s-payouts').textContent=payouts.length;
+    const statusMap={completed:['مكتمل','green'],finance_review:['مراجعة مالية','yellow'],draft:['مسودة','blue'],cancelled:['ملغى','red']};
+    document.getElementById('payouts-tbl').innerHTML=payouts.map(p=>{
+      const [label,color]=statusMap[p.status]||[p.status,'blue'];
+      return `<tr>
+        <td><strong>${p.run_name}</strong></td>
+        <td>${formatDate(p.period_start)} — ${formatDate(p.period_end)}</td>
+        <td>${badge(p.platform_app||'—','blue')}</td>
+        <td>${p.total_drivers||0}</td>
+        <td>${formatMoney(p.total_gross)}</td>
+        <td><strong>${formatMoney(p.total_net)}</strong></td>
+        <td>${badge(label,color)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+loadAll();
+</script>
+</body></html>

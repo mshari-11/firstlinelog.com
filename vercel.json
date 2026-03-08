@@ -6,27 +6,15 @@
     { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
     { "source": "/staff-dashboard", "destination": "/staff-dashboard.html" },
     { "source": "/courier-dashboard", "destination": "/courier-dashboard.html" },
+    { "source": "/staff-finance", "destination": "/staff-finance.html" },
+    { "source": "/staff-hr", "destination": "/staff-hr.html" },
+    { "source": "/staff-ops", "destination": "/staff-ops.html" },
+    { "source": "/staff-fleet", "destination": "/staff-fleet.html" },
     { "source": "/unauthorized", "destination": "/unauthorized.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
-    {
-      "source": "/",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/admin-dashboard.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    }
+    { "source": "/(admin-dashboard|staff-finance|staff-hr|staff-ops|staff-fleet|index)(.html)?", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+    { "source": "/fll-*.js", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
   ]
 }

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة المركبات - فيرست لاين لوجستيكس</title>
+<link rel="icon" href="/public/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fll-shared.js"></script>
+<style>
+:root{--navy:#0f2744;--gold:#f59e0b;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--purple:#6366f1;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.top-bar{background:var(--navy);color:white;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.top-bar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+.top-bar-nav{display:flex;gap:4px}.top-bar-nav a{color:rgba(255,255,255,.7);text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;transition:all .2s}.top-bar-nav a:hover,.top-bar-nav a.active{background:rgba(255,255,255,.15);color:white}
+.top-bar-actions{display:flex;align-items:center;gap:12px}.top-bar-actions button{background:rgba(255,255,255,.15);border:none;color:white;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
+.container{max-width:1400px;margin:0 auto;padding:24px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.page-title{font-size:28px;font-weight:800;color:var(--navy)}.page-sub{color:var(--muted);font-size:14px;margin-top:4px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);border-right:4px solid var(--blue)}.stat.green{border-right-color:var(--green)}.stat.gold{border-right-color:var(--gold)}.stat.red{border-right-color:var(--red)}
+.stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.stat-value{font-size:26px;font-weight:800;color:var(--navy)}
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:20px;overflow:hidden}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.card-h h3{font-size:16px;font-weight:700;color:var(--navy)}.card-b{padding:20px}
+.tbl{width:100%;border-collapse:collapse}.tbl th{padding:10px 12px;text-align:right;font-size:12px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}.tbl tr:hover td{background:rgba(15,39,68,.02)}
+.vehicle-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.v-card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s}
+.v-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08);transform:translateY(-2px)}
+.v-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.v-card-header h4{font-size:16px;font-weight:700;color:var(--navy)}
+.v-card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.v-card-icon.van{background:#dbeafe}.v-card-icon.car{background:#dcfce7}.v-card-icon.motorcycle{background:#fef9c3}
+.v-detail{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #f1f5f9}
+.v-detail:last-child{border:none}.v-detail span:first-child{color:var(--muted)}.v-detail span:last-child{font-weight:600}
+.expiry-warn{color:var(--red);font-weight:700}
+@media(max-width:768px){.vehicle-cards{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>🚗 إدارة المركبات</h1>
+  <div class="top-bar-nav">
+    <a href="/admin-dashboard.html">🏛️ الإدارة</a>
+    <a href="/staff-finance.html">💰 المالية</a>
+    <a href="/staff-hr.html">👥 الموارد البشرية</a>
+    <a href="/staff-ops.html">📦 العمليات</a>
+    <a href="/staff-fleet.html" class="active">🚗 المركبات</a>
+  </div>
+  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
+</div>
+<div class="container">
+  <div class="page-header"><div><div class="page-title">إدارة المركبات والأسطول</div><div class="page-sub" id="current-date"></div></div></div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">إجمالي المركبات</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat green"><div class="stat-label">نشطة</div><div class="stat-value" id="s-active">—</div></div>
+    <div class="stat gold"><div class="stat-label">صيانة</div><div class="stat-value" id="s-maint">—</div></div>
+    <div class="stat red"><div class="stat-label">تأمين منتهي قريباً</div><div class="stat-value" id="s-expiring">—</div></div>
+  </div>
+
+  <div class="vehicle-cards" id="v-cards"></div>
+
+  <div class="card">
+    <div class="card-h"><h3>جدول المركبات التفصيلي</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>اللوحة</th><th>النوع</th><th>الماركة</th><th>الموديل</th><th>السنة</th><th>اللون</th><th>المندوب</th><th>التأمين</th><th>الفحص</th><th>الحالة</th></tr></thead><tbody id="v-tbl"></tbody></table></div>
+  </div>
+</div>
+<script>
+const user=checkAuth();if(!user)throw'no auth';setUserInfo(user);const db=initSupabase();
+const typeIcon={van:'🚐',car:'🚗',motorcycle:'🏍️',truck:'🚛'};
+const typeLabel={van:'فان',car:'سيارة',motorcycle:'دراجة',truck:'شاحنة'};
+
+async function loadAll(){
+  const {data:vehicles}=await db.from('vehicles').select('*, couriers(full_name_ar,full_name)');
+  if(!vehicles) return;
+
+  const active=vehicles.filter(v=>v.status==='active');
+  const maint=vehicles.filter(v=>v.status==='maintenance');
+  const now=new Date();
+  const soon=vehicles.filter(v=>{if(!v.insurance_expiry)return false;const d=new Date(v.insurance_expiry);return d<new Date(now.getTime()+90*86400000);});
+
+  document.getElementById('s-total').textContent=vehicles.length;
+  document.getElementById('s-active').textContent=active.length;
+  document.getElementById('s-maint').textContent=maint.length;
+  document.getElementById('s-expiring').textContent=soon.length;
+
+  // Vehicle cards
+  document.getElementById('v-cards').innerHTML=vehicles.map(v=>{
+    const isExpiring=v.insurance_expiry&&new Date(v.insurance_expiry)<new Date(now.getTime()+90*86400000);
+    return `<div class="v-card">
+      <div class="v-card-header">
+        <h4>${v.plate_number}</h4>
+        <div class="v-card-icon ${v.vehicle_type}">${typeIcon[v.vehicle_type]||'🚗'}</div>
+      </div>
+      <div class="v-detail"><span>النوع</span><span>${typeLabel[v.vehicle_type]||v.vehicle_type}</span></div>
+      <div class="v-detail"><span>الماركة</span><span>${v.brand} ${v.model}</span></div>
+      <div class="v-detail"><span>السنة</span><span>${v.year}</span></div>
+      <div class="v-detail"><span>اللون</span><span>${v.color||'—'}</span></div>
+      <div class="v-detail"><span>المندوب</span><span>${v.couriers?.full_name_ar||'<span style="color:var(--muted)">غير معيّن</span>'}</span></div>
+      <div class="v-detail"><span>التأمين</span><span ${isExpiring?'class="expiry-warn"':''}>${formatDate(v.insurance_expiry)}</span></div>
+      <div class="v-detail"><span>الحالة</span><span>${v.status==='active'?badge('نشط','green'):badge('صيانة','yellow')}</span></div>
+    </div>`;
+  }).join('');
+
+  // Table
+  document.getElementById('v-tbl').innerHTML=vehicles.map(v=>`<tr>
+    <td><strong>${v.plate_number}</strong></td>
+    <td>${typeIcon[v.vehicle_type]||''} ${typeLabel[v.vehicle_type]||v.vehicle_type}</td>
+    <td>${v.brand}</td><td>${v.model}</td><td>${v.year}</td><td>${v.color||'—'}</td>
+    <td>${v.couriers?.full_name_ar||'—'}</td>
+    <td>${formatDate(v.insurance_expiry)}</td><td>${formatDate(v.registration_expiry)}</td>
+    <td>${v.status==='active'?badge('نشط','green'):badge('صيانة','yellow')}</td></tr>`).join('');
+}
+loadAll();
+</script>
+</body></html>

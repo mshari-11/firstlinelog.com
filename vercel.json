@@ -2,19 +2,20 @@
   "buildCommand": "",
   "framework": null,
   "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
-    { "source": "/staff-dashboard", "destination": "/staff-dashboard.html" },
-    { "source": "/courier-dashboard", "destination": "/courier-dashboard.html" },
-    { "source": "/staff-finance", "destination": "/staff-finance.html" },
-    { "source": "/staff-hr", "destination": "/staff-hr.html" },
-    { "source": "/staff-ops", "destination": "/staff-ops.html" },
-    { "source": "/staff-fleet", "destination": "/staff-fleet.html" },
-    { "source": "/unauthorized", "destination": "/unauthorized.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/admin-dashboard", "dest": "/admin-dashboard.html" },
+    { "src": "/staff-dashboard", "dest": "/staff-dashboard.html" },
+    { "src": "/courier-dashboard", "dest": "/courier-dashboard.html" },
+    { "src": "/staff-finance", "dest": "/staff-finance.html" },
+    { "src": "/staff-hr", "dest": "/staff-hr.html" },
+    { "src": "/staff-ops", "dest": "/staff-ops.html" },
+    { "src": "/staff-fleet", "dest": "/staff-fleet.html" },
+    { "src": "/unauthorized", "dest": "/unauthorized.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
-    { "source": "/(admin-dashboard|staff-finance|staff-hr|staff-ops|staff-fleet|index)(.html)?", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+    { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
     { "source": "/fll-*.js", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
   ]
 }

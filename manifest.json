@@ -1,0 +1,29 @@
+{
+  "name": "فيرست لاين لوجستيكس",
+  "short_name": "FLL",
+  "description": "شركة الخط الأول للخدمات اللوجستية - نظام إدارة المناديب والتوصيل",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f2744",
+  "theme_color": "#0f2744",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/public/images/first_line_correct_logos_1.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/public/images/first_line_correct_logos_1.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "logistics"],
+  "screenshots": [],
+  "scope": "/"
+}

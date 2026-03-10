@@ -101,9 +101,12 @@
     const r = await authAPI('/auth/login', { username: id, password: pw });
     setLoad(btn, false);
 
-    if (r.ok && r.data.token) {
+    if (r.ok && r.data.challenge === 'EMAIL_OTP') {
+      // MFA Required — show OTP input
+      showToast('تم إرسال رمز التحقق إلى بريدك الإلكتروني 📧','info',6000);
+      showMFAInput(id, r.data.session, page);
+    } else if (r.ok && r.data.token) {
       saveSession(r.data);
-      // Audit log
       try { fetch(`${API}/api/audit-log`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',actor:r.data.email||r.data.username,resource_type:page==='/login'?'driver':'staff',timestamp:new Date().toISOString()})}); } catch(e){}
       showToast(`مرحباً ${r.data.name||r.data.username}! جاري التحويل...`,'success');
       setTimeout(()=>{ window.location.href = getRedirect(r.data.groups); }, 1200);
@@ -141,6 +144,82 @@
     const el=e.target.closest('button,a'); if(!el) return;
     if(el.textContent.trim().includes('نسيت كلمة المرور')){e.preventDefault();e.stopPropagation();showForgotPW();}
   }, true);
+
+  // --- MFA OTP Input ---
+  function showMFAInput(username, session, page) {
+    // Replace the login form with OTP input
+    const formArea = document.querySelector('form') || document.querySelector('[class*="login"], [class*="form"], [class*="card"]');
+    if (!formArea) return;
+    
+    const container = formArea.parentElement || formArea;
+    const originalHTML = container.innerHTML;
+    
+    container.innerHTML = `
+      <div style="max-width:420px;margin:0 auto;padding:32px 24px;text-align:center;direction:rtl;font-family:'Segoe UI',Tahoma,sans-serif">
+        <div style="width:64px;height:64px;margin:0 auto 16px;background:#0f2744;border-radius:50%;display:flex;align-items:center;justify-content:center">
+          <span style="font-size:28px">📧</span>
+        </div>
+        <h2 style="color:#0f2744;margin:0 0 8px;font-size:22px">رمز التحقق</h2>
+        <p style="color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong style="color:#0f2744">${username}</strong></p>
+        <div style="margin:0 0 20px">
+          <input id="fll-otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="أدخل الرمز المكون من 6 أرقام"
+            style="width:100%;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;border:2px solid #d1d5db;border-radius:12px;outline:none;font-family:monospace;direction:ltr;box-sizing:border-box"
+            onfocus="this.style.borderColor='#0f2744'" onblur="this.style.borderColor='#d1d5db'">
+        </div>
+        <button id="fll-verify-btn" style="width:100%;padding:14px;background:#0f2744;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s"
+          onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          ✓ تأكيد الرمز
+        </button>
+        <p style="color:#94a3b8;font-size:12px;margin:16px 0 0">الرمز صالح لمدة 3 دقائق</p>
+        <button id="fll-back-btn" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;margin-top:12px;font-family:inherit;text-decoration:underline">
+          العودة لتسجيل الدخول
+        </button>
+      </div>
+    `;
+
+    const otpInput = document.getElementById('fll-otp-input');
+    const verifyBtn = document.getElementById('fll-verify-btn');
+    const backBtn = document.getElementById('fll-back-btn');
+
+    // Focus OTP input
+    setTimeout(() => otpInput.focus(), 100);
+
+    // Auto-submit when 6 digits entered
+    otpInput.addEventListener('input', () => {
+      otpInput.value = otpInput.value.replace(/\D/g, '');
+      if (otpInput.value.length === 6) verifyBtn.click();
+    });
+
+    // Verify OTP
+    verifyBtn.addEventListener('click', async () => {
+      const code = otpInput.value.trim();
+      if (code.length !== 6) { showToast('الرجاء إدخال الرمز المكون من 6 أرقام','warning'); return; }
+      
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = 'جاري التحقق...';
+      
+      const r = await authAPI('/auth/respond-mfa', { username, code, session, challenge: 'EMAIL_OTP' });
+      
+      if (r.ok && r.data.token) {
+        saveSession(r.data);
+        try { fetch(`${API}/api/audit-log`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login_mfa',actor:username,resource_type:page==='/login'?'driver':'staff',timestamp:new Date().toISOString()})}); } catch(e){}
+        showToast(`مرحباً ${r.data.user?.name||username}! جاري التحويل... ✅`,'success');
+        setTimeout(()=>{ window.location.href = getRedirect(r.data.user?.groups||r.data.groups||[]); }, 1200);
+      } else {
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = '✓ تأكيد الرمز';
+        showToast(r.data.message||'رمز التحقق غير صحيح','error');
+        otpInput.value = '';
+        otpInput.focus();
+      }
+    });
+
+    // Back button
+    backBtn.addEventListener('click', () => { location.reload(); });
+
+    // Enter key
+    otpInput.addEventListener('keydown', (e) => { if(e.key==='Enter') verifyBtn.click(); });
+  }
 
   function showForgotPW() {
     const x=document.getElementById('fll-fp');if(x)x.remove();

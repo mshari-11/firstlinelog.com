@@ -96,7 +96,7 @@ create unique index if not exists uniq_app_phone on driver_applications(phone)
 -- ─── Archive (immutable copy of every application state change) ────────────────
 create table if not exists driver_applications_archive (
   id             uuid primary key default gen_random_uuid(),
-  application_id uuid not null references driver_applications(id) on delete cascade,
+  application_id uuid not null references driver_applications(id) on delete restrict,
   snapshot       jsonb not null,              -- full row snapshot at time of change
   changed_by     uuid,
   change_type    text not null,               -- 'submitted','reviewed','approved','rejected','corrected'

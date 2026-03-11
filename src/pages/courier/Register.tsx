@@ -297,12 +297,15 @@ function CameraCapture({
   const [livenessTimer, setLivenessTimer] = useState(0);
   const [captured, setCaptured] = useState<string | null>(null);
 
+  const streamRef = useRef<MediaStream | null>(null);
+
   useEffect(() => {
     async function startCamera() {
       try {
         const s = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
         });
+        streamRef.current = s;
         setStream(s);
         if (videoRef.current) videoRef.current.srcObject = s;
       } catch {
@@ -310,8 +313,7 @@ function CameraCapture({
       }
     }
     startCamera();
-    return () => { stream?.getTracks().forEach((t) => t.stop()); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); };
   }, []);
 
   async function startLiveness() {
@@ -343,9 +345,9 @@ function CameraCapture({
     const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
     setCaptured(dataUrl);
     stream?.getTracks().forEach((t) => t.stop());
-    // Fake score — in production this would be a real face-api score
-    const score = 88 + Math.floor(Math.random() * 10);
-    onCapture(dataUrl, score);
+    streamRef.current = null;
+    // Score 0 = not verified by server-side face-api; backend should re-verify
+    onCapture(dataUrl, 0);
   }
 
   if (cameraError) {
@@ -917,8 +919,7 @@ export default function CourierRegister() {
               <div style={{ background: "#052e16", border: "1px solid #16a34a", borderRadius: "8px", padding: "0.75rem", textAlign: "center", marginBottom: "0.75rem" }}>
                 <p style={{ fontSize: "12px", color: "#86efac" }}>
                   <CheckCircle2 size={13} style={{ display: "inline", marginLeft: 4 }} />
-                  تم التحقق الحيوي بنجاح — درجة التشابه المتوقعة:{" "}
-                  <strong>{form.livenessScore}%</strong>
+                  تم التقاط الصورة — سيتم التحقق الحيوي عند مراجعة الطلب
                 </p>
               </div>
             )}

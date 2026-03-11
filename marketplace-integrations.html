@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة التكاملات - AWS Marketplace — FLL</title>
+<link rel="icon" href="/public/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:oklch(25% .12 220);--accent:oklch(55% .15 200);--surface:oklch(20% .08 220);--card-bg:oklch(22% .08 220/.65);--green:#10b981;--red:#ef4444;--gold:#f59e0b;--blue:#0ea5e9;--purple:#8b5cf6;--border:oklch(35% .08 220/.3);--text-muted:oklch(65% .04 220)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--navy);color:#fff;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 600px 400px at 20% 80%,oklch(30% .15 200/.2),transparent),radial-gradient(ellipse 500px 500px at 80% 20%,oklch(35% .12 240/.15),transparent)}
+.header{position:sticky;top:0;z-index:50;padding:16px 24px;background:oklch(20% .1 220/.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header-nav{display:flex;gap:6px}
+.header-nav a{color:oklch(70% .05 220);text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;transition:all .2s}
+.header-nav a:hover{background:oklch(30% .08 220/.5);color:#fff}
+.container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px}
+.page-title{font-size:14px;color:var(--text-muted);margin-bottom:20px}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:var(--card-bg);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center}
+.stat-icon{font-size:28px;margin-bottom:6px}
+.stat-val{font-size:24px;font-weight:700}.stat-lbl{font-size:11px;color:var(--text-muted);margin-top:2px}
+/* Cards */
+.integrations{display:grid;gap:16px}
+.card{background:var(--card-bg);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all .3s}
+.card:hover{border-color:oklch(50% .12 200/.4);box-shadow:0 8px 40px oklch(30% .15 220/.3)}
+.card-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-header-left{display:flex;align-items:center;gap:14px}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.card-icon.nected{background:linear-gradient(135deg,#059669,#10b981)}
+.card-icon.veri5now{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.card-icon.ai-finance{background:linear-gradient(135deg,#f59e0b,#f97316)}
+.card-icon.turiya{background:linear-gradient(135deg,#0ea5e9,#06b6d4)}
+.card-name{font-size:17px;font-weight:700}
+.card-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+.badge-active{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534}
+.badge-config{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:#fef9c3;color:#854d0e}
+.card-body{padding:20px 24px}
+.use-cases{list-style:none;padding:0}
+.use-cases li{padding:8px 0;font-size:13px;color:oklch(80% .04 220);display:flex;align-items:center;gap:8px;border-bottom:1px solid oklch(30% .06 220/.3)}
+.use-cases li:last-child{border:none}
+.use-cases li::before{content:'✓';color:var(--green);font-weight:700;font-size:14px}
+.card-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted)}
+.integration-point{display:flex;align-items:center;gap:6px}
+.integration-point code{background:oklch(28% .08 220/.5);padding:2px 8px;border-radius:4px;font-size:11px;color:var(--blue)}
+/* Rules section */
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+.rule-item{background:oklch(25% .06 220/.5);border-radius:10px;padding:12px;border:1px solid oklch(35% .06 220/.2)}
+.rule-platform{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.rule-detail{font-size:11px;color:var(--text-muted);line-height:1.8}
+.rule-detail strong{color:oklch(75% .1 200)}
+/* Toggle */
+.toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:oklch(30% .06 220);border-radius:24px;transition:all .3s}
+.toggle .slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;right:3px;transition:all .3s}
+.toggle input:checked+.slider{background:var(--green)}
+.toggle input:checked+.slider::before{right:23px}
+/* Subsection */
+.subsection{margin-top:14px}
+.subsection h4{font-size:13px;font-weight:600;color:oklch(70% .1 200);margin-bottom:8px}
+.agents-list{display:grid;gap:8px}
+.agent-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:oklch(25% .06 220/.5);border-radius:8px;border:1px solid oklch(35% .06 220/.2)}
+.agent-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.agent-name{font-size:13px;font-weight:600;flex:1}
+.agent-trigger{font-size:10px;color:var(--text-muted);background:oklch(28% .08 220/.5);padding:2px 8px;border-radius:4px}
+.loading{text-align:center;padding:40px;color:var(--text-muted);font-size:14px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.rules-grid{grid-template-columns:1fr}.card-header{flex-direction:column;gap:10px;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🔌 إدارة التكاملات — AWS Marketplace</h1>
+  <div class="header-nav">
+    <a href="/admin-dashboard">🏛️ الإدارة</a>
+    <a href="/staff-finance">💰 المالية</a>
+    <a href="/staff-hr">👥 HR</a>
+    <a href="/">🏠 الرئيسية</a>
+  </div>
+</div>
+<div class="container">
+  <p class="page-title">خدمات AWS Marketplace المفعّلة على حساب FLL — إدارة وتحكم</p>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-icon">🔌</div><div class="stat-val" id="s-total">4</div><div class="stat-lbl">تكاملات مفعّلة</div></div>
+    <div class="stat"><div class="stat-icon">⚙️</div><div class="stat-val" id="s-rules">—</div><div class="stat-lbl">قواعد أعمال</div></div>
+    <div class="stat"><div class="stat-icon">🤖</div><div class="stat-val" id="s-agents">—</div><div class="stat-lbl">AI Agents</div></div>
+    <div class="stat"><div class="stat-icon">📊</div><div class="stat-val" id="s-reports">5</div><div class="stat-lbl">أنواع تقارير</div></div>
+  </div>
+
+  <div class="integrations" id="integrations-list">
+    <div class="loading">⏳ جاري تحميل التكاملات...</div>
+  </div>
+</div>
+
+<script src="/fll-shared.js"></script>
+<script>
+const API=window.AWS_API||'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+
+async function loadIntegrations(){
+  const list=document.getElementById('integrations-list');
+  try{
+    const r=await fetch(API+'/api/system-settings');
+    const d=await r.json();
+    const items=(d.items||d||[]).filter(i=>(i.id||i.setting_key||'').startsWith('marketplace-'));
+    
+    if(!items.length){list.innerHTML='<p style="text-align:center;color:var(--text-muted)">لا توجد تكاملات مفعّلة</p>';return}
+    
+    let totalRules=0,totalAgents=0;
+    let html='';
+    
+    items.forEach(item=>{
+      const key=item.id||item.setting_key||'';
+      const name=item.service_name||key;
+      const desc=item.description||'';
+      const enabled=item.enabled!==false;
+      
+      // Determine icon class
+      let iconClass='nected',icon='⚙️';
+      if(key.includes('veri5now')){iconClass='veri5now';icon='🔐'}
+      else if(key.includes('ai-finance')){iconClass='ai-finance';icon='📊'}
+      else if(key.includes('turiya')){iconClass='turiya';icon='🤖'}
+      
+      html+=`<div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon ${iconClass}">${icon}</div>
+            <div><div class="card-name">${name}</div><div class="card-desc">${desc}</div></div>
+          </div>
+          <span class="${enabled?'badge-active':'badge-config'}">${enabled?'✅ مفعّل':'⏸ معطّل'}</span>
+        </div>
+        <div class="card-body">`;
+      
+      // Nected — show rules
+      if(key.includes('nected')&&item.rules){
+        const rules=item.rules||[];
+        totalRules+=rules.length;
+        html+=`<div class="subsection"><h4>📋 قواعد العمولات حسب المنصة (${rules.length})</h4><div class="rules-grid">`;
+        rules.forEach(r=>{
+          const p=r.platform||r.M?.platform?.S||'—';
+          const rate=r.commission_rate||r.M?.commission_rate?.N||'—';
+          const minFee=r.min_delivery_fee||r.M?.min_delivery_fee?.N||'—';
+          const bonus=r.bonus_amount||r.M?.bonus_amount?.N||'—';
+          const threshold=r.bonus_threshold||r.M?.bonus_threshold?.N||'—';
+          html+=`<div class="rule-item">
+            <div class="rule-platform">🏪 ${p}</div>
+            <div class="rule-detail">
+              العمولة: <strong>${rate}%</strong><br>
+              أقل رسم توصيل: <strong>${minFee} ر.س</strong><br>
+              حافز: <strong>${bonus} ر.س</strong> عند ${threshold}+ توصيلة
+            </div></div>`;
+        });
+        html+=`</div></div>`;
+        
+        // Penalties
+        if(item.penalty_rules){
+          const penalties=item.penalty_rules||[];
+          totalRules+=penalties.length;
+          html+=`<div class="subsection"><h4>⚠️ قواعد الخصم (${penalties.length})</h4><div class="rules-grid">`;
+          penalties.forEach(p=>{
+            const type=p.type||p.M?.type?.S||'—';
+            const ded=p.deduction_sar||p.M?.deduction_sar?.N||'0';
+            const ddesc=p.description||p.M?.description?.S||'';
+            html+=`<div class="rule-item"><div class="rule-platform">🚫 ${ddesc}</div><div class="rule-detail">خصم: <strong>${ded} ر.س</strong></div></div>`;
+          });
+          html+=`</div></div>`;
+        }
+      }
+      
+      // Veri5now — show verification types
+      if(key.includes('veri5now')&&item.verification_types){
+        const types=item.verification_types||[];
+        html+=`<div class="subsection"><h4>📝 أنواع التحقق (${types.length})</h4><div class="use-cases">`;
+        types.forEach(t=>{
+          const tname=t.description||t.M?.description?.S||'—';
+          const req=t.required||t.M?.required?.BOOL;
+          html+=`<li>${tname} ${req?'<span style="color:var(--red);font-size:10px;font-weight:600">(مطلوب)</span>':''}</li>`;
+        });
+        html+=`</div></div>`;
+        if(item.auto_approve_threshold){
+          html+=`<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">اعتماد تلقائي عند نسبة تطابق ≥ <strong style="color:var(--green)">${item.auto_approve_threshold}%</strong> | مراجعة يدوية ≥ <strong style="color:var(--gold)">${item.manual_review_threshold}%</strong></div>`;
+        }
+      }
+      
+      // AI Finance — show analysis types
+      if(key.includes('ai-finance')&&item.analysis_types){
+        const types=item.analysis_types||[];
+        html+=`<div class="subsection"><h4>📈 أنواع التحليل (${types.length})</h4><div class="use-cases">`;
+        types.forEach(t=>{
+          const tdesc=t.description||t.M?.description?.S||'—';
+          const sched=t.schedule||t.M?.schedule?.S||'—';
+          html+=`<li>${tdesc} <span style="font-size:10px;color:var(--blue)">(${sched})</span></li>`;
+        });
+        html+=`</div></div>`;
+      }
+      
+      // Turiya — show agents
+      if(key.includes('turiya')&&item.agents){
+        const agents=item.agents||[];
+        totalAgents+=agents.length;
+        html+=`<div class="subsection"><h4>🤖 AI Agents (${agents.length})</h4><div class="agents-list">`;
+        agents.forEach(a=>{
+          const aname=a.name||a.M?.name?.S||'—';
+          const adesc=a.description||a.M?.description?.S||'';
+          const trigger=a.trigger||a.M?.trigger?.S||'—';
+          html+=`<div class="agent-item">
+            <div class="agent-dot"></div>
+            <div class="agent-name">${aname}<div style="font-size:11px;color:var(--text-muted);font-weight:400">${adesc}</div></div>
+            <span class="agent-trigger">${trigger}</span>
+          </div>`;
+        });
+        html+=`</div></div>`;
+      }
+      
+      html+=`</div></div>`;
+    });
+    
+    list.innerHTML=html;
+    document.getElementById('s-rules').textContent=totalRules;
+    document.getElementById('s-agents').textContent=totalAgents;
+    
+  }catch(err){
+    list.innerHTML=`<p style="color:var(--red);text-align:center">خطأ في تحميل التكاملات: ${err.message}</p>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',loadIntegrations);
+</script>
+</body>
+</html>

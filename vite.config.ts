@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import fs from "fs";
 
 export default defineConfig({
   plugins: [
@@ -11,7 +12,6 @@ export default defineConfig({
     {
       name: "rename-spa-to-index",
       closeBundle() {
-        const fs = require("fs");
         const src = path.resolve(__dirname, "dist/spa.html");
         const dest = path.resolve(__dirname, "dist/index.html");
         if (fs.existsSync(src)) {

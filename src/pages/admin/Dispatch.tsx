@@ -6,10 +6,9 @@
  * Map token: set VITE_MAPBOX_TOKEN in .env
  * Falls back to a styled static placeholder if token is missing.
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
-import type { MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
@@ -48,7 +47,10 @@ interface Order {
   estimatedTime?: number;
 }
 
-// ─── Mock data (Riyadh area) ──────────────────────────────────────────────────
+// ─── API base ─────────────────────────────────────────────────────────────────
+const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+
+// ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [
   { id: "D01", name: "محمد العتيبي",   phone: "0501234567", rating: 4.8, status: "available",  lat: 24.7136, lng: 46.6753, vehicle: "دراجة نارية" },
   { id: "D02", name: "خالد الزهراني",  phone: "0512345678", rating: 4.5, status: "busy",       lat: 24.7250, lng: 46.6900, vehicle: "سيارة",       activeOrderId: "O02" },
@@ -128,12 +130,53 @@ export default function Dispatch() {
   const mapRef = useRef<MapRef>(null);
   const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [loadingData, setLoadingData] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [showDrivers, setShowDrivers] = useState(true);
   const [showOrders, setShowOrders] = useState(true);
+
+  // ── Fetch real data from API, fall back to mock ──────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        const [driversRes, ordersRes] = await Promise.all([
+          fetch(`${API_BASE}/api/drivers`),
+          fetch(`${API_BASE}/api/orders`),
+        ]);
+
+        if (!driversRes.ok || !ordersRes.ok) throw new Error("API error");
+
+        const [driversData, ordersData] = await Promise.all([
+          driversRes.json(),
+          ordersRes.json(),
+        ]);
+
+        if (cancelled) return;
+
+        // Normalise — API may return { drivers: [...] } or [...]
+        const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.drivers ?? driversData.data ?? []);
+        const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.orders ?? ordersData.data ?? []);
+
+        if (rawDrivers.length > 0) setDrivers(rawDrivers);
+        if (rawOrders.length > 0) setOrders(rawOrders);
+      } catch {
+        if (!cancelled) setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
+      } finally {
+        if (!cancelled) setLoadingData(false);
+      }
+    }
+
+    fetchData();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;
@@ -182,6 +225,21 @@ export default function Dispatch() {
 
       {/* CSS for pulse animation */}
       <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0.6)} 50%{box-shadow:0 0 0 8px rgba(217,119,6,0)} }`}</style>
+
+      {/* API error / loading banner */}
+      {loadingData && (
+        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", fontSize: "12px", color: "var(--con-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} />
+          جارٍ تحميل بيانات السائقين والطلبات...
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+      {!loadingData && apiError && (
+        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-warning-subtle,#fef3c7)", borderBottom: "1px solid var(--con-warning)", fontSize: "12px", color: "var(--con-warning)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <AlertTriangle size={12} />
+          {apiError}
+        </div>
+      )}
 
       {/* ── Top KPI bar ── */}
       <div style={{

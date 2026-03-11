@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>التعديلات اليدوية — FLL Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1)}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:250px;background:var(--navy);border-left:1px solid var(--border);padding:20px 0;position:fixed;top:0;right:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar .logo h2{color:var(--blue);font-size:16px;margin-bottom:4px}
+.sidebar .logo small{color:var(--muted);font-size:11px}
+.nav-group{margin:12px 0}
+.nav-group-label{padding:8px 20px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--text);text-decoration:none;font-size:13px;transition:all .2s;border-right:3px solid transparent}
+.nav-link:hover{background:rgba(56,189,248,0.05);color:var(--blue)}
+.nav-link.active{background:rgba(56,189,248,0.1);color:var(--blue);border-right-color:var(--blue)}
+.main{margin-right:250px;flex:1;padding:24px;min-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:8px}
+.page-header h1 i{color:var(--blue)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(10px);border-top:3px solid var(--blue)}
+.stat-card.green{border-top-color:var(--green)}
+.stat-card.gold{border-top-color:var(--gold)}
+.stat-card.red{border-top-color:var(--red)}
+.stat-card.purple{border-top-color:var(--purple)}
+.stat-label{color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-sub{color:var(--muted);font-size:11px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.card h3{color:var(--text);font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(56,189,248,0.08);color:var(--blue);font-weight:600;padding:10px 12px;text-align:right;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:rgba(56,189,248,0.03)}
+.badge{padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:#86efac}
+.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}
+.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}
+.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--blue-deep);color:white}
+.btn-primary:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-green{background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.btn-green:hover{background:rgba(34,197,94,0.3)}
+.btn-red{background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)}
+.btn-red:hover{background:rgba(239,68,68,0.3)}
+.search-input{background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;width:250px}
+.search-input::placeholder{color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--navy);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
+.modal h3{color:var(--text);margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.form-input{width:100%;background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px}
+.form-input:focus{border-color:var(--blue);outline:none}
+textarea.form-input{min-height:80px;resize:vertical}
+@media(max-width:768px){.sidebar{display:none}.main{margin-right:0}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <h2>فيرست لاين لوجستيكس</h2>
+    <small>المحرك المالي</small>
+  </div>
+  <div id="sidebar-nav"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:auto">
+    <div style="font-size:12px;color:var(--muted)" id="user-info"></div>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-top:8px;width:100%">تسجيل خروج</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <h1><i data-lucide="sliders-horizontal"></i> التعديلات اليدوية</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="openModal('adj-modal')"><i data-lucide="plus" style="width:14px;height:14px"></i> تعديل جديد</button>
+      <button class="btn btn-outline" onclick="loadAdjustments()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">إجمالي التعديلات</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card gold"><div class="stat-label">قيد الانتظار</div><div class="stat-value" id="s-pending">—</div></div>
+    <div class="stat-card green"><div class="stat-label">معتمدة</div><div class="stat-value" id="s-approved">—</div></div>
+    <div class="stat-card red"><div class="stat-label">مرفوضة</div><div class="stat-value" id="s-rejected">—</div></div>
+  </div>
+
+  <div class="card">
+    <h3><i data-lucide="list" style="width:16px;height:16px;color:var(--blue)"></i> جدول التعديلات</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>السائق</th><th>النوع</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>إجراءات</th>
+        </tr></thead>
+        <tbody id="adj-tbl"><tr><td colspan="6" class="loading">جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- New Adjustment Modal -->
+<div class="modal-overlay" id="adj-modal">
+<div class="modal">
+<h3>إنشاء تعديل جديد</h3>
+<div class="form-group"><label class="form-label">معرف السائق</label><input class="form-input" id="na-driver" placeholder="driver ID"></div>
+<div class="form-group"><label class="form-label">النوع</label><select class="form-input" id="na-type"><option value="credit">إضافة رصيد</option><option value="debit">خصم رصيد</option><option value="bonus">مكافأة</option><option value="penalty">جزاء</option><option value="correction">تصحيح</option></select></div>
+<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input class="form-input" id="na-amount" type="number" step="0.01" min="0.01"></div>
+<div class="form-group"><label class="form-label">السبب</label><textarea class="form-input" id="na-reason" placeholder="سبب التعديل..."></textarea></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-primary" onclick="createAdjustment()">إنشاء</button>
+<button class="btn btn-outline" onclick="closeModal('adj-modal')">إلغاء</button>
+</div>
+</div>
+</div>
+
+<script src="/fll-shared.js"></script>
+<script src="/fll-rbac.js"></script>
+<script>
+const user=checkAuth();if(!user)throw'no auth';
+if(window.FLL_RBAC)FLL_RBAC.guardPage();
+
+document.getElementById('sidebar-nav').innerHTML=window.FLL_RBAC?FLL_RBAC.renderSidebarNav():'';
+document.getElementById('user-info').textContent=(user.name||user.email||'مستخدم')+' — '+(window.FLL_RBAC?FLL_RBAC.getUserRoleLabel():'');
+
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function fmt(n){return parseFloat(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2})}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+const statusLabels={pending:'قيد الانتظار',approved:'معتمدة',rejected:'مرفوضة',applied:'مطبقة'};
+const statusBadge={pending:'badge-yellow',approved:'badge-green',rejected:'badge-red',applied:'badge-blue'};
+const typeLabels={credit:'إضافة رصيد',debit:'خصم رصيد',bonus:'مكافأة',penalty:'جزاء',correction:'تصحيح'};
+
+async function loadAdjustments(){
+  document.getElementById('adj-tbl').innerHTML='<tr><td colspan="6" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/adjustments');
+    const items=data.items||[];
+    const pending=items.filter(a=>a.status==='pending').length;
+    const approved=items.filter(a=>a.status==='approved'||a.status==='applied').length;
+    const rejected=items.filter(a=>a.status==='rejected').length;
+    document.getElementById('s-total').textContent=items.length;
+    document.getElementById('s-pending').textContent=pending;
+    document.getElementById('s-approved').textContent=approved;
+    document.getElementById('s-rejected').textContent=rejected;
+
+    if(!items.length){document.getElementById('adj-tbl').innerHTML='<tr><td colspan="6" class="empty">لا توجد تعديلات</td></tr>';return;}
+    document.getElementById('adj-tbl').innerHTML=items.map(a=>{
+      let actions='—';
+      if(a.status==='pending'){
+        actions=`<button class="btn btn-sm btn-green" onclick="adjAction('${esc(a.id)}','approve')">اعتماد</button> <button class="btn btn-sm btn-red" onclick="adjAction('${esc(a.id)}','reject')">رفض</button>`;
+      }
+      return `<tr>
+        <td><strong>${esc(a.driver_id||a.driver)}</strong></td>
+        <td>${esc(typeLabels[a.type]||a.type)}</td>
+        <td style="font-weight:700">${fmt(a.amount)} ر.س</td>
+        <td>${esc(a.reason||'—')}</td>
+        <td><span class="badge ${statusBadge[a.status]||'badge-blue'}">${statusLabels[a.status]||a.status}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('adj-tbl').innerHTML='<tr><td colspan="6" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+async function createAdjustment(){
+  const driver_id=document.getElementById('na-driver').value.trim();
+  const type=document.getElementById('na-type').value;
+  const amount=document.getElementById('na-amount').value;
+  const reason=document.getElementById('na-reason').value.trim();
+  if(!driver_id||!amount){showToast('يلزم تحديد السائق والمبلغ','error');return;}
+  try{
+    await fllPost('/finance/adjustments',{driver_id,type,amount:parseFloat(amount),reason});
+    showToast('تم إنشاء التعديل بنجاح','success');
+    closeModal('adj-modal');
+    loadAdjustments();
+  }catch(e){
+    showToast('خطأ: '+e.message,'error');
+  }
+}
+
+async function adjAction(id,action){
+  try{
+    await fllPost('/finance/adjustments/'+id+'/'+action,{});
+    showToast(action==='approve'?'تم الاعتماد بنجاح':'تم الرفض','success');
+    loadAdjustments();
+  }catch(e){
+    showToast('خطأ: '+e.message,'error');
+  }
+}
+
+loadAdjustments();
+try{lucide.createIcons()}catch(e){}
+</script>
+</body>
+</html>

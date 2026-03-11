@@ -3,15 +3,15 @@ import { useState, useRef, useEffect, useCallback } from "react";
 const API = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
 
 const REDIRECT: Record<string, string> = {
-  SystemAdmin: "/admin-dashboard.html",
-  admin: "/admin-dashboard.html",
-  finance: "/admin-dashboard.html#finance",
-  hr: "/admin-dashboard.html#staff",
-  ops: "/admin-dashboard.html#orders",
-  fleet: "/admin-dashboard.html#couriers",
-  staff: "/staff-dashboard.html",
-  executive: "/admin-dashboard.html",
-  driver: "/courier-dashboard.html",
+  SystemAdmin: "/admin-panel/dashboard",
+  admin: "/admin-panel/dashboard",
+  finance: "/admin-panel/finance",
+  hr: "/admin-panel/staff",
+  ops: "/admin-panel/orders",
+  fleet: "/admin-panel/couriers",
+  staff: "/admin-panel/dashboard",
+  executive: "/admin-panel/dashboard",
+  driver: "/courier/portal",
 };
 
 function getRedirect(groups: string[]) {

@@ -610,7 +610,8 @@ export default function CourierRegister() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
+        const detail = data.error ? ` (${data.error})` : "";
+        setErrors({ general: (data.message || "حدث خطأ أثناء إرسال الطلب") + detail });
       } else {
         setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
       }

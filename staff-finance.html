@@ -4,72 +4,79 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>المالية - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="/fll-shared.js"></script>
 <style>
-:root{--navy:#0f2744;--gold:#f59e0b;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--purple:#6366f1;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.top-bar{background:var(--navy);color:white;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
-.top-bar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(56,189,248,0.06) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(251,191,36,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:var(--navy-mid);border-radius:3px}
+.top-bar{background:rgba(10,22,40,0.9);backdrop-filter:blur(20px);color:white;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;border-bottom:1px solid var(--border)}
+.top-bar h1{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
 .top-bar-nav{display:flex;gap:4px}
-.top-bar-nav a{color:rgba(255,255,255,.7);text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;transition:all .2s}
-.top-bar-nav a:hover,.top-bar-nav a.active{background:rgba(255,255,255,.15);color:white}
+.top-bar-nav a{color:var(--muted);text-decoration:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;transition:all .25s;display:flex;align-items:center;gap:6px}
+.top-bar-nav a:hover{background:var(--glass);color:var(--text)}
+.top-bar-nav a.active{background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(249,115,22,0.1));color:var(--gold);box-shadow:inset 0 0 0 1px rgba(251,191,36,0.2)}
 .top-bar-actions{display:flex;align-items:center;gap:12px}
-.top-bar-actions button{background:rgba(255,255,255,.15);border:none;color:white;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
-.top-bar-actions button:hover{background:rgba(255,255,255,.25)}
-.container{max-width:1400px;margin:0 auto;padding:24px}
+.top-bar-actions button{background:var(--glass);border:1px solid var(--border);color:white;padding:8px 16px;border-radius:10px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
+.top-bar-actions button:hover{background:rgba(255,255,255,.08)}
+.container{max-width:1400px;margin:0 auto;padding:24px;position:relative;z-index:1}
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.page-title{font-size:28px;font-weight:800;color:var(--navy)}
-.page-sub{color:var(--muted);font-size:14px;margin-top:4px}
+.page-title{font-size:24px;font-weight:700;color:white;display:flex;align-items:center;gap:10px}
+.page-sub{color:var(--muted);font-size:13px;margin-top:4px}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);border-right:4px solid var(--green)}
-.stat.blue{border-right-color:var(--blue)}.stat.gold{border-right-color:var(--gold)}.stat.red{border-right-color:var(--red)}.stat.purple{border-right-color:var(--purple)}
-.stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.stat-value{font-size:26px;font-weight:800;color:var(--navy)}.stat-sub{font-size:11px;color:var(--green);margin-top:2px}
-.card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:20px;overflow:hidden}
+.stat{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:transform .2s,box-shadow .2s}
+.stat:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+.stat::before{content:'';position:absolute;top:0;right:0;width:100%;height:3px;background:linear-gradient(90deg,var(--green),#34d399);border-radius:var(--radius) var(--radius) 0 0}
+.stat.blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}.stat.gold::before{background:linear-gradient(90deg,var(--gold),#fcd34d)}.stat.red::before{background:linear-gradient(90deg,var(--red),#f87171)}.stat.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.stat-value{font-size:26px;font-weight:700;color:white}.stat-sub{font-size:11px;color:var(--green);margin-top:2px}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:20px;overflow:hidden;backdrop-filter:blur(10px)}
 .card-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.card-h h3{font-size:16px;font-weight:700;color:var(--navy)}.card-b{padding:20px}
+.card-h h3{font-size:15px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}.card-b{padding:20px}
 .tbl{width:100%;border-collapse:collapse}
-.tbl th{padding:10px 12px;text-align:right;font-size:12px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
-.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}
-.tbl tr:hover td{background:rgba(15,39,68,.02)}
+.tbl th{padding:10px 12px;text-align:right;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text)}
+.tbl tr:hover td{background:rgba(56,189,248,0.03)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .chart-container{position:relative;height:300px;padding:10px}
-.btn{padding:10px 20px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-primary{background:var(--navy);color:white}.btn-gold{background:var(--gold);color:var(--navy)}
-.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.tabs{display:flex;gap:2px;background:#e2e8f0;border-radius:10px;padding:3px;margin-bottom:20px}
-.tab{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)}
-.tab.active{background:white;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-@media(max-width:768px){.grid-2{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
+.btn{padding:10px 20px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--blue-deep),#7c3aed);color:white;box-shadow:0 4px 15px rgba(2,132,199,0.3)}.btn-gold{background:linear-gradient(135deg,#d97706,var(--gold));color:var(--navy)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.tabs{display:flex;gap:2px;background:rgba(255,255,255,0.03);border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid var(--border);flex-wrap:wrap}
+.tab{flex:1;padding:10px 8px;text-align:center;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted);transition:all .2s;min-width:100px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.tab:hover{background:var(--glass);color:var(--text)}
+.tab.active{background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(249,115,22,0.1));color:var(--gold);box-shadow:inset 0 0 0 1px rgba(251,191,36,0.2)}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}.tabs{flex-wrap:wrap}.tab{min-width:80px}}
 </style>
 </head>
 <body>
 <!-- Top Navigation Bar -->
 <div class="top-bar">
-  <h1>💰 المالية - فيرست لاين</h1>
+  <h1><i data-lucide="wallet" style="width:22px;height:22px;color:var(--gold)"></i> المالية - فيرست لاين</h1>
   <div class="top-bar-nav">
-    <a href="/admin-dashboard.html">🏛️ الإدارة</a>
-    <a href="/staff-finance.html" class="active">💰 المالية</a>
-    <a href="/staff-hr.html">👥 الموارد البشرية</a>
-    <a href="/staff-ops.html">📦 العمليات</a>
-    <a href="/staff-fleet.html">🚗 المركبات</a>
+    <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
+    <a href="/staff-finance.html" class="active"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
+    <a href="/staff-hr.html"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
+    <a href="/staff-ops.html"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
+    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
   </div>
   <div class="top-bar-actions">
-    <span id="user-name" style="font-size:13px"></span>
-    <button onclick="logout()">خروج</button>
+    <span id="user-name" style="font-size:13px;color:var(--muted)"></span>
+    <button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button>
   </div>
 </div>
 
 <div class="container">
   <div class="page-header">
     <div>
-      <div class="page-title">إدارة المالية</div>
+      <div class="page-title"><i data-lucide="trending-up" style="width:26px;height:26px;color:var(--gold)"></i> إدارة المالية</div>
       <div class="page-sub" id="current-date"></div>
     </div>
-    <button class="btn btn-primary" onclick="loadAll()">🔄 تحديث</button>
+    <button class="btn btn-primary" onclick="loadAll()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i> تحديث</button>
   </div>
 
   <!-- Stats -->
@@ -83,24 +90,24 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="showTab('payouts',this)">الدفعات</button>
-    <button class="tab" onclick="showTab('earnings',this)">أرباح المناديب</button>
-    <button class="tab" onclick="showTab('invoices',this)">الفواتير</button>
-    <button class="tab" onclick="showTab('platform-statements',this)">كشوفات المنصات</button>
-    <button class="tab" onclick="showTab('bank-transfers',this)">التحويلات البنكية</button>
-    <button class="tab" onclick="showTab('monthly-reports',this)">التقارير الشهرية</button>
-    <button class="tab" onclick="showTab('charts',this)">الرسوم البيانية</button>
-    <button class="tab" onclick="showTab('upload-center',this)" style="color:#f59e0b">📤 رفع التقارير</button>
-    <button class="tab" onclick="showTab('wallets',this)" style="color:#10b981">💳 المحافظ</button>
-    <button class="tab" onclick="showTab('reconciliation',this)" style="color:#6366f1">⚖️ التسويات</button>
-    <button class="tab" onclick="showTab('ai-insights',this)" style="color:#0ea5e9">🤖 التحليل الذكي</button>
-    <button class="tab" onclick="showTab('profitability',this)" style="color:#ef4444">📊 الربحية</button>
+    <button class="tab active" onclick="showTab('payouts',this)"><i data-lucide="credit-card" style="width:14px;height:14px"></i> الدفعات</button>
+    <button class="tab" onclick="showTab('earnings',this)"><i data-lucide="coins" style="width:14px;height:14px"></i> أرباح المناديب</button>
+    <button class="tab" onclick="showTab('invoices',this)"><i data-lucide="file-text" style="width:14px;height:14px"></i> الفواتير</button>
+    <button class="tab" onclick="showTab('platform-statements',this)"><i data-lucide="monitor" style="width:14px;height:14px"></i> كشوفات المنصات</button>
+    <button class="tab" onclick="showTab('bank-transfers',this)"><i data-lucide="landmark" style="width:14px;height:14px"></i> التحويلات البنكية</button>
+    <button class="tab" onclick="showTab('monthly-reports',this)"><i data-lucide="bar-chart-3" style="width:14px;height:14px"></i> التقارير الشهرية</button>
+    <button class="tab" onclick="showTab('charts',this)"><i data-lucide="pie-chart" style="width:14px;height:14px"></i> الرسوم البيانية</button>
+    <button class="tab" onclick="showTab('upload-center',this)"><i data-lucide="upload-cloud" style="width:14px;height:14px"></i> رفع التقارير</button>
+    <button class="tab" onclick="showTab('wallets',this)"><i data-lucide="wallet" style="width:14px;height:14px"></i> المحافظ</button>
+    <button class="tab" onclick="showTab('reconciliation',this)"><i data-lucide="scale" style="width:14px;height:14px"></i> التسويات</button>
+    <button class="tab" onclick="showTab('ai-insights',this)"><i data-lucide="brain" style="width:14px;height:14px"></i> التحليل الذكي</button>
+    <button class="tab" onclick="showTab('profitability',this)"><i data-lucide="trending-up" style="width:14px;height:14px"></i> الربحية</button>
   </div>
 
   <!-- Payouts Tab -->
   <div id="tab-payouts">
     <div class="card">
-      <div class="card-h"><h3>دورات الدفع</h3></div>
+      <div class="card-h"><h3><i data-lucide="credit-card" style="width:16px;height:16px;color:var(--gold)"></i> دورات الدفع</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>الفترة</th><th>المنصة</th><th>المناديب</th><th>الإجمالي</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="payouts-tbl"></tbody></table></div>
     </div>
   </div>
@@ -108,7 +115,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- Earnings Tab -->
   <div id="tab-earnings" style="display:none">
     <div class="card">
-      <div class="card-h"><h3>ملخص أرباح المناديب</h3></div>
+      <div class="card-h"><h3><i data-lucide="coins" style="width:16px;height:16px;color:var(--green)"></i> ملخص أرباح المناديب</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>المندوب</th><th>المنصة</th><th>عدد الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>التاريخ</th><th>الحالة</th></tr></thead><tbody id="earnings-tbl"></tbody></table></div>
     </div>
   </div>
@@ -116,15 +123,15 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- Charts Tab -->
   <div id="tab-charts" style="display:none">
     <div class="grid-2">
-      <div class="card"><div class="card-h"><h3>الأرباح حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-platform"></canvas></div></div></div>
-      <div class="card"><div class="card-h"><h3>الأرباح حسب المندوب</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-courier"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h3><i data-lucide="pie-chart" style="width:16px;height:16px;color:var(--blue)"></i> الأرباح حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-platform"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h3><i data-lucide="bar-chart-3" style="width:16px;height:16px;color:var(--green)"></i> الأرباح حسب المندوب</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-courier"></canvas></div></div></div>
     </div>
   </div>
 
   <!-- Invoices Tab (NEW) -->
   <div id="tab-invoices" style="display:none">
     <div class="card">
-      <div class="card-h"><h3>الفواتير</h3><button class="btn btn-primary" onclick="createInvoice()">+ فاتورة جديدة</button></div>
+      <div class="card-h"><h3><i data-lucide="file-text" style="width:16px;height:16px;color:var(--blue)"></i> الفواتير</h3><button class="btn btn-primary" onclick="createInvoice()">+ فاتورة جديدة</button></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>رقم الفاتورة</th><th>المنصة</th><th>الفترة</th><th>المبلغ</th><th>الضريبة (15%)</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="invoices-tbl"></tbody></table></div>
     </div>
   </div>
@@ -132,14 +139,14 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- Platform Statements Tab (NEW) -->
   <div id="tab-platform-statements" style="display:none">
     <div class="card">
-      <div class="card-h"><h3>كشوفات المنصات</h3><button class="btn btn-gold" onclick="exportStatements()">📥 تصدير الكل</button></div>
+      <div class="card-h"><h3><i data-lucide="monitor" style="width:16px;height:16px;color:var(--gold)"></i> كشوفات المنصات</h3><button class="btn btn-gold" onclick="exportStatements()">📥 تصدير الكل</button></div>
       <div class="card-b">
         <p style="color:var(--muted);font-size:13px;margin-bottom:16px">ملخص المستحقات والعمولات حسب كل منصة</p>
         <table class="tbl"><thead><tr><th>المنصة</th><th>عدد المناديب</th><th>إجمالي التوصيلات</th><th>إجمالي المستحقات</th><th>عمولة FLL</th><th>صافي للمناديب</th><th>نسبة العمولة</th></tr></thead><tbody id="statements-tbl"></tbody></table>
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>مقارنة المنصات</h3></div>
+      <div class="card-h"><h3><i data-lucide="git-compare" style="width:16px;height:16px;color:var(--blue)"></i> مقارنة المنصات</h3></div>
       <div class="card-b"><div class="chart-container"><canvas id="chart-platform-compare"></canvas></div></div>
     </div>
   </div>
@@ -147,7 +154,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- Bank Transfers Tab (NEW) -->
   <div id="tab-bank-transfers" style="display:none">
     <div class="card">
-      <div class="card-h"><h3>التحويلات البنكية</h3><button class="btn btn-primary" onclick="newTransfer()">+ تحويل جديد</button></div>
+      <div class="card-h"><h3><i data-lucide="landmark" style="width:16px;height:16px;color:var(--blue)"></i> التحويلات البنكية</h3><button class="btn btn-primary" onclick="newTransfer()">+ تحويل جديد</button></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>رقم التحويل</th><th>المندوب</th><th>البنك</th><th>الآيبان</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="transfers-tbl"></tbody></table></div>
     </div>
     <div class="stats-row">
@@ -163,24 +170,24 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       <div class="card" style="cursor:pointer" onclick="genMonthlyReport('current')">
         <div class="card-b" style="text-align:center;padding:32px">
           <div style="font-size:36px;margin-bottom:8px">📊</div>
-          <div style="font-weight:700;color:var(--navy);font-size:16px">تقرير الشهر الحالي</div>
+          <div style="font-weight:700;color:white;font-size:16px">تقرير الشهر الحالي</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">ملخص شامل للمالية والعمليات</div>
         </div>
       </div>
       <div class="card" style="cursor:pointer" onclick="genMonthlyReport('previous')">
         <div class="card-b" style="text-align:center;padding:32px">
           <div style="font-size:36px;margin-bottom:8px">📋</div>
-          <div style="font-weight:700;color:var(--navy);font-size:16px">تقرير الشهر السابق</div>
+          <div style="font-weight:700;color:white;font-size:16px">تقرير الشهر السابق</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">مقارنة مع الشهر الحالي</div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>التقارير المالية</h3></div>
+      <div class="card-h"><h3><i data-lucide="file-bar-chart" style="width:16px;height:16px;color:var(--blue)"></i> التقارير المالية</h3></div>
       <div class="card-b" id="monthly-reports-content"><p style="color:var(--muted);text-align:center;padding:20px">اضغط على تقرير أعلاه لتوليده</p></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>الاتجاه الشهري</h3></div>
+      <div class="card-h"><h3><i data-lucide="trending-up" style="width:16px;height:16px;color:var(--green)"></i> الاتجاه الشهري</h3></div>
       <div class="card-b"><div class="chart-container"><canvas id="chart-monthly-trend"></canvas></div></div>
     </div>
   </div>
@@ -189,16 +196,16 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- NEW: Upload Center — مركز رفع تقارير المنصات -->
   <!-- ============================================================ -->
   <div id="tab-upload-center" style="display:none">
-    <div class="card" style="border-right:4px solid #f59e0b">
-      <div class="card-h"><h3>📤 مركز رفع تقارير المنصات</h3><span style="font-size:11px;color:var(--muted)">S3: fll-ops-raw</span></div>
+    <div class="card" >
+      <div class="card-h"><h3><i data-lucide="upload-cloud" style="width:16px;height:16px;color:var(--gold)"></i> مركز رفع تقارير المنصات</h3><span style="font-size:11px;color:var(--muted)">S3: fll-ops-raw</span></div>
       <div class="card-b">
-        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-bottom:16px">
-          <p style="font-size:13px;color:#92400e">⚡ ارفع ملفات Excel/CSV من المنصات. النظام يعالجها تلقائياً عبر: Glue → Nected Rules → Wallet Ledger</p>
+        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:16px;margin-bottom:16px">
+          <p style="font-size:13px;color:var(--gold)">⚡ ارفع ملفات Excel/CSV من المنصات. النظام يعالجها تلقائياً عبر: Glue → Nected Rules → Wallet Ledger</p>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
           <div>
-            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">المنصة</label>
-            <select id="upload-platform" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit">
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">المنصة</label>
+            <select id="upload-platform" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-family:inherit;background:var(--navy);color:var(--text)">
               <option value="hungerstation">هنقرستيشن</option>
               <option value="keeta">كيتا</option>
               <option value="ninja">نينجا</option>
@@ -209,11 +216,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
             </select>
           </div>
           <div>
-            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">تاريخ التقرير</label>
-            <input type="date" id="upload-date" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit" value="">
+            <label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">تاريخ التقرير</label>
+            <input type="date" id="upload-date" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-family:inherit;background:var(--navy);color:var(--text)" value="">
           </div>
         </div>
-        <div id="upload-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s" onclick="document.getElementById('upload-file').click()" ondragover="this.style.borderColor='#f59e0b';this.style.background='#fffbeb';event.preventDefault()" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="handleFileDrop(event)">
+        <div id="upload-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s" onclick="document.getElementById('upload-file').click()" ondragover="this.style.borderColor='var(--gold)';this.style.background='rgba(251,191,36,0.05)';event.preventDefault()" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="handleFileDrop(event)">
           <div style="font-size:32px;margin-bottom:8px">📁</div>
           <p style="font-size:14px;font-weight:600;color:var(--navy)">اسحب الملف هنا أو اضغط للاختيار</p>
           <p style="font-size:11px;color:var(--muted);margin-top:4px">يدعم Excel (.xlsx, .xls) و CSV</p>
@@ -223,11 +230,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📋 سجل الملفات المرفوعة</h3></div>
+      <div class="card-h"><h3><i data-lucide="list" style="width:16px;height:16px;color:var(--muted)"></i> سجل الملفات المرفوعة</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>الملف</th><th>المنصة</th><th>التاريخ</th><th>الحجم</th><th>الحالة</th><th>الوقت</th></tr></thead><tbody id="uploads-tbl"></tbody></table></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>⏳ الملفات المتوقعة اليوم</h3></div>
+      <div class="card-h"><h3><i data-lucide="clock" style="width:16px;height:16px;color:var(--gold)"></i> الملفات المتوقعة اليوم</h3></div>
       <div class="card-b" id="expected-files"></div>
     </div>
   </div>
@@ -243,11 +250,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       <div class="stat purple"><div class="stat-label">محافظ نشطة</div><div class="stat-value" id="w-count">—</div></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>💳 محافظ السائقين</h3><button class="btn btn-primary" onclick="loadWallets()">🔄 تحديث</button></div>
+      <div class="card-h"><h3><i data-lucide="wallet" style="width:16px;height:16px;color:var(--green)"></i> محافظ السائقين</h3><button class="btn btn-primary" onclick="loadWallets()">🔄 تحديث</button></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>السائق</th><th>الرصيد الحالي</th><th>المعلق</th><th>إجمالي المكتسب</th><th>إجمالي المدفوع</th><th>الخصومات</th><th>آخر دفعة</th></tr></thead><tbody id="wallets-tbl"></tbody></table></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📒 سجل حركات المحفظة (Ledger)</h3></div>
+      <div class="card-h"><h3><i data-lucide="scroll-text" style="width:16px;height:16px;color:var(--muted)"></i> سجل حركات المحفظة (Ledger)</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>التاريخ</th><th>السائق</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد</th><th>الوصف</th></tr></thead><tbody id="ledger-tbl"></tbody></table></div>
     </div>
   </div>
@@ -263,23 +270,23 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       <div class="stat gold"><div class="stat-label">بانتظار الاعتماد</div><div class="stat-value" id="r-pending">—</div></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>⚖️ دورات التسوية</h3><button class="btn btn-primary" onclick="runReconciliation()">▶️ تشغيل تسوية</button></div>
+      <div class="card-h"><h3><i data-lucide="scale" style="width:16px;height:16px;color:var(--purple)"></i> دورات التسوية</h3><button class="btn btn-primary" onclick="runReconciliation()">▶️ تشغيل تسوية</button></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>التاريخ</th><th>مبلغ المنصة</th><th>المبلغ المحسوب</th><th>الفرق</th><th>النسبة</th><th>الحالة</th></tr></thead><tbody id="recon-tbl"></tbody></table></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📋 التعديلات اليدوية</h3><button class="btn btn-gold" onclick="showAdjustmentForm()">+ تعديل جديد</button></div>
+      <div class="card-h"><h3><i data-lucide="edit" style="width:16px;height:16px;color:var(--gold)"></i> التعديلات اليدوية</h3><button class="btn btn-gold" onclick="showAdjustmentForm()">+ تعديل جديد</button></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>السائق</th><th>النوع</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>الطالب</th><th>المعتمد</th></tr></thead><tbody id="adjustments-tbl"></tbody></table></div>
     </div>
     <div id="adjustment-form" style="display:none" class="card">
-      <div class="card-h"><h3>✏️ تعديل مالي يدوي</h3></div>
+      <div class="card-h"><h3><i data-lucide="pen-line" style="width:16px;height:16px;color:var(--blue)"></i> تعديل مالي يدوي</h3></div>
       <div class="card-b">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">السائق</label><select id="adj-driver" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit"></select></div>
-          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">النوع</label><select id="adj-type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit"><option value="credit">إضافة (Credit)</option><option value="debit">خصم (Debit)</option><option value="correction">تصحيح</option><option value="reversal">عكس عملية</option></select></div>
-          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">المبلغ (ر.س)</label><input type="number" id="adj-amount" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit" placeholder="0.00"></div>
+          <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">السائق</label><select id="adj-driver" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:var(--navy);color:var(--text)"></select></div>
+          <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">النوع</label><select id="adj-type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:var(--navy);color:var(--text)"><option value="credit">إضافة (Credit)</option><option value="debit">خصم (Debit)</option><option value="correction">تصحيح</option><option value="reversal">عكس عملية</option></select></div>
+          <div><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">المبلغ (ر.س)</label><input type="number" id="adj-amount" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:inherit;background:var(--navy);color:var(--text)" placeholder="0.00"></div>
         </div>
-        <div style="margin-top:10px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">السبب</label><textarea id="adj-reason" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;min-height:60px" placeholder="سبب التعديل..."></textarea></div>
-        <div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" onclick="submitAdjustment()">إرسال للاعتماد</button><button class="btn" style="background:#e2e8f0" onclick="document.getElementById('adjustment-form').style.display='none'">إلغاء</button></div>
+        <div style="margin-top:10px"><label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px;color:var(--blue);text-transform:uppercase;letter-spacing:.3px">السبب</label><textarea id="adj-reason" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:inherit;min-height:60px;background:var(--navy);color:var(--text)" placeholder="سبب التعديل..."></textarea></div>
+        <div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" onclick="submitAdjustment()">إرسال للاعتماد</button><button class="btn" style="background:var(--glass);border:1px solid var(--border);color:var(--text)" onclick="document.getElementById('adjustment-form').style.display='none'">إلغاء</button></div>
       </div>
     </div>
   </div>
@@ -288,8 +295,8 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <!-- NEW: AI Insights — التحليل الذكي (read-only) -->
   <!-- ============================================================ -->
   <div id="tab-ai-insights" style="display:none">
-    <div style="background:linear-gradient(135deg,#0f2744,#1e3a5f);border-radius:14px;padding:24px;margin-bottom:20px;color:white">
-      <h3 style="font-size:18px;margin-bottom:8px">🤖 المحلل المالي الذكي — AI Financial Report Analyst</h3>
+    <div style="background:linear-gradient(135deg,rgba(2,132,199,0.15),rgba(124,58,237,0.1));border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;color:white">
+      <h3 style="font-size:18px;margin-bottom:8px;display:flex;align-items:center;gap:8px"><i data-lucide="sparkles" style="width:22px;height:22px;color:var(--purple)"></i> المحلل المالي الذكي — AI Financial Report Analyst</h3>
       <p style="font-size:13px;color:rgba(255,255,255,.7)">يحلل بيانات Athena + Aurora المالية ويقدم رؤى وتوصيات. القراءة فقط — لا يكتب على Ledger.</p>
     </div>
     <div class="grid-2">
@@ -307,17 +314,17 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📈 نتائج التحليل</h3><span id="ai-timestamp" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="card-h"><h3><i data-lucide="brain" style="width:16px;height:16px;color:var(--blue)"></i> نتائج التحليل</h3><span id="ai-timestamp" style="font-size:11px;color:var(--muted)"></span></div>
       <div class="card-b" id="ai-results" style="min-height:200px"><p style="color:var(--muted);text-align:center;padding:40px">اختر نوع التحليل أعلاه</p></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📋 سجل التقارير الذكية</h3></div>
+      <div class="card-h"><h3><i data-lucide="history" style="width:16px;height:16px;color:var(--muted)"></i> سجل التقارير الذكية</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>التاريخ</th><th>النوع</th><th>المنصة</th><th>الثقة</th><th>ملخص</th></tr></thead><tbody id="ai-history-tbl"></tbody></table></div>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- NEW: Profitability — الربحية حسب المنصة والمدينة -->
+  <!-- NEW: Profitability — <i data-lucide="bar-chart-3" style="width:16px;height:16px;color:var(--green)"></i> الربحية حسب المنصة والمدينة -->
   <!-- ============================================================ -->
   <div id="tab-profitability" style="display:none">
     <div class="stats-row">
@@ -328,19 +335,20 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       <div class="stat red"><div class="stat-label">ربح/طلب</div><div class="stat-value" id="p-per-order">—</div></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📊 ربحية المنصات</h3></div>
+      <div class="card-h"><h3><i data-lucide="trending-up" style="width:16px;height:16px;color:var(--green)"></i> ربحية المنصات</h3></div>
       <div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>الإيرادات</th><th>تكلفة السائقين</th><th>عمولة FLL</th><th>تكلفة المركبات</th><th>صافي الربح</th><th>ربح/طلب</th><th>الطلبات</th></tr></thead><tbody id="profit-platform-tbl"></tbody></table></div>
     </div>
     <div class="grid-2">
       <div class="card"><div class="card-h"><h3>الربحية حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-profit-platform"></canvas></div></div></div>
-      <div class="card"><div class="card-h"><h3>الربحية حسب نوع العقد</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-profit-contract"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h3><i data-lucide="pie-chart" style="width:16px;height:16px;color:var(--purple)"></i> الربحية حسب نوع العقد</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-profit-contract"></canvas></div></div></div>
     </div>
     <div class="card">
-      <div class="card-h"><h3>📊 Nected Rules — قواعد الحساب النشطة</h3></div>
+      <div class="card-h"><h3><i data-lucide="settings-2" style="width:16px;height:16px;color:var(--blue)"></i> Nected Rules — قواعد الحساب النشطة</h3></div>
       <div class="card-b" id="nected-rules-display"></div>
     </div>
   </div>
 </div>
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='rgba(56,189,248,0.08)';
 const user = checkAuth(); if(!user) throw 'no auth';
 setUserInfo(user);
 const db = initSupabase();
@@ -383,12 +391,12 @@ async function loadAll(){
     const byPlatform={};
     orders.forEach(o=>{byPlatform[o.platform]=(byPlatform[o.platform]||0)++(o.net_earnings||0);});
     if(chartPlatform) chartPlatform.destroy();
-    chartPlatform=new Chart(document.getElementById('chart-platform'),{type:'doughnut',data:{labels:Object.keys(byPlatform),datasets:[{data:Object.values(byPlatform),backgroundColor:['#f59e0b','#0ea5e9','#10b981','#6366f1','#ef4444','#ec4899','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal'}}}}}});
+    chartPlatform=new Chart(document.getElementById('chart-platform'),{type:'doughnut',data:{labels:Object.keys(byPlatform),datasets:[{data:Object.values(byPlatform),backgroundColor:['#f59e0b','#0ea5e9','#10b981','#6366f1','#ef4444','#ec4899','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic'}}}}}});
 
     const byCourier={};
     orders.forEach(o=>{const n=o.couriers?.full_name_ar||'غير معروف';byCourier[n]=(byCourier[n]||0)++(o.net_earnings||0);});
     if(chartCourier) chartCourier.destroy();
-    chartCourier=new Chart(document.getElementById('chart-courier'),{type:'bar',data:{labels:Object.keys(byCourier),datasets:[{label:'صافي الأرباح',data:Object.values(byCourier),backgroundColor:'#0f2744',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'Tajawal'}}},y:{ticks:{font:{family:'Tajawal'}}}}}});
+    chartCourier=new Chart(document.getElementById('chart-courier'),{type:'bar',data:{labels:Object.keys(byCourier),datasets:[{label:'صافي الأرباح',data:Object.values(byCourier),backgroundColor:'rgba(56,189,248,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'IBM Plex Sans Arabic'}}},y:{ticks:{font:{family:'IBM Plex Sans Arabic'}}}}}});
   }
 
   if(payouts){
@@ -465,9 +473,9 @@ function renderStatements(){
   const ctx=document.getElementById('chart-platform-compare');
   if(ctx&&Object.keys(byP).length){
     _newCharts.compare=new Chart(ctx,{type:'bar',data:{labels:Object.keys(byP),datasets:[
-      {label:'إجمالي',data:Object.values(byP).map(d=>d.gross),backgroundColor:'#0f2744',borderRadius:6},
+      {label:'إجمالي',data:Object.values(byP).map(d=>d.gross),backgroundColor:'rgba(56,189,248,0.6)',borderRadius:6},
       {label:'عمولة FLL',data:Object.values(byP).map(d=>d.gross*commissionRate),backgroundColor:'#f59e0b',borderRadius:6},
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}},scales:{y:{ticks:{font:{family:'Tajawal'}}}}}});
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'IBM Plex Sans Arabic'}}}},scales:{y:{ticks:{font:{family:'IBM Plex Sans Arabic'}}}}}});
   }
 }
 function exportStatements(){
@@ -507,8 +515,8 @@ function genMonthlyReport(period){
   const net=_fOrders.reduce((s,o)=>s++(o.net_earnings||0),0);
   const platforms=[...new Set(_fOrders.map(o=>o.platform).filter(Boolean))];
   el.innerHTML=`
-    <div style="padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
-      <h4 style="color:var(--navy);margin-bottom:12px">📊 التقرير المالي — ${month}</h4>
+    <div style="padding:16px;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;background:rgba(255,255,255,0.03)">
+      <h4 style="color:white;margin-bottom:12px">📊 التقرير المالي — ${month}</h4>
       <div class="stats-row" style="margin-bottom:12px">
         <div class="stat"><div class="stat-label">الإيرادات</div><div class="stat-value" style="font-size:18px">${formatMoney(gross)}</div></div>
         <div class="stat red"><div class="stat-label">الخصومات</div><div class="stat-value" style="font-size:18px">${formatMoney(ded)}</div></div>
@@ -526,7 +534,7 @@ function renderMonthlyCharts(){
   if(!ctx) return;
   const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو'];
   const data=months.map(()=>Math.floor(Math.random()*50000+10000));
-  _newCharts.trend=new Chart(ctx,{type:'line',data:{labels:months,datasets:[{label:'صافي المستحقات',data:data,borderColor:'#0f2744',backgroundColor:'rgba(15,39,68,.1)',fill:true,tension:.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}},scales:{y:{ticks:{font:{family:'Tajawal'},callback:v=>v.toLocaleString()+' ر.س'}}}}});
+  _newCharts.trend=new Chart(ctx,{type:'line',data:{labels:months,datasets:[{label:'صافي المستحقات',data:data,borderColor:'#0f2744',backgroundColor:'rgba(15,39,68,.1)',fill:true,tension:.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'IBM Plex Sans Arabic'}}}},scales:{y:{ticks:{font:{family:'IBM Plex Sans Arabic'},callback:v=>v.toLocaleString()+' ر.س'}}}}});
 }
 
 loadAll();
@@ -667,7 +675,7 @@ async function generateAIInsight(type){
   const d=insights[type]||insights.daily_summary;
   el.innerHTML=`<h4 style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:14px">${d.title}</h4>
     <div class="stats-row" style="margin-bottom:16px">${d.metrics.map(m=>`<div class="stat"><div class="stat-label">${m.label}</div><div class="stat-value" style="font-size:18px">${m.value}</div><div class="stat-sub">${m.change}</div></div>`).join('')}</div>
-    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px"><h5 style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--navy)">💡 التحليل والتوصيات</h5><p style="font-size:13px;color:var(--text);line-height:1.8">${d.summary}</p></div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px"><h5 style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--navy)">💡 التحليل والتوصيات</h5><p style="font-size:13px;color:var(--text);line-height:1.8">${d.summary}</p></div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted)">المصدر: Athena fll_finance_db + AI Financial Report Analyst | Confidence: 87%</div>`;
 }
 
@@ -697,7 +705,7 @@ async function loadProfitability(){
     // Charts
     if(_newCharts.profitPlatform)_newCharts.profitPlatform.destroy();
     const ctx1=document.getElementById('chart-profit-platform');
-    if(ctx1)_newCharts.profitPlatform=new Chart(ctx1,{type:'bar',data:{labels:Object.keys(byPlatform),datasets:[{label:'ربح',data:Object.values(byPlatform).map(d=>d.profit),backgroundColor:'#10b981',borderRadius:6},{label:'تكلفة مركبات',data:Object.values(byPlatform).map(d=>d.vehicleCost),backgroundColor:'#ef4444',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}}}});
+    if(ctx1)_newCharts.profitPlatform=new Chart(ctx1,{type:'bar',data:{labels:Object.keys(byPlatform),datasets:[{label:'ربح',data:Object.values(byPlatform).map(d=>d.profit),backgroundColor:'#10b981',borderRadius:6},{label:'تكلفة مركبات',data:Object.values(byPlatform).map(d=>d.vehicleCost),backgroundColor:'#ef4444',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'IBM Plex Sans Arabic'}}}}}});
     if(_newCharts.profitContract)_newCharts.profitContract.destroy();
     const ctx2=document.getElementById('chart-profit-contract');
     if(ctx2)_newCharts.profitContract=new Chart(ctx2,{type:'doughnut',data:{labels:['Freelancer','Kafala','Company','Ajir'],datasets:[{data:[45,25,20,10],backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false}});
@@ -705,7 +713,7 @@ async function loadProfitability(){
     if(nected&&nected.rules){
       document.getElementById('nected-rules-display').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">${(nected.rules||[]).map(r=>{
         const p=r.platform||r.M?.platform?.S||'—';const rate=r.commission_rate||r.M?.commission_rate?.N||'—';const bonus=r.bonus_amount||r.M?.bonus_amount?.N||'—';
-        return `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">🏪 ${p}</div><div style="font-size:11px;color:var(--muted);line-height:1.8">عمولة: <strong>${rate}%</strong> | حافز: <strong>${bonus} ر.س</strong></div></div>`}).join('')}</div>`;
+        return `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">🏪 ${p}</div><div style="font-size:11px;color:var(--muted);line-height:1.8">عمولة: <strong>${rate}%</strong> | حافز: <strong>${bonus} ر.س</strong></div></div>`}).join('')}</div>`;
     }
   }catch(e){console.error(e)}
 }
@@ -722,5 +730,7 @@ showTab=function(name,btn){
 
 
 loadAll();
+try{lucide.createIcons()}catch(e){}
+try{lucide.createIcons()}catch(e){}
 </script>
 </body></html>

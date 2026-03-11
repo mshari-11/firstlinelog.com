@@ -11,8 +11,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Assets are served from /dist/assets/ since outputDirectory is "." (root)
+  base: "/dist/",
   build: {
-    // Output into dist/ — vercel.json rewrites admin routes to /dist/index.html
+    // Output into dist/ — vercel.json rewrites admin routes to /dist/index
     outDir: "dist",
     emptyOutDir: true,
     // Use spa.html as SPA entry (keeps root index.html as the static public site)

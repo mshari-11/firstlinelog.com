@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>بوابة الموظفين - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -143,33 +144,33 @@ function render(){
   document.getElementById('s-dept').textContent=D.staff?.department||D.staff?.role||'—';
 
   // Urgent tasks
-  document.getElementById('urgent-tasks').innerHTML=pending.slice(0,3).map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${t.title||'—'}</strong> <span style="color:var(--muted);font-size:11px">من: ${t.assigned_by||'—'}</span></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد مهام عاجلة</p>';
+  document.getElementById('urgent-tasks').innerHTML=pending.slice(0,3).map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${esc(t.title)||'—'}</strong> <span style="color:var(--muted);font-size:11px">من: ${esc(t.assigned_by)||'—'}</span></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد مهام عاجلة</p>';
 
   // Recent notifs
-  document.getElementById('recent-notif').innerHTML=D.notifications.slice(0,4).map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div><div style="font-size:11px;color:var(--muted)">${n.message||''}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد إشعارات</p>';
+  document.getElementById('recent-notif').innerHTML=D.notifications.slice(0,4).map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${esc(n.title)||'إشعار'}</div><div style="font-size:11px;color:var(--muted)">${esc(n.message)||''}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد إشعارات</p>';
 
   // Tasks table
   const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
   const stL={pending:'معلق',in_progress:'قيد التنفيذ',completed:'مكتمل'};
   const stC={pending:'yellow',in_progress:'blue',completed:'green'};
-  document.getElementById('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr><td><strong>${t.title||'—'}</strong></td><td>${t.assigned_by||'—'}</td><td>${t.department||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td><td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td><td>${t.createdAt?new Date(t.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد مهام</td></tr>';
+  document.getElementById('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr><td><strong>${esc(t.title)||'—'}</strong></td><td>${esc(t.assigned_by)||'—'}</td><td>${esc(t.department)||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td><td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td><td>${t.createdAt?new Date(t.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد مهام</td></tr>';
 
   // Requests/approvals
   const typeL={leave:'إجازة',advance:'سلفة',transfer:'نقل',equipment:'معدات',payout:'دفعة',other:'أخرى'};
-  document.getElementById('tbl-requests').innerHTML=D.approvals.map((a,i)=>`<tr><td>#${i+1}</td><td>${badge(typeL[a.type]||a.type||'—','purple')}</td><td>${a.description||'—'}</td><td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td><td>${a.createdAt?new Date(a.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
+  document.getElementById('tbl-requests').innerHTML=D.approvals.map((a,i)=>`<tr><td>#${i+1}</td><td>${badge(typeL[a.type]||a.type||'—','purple')}</td><td>${esc(a.description)||'—'}</td><td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td><td>${a.createdAt?new Date(a.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
 
   // Notifications
-  document.getElementById('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div><div style="font-size:12px;color:var(--muted)">${n.message||''}</div><div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات</p>';
+  document.getElementById('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${esc(n.title)||'إشعار'}</div><div style="font-size:12px;color:var(--muted)">${esc(n.message)||''}</div><div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات</p>';
 
   // Profile
   const s=D.staff||{};
   document.getElementById('profile-info').innerHTML=`
-    <div class="info-item"><label>الاسم</label><span>${s.full_name||s.name||user?.name||'—'}</span></div>
-    <div class="info-item"><label>البريد</label><span>${s.email||user?.email||'—'}</span></div>
-    <div class="info-item"><label>القسم</label><span>${s.department||'—'}</span></div>
-    <div class="info-item"><label>المسمى</label><span>${s.position_title||'—'}</span></div>
-    <div class="info-item"><label>الدور</label><span>${s.role||'—'}</span></div>
-    <div class="info-item"><label>الجوال</label><span>${s.phone||'—'}</span></div>
+    <div class="info-item"><label>الاسم</label><span>${esc(s.full_name||s.name||user?.name)||'—'}</span></div>
+    <div class="info-item"><label>البريد</label><span>${esc(s.email||user?.email)||'—'}</span></div>
+    <div class="info-item"><label>القسم</label><span>${esc(s.department)||'—'}</span></div>
+    <div class="info-item"><label>المسمى</label><span>${esc(s.position_title)||'—'}</span></div>
+    <div class="info-item"><label>الدور</label><span>${esc(s.role)||'—'}</span></div>
+    <div class="info-item"><label>الجوال</label><span>${esc(s.phone)||'—'}</span></div>
     <div class="info-item"><label>الحالة</label><span>${s.is_active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">معطل</span>'}</span></div>
     <div class="info-item"><label>تاريخ الانضمام</label><span>${s.created_at?new Date(s.created_at).toLocaleDateString('ar-SA'):'—'}</span></div>`;
 }

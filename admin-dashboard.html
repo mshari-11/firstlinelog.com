@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>لوحة الإدارة - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -538,8 +539,8 @@ function renderStaff(){
 
 function renderDepts(){
   $('dept-grid').innerHTML=D.depts.map(d=>`<div class="card"><div class="card-body" style="text-align:center;padding:20px">
-    <div style="font-size:28px">🏢</div><h3 style="font-size:14px;color:var(--navy);margin:8px 0">${d.name_ar||d.name}</h3>
-    <p style="font-size:12px;color:var(--muted)">${d.description||d.name}</p>
+    <div style="font-size:28px">🏢</div><h3 style="font-size:14px;color:var(--navy);margin:8px 0">${esc(d.name_ar||d.name)}</h3>
+    <p style="font-size:12px;color:var(--muted)">${esc(d.description||d.name)}</p>
     <div style="margin-top:8px">${d.is_active!==false?badge('مفعل','green'):badge('معطل','red')}</div>
   </div></div>`).join('')||'<p style="color:var(--muted)">لا توجد أقسام</p>';
 }
@@ -549,8 +550,8 @@ function renderTasks(){
   const stL={pending:'معلق',in_progress:'قيد التنفيذ',completed:'مكتمل',cancelled:'ملغي'};
   const stC={pending:'yellow',in_progress:'blue',completed:'green',cancelled:'red'};
   $('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr>
-    <td><strong>${t.title||'—'}</strong></td><td>${t.assigned_to||'—'}</td><td>${t.assigned_by||'—'}</td>
-    <td>${t.department||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td>
+    <td><strong>${esc(t.title)||'—'}</strong></td><td>${esc(t.assigned_to)||'—'}</td><td>${esc(t.assigned_by)||'—'}</td>
+    <td>${esc(t.department)||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td>
     <td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td>
     <td>${t.createdAt?new Date(t.createdAt).toLocaleString('ar-SA'):'—'}</td>
   </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد مهام — اضغط "+ مهمة جديدة"</td></tr>';
@@ -559,8 +560,8 @@ function renderTasks(){
 function renderNotifications(){
   $('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item">
     <div class="notif-dot"></div>
-    <div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div>
-    <div style="font-size:12px;color:var(--muted)">${n.message||''}</div>
+    <div><div style="font-size:13px;font-weight:600">${esc(n.title)||'إشعار'}</div>
+    <div style="font-size:12px;color:var(--muted)">${esc(n.message)||''}</div>
     <div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div>
   </div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات — اضغط "+ إشعار جديد"</p>';
 }
@@ -569,8 +570,8 @@ function markAllRead(){toast('تم تعيين الكل كمقروء ✅');docume
 function renderAudit(items){
   const list=items||D.audit||[];
   $('audit-content').innerHTML=list.map(a=>`<div class="audit-entry">
-    <strong>${a.action||'—'}</strong> — <span style="color:var(--blue)">${a.user||'—'}</span>
-    ${a.details?'<br><span style="font-size:12px;color:var(--muted)">'+a.details+'</span>':''}
+    <strong>${esc(a.action)||'—'}</strong> — <span style="color:var(--blue)">${esc(a.user)||'—'}</span>
+    ${a.details?'<br><span style="font-size:12px;color:var(--muted)">'+esc(a.details)+'</span>':''}
     <br><span class="audit-time">${a.created_at||a.createdAt?new Date(a.created_at||a.createdAt).toLocaleString('ar-SA'):'—'}</span>
   </div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد سجلات</p>';
 }
@@ -578,8 +579,8 @@ function filterAudit(){const v=$('audit-filter').value;renderAudit(v?D.audit.fil
 
 function renderApprovals(){
   $('tbl-approvals').innerHTML=D.approvals.map(a=>`<tr>
-    <td><strong>${a.description||a.approvalId||'—'}</strong></td><td>${a.type||'—'}</td>
-    <td>${a.requested_by||'—'}</td><td>${a.amount||0} ر.س</td>
+    <td><strong>${esc(a.description||a.approvalId)||'—'}</strong></td><td>${esc(a.type)||'—'}</td>
+    <td>${esc(a.requested_by)||'—'}</td><td>${parseFloat(a.amount||0).toFixed(2)} ر.س</td>
     <td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td>
     <td>${a.createdAt?new Date(a.createdAt).toLocaleString('ar-SA'):'—'}</td>
     <td>${a.status==='pending'?'<button class="action-btn green" style="padding:3px 8px;font-size:10px" onclick="approveItem(\''+a.id+'\')">✅ اعتماد</button>':''}</td>
@@ -719,8 +720,11 @@ async function saveDept(){
   toast('✅ تم إضافة القسم');closeModal('dept-modal');loadAll();
 }
 
-function viewCourier(id){const c=D.couriers.find(x=>x.id==id);if(c)alert(`${c.full_name_ar}\nالهوية: ${c.national_id}\nSTC: ${c.stc_bank_phone_int||'—'}\nالمدينة: ${c.city}\nالتعاقد: ${c.contract_type}`)}
-async function approveItem(id){toast('✅ تم الاعتماد');await auditLog('approve','اعتماد طلب: '+id,'approvals');loadAll()}
+function viewCourier(id){const c=D.couriers.find(x=>x.id==id);if(c)alert(c.full_name_ar+'\nالمدينة: '+(c.city||'—')+'\nالتعاقد: '+(c.contract_type||'—'))}
+async function approveItem(id){
+  if(!confirm('هل تريد اعتماد هذا الطلب؟'))return;
+  try{await fetch(AWS_API+'/api/approvals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status:'approved',decided_by:user?.email||'admin',decided_at:new Date().toISOString()})});toast('تم الاعتماد');await auditLog('approve','اعتماد طلب: '+id,'approvals');loadAll()}catch(e){toast('خطأ: '+e.message,'error')}
+}
 
 // === EXPORT CSV ===
 function exportCSV(type){

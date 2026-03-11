@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>بوابة المناديب - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -309,11 +310,11 @@ function renderEarnings(){
 // ==============================
 function renderDeliveries(){
   document.getElementById('deliveries-tbl').innerHTML=_orders.map(o=>`<tr>
-    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
-    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
+    <td><span class="badge badge-blue">${esc(o.platform)||'—'}</span></td>
+    <td>${esc(o.order_date)||'—'}</td><td>${parseInt(o.orders_count)||0}</td>
     <td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
     <td><strong>${fmt(o.net_earnings)}</strong></td>
-    <td>${_courier?.contract_type||'—'}</td>
+    <td>${esc(_courier?.contract_type)||'—'}</td>
     <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
   </tr>`).join('')||'<tr><td colspan="8" class="empty">لا توجد توصيلات</td></tr>';
 

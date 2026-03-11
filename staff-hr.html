@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>الموارد البشرية - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -122,34 +123,30 @@ async function loadAll(){
   document.getElementById('s-depts').textContent=(depts||[]).length;
 
   if(staff) document.getElementById('staff-tbl').innerHTML=staff.map(s=>`<tr>
-    <td><strong>${s.name||'—'}</strong></td><td>${s.email||'—'}</td>
-    <td>${badge(s.department||'—','blue')}</td><td>${s.position_title||'—'}</td>
-    <td>${s.phone||'—'}</td><td>${badge(s.role||'—','purple')}</td>
+    <td><strong>${esc(s.name||s.full_name)||'—'}</strong></td><td>${esc(s.email)||'—'}</td>
+    <td>${badge(s.department||'—','blue')}</td><td>${esc(s.position_title)||'—'}</td>
+    <td>${esc(s.phone)||'—'}</td><td>${badge(s.role||'—','purple')}</td>
     <td>${s.is_active?badge('نشط','green'):badge('معطل','red')}</td></tr>`).join('');
 
   if(couriers) document.getElementById('couriers-tbl').innerHTML=couriers.map(c=>`<tr>
-    <td><strong>${c.full_name_ar||c.full_name}</strong></td><td>${c.national_id||'—'}</td>
-    <td>${c.phone||'—'}</td><td>${c.city||'—'}</td><td>${c.bank_name||'—'}</td>
-    <td>${c.contract_type||'—'}</td><td>${formatDate(c.join_date)}</td>
+    <td><strong>${esc(c.full_name_ar||c.full_name)}</strong></td><td>${esc(c.national_id)||'—'}</td>
+    <td>${esc(c.phone)||'—'}</td><td>${esc(c.city)||'—'}</td><td>${esc(c.bank_name)||'—'}</td>
+    <td>${esc(c.contract_type)||'—'}</td><td>${formatDate(c.join_date)}</td>
     <td>${c.status==='active'?badge('نشط','green'):badge('غير نشط','red')}</td></tr>`).join('');
 
   if(depts) document.getElementById('depts-grid').innerHTML=depts.map(d=>`
-    <div class="dept-card"><h4>${d.name_ar||d.name}</h4><p>${d.description||d.name}</p>
+    <div class="dept-card"><h4>${esc(d.name_ar||d.name)}</h4><p>${esc(d.description||d.name)}</p>
     <div style="margin-top:8px">${d.is_active?badge('مفعل','green'):badge('معطل','red')}</div></div>`).join('');
 }
 
 // === NEW: Attendance, Tasks, Performance ===
 const _origHRLoad=loadAll;
-loadAll=async function(){await _origHRLoad();try{
-  // Attendance — placeholder until real attendance tracking is connected
+loadAll=async function(){await _origHRLoad();
+  // Placeholders for tabs not yet connected to real data sources
   document.getElementById('attendance-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام الحضور والانصراف قيد الإعداد — سيُربط مع جدول attendance في Supabase</td></tr>';
-
-  // Tasks
   document.getElementById('tasks-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام المهام قيد الإعداد — سيُربط مع جدول tasks في Supabase</td></tr>';
-
-  // Performance — placeholder until real performance evaluation is connected
   document.getElementById('perf-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام تقييم الأداء قيد الإعداد — سيُربط مع نظام التقييم</td></tr>';
-}catch(e){console.error('HR v4:',e)}};loadAll();
+};loadAll();
 try{lucide.createIcons()}catch(e){}
 </script>
 </body></html>

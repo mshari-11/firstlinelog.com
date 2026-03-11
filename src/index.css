@@ -1,0 +1,1278 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   ENTERPRISE DESIGN TOKENS — FLL ADMIN CONSOLE
+   These tokens apply ONLY to elements inside .fll-console
+   (admin-panel, driver-dashboard, courier-portal).
+   The public site (fll.sa Home/About/etc.) is NOT affected.
+   Based on: AWS Cloudscape + IBM Carbon for data-dense UIs.
+   ========================================================================== */
+
+:root {
+  /* ── Console Backgrounds ── */
+  --con-bg-app:       #0B1220;
+  --con-bg-surface-1: #111A2B;
+  --con-bg-surface-2: #162235;
+  --con-bg-elevated:  #1B2940;
+  --con-bg-overlay:   #1E2F47;
+
+  /* ── Console Text ── */
+  --con-text-primary:   #F3F6FB;
+  --con-text-secondary: #B6C2D2;
+  --con-text-muted:     #7E8CA2;
+  --con-text-disabled:  #4A5568;
+
+  /* ── Brand / Accent (one accent only) ── */
+  --con-brand:        #3B82F6;
+  --con-brand-hover:  #2563EB;
+  --con-brand-subtle: rgba(59,130,246,0.12);
+  --con-brand-border: rgba(59,130,246,0.30);
+
+  /* ── Semantic ── */
+  --con-success:        #16A34A;
+  --con-success-subtle: rgba(22,163,74,0.12);
+  --con-warning:        #D97706;
+  --con-warning-subtle: rgba(217,119,6,0.12);
+  --con-danger:         #DC2626;
+  --con-danger-subtle:  rgba(220,38,38,0.12);
+  --con-info:           #0EA5E9;
+  --con-info-subtle:    rgba(14,165,233,0.12);
+
+  /* ── Borders ── */
+  --con-border-default: rgba(255,255,255,0.07);
+  --con-border-strong:  rgba(255,255,255,0.13);
+  --con-border-brand:   rgba(59,130,246,0.35);
+
+  /* ── Typography Scale ── */
+  --con-font-primary: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  --con-font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  --con-text-page-title:    2rem;      /* 32px / 700 */
+  --con-text-section-title: 1.375rem;  /* 22px / 600 */
+  --con-text-card-title:    1rem;      /* 16px / 600 */
+  --con-text-body:          0.875rem;  /* 14px / 400 */
+  --con-text-table:         0.8125rem; /* 13px / 400 */
+  --con-text-caption:       0.75rem;   /* 12px / 400 */
+
+  /* ── Spacing ── */
+  --con-radius-sm:  6px;
+  --con-radius:     8px;
+  --con-radius-md:  10px;
+  --con-radius-lg:  12px;
+
+  /* ── Shadows ── */
+  --con-shadow-card:    0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --con-shadow-panel:   0 4px 16px rgba(0,0,0,0.5);
+  --con-shadow-overlay: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* ==========================================================================
+   CONSOLE SCOPE — all styles inside .fll-console
+   ========================================================================== */
+
+.fll-console {
+  font-family: var(--con-font-primary);
+  background: var(--con-bg-app);
+  color: var(--con-text-primary);
+  min-height: 100vh;
+}
+
+/* ── Typography ── */
+.fll-console .con-page-title {
+  font-size: var(--con-text-page-title);
+  font-weight: 700;
+  color: var(--con-text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.fll-console .con-section-title {
+  font-size: var(--con-text-section-title);
+  font-weight: 600;
+  color: var(--con-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.fll-console .con-card-title {
+  font-size: var(--con-text-card-title);
+  font-weight: 600;
+  color: var(--con-text-primary);
+}
+
+.fll-console .con-body {
+  font-size: var(--con-text-body);
+  color: var(--con-text-secondary);
+  line-height: 1.6;
+}
+
+.fll-console .con-caption {
+  font-size: var(--con-text-caption);
+  color: var(--con-text-muted);
+}
+
+.fll-console .con-mono {
+  font-family: var(--con-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ── Eyebrow / Label ── */
+.fll-console .con-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--con-text-muted);
+}
+
+/* ── Surface Cards ── */
+.fll-console .con-card {
+  background: var(--con-bg-surface-1);
+  border: 1px solid var(--con-border-default);
+  border-radius: var(--con-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--con-shadow-card);
+  transition: border-color 0.2s ease;
+}
+
+.fll-console .con-card:hover {
+  border-color: var(--con-border-strong);
+}
+
+.fll-console .con-card-elevated {
+  background: var(--con-bg-elevated);
+  border: 1px solid var(--con-border-default);
+  border-radius: var(--con-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--con-shadow-panel);
+}
+
+/* ── KPI Card ── */
+.fll-console .con-kpi-card {
+  background: var(--con-bg-surface-1);
+  border: 1px solid var(--con-border-default);
+  border-radius: var(--con-radius-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fll-console .con-kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--con-brand);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fll-console .con-kpi-card:hover {
+  border-color: var(--con-border-brand);
+  background: var(--con-bg-surface-2);
+}
+
+.fll-console .con-kpi-card:hover::after {
+  opacity: 1;
+}
+
+.fll-console .con-kpi-value {
+  font-family: var(--con-font-mono);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--con-text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fll-console .con-kpi-label {
+  font-size: var(--con-text-caption);
+  color: var(--con-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.fll-console .con-kpi-delta-up {
+  font-size: var(--con-text-caption);
+  color: var(--con-success);
+  font-weight: 600;
+}
+
+.fll-console .con-kpi-delta-down {
+  font-size: var(--con-text-caption);
+  color: var(--con-danger);
+  font-weight: 600;
+}
+
+/* ── Icon Container ── */
+.fll-console .con-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--con-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--con-brand-subtle);
+  color: var(--con-brand);
+  flex-shrink: 0;
+}
+
+.fll-console .con-icon-wrap.success { background: var(--con-success-subtle); color: var(--con-success); }
+.fll-console .con-icon-wrap.warning { background: var(--con-warning-subtle); color: var(--con-warning); }
+.fll-console .con-icon-wrap.danger  { background: var(--con-danger-subtle);  color: var(--con-danger);  }
+.fll-console .con-icon-wrap.info    { background: var(--con-info-subtle);    color: var(--con-info);    }
+.fll-console .con-icon-wrap.muted   { background: rgba(255,255,255,0.05);    color: var(--con-text-muted); }
+
+/* ── Status Chips / Badges ── */
+.fll-console .con-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--con-radius-sm);
+  font-size: var(--con-text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fll-console .con-badge-success { background: var(--con-success-subtle); color: var(--con-success); }
+.fll-console .con-badge-warning { background: var(--con-warning-subtle); color: var(--con-warning); }
+.fll-console .con-badge-danger  { background: var(--con-danger-subtle);  color: var(--con-danger);  }
+.fll-console .con-badge-info    { background: var(--con-info-subtle);    color: var(--con-info);    }
+.fll-console .con-badge-brand   { background: var(--con-brand-subtle);   color: var(--con-brand);   }
+.fll-console .con-badge-muted   { background: rgba(255,255,255,0.06);    color: var(--con-text-muted); }
+
+/* ── Dot indicator ── */
+.fll-console .con-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.fll-console .con-dot-success { background: var(--con-success); }
+.fll-console .con-dot-warning { background: var(--con-warning); }
+.fll-console .con-dot-danger  { background: var(--con-danger);  }
+.fll-console .con-dot-info    { background: var(--con-info);    }
+.fll-console .con-dot-muted   { background: var(--con-text-muted); }
+
+/* ── Tables ── */
+.fll-console .con-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--con-text-table);
+  color: var(--con-text-secondary);
+}
+
+.fll-console .con-table thead tr {
+  border-bottom: 1px solid var(--con-border-strong);
+}
+
+.fll-console .con-table thead th {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--con-text-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fll-console .con-table tbody tr {
+  border-bottom: 1px solid var(--con-border-default);
+  transition: background 0.15s ease;
+}
+
+.fll-console .con-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.fll-console .con-table tbody tr:hover {
+  background: rgba(255,255,255,0.025);
+}
+
+.fll-console .con-table td {
+  padding: 0.625rem 0.75rem;
+  color: var(--con-text-secondary);
+  text-align: right;
+}
+
+.fll-console .con-table td.con-td-primary {
+  color: var(--con-text-primary);
+  font-weight: 500;
+}
+
+.fll-console .con-table td.con-td-mono {
+  font-family: var(--con-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--con-text-primary);
+}
+
+/* ── Toolbar / Filters Bar ── */
+.fll-console .con-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--con-bg-surface-2);
+  border: 1px solid var(--con-border-default);
+  border-radius: var(--con-radius-lg);
+}
+
+/* ── Inputs ── */
+.fll-console .con-input {
+  background: var(--con-bg-app);
+  border: 1px solid var(--con-border-strong);
+  border-radius: var(--con-radius);
+  padding: 0.4375rem 0.75rem;
+  font-size: var(--con-text-body);
+  color: var(--con-text-primary);
+  font-family: var(--con-font-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.fll-console .con-input:focus {
+  border-color: var(--con-brand);
+  box-shadow: 0 0 0 2px var(--con-brand-subtle);
+}
+
+.fll-console .con-input::placeholder {
+  color: var(--con-text-disabled);
+}
+
+/* ── Buttons ── */
+.fll-console .con-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4375rem 0.875rem;
+  background: var(--con-brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--con-radius);
+  font-size: var(--con-text-body);
+  font-weight: 600;
+  font-family: var(--con-font-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.fll-console .con-btn-primary:hover {
+  background: var(--con-brand-hover);
+  box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
+.fll-console .con-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4375rem 0.75rem;
+  background: transparent;
+  color: var(--con-text-secondary);
+  border: 1px solid var(--con-border-default);
+  border-radius: var(--con-radius);
+  font-size: var(--con-text-body);
+  font-weight: 500;
+  font-family: var(--con-font-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fll-console .con-btn-ghost:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--con-border-strong);
+  color: var(--con-text-primary);
+}
+
+.fll-console .con-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4375rem 0.875rem;
+  background: var(--con-danger-subtle);
+  color: var(--con-danger);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-radius: var(--con-radius);
+  font-size: var(--con-text-body);
+  font-weight: 600;
+  font-family: var(--con-font-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fll-console .con-btn-danger:hover {
+  background: rgba(220,38,38,0.2);
+}
+
+/* ── Tabs ── */
+.fll-console .con-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--con-border-default);
+}
+
+.fll-console .con-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.625rem 1rem;
+  font-size: var(--con-text-body);
+  font-weight: 500;
+  color: var(--con-text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  font-family: var(--con-font-primary);
+}
+
+.fll-console .con-tab:hover {
+  color: var(--con-text-secondary);
+}
+
+.fll-console .con-tab.active {
+  color: var(--con-brand);
+  border-bottom-color: var(--con-brand);
+  font-weight: 600;
+}
+
+/* ── Page Header ── */
+.fll-console .con-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+/* ── Section Divider ── */
+.fll-console .con-divider {
+  border: none;
+  border-top: 1px solid var(--con-border-default);
+  margin: 0;
+}
+
+/* ── Empty State ── */
+.fll-console .con-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--con-text-muted);
+  text-align: center;
+}
+
+.fll-console .con-empty svg {
+  opacity: 0.35;
+}
+
+/* ── Loading Skeleton ── */
+.fll-console .con-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--con-bg-surface-2) 0%,
+    var(--con-bg-elevated) 50%,
+    var(--con-bg-surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: con-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--con-radius);
+}
+
+@keyframes con-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Sidebar ── */
+.fll-console .con-sidebar {
+  width: 240px;
+  background: var(--con-bg-surface-1);
+  border-left: 1px solid var(--con-border-default);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 50;
+}
+
+.fll-console .con-sidebar-logo {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--con-border-default);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fll-console .con-nav-group-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--con-text-disabled);
+  padding: 0.875rem 0.875rem 0.375rem;
+}
+
+.fll-console .con-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--con-radius);
+  font-size: var(--con-text-body);
+  font-weight: 500;
+  color: var(--con-text-secondary);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  margin: 1px 0.5rem;
+  cursor: pointer;
+}
+
+.fll-console .con-nav-item:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--con-text-primary);
+}
+
+.fll-console .con-nav-item.active {
+  background: var(--con-brand-subtle);
+  color: var(--con-brand);
+  font-weight: 600;
+}
+
+.fll-console .con-nav-badge {
+  margin-right: auto;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  background: var(--con-danger-subtle);
+  color: var(--con-danger);
+}
+
+/* ── Main content area ── */
+.fll-console .con-main {
+  flex: 1;
+  margin-right: 240px;
+  min-height: 100vh;
+  background: var(--con-bg-app);
+  overflow-x: hidden;
+}
+
+.fll-console .con-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Scrollbar (inside console) ── */
+.fll-console ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.fll-console ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.fll-console ::-webkit-scrollbar-thumb {
+  background: var(--con-border-strong);
+  border-radius: 4px;
+}
+.fll-console ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/*
+==========================================================================
+【AI HANDOVER NOTE】
+1. DESIGN PHILOSOPHY:
+   - Institutional Excellence: A design system built for the 'Execution Layer' of the delivery economy. It emphasizes stability, precision, and trust through a modular, grid-based layout (Bento Surfaces).
+   - Visual Style: 'Industrial Sophistication'. Combining the physicality of logistics (sharp borders, subtle rim-lights) with high-end SaaS aesthetics (glassmorphism in overlays, deep slate gradients).
+   - Rationale: First Line Logistics targets institutional partners and investors; the UI must feel as disciplined and scalable as their operational model.
+
+2. TYPOGRAPHY:
+   - Sans (Plus Jakarta Sans): Chosen for its modern, geometric character that conveys authority and efficiency. High-weight headers (700+) mirror the bold logo typography.
+   - Mono (JetBrains Mono): Used exclusively for metrics (35K orders, 150M+ SAR) and operational IDs to reinforce the data-driven, 'governance-grade' nature of the business.
+
+3. COLOR SYSTEM:
+   - Brand Hue: The primary teal (#4FB5AB) is mapped to --primary using oklch(0.72 0.13 188). This hue (188) represents reliability and professional technology.
+   - Mapping: --primary is the main brand teal. --accent uses a softer version for hover states, while --sidebar uses a deep slate-teal to match the professional gradient found in company branding.
+   - Semantic Logic: Success (150 hue) for growth metrics, Destructive (25 hue) for risk management alerts, and Warning (50 hue) for peak capacity indicators.
+
+4. USAGE GUIDE:
+   - Layout: Use a 'Centered Container' for narrative sections and 'Full-width Grid' for the Operating Cities and Dashboard metrics.
+   - Effects: Apply a 1px 'rim-light' (border-t with low opacity white) on primary cards to create a subtle 3D depth, symbolizing the 'physicality' of logistics.
+   - Rule: All data visualizations (charts) must strictly use the chart_1 to chart_5 sequence to maintain visual hierarchy across investor reports.
+==========================================================================
+*/
+
+:root {
+  /* Typography */
+  --font-sans: "Noto Sans Arabic", "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Core UI Tokens */
+  /* نظام الألوان المستنبط من شعار فيرست لاين */
+  --background: oklch(0.99 0.002 220); /* أبيض نظيف */
+  --foreground: oklch(0.18 0.08 220); /* أزرق داكن من الشعار #1A3C4D */
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.18 0.08 220);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.18 0.08 220);
+  --primary: oklch(0.25 0.12 220); /* أزرق داكن من الشعار */
+  --primary-foreground: oklch(0.98 0.01 220); /* أبيض نظيف */
+  --secondary: oklch(0.45 0.02 240); /* رمادي متوسط */
+  --secondary-foreground: oklch(0.98 0.01 240);
+  --muted: oklch(0.96 0.01 220); /* رمادي فاتح */
+  --muted-foreground: oklch(0.45 0.03 220);
+  --accent: oklch(0.55 0.15 200); /* أزرق سماوي للتمييز #00C1D4 */
+  --accent-foreground: oklch(0.98 0.01 200);
+  --destructive: oklch(0.60 0.18 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --border: oklch(0.89 0.01 188);
+  --input: oklch(0.89 0.01 188);
+  --ring: oklch(0.72 0.13 188);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.72 0.13 188);
+  --chart-2: oklch(0.60 0.12 200);
+  --chart-3: oklch(0.50 0.10 210);
+  --chart-4: oklch(0.85 0.10 180);
+  --chart-5: oklch(0.75 0.08 190);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.98 0.01 188);
+  --sidebar-foreground: oklch(0.25 0.03 188);
+  --sidebar-primary: oklch(0.72 0.13 188);
+  --sidebar-primary-foreground: oklch(0.98 0.01 188);
+  --sidebar-accent: oklch(0.94 0.02 188);
+  --sidebar-accent-foreground: oklch(0.25 0.03 188);
+  --sidebar-border: oklch(0.92 0.01 188);
+  --sidebar-ring: oklch(0.72 0.13 188);
+}
+
+.dark {
+  /* الوضع المظلم - مستنبط من شعار فيرست لاين */
+  --background: oklch(0.10 0.08 220); /* أزرق داكن جداً من الشعار */
+  --foreground: oklch(0.95 0.01 220); /* أبيض نظيف */
+  --card: oklch(0.15 0.06 220); /* أزرق داكن أفتح قليلاً */
+  --card-foreground: oklch(0.95 0.01 220);
+  --popover: oklch(0.10 0.08 220);
+  --popover-foreground: oklch(0.95 0.01 220);
+  --primary: oklch(0.60 0.18 200); /* أزرق سماوي مضيء */
+  --primary-foreground: oklch(0.10 0.08 220); /* أزرق داكن */
+  --secondary: oklch(0.30 0.04 240); /* رمادي متوسط */
+  --secondary-foreground: oklch(0.95 0.01 240);
+  --muted: oklch(0.20 0.05 220);
+  --muted-foreground: oklch(0.70 0.03 220);
+  --accent: oklch(0.65 0.18 200); /* أزرق سماوي للتمييز */
+  --accent-foreground: oklch(0.10 0.08 220);
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --border: oklch(0.25 0.03 188);
+  --input: oklch(0.25 0.03 188);
+  --ring: oklch(0.75 0.15 188);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.75 0.15 188);
+  --chart-2: oklch(0.65 0.14 200);
+  --chart-3: oklch(0.55 0.12 210);
+  --chart-4: oklch(0.80 0.10 180);
+  --chart-5: oklch(0.70 0.10 190);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.12 0.02 188);
+  --sidebar-foreground: oklch(0.92 0.01 188);
+  --sidebar-primary: oklch(0.75 0.15 188);
+  --sidebar-primary-foreground: oklch(0.12 0.02 188);
+  --sidebar-accent: oklch(0.20 0.03 188);
+  --sidebar-accent-foreground: oklch(0.94 0.01 188);
+  --sidebar-border: oklch(0.20 0.03 188);
+  --sidebar-ring: oklch(0.75 0.15 188);
+}
+
+@theme inline {
+  /* Shadcn Core Mapping */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts Mapping */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar Mapping */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  code, pre {
+    @apply font-mono;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
+  }
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Arabic Typography Improvements */
+.arabic-text {
+  font-family: "Noto Sans Arabic", sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+.arabic-heading {
+  font-family: "Noto Sans Arabic", sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   FIRST LINE LOGISTICS — DESIGN SYSTEM
+   Aesthetic: "Midnight Operations"
+   Deep space-dark with teal signal lines. The visual language
+   of a control room tracking 35,000 daily deliveries.
+   ============================================================ */
+
+/* --- Keyframe Animations --- */
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes grid-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes rim-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.72 0.13 188 / 0); }
+  50% { box-shadow: 0 0 20px 4px oklch(0.72 0.13 188 / 0.15); }
+}
+
+@keyframes counter-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- Core Layout Classes --- */
+@layer components {
+
+  /* =========================================
+     HERO & BACKGROUNDS
+     ========================================= */
+
+  /* The signature dark grid — animated subtle drift */
+  .fll-grid-bg {
+    background-color: oklch(0.07 0.04 220);
+    background-image:
+      linear-gradient(oklch(0.72 0.13 188 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.72 0.13 188 / 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: grid-drift 8s linear infinite;
+  }
+
+  /* Radial vignette overlay for depth */
+  .fll-vignette {
+    background: radial-gradient(
+      ellipse 80% 70% at 50% 0%,
+      transparent 30%,
+      oklch(0.05 0.04 220 / 0.6) 70%,
+      oklch(0.05 0.04 220 / 0.95) 100%
+    );
+  }
+
+  /* Scanning line effect on hero */
+  .fll-scan-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      oklch(0.72 0.13 188 / 0.04) 50%,
+      transparent 100%
+    );
+    height: 60px;
+    width: 100%;
+    animation: scan-line 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Page background: near-black with barely visible grid */
+  .first-line-section-bg {
+    background-color: oklch(0.10 0.03 220);
+    background-image:
+      radial-gradient(circle at 20% 50%, oklch(0.72 0.13 188 / 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, oklch(0.55 0.15 200 / 0.03) 0%, transparent 40%);
+  }
+
+  .first-line-hero-bg {
+    background: oklch(0.07 0.04 220);
+    color: white;
+  }
+
+  .first-line-gradient {
+    background: linear-gradient(
+      135deg,
+      oklch(0.08 0.05 220) 0%,
+      oklch(0.12 0.06 210) 50%,
+      oklch(0.10 0.04 220) 100%
+    );
+  }
+
+  /* =========================================
+     CARDS — Bento Surface Style
+     ========================================= */
+
+  /* Base card with rim-light border */
+  .fll-card {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .fll-card:hover {
+    border-color: oklch(0.72 0.13 188 / 0.4);
+    box-shadow: 0 0 0 1px oklch(0.72 0.13 188 / 0.1),
+                0 8px 32px oklch(0.05 0.04 220 / 0.8);
+  }
+
+  /* Top rim-light accent line */
+  .fll-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      oklch(0.72 0.13 188 / 0.6) 50%,
+      transparent 100%
+    );
+  }
+
+  /* Metric card — for KPIs with mono numbers */
+  .fll-metric-card {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 2rem;
+    text-align: right;
+  }
+
+  .fll-metric-card:hover {
+    animation: rim-glow 2s ease-in-out infinite;
+  }
+
+  .fll-metric-value {
+    font-family: var(--font-mono);
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    color: oklch(0.88 0.14 188);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    animation: counter-up 0.6s ease-out both;
+  }
+
+  .fll-metric-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.13 188 / 0.7);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Platform card */
+  .fll-platform-card {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: oklch(0.10 0.03 220);
+    filter: grayscale(0.4) brightness(0.9);
+  }
+
+  .fll-platform-card:hover {
+    filter: grayscale(0) brightness(1);
+    background: oklch(0.14 0.04 220);
+  }
+
+  /* City card */
+  .fll-city-card {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+    cursor: default;
+  }
+
+  .fll-card-bg {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-image: linear-gradient(135deg, oklch(0.72 0.13 188 / 0.04) 0%, transparent 100%);
+  }
+
+  /* =========================================
+     TYPOGRAPHY
+     ========================================= */
+
+  /* Display heading — sharp, precise */
+  .fll-display {
+    font-family: "Plus Jakarta Sans", var(--font-sans);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: oklch(0.96 0.01 188);
+  }
+
+  /* Accent text in teal */
+  .fll-accent {
+    color: oklch(0.72 0.13 188);
+  }
+
+  /* Mono numbers */
+  .fll-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section label / eyebrow */
+  .fll-eyebrow {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.13 188);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fll-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: oklch(0.72 0.13 188);
+  }
+
+  /* =========================================
+     BUTTONS
+     ========================================= */
+
+  .first-line-button {
+    position: relative;
+    background: oklch(0.72 0.13 188);
+    color: oklch(0.08 0.04 220);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: none;
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+
+  .first-line-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .first-line-button:hover {
+    background: oklch(0.78 0.14 188);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px oklch(0.72 0.13 188 / 0.35);
+  }
+
+  .first-line-button:hover::after {
+    opacity: 1;
+  }
+
+  /* =========================================
+     LIVE TICKER
+     ========================================= */
+
+  .fll-ticker-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+    background: oklch(0.10 0.04 220);
+    border-top: 1px solid oklch(0.22 0.04 188 / 0.5);
+    border-bottom: 1px solid oklch(0.22 0.04 188 / 0.5);
+  }
+
+  .fll-ticker-track {
+    display: inline-flex;
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  /* =========================================
+     STATUS & INDICATORS
+     ========================================= */
+
+  .fll-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: oklch(0.72 0.13 188);
+    animation: pulse-dot 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .fll-status-dot.warning {
+    background: oklch(0.85 0.18 60);
+  }
+
+  .fll-status-dot.danger {
+    background: oklch(0.65 0.22 25);
+  }
+
+  /* =========================================
+     DIVIDERS & STRUCTURE
+     ========================================= */
+
+  .fll-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.72 0.13 188 / 0.3) 50%,
+      transparent
+    );
+  }
+
+  /* =========================================
+     HEADER
+     ========================================= */
+
+  .first-line-header {
+    background: oklch(0.07 0.04 220 / 0.92);
+    backdrop-filter: blur(16px) saturate(1.5);
+    border-bottom: 1px solid oklch(0.22 0.04 188 / 0.4);
+  }
+
+  /* =========================================
+     LEGACY ALIASES (keep existing classes working)
+     ========================================= */
+
+  .first-line-pattern {
+    background-image:
+      radial-gradient(circle at 25% 25%, oklch(0.72 0.13 188 / 0.06) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, oklch(0.72 0.13 188 / 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .first-line-card-bg {
+    background: oklch(0.12 0.03 220);
+    border: 1px solid oklch(0.22 0.04 188);
+    border-top-color: oklch(0.35 0.08 188 / 0.5);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* =========================================
+     WATERMARK (unchanged)
+     ========================================= */
+
+  .company-logo-watermark {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    height: 120px;
+    background-image: url('/images/first_line_vertical_with_header_logo_1.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .page-with-logo-bg {
+    position: relative;
+  }
+
+  .page-with-logo-bg::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background-image: url('/images/first_line_vertical_with_header_logo_1.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 0;
+  }
+}

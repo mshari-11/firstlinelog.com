@@ -6,16 +6,16 @@
  * Map token: set VITE_MAPBOX_TOKEN in .env
  * Falls back to a styled static placeholder if token is missing.
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
-import type { MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
   Navigation, Phone, Star, Layers, Filter, Zap,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -128,7 +128,54 @@ export default function Dispatch() {
   const mapRef = useRef<MapRef>(null);
   const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [dataSource, setDataSource] = useState<"loading" | "live" | "mock">("loading");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+
+  // ── Fetch real data from Supabase, fall back to mock ──
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      if (!supabase) {
+        setDataSource("mock");
+        return;
+      }
+
+      try {
+        const { data: couriers } = await supabase
+          .from("couriers")
+          .select("id, full_name, full_name_ar, phone, city, platform, vehicle_type, status, latitude, longitude");
+
+        if (cancelled) return;
+
+        if (couriers && couriers.length > 0) {
+          const mapped: Driver[] = couriers.map((c) => {
+            const statusMap: Record<string, DriverStatus> = { active: "available", inactive: "offline", suspended: "offline" };
+            return {
+              id: c.id,
+              name: c.full_name_ar || c.full_name || "—",
+              phone: c.phone || "",
+              rating: 4.5,
+              status: statusMap[c.status] || "offline",
+              lat: c.latitude ? parseFloat(c.latitude) : 24.7136 + (Math.random() - 0.5) * 0.08,
+              lng: c.longitude ? parseFloat(c.longitude) : 46.6753 + (Math.random() - 0.5) * 0.08,
+              vehicle: c.vehicle_type || "—",
+            };
+          });
+          setDrivers(mapped);
+          setDataSource("live");
+        } else {
+          setDataSource("mock");
+        }
+      } catch {
+        if (!cancelled) setDataSource("mock");
+      }
+    }
+
+    fetchData();
+    const interval = setInterval(fetchData, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
@@ -192,8 +239,11 @@ export default function Dispatch() {
         flexShrink: 0,
         flexWrap: "wrap",
       }}>
-        <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", marginLeft: "0.5rem" }}>
+        <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", marginLeft: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           لوحة الإرسال المباشر
+          {dataSource === "live" && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "100px", background: "var(--con-success-subtle,#dcfce7)", color: "var(--con-success)" }}>مباشر</span>}
+          {dataSource === "mock" && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "100px", background: "var(--con-warning-subtle,#fef3c7)", color: "var(--con-warning)" }}>تجريبي</span>}
+          {dataSource === "loading" && <RefreshCw size={12} style={{ animation: "spin 1s linear infinite", color: "var(--con-text-muted)" }} />}
         </h1>
         <div style={{ display: "flex", gap: "0.75rem", flex: 1, flexWrap: "wrap" }}>
           {[

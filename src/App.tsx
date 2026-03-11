@@ -18,6 +18,7 @@ import { AuthProvider as AdminAuthProvider } from "@/lib/admin/auth";
 
 // ── Courier / public onboarding ───────────────────────────────────────────────
 import CourierRegister from "@/pages/courier/Register";
+import CourierPortal from "@/pages/courier/Portal";
 import ApplicationStatus from "@/pages/courier/ApplicationStatus";
 
 // ── Admin panel (exists) ──────────────────────────────────────────────────────
@@ -94,6 +95,7 @@ export default function App() {
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />
+          <Route path="/courier/portal" element={<CourierPortal />} />
           <Route path="/application-status" element={<ApplicationStatus />} />
 
           {/* ── Fallback: redirect unknown routes to admin login ── */}

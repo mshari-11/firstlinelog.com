@@ -1,5 +1,6 @@
 /**
  * نظام المصادقة للوحة الإدارة
+ * يدعم Supabase auth + Cognito localStorage session (fll_token / fll_user)
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
@@ -37,24 +38,72 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/** Map Cognito group names to internal UserRole */
+function cognitoGroupToRole(groups: string[]): UserRole {
+  if (groups.includes("SystemAdmin") || groups.includes("admin")) return "admin";
+  if (groups.includes("owner") || groups.includes("executive")) return "owner";
+  if (groups.includes("driver")) return "courier";
+  return "staff";
+}
+
+/** Try to restore a session from Cognito localStorage tokens (fll_token + fll_user) */
+function getCognitoLocalSession(): AdminUser | null {
+  try {
+    const token = localStorage.getItem("fll_token");
+    const raw = localStorage.getItem("fll_user");
+    if (!token || !raw) return null;
+    const data = JSON.parse(raw);
+    if (!data) return null;
+    const groups: string[] = data.groups || [];
+    const role = cognitoGroupToRole(groups);
+    return {
+      id: data.username || data.email || "cognito-user",
+      email: data.email || data.username || "",
+      role,
+      full_name: data.name || data.email || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
+    // 1. Try Supabase session first
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          // 2. Fallback: check Cognito localStorage session
+          const cognitoUser = getCognitoLocalSession();
+          if (cognitoUser) {
+            setUser(cognitoUser);
+          }
+          setLoading(false);
+        }
+      });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) fetchUserProfile(session.user.id);
-      else setLoading(false);
-    });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) fetchUserProfile(session.user.id);
+        else {
+          // Check Cognito fallback on Supabase sign-out too
+          const cognitoUser = getCognitoLocalSession();
+          setUser(cognitoUser);
+          setLoading(false);
+        }
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) fetchUserProfile(session.user.id);
-      else { setUser(null); setLoading(false); }
-    });
+      return () => subscription.unsubscribe();
+    }
 
-    return () => subscription.unsubscribe();
+    // No Supabase configured — use Cognito only
+    const cognitoUser = getCognitoLocalSession();
+    if (cognitoUser) setUser(cognitoUser);
+    setLoading(false);
   }, []);
 
   async function fetchUserProfile(userId: string) {
@@ -125,8 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    // Clear Cognito localStorage session
+    try {
+      localStorage.removeItem("fll_token");
+      localStorage.removeItem("fll_user");
+    } catch {}
+    // Clear Supabase session
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
   }
 

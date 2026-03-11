@@ -107,28 +107,28 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
 <div class="sidebar" id="sidebar">
 <div class="sidebar-header"><div class="sidebar-logo">FL</div><div><h2>فيرست لاين</h2><span>لوحة الإدارة v6</span></div></div>
 <div class="nav-section">الرئيسية</div>
-<a class="nav-item active" onclick="S('overview')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>نظرة عامة</span></a>
+<a class="nav-item active" onclick="S('overview')"><i data-lucide="layout-dashboard"></i><span>نظرة عامة</span></a>
 <div class="nav-section">العمليات</div>
-<a class="nav-item" onclick="S('couriers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>المناديب</span><span class="nav-badge" id="nav-couriers">0</span></a>
-<a class="nav-item" onclick="S('orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg><span>الطلبات</span><span class="nav-badge blue" id="nav-orders">0</span></a>
-<a class="nav-item" onclick="S('complaints')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>الشكاوى</span><span class="nav-badge" id="nav-complaints">0</span></a>
-<a class="nav-item" onclick="S('platforms')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg><span>المنصات</span></a>
-<a class="nav-item" onclick="S('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>المالية</span></a>
+<a class="nav-item" onclick="S('couriers')"><i data-lucide="users"></i><span>المناديب</span><span class="nav-badge" id="nav-couriers">0</span></a>
+<a class="nav-item" onclick="S('orders')"><i data-lucide="package"></i><span>الطلبات</span><span class="nav-badge blue" id="nav-orders">0</span></a>
+<a class="nav-item" onclick="S('complaints')"><i data-lucide="message-circle-warning"></i><span>الشكاوى</span><span class="nav-badge" id="nav-complaints">0</span></a>
+<a class="nav-item" onclick="S('platforms')"><i data-lucide="monitor"></i><span>المنصات</span></a>
+<a class="nav-item" onclick="S('finance')"><i data-lucide="wallet"></i><span>المالية</span></a>
 <div class="nav-section">الموارد البشرية</div>
-<a class="nav-item" onclick="S('staff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الموظفين</span></a>
-<a class="nav-item" onclick="S('departments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>الأقسام</span></a>
-<a class="nav-item" onclick="S('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>المهام</span><span class="nav-badge gold" id="nav-tasks">0</span></a>
+<a class="nav-item" onclick="S('staff')"><i data-lucide="user-check"></i><span>الموظفين</span></a>
+<a class="nav-item" onclick="S('departments')"><i data-lucide="building-2"></i><span>الأقسام</span></a>
+<a class="nav-item" onclick="S('tasks')"><i data-lucide="list-checks"></i><span>المهام</span><span class="nav-badge gold" id="nav-tasks">0</span></a>
 <div class="nav-section">النظام</div>
-<a class="nav-item" onclick="S('notifications')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>الإشعارات</span><span class="nav-badge" id="nav-notif">0</span></a>
-<a class="nav-item" onclick="S('audit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>سجل التدقيق</span></a>
-<a class="nav-item" onclick="S('approvals')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>الموافقات</span><span class="nav-badge gold" id="nav-approvals">0</span></a>
-<a class="nav-item" onclick="S('integrations')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>التكاملات</span></a>
-<a class="nav-item" onclick="S('ai')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>AI</span></a>
-<a class="nav-item" onclick="S('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>الإعدادات</span></a>
+<a class="nav-item" onclick="S('notifications')"><i data-lucide="bell"></i><span>الإشعارات</span><span class="nav-badge" id="nav-notif">0</span></a>
+<a class="nav-item" onclick="S('audit')"><i data-lucide="shield-check"></i><span>سجل التدقيق</span></a>
+<a class="nav-item" onclick="S('approvals')"><i data-lucide="badge-check"></i><span>الموافقات</span><span class="nav-badge gold" id="nav-approvals">0</span></a>
+<a class="nav-item" onclick="S('integrations')"><i data-lucide="plug-zap"></i><span>التكاملات</span></a>
+<a class="nav-item" onclick="S('ai')"><i data-lucide="brain"></i><span>AI</span></a>
+<a class="nav-item" onclick="S('settings')"><i data-lucide="settings"></i><span>الإعدادات</span></a>
 <div class="nav-section" style="color:#f59e0b">المالية المتقدمة</div>
-<a class="nav-item" onclick="S('fraud')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>كشف التلاعب</span><span class="nav-badge" style="background:#fee2e2;color:#991b1b" id="nav-fraud">0</span></a>
-<a class="nav-item" onclick="S('upload-admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>رفع التقارير</span></a>
-<a class="nav-item" onclick="S('daily-close')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>الإقفال اليومي</span></a>
+<a class="nav-item" onclick="S('fraud')"><i data-lucide="scan-search"></i><span>كشف التلاعب</span><span class="nav-badge" style="background:#fee2e2;color:#991b1b" id="nav-fraud">0</span></a>
+<a class="nav-item" onclick="S('upload-admin')"><i data-lucide="upload-cloud"></i><span>رفع التقارير</span></a>
+<a class="nav-item" onclick="S('daily-close')"><i data-lucide="calendar-check"></i><span>الإقفال اليومي</span></a>
 </div>
 <div class="main">
 <div class="top-bar">

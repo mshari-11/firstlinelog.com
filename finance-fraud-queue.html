@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>كشف الاحتيال — FLL Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1)}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:250px;background:var(--navy);border-left:1px solid var(--border);padding:20px 0;position:fixed;top:0;right:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar .logo h2{color:var(--blue);font-size:16px;margin-bottom:4px}
+.sidebar .logo small{color:var(--muted);font-size:11px}
+.nav-group{margin:12px 0}
+.nav-group-label{padding:8px 20px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--text);text-decoration:none;font-size:13px;transition:all .2s;border-right:3px solid transparent}
+.nav-link:hover{background:rgba(56,189,248,0.05);color:var(--blue)}
+.nav-link.active{background:rgba(56,189,248,0.1);color:var(--blue);border-right-color:var(--blue)}
+.main{margin-right:250px;flex:1;padding:24px;min-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:8px}
+.page-header h1 i{color:var(--blue)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(10px);border-top:3px solid var(--blue)}
+.stat-card.green{border-top-color:var(--green)}
+.stat-card.gold{border-top-color:var(--gold)}
+.stat-card.red{border-top-color:var(--red)}
+.stat-card.purple{border-top-color:var(--purple)}
+.stat-label{color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-sub{color:var(--muted);font-size:11px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.card h3{color:var(--text);font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(56,189,248,0.08);color:var(--blue);font-weight:600;padding:10px 12px;text-align:right;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:rgba(56,189,248,0.03)}
+.badge{padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:#86efac}
+.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}
+.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}
+.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}
+.badge-purple{background:rgba(167,139,250,0.15);color:#c4b5fd}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--blue-deep);color:white}
+.btn-primary:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.search-input{background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;width:250px}
+.search-input::placeholder{color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--navy);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
+.modal h3{color:var(--text);margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.form-input{width:100%;background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px}
+.form-input:focus{border-color:var(--blue);outline:none}
+textarea.form-input{min-height:80px;resize:vertical}
+@media(max-width:768px){.sidebar{display:none}.main{margin-right:0}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <h2>فيرست لاين لوجستيكس</h2>
+    <small>المحرك المالي</small>
+  </div>
+  <div id="sidebar-nav"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:auto">
+    <div style="font-size:12px;color:var(--muted)" id="user-info"></div>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-top:8px;width:100%">تسجيل خروج</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <h1><i data-lucide="shield-alert"></i> كشف الاحتيال</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" class="search-input" placeholder="بحث بالسائق أو النوع..." id="fraud-search" oninput="filterFlags()">
+      <button class="btn btn-outline" onclick="loadFlags()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">إجمالي البلاغات</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card red"><div class="stat-label">مفتوحة</div><div class="stat-value" id="s-open">—</div></div>
+    <div class="stat-card gold"><div class="stat-label">تمت المراجعة</div><div class="stat-value" id="s-reviewed">—</div></div>
+    <div class="stat-card green"><div class="stat-label">تم اتخاذ إجراء</div><div class="stat-value" id="s-actioned">—</div></div>
+  </div>
+
+  <div class="card">
+    <h3><i data-lucide="list" style="width:16px;height:16px;color:var(--blue)"></i> قائمة البلاغات</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>السائق</th><th>النوع</th><th>الخطورة</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th>
+        </tr></thead>
+        <tbody id="flags-tbl"><tr><td colspan="6" class="loading">جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="review-modal">
+<div class="modal">
+<h3>مراجعة البلاغ</h3>
+<div class="form-group"><label class="form-label">السائق</label><div id="rv-driver" style="color:var(--text);font-weight:600;padding:4px 0"></div></div>
+<div class="form-group"><label class="form-label">النوع</label><div id="rv-type" style="color:var(--text);padding:4px 0"></div></div>
+<div class="form-group"><label class="form-label">التفاصيل</label><div id="rv-details" style="color:var(--muted);padding:4px 0;font-size:12px"></div></div>
+<div class="form-group"><label class="form-label">ملاحظات المراجعة</label><textarea class="form-input" id="rv-notes" placeholder="أدخل ملاحظاتك..."></textarea></div>
+<div class="form-group"><label class="form-label">الإجراء</label><select class="form-input" id="rv-action"><option value="reviewed">تمت المراجعة</option><option value="action_taken">اتخاذ إجراء</option><option value="dismissed">رفض البلاغ</option></select></div>
+<input type="hidden" id="rv-id">
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-primary" onclick="submitReview()">حفظ</button>
+<button class="btn btn-outline" onclick="closeModal('review-modal')">إلغاء</button>
+</div>
+</div>
+</div>
+
+<script src="/fll-shared.js"></script>
+<script src="/fll-rbac.js"></script>
+<script>
+const user=checkAuth();if(!user)throw'no auth';
+if(window.FLL_RBAC)FLL_RBAC.guardPage();
+
+document.getElementById('sidebar-nav').innerHTML=window.FLL_RBAC?FLL_RBAC.renderSidebarNav():'';
+document.getElementById('user-info').textContent=(user.name||user.email||'مستخدم')+' — '+(window.FLL_RBAC?FLL_RBAC.getUserRoleLabel():'');
+
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+const statusLabels={open:'مفتوحة',reviewed:'تمت المراجعة',action_taken:'تم اتخاذ إجراء',dismissed:'مرفوضة'};
+const statusBadge={open:'badge-red',reviewed:'badge-yellow',action_taken:'badge-green',dismissed:'badge-blue'};
+const severityLabels={low:'منخفضة',medium:'متوسطة',high:'عالية',critical:'حرجة'};
+const severityBadge={low:'badge-blue',medium:'badge-yellow',high:'badge-red',critical:'badge-red'};
+const typeLabels={duplicate_trip:'رحلة مكررة',speed_anomaly:'شذوذ في السرعة',location_spoof:'تزوير الموقع',excessive_cancellation:'إلغاءات مفرطة',suspicious_earnings:'أرباح مشبوهة'};
+
+let allFlags=[];
+
+async function loadFlags(){
+  document.getElementById('flags-tbl').innerHTML='<tr><td colspan="6" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/fraud-queue');
+    allFlags=data.items||[];
+    renderFlags(allFlags);
+    const open=allFlags.filter(f=>f.status==='open').length;
+    const reviewed=allFlags.filter(f=>f.status==='reviewed').length;
+    const actioned=allFlags.filter(f=>f.status==='action_taken').length;
+    document.getElementById('s-total').textContent=allFlags.length;
+    document.getElementById('s-open').textContent=open;
+    document.getElementById('s-reviewed').textContent=reviewed;
+    document.getElementById('s-actioned').textContent=actioned;
+  }catch(e){
+    document.getElementById('flags-tbl').innerHTML='<tr><td colspan="6" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+function renderFlags(flags){
+  if(!flags.length){document.getElementById('flags-tbl').innerHTML='<tr><td colspan="6" class="empty">لا توجد بلاغات</td></tr>';return;}
+  document.getElementById('flags-tbl').innerHTML=flags.map(f=>`<tr>
+    <td><strong>${esc(f.driver_id||f.driver)}</strong></td>
+    <td>${esc(typeLabels[f.type]||f.type)}</td>
+    <td><span class="badge ${severityBadge[f.severity]||'badge-blue'}">${severityLabels[f.severity]||f.severity}</span></td>
+    <td><span class="badge ${statusBadge[f.status]||'badge-blue'}">${statusLabels[f.status]||f.status}</span></td>
+    <td>${f.created_at?new Date(f.created_at).toLocaleDateString('ar-SA'):'—'}</td>
+    <td>${f.status==='open'?`<button class="btn btn-sm btn-primary" onclick="openReview('${esc(f.id)}')">مراجعة</button>`:'—'}</td>
+  </tr>`).join('');
+}
+
+function filterFlags(){
+  const q=document.getElementById('fraud-search').value.toLowerCase();
+  const filtered=allFlags.filter(f=>(f.driver_id||f.driver||'').toLowerCase().includes(q)||(f.type||'').toLowerCase().includes(q));
+  renderFlags(filtered);
+}
+
+function openReview(id){
+  const flag=allFlags.find(f=>f.id===id);
+  if(!flag)return;
+  document.getElementById('rv-id').value=id;
+  document.getElementById('rv-driver').textContent=flag.driver_id||flag.driver||'—';
+  document.getElementById('rv-type').textContent=typeLabels[flag.type]||flag.type||'—';
+  document.getElementById('rv-details').textContent=flag.details||flag.description||'لا توجد تفاصيل';
+  document.getElementById('rv-notes').value='';
+  document.getElementById('rv-action').value='reviewed';
+  openModal('review-modal');
+}
+
+async function submitReview(){
+  const id=document.getElementById('rv-id').value;
+  const notes=document.getElementById('rv-notes').value;
+  const action=document.getElementById('rv-action').value;
+  if(!notes.trim()){showToast('يلزم إدخال ملاحظات المراجعة','error');return;}
+  try{
+    await fllPost('/finance/fraud-queue/'+id+'/review',{status:action,review_notes:notes});
+    showToast('تمت المراجعة بنجاح','success');
+    closeModal('review-modal');
+    loadFlags();
+  }catch(e){
+    showToast('خطأ: '+e.message,'error');
+  }
+}
+
+loadFlags();
+try{lucide.createIcons()}catch(e){}
+</script>
+</body>
+</html>

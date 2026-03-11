@@ -57,11 +57,39 @@
     <div class="stat red"><div class="stat-label">تأمين منتهي قريباً</div><div class="stat-value" id="s-expiring">—</div></div>
   </div>
 
+  <!-- Tabs (NEW) -->
+  <div class="tabs" style="display:flex;gap:2px;background:#e2e8f0;border-radius:10px;padding:3px;margin-bottom:20px">
+    <button class="tab active" onclick="showFleetTab('vehicles',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:white;font-family:inherit;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)">المركبات</button>
+    <button class="tab" onclick="showFleetTab('maintenance',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">الصيانة</button>
+    <button class="tab" onclick="showFleetTab('assignments',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">التعيينات</button>
+    <button class="tab" onclick="showFleetTab('insurance',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">التأمين والفحص</button>
+  </div>
+
+  <div id="ftab-vehicles">
   <div class="vehicle-cards" id="v-cards"></div>
 
   <div class="card">
     <div class="card-h"><h3>جدول المركبات التفصيلي</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>اللوحة</th><th>النوع</th><th>الماركة</th><th>الموديل</th><th>السنة</th><th>اللون</th><th>المندوب</th><th>التأمين</th><th>الفحص</th><th>الحالة</th></tr></thead><tbody id="v-tbl"></tbody></table></div>
+  </div>
+  </div><!-- end ftab-vehicles -->
+
+  <!-- MAINTENANCE TAB (NEW) -->
+  <div id="ftab-maintenance" style="display:none">
+    <div class="card"><div class="card-h"><h3>سجل الصيانة</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>نوع الصيانة</th><th>التاريخ</th><th>التكلفة</th><th>الورشة</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody id="maint-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- ASSIGNMENTS TAB (NEW) -->
+  <div id="ftab-assignments" style="display:none">
+    <div class="card"><div class="card-h"><h3>تعيينات المركبات — ربط مركبة بمندوب</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>المندوب</th><th>تاريخ التعيين</th><th>تاريخ الإنهاء</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody id="assign-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- INSURANCE TAB (NEW) -->
+  <div id="ftab-insurance" style="display:none">
+    <div class="card"><div class="card-h"><h3>التأمين والفحص الدوري</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>نوع التأمين</th><th>تاريخ الانتهاء</th><th>الأيام المتبقية</th><th>حالة الفحص</th><th>تنبيه</th></tr></thead><tbody id="ins-tbl"></tbody></table></div></div>
   </div>
 </div>
 <script>
@@ -111,5 +139,28 @@ async function loadAll(){
     <td>${v.status==='active'?badge('نشط','green'):badge('صيانة','yellow')}</td></tr>`).join('');
 }
 loadAll();
+
+// === NEW: Fleet tab switching + data for new tabs ===
+function showFleetTab(n,btn){document.querySelectorAll('[id^="ftab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>{t.style.background='transparent';t.style.color='var(--muted)';t.style.boxShadow='none'});document.getElementById('ftab-'+n).style.display='block';if(btn){btn.style.background='white';btn.style.color='var(--navy)';btn.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'}}
+
+const _origFleetLoad=loadAll;
+loadAll=async function(){await _origFleetLoad();try{
+  const{data:vehicles}=await db.from('vehicles').select('*,couriers(full_name_ar)');
+  if(!vehicles)return;
+  const now=new Date();
+
+  // Maintenance
+  document.getElementById('maint-tbl').innerHTML=vehicles.filter(v=>v.status==='maintenance').map(v=>`<tr><td><strong>${v.plate_number}</strong></td><td>صيانة دورية</td><td>${new Date().toLocaleDateString('ar-SA')}</td><td>—</td><td>—</td><td>${badge('قيد الصيانة','yellow')}</td><td>—</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد مركبات في الصيانة</td></tr>';
+
+  // Assignments
+  document.getElementById('assign-tbl').innerHTML=vehicles.filter(v=>v.courier_id).map(v=>`<tr><td><strong>${v.plate_number}</strong></td><td>${v.couriers?.full_name_ar||'—'}</td><td>${formatDate(v.created_at)}</td><td>—</td><td>${badge('نشط','green')}</td><td>—</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد تعيينات</td></tr>';
+
+  // Insurance
+  document.getElementById('ins-tbl').innerHTML=vehicles.map(v=>{
+    const exp=v.insurance_expiry?new Date(v.insurance_expiry):null;
+    const days=exp?Math.floor((exp-now)/86400000):null;
+    const alert=days!==null?(days<0?'🔴 منتهي':days<30?'🟡 قريب':'🟢 ساري'):'—';
+    return`<tr><td><strong>${v.plate_number}</strong></td><td>${v.insurance_type||'شامل'}</td><td>${formatDate(v.insurance_expiry)}</td><td>${days!==null?days+' يوم':'—'}</td><td>${formatDate(v.registration_expiry)}</td><td>${alert}</td></tr>`}).join('');
+}catch(e){console.error('Fleet v4:',e)}};loadAll();
 </script>
 </body></html>

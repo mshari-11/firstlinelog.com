@@ -1,0 +1,32 @@
+{
+  "otp_send": {
+    "requestContext": {
+      "http": {
+        "method": "POST",
+        "path": "/driver/otp/send",
+        "sourceIp": "127.0.0.1"
+      }
+    },
+    "body": "{\"email\":\"driver@example.com\",\"full_name\":\"محمد السالم\"}"
+  },
+  "otp_verify": {
+    "requestContext": {
+      "http": {
+        "method": "POST",
+        "path": "/driver/otp/verify",
+        "sourceIp": "127.0.0.1"
+      }
+    },
+    "body": "{\"email\":\"driver@example.com\",\"code\":\"123456\"}"
+  },
+  "status_lookup": {
+    "requestContext": {
+      "http": {
+        "method": "GET",
+        "path": "/driver/application-status",
+        "sourceIp": "127.0.0.1"
+      }
+    },
+    "rawQueryString": "ref=APP-20260311-AB12"
+  }
+}

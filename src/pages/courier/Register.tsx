@@ -525,9 +525,7 @@ export default function CourierRegister() {
         setOtpCooldown(60);
       }
     } catch {
-      // Fallback: if API doesn't have the endpoint yet, simulate success
-      setOtpSent(true);
-      setOtpCooldown(60);
+      setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
     } finally {
       setOtpSending(false);
     }
@@ -554,9 +552,7 @@ export default function CourierRegister() {
         setStep(3);
       }
     } catch {
-      // Dev fallback: accept any 6-digit code
-      set("emailVerified", true);
-      setStep(3);
+      setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
     } finally {
       setOtpVerifying(false);
     }
@@ -567,6 +563,7 @@ export default function CourierRegister() {
     const e: typeof errors = {};
     if (!form.doc_national_id) e.doc_national_id = "صورة الهوية الوطنية مطلوبة";
     if (!form.doc_national_id_back) e.doc_national_id_back = "صورة الهوية (الظهر) مطلوبة";
+    if (!form.doc_driver_license) e.doc_driver_license = "رخصة القيادة مطلوبة";
     if (!form.doc_bank_cert) e.doc_bank_cert = "شهادة الحساب البنكي مطلوبة";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -590,6 +587,14 @@ export default function CourierRegister() {
   // ── Final submit ────────────────────────────────────────────────────────────
   async function submitApplication() {
     if (!validateStep5()) return;
+    if (!form.emailVerified) {
+      setErrors({ general: "يجب التحقق من البريد الإلكتروني قبل إرسال الطلب" });
+      return;
+    }
+    if (!form.livenessComplete || !form.selfieDataUrl) {
+      setErrors({ general: "التحقق الحيوي والصورة الشخصية مطلوبان قبل الإرسال" });
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -610,8 +615,7 @@ export default function CourierRegister() {
         setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
       }
     } catch {
-      // Dev fallback
-      setSubmitted({ appRef: "APP-" + Date.now().toString(36).toUpperCase() });
+      setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });
     } finally {
       setSubmitting(false);
     }
@@ -963,7 +967,7 @@ export default function CourierRegister() {
             </div>
 
             <div style={grid2}>
-              <Field label="رخصة القيادة" icon={Car}>
+              <Field label="رخصة القيادة" icon={Car} error={errors.doc_driver_license as string}>
                 <FileZone label="اضغط لرفع رخصة القيادة" value={form.doc_driver_license}
                   onChange={(v) => set("doc_driver_license", v)} />
               </Field>

@@ -16,6 +16,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider as AdminAuthProvider } from "@/lib/admin/auth";
 
+// ── Courier / public onboarding ───────────────────────────────────────────────
+import CourierRegister from "@/pages/courier/Register";
+import ApplicationStatus from "@/pages/courier/ApplicationStatus";
+
 // ── Admin panel (exists) ──────────────────────────────────────────────────────
 import { AdminLayout } from "@/components/admin/Layout";
 import { PermissionGuard } from "@/components/admin/PermissionGuard";
@@ -87,6 +91,10 @@ export default function App() {
                fll-login-fixer.js + fll-auth-connector.js static scripts ── */}
           <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
           <Route path="/unified-login" element={<LoginShell title="تسجيل الدخول الموحّد" />} />
+
+          {/* ── Courier onboarding (public) ── */}
+          <Route path="/courier/register" element={<CourierRegister />} />
+          <Route path="/application-status" element={<ApplicationStatus />} />
 
           {/* ── Fallback: redirect unknown routes to admin login ── */}
           <Route path="*" element={<Navigate to="/admin/login" replace />} />

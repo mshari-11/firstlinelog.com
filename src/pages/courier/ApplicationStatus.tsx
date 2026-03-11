@@ -20,7 +20,7 @@ interface ApplicationRecord {
   email: string;
   phone: string;
   city: string;
-  status: "pending" | "under_review" | "approved" | "rejected" | "info_required";
+  status: "pending" | "under_review" | "approved" | "rejected" | "requires_correction";
   created_at: string;
   updated_at: string;
   rejection_reason?: string;
@@ -64,13 +64,13 @@ const STATUS_CONFIG: Record<
     icon: XCircle,
     desc: "عذراً، لم يتم قبول طلبك في الوقت الحالي.",
   },
-  info_required: {
-    label: "معلومات مطلوبة",
+  requires_correction: {
+    label: "استكمال مطلوب",
     color: "#fb923c",
     bg: "#1c1008",
     border: "#7c2d12",
     icon: AlertTriangle,
-    desc: "نحتاج معلومات إضافية منك. تحقق من بريدك الإلكتروني.",
+    desc: "يرجى استكمال البيانات أو إعادة رفع المستندات المطلوبة ثم إعادة المتابعة.",
   },
 };
 
@@ -83,7 +83,7 @@ const TIMELINE = [
 
 function getTimelineIndex(status: string): number {
   if (status === "approved" || status === "rejected") return 2;
-  if (status === "under_review" || status === "info_required") return 1;
+  if (status === "under_review" || status === "requires_correction") return 1;
   return 0;
 }
 

@@ -525,9 +525,7 @@ export default function CourierRegister() {
         setOtpCooldown(60);
       }
     } catch {
-      // Fallback: if API doesn't have the endpoint yet, simulate success
-      setOtpSent(true);
-      setOtpCooldown(60);
+      setErrors({ general: "تعذّر الاتصال بالخادم. حاول مرة أخرى." });
     } finally {
       setOtpSending(false);
     }
@@ -554,9 +552,7 @@ export default function CourierRegister() {
         setStep(3);
       }
     } catch {
-      // Dev fallback: accept any 6-digit code
-      set("emailVerified", true);
-      setStep(3);
+      setErrors({ otpCode: "تعذّر الاتصال بالخادم. حاول مرة أخرى." });
     } finally {
       setOtpVerifying(false);
     }
@@ -610,8 +606,7 @@ export default function CourierRegister() {
         setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
       }
     } catch {
-      // Dev fallback
-      setSubmitted({ appRef: "APP-" + Date.now().toString(36).toUpperCase() });
+      setErrors({ general: "تعذّر الاتصال بالخادم. حاول مرة أخرى." });
     } finally {
       setSubmitting(false);
     }

@@ -171,19 +171,7 @@ export default function ApplicationStatus() {
         window.history.replaceState(null, "", url.toString());
       }
     } catch {
-      // Dev fallback — simulate a pending application
-      const mock: ApplicationRecord = {
-        app_ref: query,
-        full_name: "—",
-        email: "—",
-        phone: "—",
-        city: "—",
-        status: "pending",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setResult(mock);
-      setLastChecked(new Date());
+      setError("تعذّر الاتصال بالخادم. حاول مرة أخرى.");
     } finally {
       setLoading(false);
     }

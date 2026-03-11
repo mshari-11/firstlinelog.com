@@ -117,27 +117,42 @@
     }
   }
 
-  // --- Real Register ---
-  async function doRegister() {
-    const v = getVals();
-    if (!v.username||!v.password) { showToast('الرجاء تعبئة جميع الحقول','error'); return; }
+  // --- Register: Redirect to full courier registration wizard ---
+  function doRegister() {
+    showToast('جاري التحويل لنموذج التسجيل...','info',2000);
+    setTimeout(function(){ window.location.href = '/courier/register'; }, 400);
+  }
 
-    const btn = findBtn();
-    setLoad(btn, true);
-    showToast('جاري إنشاء الحساب...','info',10000);
+  // --- Proactive: Intercept "إنشاء حساب جديد" tab click to redirect immediately ---
+  function interceptRegisterTab() {
+    if (window.location.pathname !== '/login') return;
+    document.querySelectorAll('button, a, [role="tab"]').forEach(function(el) {
+      var t = (el.textContent || '').trim();
+      if ((t.includes('إنشاء حساب') || t === 'حساب جديد') && !el.dataset.fllRegHooked) {
+        el.dataset.fllRegHooked = '1';
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          window.location.href = '/courier/register';
+        }, true); // capture phase — fires before Skywork handlers
+      }
+    });
+  }
 
-    const email = v.email || `${v.username}@drivers.fll.sa`;
-    const r = await authAPI('/auth/register', { username: v.fullName||v.username, email, password: v.password });
-    setLoad(btn, false);
-
-    if (r.ok) {
-      // Save driver profile
-      try { fetch(`${API}/api/drivers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nationalId:v.username,fullName:v.fullName||'',email,phone:v.phone||'',status:'pending',registeredAt:new Date().toISOString()})}); } catch(e){}
-      showToast('تم إنشاء الحساب! تحقق من بريدك الإلكتروني لتفعيل الحساب','success',6000);
-    } else {
-      showToast(r.data.message||'حدث خطأ أثناء التسجيل','error');
+  // Run tab intercept on load and on DOM mutations
+  function initRegisterIntercept() {
+    interceptRegisterTab();
+    setTimeout(interceptRegisterTab, 500);
+    setTimeout(interceptRegisterTab, 1500);
+    setTimeout(interceptRegisterTab, 3000);
+    if (document.body) {
+      new MutationObserver(function(){ setTimeout(interceptRegisterTab, 100); })
+        .observe(document.body, { childList: true, subtree: true });
     }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRegisterIntercept);
+  else initRegisterIntercept();
 
   // --- Forgot Password ---
   document.addEventListener('click', (e) => {

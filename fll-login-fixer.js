@@ -5,8 +5,8 @@
  * - يضيف أيقونة إظهار كلمة المرور
  */
 (function() {
-  const p = location.pathname;
-  if (p !== '/unified-login' && p !== '/login') return;
+  // The React SPA now handles /unified-login and /login natively — this fixer is no longer needed
+  return;
 
   const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 

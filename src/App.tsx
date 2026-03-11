@@ -131,7 +131,7 @@ export default function App() {
               {/* ===== Auth ===== */}
               <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/unified-login" element={<LoginShell title="تسجيل الدخول الموحّد" />} />
+              <Route path="/unified-login" element={<UnifiedLogin />} />
 
               {/* ===== صفحات الخدمات الفرعية ===== */}
               <Route path="/services/couriers" element={<CouriersService />} />

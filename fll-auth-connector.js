@@ -75,15 +75,12 @@
   }
 
   // ==============================
-  // CORE: Intercept alert() 
+  // CORE: Intercept alert()
+  // React SPA now handles /login and /unified-login natively,
+  // so alert interception is only needed for other pages.
   // ==============================
   const _alert = window.alert;
   window.alert = function(msg) {
-    const p = window.location.pathname;
-    if (p==='/login'||p==='/unified-login') {
-      if (msg==='تم تسجيل الدخول بنجاح!') { doLogin(p); return; }
-      if (msg==='تم إنشاء الحساب بنجاح!') { doRegister(); return; }
-    }
     _alert.call(window, msg);
   };
 
@@ -253,8 +250,7 @@
     };
   }
 
-  // --- Auto-redirect ---
-  (function(){const s=getSession(),p=window.location.pathname;if(s&&(p==='/login'||p==='/unified-login')){const d=getRedirect(s.groups);if(d!=='/')window.location.href=d;}})();
+  // --- Auto-redirect (handled by React component now) ---
 
   // --- Global ---
   window.FLLAuth = { getSession, clearSession, logout:()=>{clearSession();window.location.href='/';}, isLoggedIn:()=>!!getSession(), getUser:()=>getSession(), getToken:()=>localStorage.getItem('fll_token') };

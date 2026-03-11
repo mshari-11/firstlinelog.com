@@ -1,11 +1,394 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>بوابة المناديب - فيرست لاين</title>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بوابة المناديب - فيرست لاين لوجستيكس</title>
+<link rel="icon" href="/public/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--navy:#0f2744;--gold:#f59e0b;--gold-light:#fbbf24;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--purple:#6366f1;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1a3a5c 100%);color:white;padding:20px 24px;position:sticky;top:0;z-index:50}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.header h1{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
+.header-user{display:flex;align-items:center;gap:10px}
+.header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--navy)}
+.header-name{font-size:13px;font-weight:600}
+.header-role{font-size:11px;color:rgba(255,255,255,.5)}
+.logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;padding:6px 14px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer}
+.logout-btn:hover{background:rgba(255,255,255,.2)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex-shrink:0;padding:10px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);border:none;background:none;font-family:inherit;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:rgba(255,255,255,.8)}
+.tab.active{color:white;border-bottom-color:var(--gold)}
+
+/* Container */
+.container{max-width:900px;margin:0 auto;padding:20px}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
+.stat-icon{font-size:24px;margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:800;color:var(--navy)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Card */
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden}
+.card-h{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-h h3{font-size:15px;font-weight:700;color:var(--navy)}
+.card-b{padding:16px 20px}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:8px 10px;text-align:right;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
+.tbl td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+
+/* Badge */
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.badge-green{background:#dcfce7;color:#166534}.badge-red{background:#fee2e2;color:#991b1b}
+.badge-yellow{background:#fef9c3;color:#854d0e}.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-purple{background:#ede9fe;color:#5b21b6}
+
+/* KYC */
+.kyc-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.kyc-item:last-child{border-bottom:none}
+.kyc-label{font-size:13px;font-weight:600;color:var(--navy)}
+.kyc-value{font-size:13px;color:var(--text)}
+
+/* Info Grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item{padding:12px;background:var(--bg);border-radius:8px}
+.info-item label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+.info-item span{font-size:14px;font-weight:600;color:var(--navy)}
+
+/* Form */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px}
+.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:white}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,158,11,.1)}
+.btn{padding:10px 24px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
+
+/* Chart */
+.chart-box{position:relative;height:200px;margin-top:12px}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--navy);color:white;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:#059669}.toast.error{background:#dc2626}
+
+/* Tab content */
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Empty */
+.empty{text-align:center;padding:40px;color:var(--muted)}
+
+/* Responsive */
+@media(max-width:600px){.info-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <h1>🛵 بوابة المناديب</h1>
+    <div class="header-user">
+      <div><div class="header-name" id="d-name">المندوب</div><div class="header-role" id="d-city">—</div></div>
+      <div class="header-avatar" id="d-avatar">م</div>
+      <button class="logout-btn" onclick="logout()">خروج</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview',this)">📊 نظرة عامة</button>
+    <button class="tab" onclick="showTab('earnings',this)">💰 المستحقات</button>
+    <button class="tab" onclick="showTab('deliveries',this)">📦 التوصيلات</button>
+    <button class="tab" onclick="showTab('profile',this)">👤 ملفي</button>
+    <button class="tab" onclick="showTab('support',this)">📋 الدعم</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- OVERVIEW -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-icon">💰</div><div class="stat-value" id="s-net">—</div><div class="stat-label">صافي المستحقات</div></div>
+      <div class="stat"><div class="stat-icon">📦</div><div class="stat-value" id="s-deliveries">—</div><div class="stat-label">التوصيلات</div></div>
+      <div class="stat"><div class="stat-icon">📱</div><div class="stat-value" id="s-platforms">—</div><div class="stat-label">المنصات</div></div>
+      <div class="stat"><div class="stat-icon">📋</div><div class="stat-value" id="s-complaints">—</div><div class="stat-label">شكاوى مفتوحة</div></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>المستحقات حسب المنصة</h3></div><div class="card-b"><div class="chart-box"><canvas id="chart-overview"></canvas></div></div></div>
+    <div class="card"><div class="card-h"><h3>آخر التوصيلات</h3></div><div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>التاريخ</th><th>التوصيلات</th><th>المستحقات</th><th>الحالة</th></tr></thead><tbody id="recent-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- EARNINGS -->
+  <div class="tab-content" id="tab-earnings">
+    <div class="card"><div class="card-h"><h3>سجل المستحقات</h3></div>
+      <div class="card-b">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">⚠️ المستحقات تظهر فقط بعد اعتماد المالية للدفعة</p>
+        <table class="tbl"><thead><tr><th>المنصة</th><th>الفترة</th><th>التوصيلات</th><th>الإجمالي</th><th>الخصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="earnings-tbl"></tbody></table>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-icon">💵</div><div class="stat-value" id="e-gross">—</div><div class="stat-label">إجمالي المستحقات</div></div>
+      <div class="stat"><div class="stat-icon">➖</div><div class="stat-value" id="e-ded">—</div><div class="stat-label">الخصومات</div></div>
+      <div class="stat"><div class="stat-icon">✅</div><div class="stat-value" id="e-net">—</div><div class="stat-label">الصافي</div></div>
+    </div>
+  </div>
+
+  <!-- DELIVERIES -->
+  <div class="tab-content" id="tab-deliveries">
+    <div class="card"><div class="card-h"><h3>سجل التوصيلات التفصيلي</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>التاريخ</th><th>عدد التوصيلات</th><th>الإجمالي</th><th>الخصومات</th><th>الصافي</th><th>نوع التعاقد</th><th>الحالة</th></tr></thead><tbody id="deliveries-tbl"></tbody></table></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>التوصيلات حسب الشهر</h3></div><div class="card-b"><div class="chart-box"><canvas id="chart-deliveries"></canvas></div></div></div>
+  </div>
+
+  <!-- PROFILE / KYC -->
+  <div class="tab-content" id="tab-profile">
+    <div class="card"><div class="card-h"><h3>بياناتي</h3></div>
+      <div class="card-b"><div class="info-grid" id="profile-info"></div></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>حالة المستندات (KYC)</h3></div>
+      <div class="card-b" id="kyc-status"></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>بيانات STC Bank</h3></div>
+      <div class="card-b" id="stc-info"></div>
+    </div>
+  </div>
+
+  <!-- SUPPORT -->
+  <div class="tab-content" id="tab-support">
+    <div class="card"><div class="card-h"><h3>رفع شكوى جديدة</h3></div>
+      <div class="card-b">
+        <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" id="sup-title" placeholder="عنوان الشكوى"></div>
+        <div class="form-group"><label class="form-label">النوع</label>
+          <select class="form-select" id="sup-type"><option value="salary">مستحقات</option><option value="operations">عمليات / تشغيل</option><option value="fleet">مركبات</option><option value="hr">موارد بشرية</option><option value="technical">تقنية</option><option value="other">أخرى</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="sup-details" rows="3" placeholder="اشرح المشكلة بالتفصيل..."></textarea></div>
+        <button class="btn btn-gold" onclick="submitComplaint()">📤 إرسال الشكوى</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-h"><h3>شكاواي السابقة</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>العنوان</th><th>النوع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="complaints-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+</div>
+
 <script>
-const user = JSON.parse(localStorage.getItem('fll_user') || 'null');
-if (!user) { window.location.href = '/login'; }
-else {
-  window.location.href = '/admin-dashboard.html#courier';
+// ==============================
+// Config
+// ==============================
+const SUPABASE_URL='https://djebhztfewjfyyoortvv.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// Auth
+const user=JSON.parse(localStorage.getItem('fll_user')||'null');
+const token=localStorage.getItem('fll_token');
+if(!user||!token){window.location.href='/unified-login'}
+
+document.getElementById('d-name').textContent=user?.name||user?.username||user?.email||'المندوب';
+document.getElementById('d-avatar').textContent=(user?.name||user?.email||'م')[0].toUpperCase();
+
+function logout(){localStorage.removeItem('fll_token');localStorage.removeItem('fll_user');window.location.href='/'}
+function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
+function showTab(n,btn){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');if(btn)btn.classList.add('active')}
+function fmt(v){return parseFloat(v||0).toFixed(2)+' ر.س'}
+
+let _ch={}, _courier=null, _orders=[], _complaints=[];
+
+// ==============================
+// Load Data
+// ==============================
+async function loadData(){
+  try{
+    // Find courier by user email or phone
+    const identifier=user?.email||user?.username||'';
+    let courier=null;
+
+    // Try finding by national_id (if username is national ID)
+    const{data:c1}=await sb.from('couriers').select('*').eq('national_id',identifier).limit(1);
+    if(c1&&c1.length)courier=c1[0];
+
+    // Try by phone
+    if(!courier){const{data:c2}=await sb.from('couriers').select('*').eq('phone',identifier).limit(1);if(c2&&c2.length)courier=c2[0]}
+
+    // Fallback: get first active courier for demo
+    if(!courier){const{data:c3}=await sb.from('couriers').select('*').eq('status','active').limit(1);if(c3&&c3.length)courier=c3[0]}
+
+    if(!courier){document.querySelector('.container').innerHTML='<div class="empty"><h3>لم يتم العثور على بياناتك</h3><p>تواصل مع الإدارة لربط حسابك</p></div>';return}
+
+    _courier=courier;
+    document.getElementById('d-name').textContent=courier.full_name_ar||courier.full_name||'المندوب';
+    document.getElementById('d-city').textContent=courier.city||'—';
+    document.getElementById('d-avatar').textContent=(courier.full_name_ar||'م')[0];
+
+    // Get orders for this courier
+    const{data:orders}=await sb.from('orders').select('*').eq('courier_id',courier.id);
+    _orders=orders||[];
+
+    // Get complaints
+    const{data:complaints}=await sb.from('complaints').select('*').or(`submitted_by.eq.${courier.full_name_ar},submitted_by.eq.${courier.national_id}`);
+    _complaints=complaints||[];
+
+    renderOverview();
+    renderEarnings();
+    renderDeliveries();
+    renderProfile();
+    renderComplaints();
+  }catch(e){console.error('Load error:',e)}
 }
+
+// ==============================
+// Render: Overview
+// ==============================
+function renderOverview(){
+  const net=_orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
+  const del=_orders.reduce((s,o)=>s+(o.orders_count||0),0);
+  const plats=[...new Set(_orders.map(o=>o.platform).filter(Boolean))];
+  const openC=_complaints.filter(c=>c.status==='open'||!c.status);
+
+  document.getElementById('s-net').textContent=net.toFixed(0)+' ر.س';
+  document.getElementById('s-deliveries').textContent=del;
+  document.getElementById('s-platforms').textContent=plats.length;
+  document.getElementById('s-complaints').textContent=openC.length;
+
+  // Recent table
+  document.getElementById('recent-tbl').innerHTML=_orders.slice(0,5).map(o=>`<tr>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
+    <td><strong>${fmt(o.net_earnings)}</strong></td>
+    <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد سجلات</td></tr>';
+
+  // Chart
+  const byP={};_orders.forEach(o=>{const p=o.platform||'?';byP[p]=(byP[p]||0)+parseFloat(o.net_earnings||0)});
+  if(_ch.ov)_ch.ov.destroy();
+  const ctx=document.getElementById('chart-overview');
+  if(ctx&&Object.keys(byP).length){
+    const pC={'HungerStation':'#f59e0b','Keeta':'#6366f1','Ninja':'#f97316','Mrsool':'#0ea5e9','ToYou':'#10b981','Careem':'#ef4444'};
+    _ch.ov=new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12}}}}}})
+  }
+}
+
+// ==============================
+// Render: Earnings
+// ==============================
+function renderEarnings(){
+  let gross=0,ded=0,net=0;
+  _orders.forEach(o=>{gross+=parseFloat(o.gross_earnings||0);ded+=parseFloat(o.deductions||0);net+=parseFloat(o.net_earnings||0)});
+  document.getElementById('e-gross').textContent=fmt(gross);
+  document.getElementById('e-ded').textContent=fmt(ded);
+  document.getElementById('e-net').textContent=fmt(net);
+
+  document.getElementById('earnings-tbl').innerHTML=_orders.map(o=>`<tr>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
+    <td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
+    <td><strong>${fmt(o.net_earnings)}</strong></td>
+    <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد مستحقات — ستظهر بعد اعتماد المالية</td></tr>';
+}
+
+// ==============================
+// Render: Deliveries
+// ==============================
+function renderDeliveries(){
+  document.getElementById('deliveries-tbl').innerHTML=_orders.map(o=>`<tr>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
+    <td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
+    <td><strong>${fmt(o.net_earnings)}</strong></td>
+    <td>${_courier?.contract_type||'—'}</td>
+    <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty">لا توجد توصيلات</td></tr>';
+
+  // Chart
+  if(_ch.del)_ch.del.destroy();
+  const ctx=document.getElementById('chart-deliveries');
+  if(ctx&&_orders.length){
+    const byDate={};_orders.forEach(o=>{const d=o.order_date||'غير محدد';byDate[d]=(byDate[d]||0)+(o.orders_count||0)});
+    const dates=Object.keys(byDate).sort();
+    _ch.del=new Chart(ctx,{type:'bar',data:{labels:dates,datasets:[{label:'التوصيلات',data:dates.map(d=>byDate[d]),backgroundColor:'#0f2744',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Tajawal'}}}}}})
+  }
+}
+
+// ==============================
+// Render: Profile / KYC
+// ==============================
+function renderProfile(){
+  const c=_courier;if(!c)return;
+  document.getElementById('profile-info').innerHTML=`
+    <div class="info-item"><label>الاسم بالعربي</label><span>${c.full_name_ar||'—'}</span></div>
+    <div class="info-item"><label>الاسم بالإنجليزي</label><span>${c.full_name||'—'}</span></div>
+    <div class="info-item"><label>رقم الهوية</label><span>${c.national_id||'—'}</span></div>
+    <div class="info-item"><label>رقم الجوال</label><span>${c.phone||'—'}</span></div>
+    <div class="info-item"><label>المدينة</label><span>${c.city||'—'}</span></div>
+    <div class="info-item"><label>نوع التعاقد</label><span>${c.contract_type||'—'}</span></div>
+    <div class="info-item"><label>البنك</label><span>${c.bank_name||'—'}</span></div>
+    <div class="info-item"><label>تاريخ الالتحاق</label><span>${c.join_date||c.created_at?new Date(c.created_at).toLocaleDateString('ar-SA'):'—'}</span></div>
+    <div class="info-item"><label>الحالة</label><span>${c.status==='active'?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">غير نشط</span>'}</span></div>`;
+
+  // KYC
+  document.getElementById('kyc-status').innerHTML=`
+    <div class="kyc-item"><span class="kyc-label">📄 صورة الهوية</span><span>${c.national_id?'<span class="badge badge-green">مرفق</span>':'<span class="badge badge-red">مطلوب</span>'}</span></div>
+    <div class="kyc-item"><span class="kyc-label">🤳 صورة شخصية (Selfie)</span><span><span class="badge badge-yellow">قيد المراجعة</span></span></div>
+    <div class="kyc-item"><span class="kyc-label">🚗 رخصة القيادة</span><span><span class="badge badge-yellow">اختياري</span></span></div>`;
+
+  // STC Bank
+  document.getElementById('stc-info').innerHTML=`
+    <div class="kyc-item"><span class="kyc-label">رقم STC Bank</span><span style="direction:ltr;font-weight:700">${c.stc_bank_phone_int||'غير مسجل'}</span></div>
+    <div class="kyc-item"><span class="kyc-label">الآيبان</span><span style="direction:ltr;font-size:12px">${c.iban||'غير مسجل'}</span></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ لتحديث بيانات البنك تواصل مع إدارة المالية</p>`;
+}
+
+// ==============================
+// Render: Complaints
+// ==============================
+function renderComplaints(){
+  const statusL={open:'مفتوحة',in_progress:'قيد المعالجة',resolved:'محلولة',closed:'مغلقة'};
+  const statusB={open:'badge-red',in_progress:'badge-yellow',resolved:'badge-green',closed:'badge-blue'};
+  const typeL={salary:'مستحقات',operations:'عمليات',fleet:'مركبات',hr:'موارد بشرية',technical:'تقنية',other:'أخرى'};
+
+  document.getElementById('complaints-tbl').innerHTML=_complaints.map((c,i)=>`<tr>
+    <td>#${c.id||i+1}</td>
+    <td><strong>${c.title||c.subject||'—'}</strong></td>
+    <td><span class="badge badge-purple">${typeL[c.type]||c.type||'—'}</span></td>
+    <td><span class="badge ${statusB[c.status]||'badge-yellow'}">${statusL[c.status]||c.status||'مفتوحة'}</span></td>
+    <td>${c.created_at?new Date(c.created_at).toLocaleDateString('ar-SA'):'—'}</td>
+  </tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد شكاوى سابقة</td></tr>';
+}
+
+// ==============================
+// Submit Complaint
+// ==============================
+async function submitComplaint(){
+  const title=document.getElementById('sup-title').value;
+  const type=document.getElementById('sup-type').value;
+  const details=document.getElementById('sup-details').value;
+  if(!title)return toast('العنوان مطلوب','error');
+  const rec={title,type,description:details,submitted_by:_courier?.full_name_ar||_courier?.national_id||'مندوب',status:'open'};
+  const{error}=await sb.from('complaints').insert(rec);
+  if(error)return toast('خطأ: '+error.message,'error');
+  toast('تم إرسال الشكوى ✅ — سيتم الرد خلال 24 ساعة');
+  document.getElementById('sup-title').value='';document.getElementById('sup-details').value='';
+  loadData();
+}
+
+// Init
+loadData();
 </script>
-</head><body><p style="text-align:center;padding:60px;font-family:Tajawal,sans-serif">جاري التحويل...</p></body></html>
+</body>
+</html>

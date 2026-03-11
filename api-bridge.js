@@ -75,24 +75,18 @@ const FLLAuth = {
 // ========================
 async function fllAPI(endpoint, options = {}) {
   const token = FLLAuth.getToken();
-  const { headers: optHeaders, aiApi, ...restOptions } = options;
   const config = {
-    ...restOptions,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...optHeaders
-    }
+      ...options.headers
+    },
+    ...options
   };
-  const base = aiApi ? FLL_CONFIG.AI_API_BASE : FLL_CONFIG.API_BASE;
-  try {
-    const res = await fetch(`${base}${endpoint}`, config);
-    if (res.status === 401) { FLLAuth.logout(); return null; }
-    return await res.json();
-  } catch (err) {
-    console.error('FLL API Error:', endpoint, err.message);
-    return { error: true, message: 'خطأ في الاتصال بالخادم' };
-  }
+  const base = options.aiApi ? FLL_CONFIG.AI_API_BASE : FLL_CONFIG.API_BASE;
+  const res = await fetch(`${base}${endpoint}`, config);
+  if (res.status === 401) { FLLAuth.logout(); return null; }
+  return res.json();
 }
 
 // ========================

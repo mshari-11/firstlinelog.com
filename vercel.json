@@ -6,14 +6,18 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
-          { "source": "/admin-panel/(.*)", "destination": "/dist/index.html" },
-          { "source": "/admin-panel", "destination": "/dist/index.html" },
-          { "source": "/admin/login", "destination": "/dist/index.html" },
-          { "source": "/login", "destination": "/dist/index.html" },
-          { "source": "/unified-login", "destination": "/dist/index.html" },
-          { "source": "/courier/register", "destination": "/dist/index.html" },
-          { "source": "/courier/(.*)", "destination": "/dist/index.html" },
-          { "source": "/application-status", "destination": "/dist/index.html" },
+          { "source": "/admin-panel/(.*)", "destination": "/dist/spa.html" },
+          { "source": "/admin-panel", "destination": "/dist/spa.html" },
+          { "source": "/admin/login", "destination": "/dist/spa.html" },
+          { "source": "/login", "destination": "/dist/spa.html" },
+          { "source": "/unified-login", "destination": "/dist/spa.html" },
+          { "source": "/courier/register", "destination": "/dist/spa.html" },
+          { "source": "/courier/(.*)", "destination": "/dist/spa.html" },
+          { "source": "/application-status", "destination": "/dist/spa.html" },
+          { "source": "/services/(.*)", "destination": "/dist/spa.html" },
+          { "source": "/register", "destination": "/dist/spa.html" },
+          { "source": "/admin/(.*)", "destination": "/dist/spa.html" },
+          { "source": "/driver/(.*)", "destination": "/dist/spa.html" },
           { "source": "/about", "destination": "/" },
           { "source": "/contact", "destination": "/" },
           { "source": "/services", "destination": "/" },
@@ -24,41 +28,10 @@
           { "source": "/compliance", "destination": "/" },
           { "source": "/operational-model", "destination": "/" },
           { "source": "/employee-services", "destination": "/" },
-          { "source": "/github-management", "destination": "/" },
-          { "source": "/ops/dispatch", "destination": "/dispatch-map.html" }
+          { "source": "/github-management", "destination": "/" }
     ],
     "headers": [
-          {
-            "source": "/(.*).html",
-            "headers": [
-              { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-              { "key": "X-Frame-Options", "value": "DENY" },
-              { "key": "X-Content-Type-Options", "value": "nosniff" },
-              { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-              { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" }
-            ]
-          },
-          {
-            "source": "/",
-            "headers": [
-              { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-              { "key": "X-Frame-Options", "value": "DENY" },
-              { "key": "X-Content-Type-Options", "value": "nosniff" },
-              { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-              { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" }
-            ]
-          },
-          {
-            "source": "/assets/(.*)",
-            "headers": [
-              { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-            ]
-          },
-          {
-            "source": "/public/(.*)",
-            "headers": [
-              { "key": "Cache-Control", "value": "public, max-age=86400" }
-            ]
-          }
+          { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+          { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
     ]
 }

@@ -2,228 +2,105 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>بوابة الموظفين - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link rel="stylesheet" href="/fll-design-system.css">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/lucide@0.468.0"></script>
-<script src="/fll-shared.js"></script>
 <style>
-/* Page-specific styles only — base comes from fll-design-system.css */
-.tc { display: none; }
-.tc.active { display: block; }
-
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.info-item {
-  padding: 14px 16px;
-  background: rgba(255,255,255,0.02);
-  border-radius: var(--fll-radius-sm);
-  border: 1px solid var(--fll-border);
-  transition: border-color var(--fll-duration) var(--fll-ease);
-}
-
-.info-item:hover {
-  border-color: var(--fll-border-focus);
-}
-
-.info-item label {
-  font-size: 11px;
-  color: var(--fll-text-secondary);
-  display: block;
-  margin-bottom: 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.info-item span {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-}
-
-.form-group { margin-bottom: 14px; }
-.form-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--fll-accent);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.form-input, .form-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--fll-border);
-  border-radius: var(--fll-radius-sm);
-  font-family: inherit;
-  font-size: 13px;
-  background: var(--fll-surface);
-  color: var(--fll-text);
-  transition: border-color var(--fll-duration), box-shadow var(--fll-duration);
-}
-
-.form-input:focus, .form-select:focus {
-  outline: none;
-  border-color: var(--fll-accent);
-  box-shadow: 0 0 0 3px var(--fll-accent-glow);
-}
-
-.notif-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  align-items: flex-start;
-}
-
-.notif-item:last-child { border-bottom: none; }
-
-.notif-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--fll-accent);
-  flex-shrink: 0;
-  margin-top: 6px;
-  box-shadow: 0 0 8px rgba(56,189,248,0.4);
-}
-
-.notif-dot.read {
-  background: var(--fll-text-tertiary);
-  box-shadow: none;
-}
-
-/* Stat icon containers */
-.stat-icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.stat-icon-wrap.blue { background: rgba(56,189,248,0.1); color: var(--fll-accent); }
-.stat-icon-wrap.gold { background: rgba(229,162,10,0.1); color: var(--fll-gold); }
-.stat-icon-wrap.green { background: rgba(16,185,129,0.1); color: var(--fll-success); }
-.stat-icon-wrap.purple { background: rgba(99,102,241,0.1); color: var(--fll-info); }
-
-.urgent-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  font-size: 13px;
-}
-
-.urgent-item:last-child { border-bottom: none; }
-
-@media (max-width: 600px) {
-  .info-grid { grid-template-columns: 1fr; }
-}
+:root{--navy:#0a1628;--navy-light:#152238;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(56,189,248,0.06) 0%,transparent 50%);pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:#1c2d47;border-radius:3px}
+.header{background:rgba(10,22,40,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);color:white;padding:16px 24px;position:sticky;top:0;z-index:50}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.header h1{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.header-actions span{font-size:12px;color:rgba(255,255,255,.6)}
+.header-actions button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:6px 14px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer}
+.tabs{display:flex;gap:0;overflow-x:auto}
+.tab{flex-shrink:0;padding:10px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);border:none;background:none;font-family:inherit;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
+.tab:hover{color:rgba(255,255,255,.8)}.tab.active{color:white;border-bottom-color:var(--blue)}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
+.stat-icon{font-size:24px;margin-bottom:4px}.stat-value{font-size:22px;font-weight:700;color:white}.stat-label{font-size:11px;color:var(--muted)}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);backdrop-filter:blur(10px);margin-bottom:16px;overflow:hidden}
+.card-h{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-h h3{font-size:15px;font-weight:700;color:var(--navy)}.card-b{padding:16px 20px}
+.tbl{width:100%;border-collapse:collapse}.tbl th{padding:8px 10px;text-align:right;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
+.tbl td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.badge-green{background:rgba(34,197,94,0.15);color:#86efac}.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}.badge-purple{background:rgba(167,139,250,0.15);color:#c4b5fd}
+.tc{display:none}.tc.active{display:block}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info-item{padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--border)}.info-item label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px}.info-item span{font-size:14px;font-weight:600;color:white}
+.form-group{margin-bottom:14px}.form-label{display:block;font-size:11px;font-weight:600;color:var(--navy);margin-bottom:5px}
+.form-input,.form-select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px}
+.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,var(--blue-deep),#7c3aed);color:white;box-shadow:0 4px 15px rgba(2,132,199,0.3)}.btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--navy);color:white;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:#059669}.toast.error{background:#dc2626}
+.notif-item{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);align-items:flex-start}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px}.notif-dot.read{background:var(--border)}
+.nav-link{color:rgba(255,255,255,.7);text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px}.nav-link:hover{background:rgba(255,255,255,.1);color:white}
+@media(max-width:600px){.info-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-
-<!-- TOP BAR -->
-<div class="top-bar">
-  <h1><i data-lucide="user-circle" style="width:20px;height:20px;color:var(--fll-accent)"></i> بوابة الموظفين</h1>
-  <div class="top-bar-nav">
-    <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:14px;height:14px"></i> الإدارة</a>
-    <a href="/staff-finance.html"><i data-lucide="wallet" style="width:14px;height:14px"></i> المالية</a>
-    <a href="/staff-hr.html"><i data-lucide="users" style="width:14px;height:14px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html"><i data-lucide="radar" style="width:14px;height:14px"></i> العمليات</a>
-    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:14px;height:14px"></i> المركبات</a>
-    <a href="/staff-dashboard.html" class="active"><i data-lucide="layout-dashboard" style="width:14px;height:14px"></i> بوابتي</a>
-  </div>
-  <div class="top-bar-actions">
-    <span id="u-name" style="font-size:13px"></span>
-    <button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button>
-  </div>
+<div class="toast" id="toast"></div>
+<div class="header">
+<div class="header-top">
+  <h1>👤 بوابة الموظفين</h1>
+  <div style="display:flex;gap:6px"><a class="nav-link" href="/admin-dashboard"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a><a class="nav-link" href="/staff-finance"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a><a class="nav-link" href="/staff-hr">👥 HR</a><a class="nav-link" href="/staff-ops"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a><a class="nav-link" href="/staff-fleet"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a></div>
+  <div class="header-actions"><span id="u-name"></span><button onclick="logout()">خروج</button></div>
 </div>
-
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">📊 نظرة عامة</button>
+  <button class="tab" onclick="showTab('tasks',this)">📋 مهامي</button>
+  <button class="tab" onclick="showTab('requests',this)">📝 طلباتي</button>
+  <button class="tab" onclick="showTab('notifications',this)">🔔 الإشعارات</button>
+  <button class="tab" onclick="showTab('profile',this)">👤 ملفي</button>
+</div>
+</div>
 <div class="container">
-  <!-- PAGE HEADER -->
-  <div class="page-header">
-    <div>
-      <div class="page-title"><i data-lucide="layout-dashboard" style="width:24px;height:24px;color:var(--fll-accent)"></i> لوحة الموظف</div>
-      <div class="page-sub" id="current-date"></div>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('overview',this)"><i data-lucide="bar-chart-3" style="width:14px;height:14px"></i> نظرة عامة</button>
-    <button class="tab" onclick="showTab('tasks',this)"><i data-lucide="list-checks" style="width:14px;height:14px"></i> مهامي</button>
-    <button class="tab" onclick="showTab('requests',this)"><i data-lucide="file-text" style="width:14px;height:14px"></i> طلباتي</button>
-    <button class="tab" onclick="showTab('notifications',this)"><i data-lucide="bell" style="width:14px;height:14px"></i> الإشعارات</button>
-    <button class="tab" onclick="showTab('profile',this)"><i data-lucide="user" style="width:14px;height:14px"></i> ملفي</button>
-  </div>
 
 <!-- OVERVIEW -->
 <div class="tc active" id="tab-overview">
 <div class="stats-row">
-  <div class="stat">
-    <div class="stat-icon-wrap blue"><i data-lucide="list-checks" style="width:20px;height:20px"></i></div>
-    <div class="stat-label">مهامي المعلقة</div>
-    <div class="stat-value" id="s-tasks">—</div>
-  </div>
-  <div class="stat green">
-    <div class="stat-icon-wrap gold"><i data-lucide="bell" style="width:20px;height:20px"></i></div>
-    <div class="stat-label">إشعارات جديدة</div>
-    <div class="stat-value" id="s-notif">—</div>
-  </div>
-  <div class="stat gold">
-    <div class="stat-icon-wrap green"><i data-lucide="file-text" style="width:20px;height:20px"></i></div>
-    <div class="stat-label">طلباتي</div>
-    <div class="stat-value" id="s-req">—</div>
-  </div>
-  <div class="stat purple">
-    <div class="stat-icon-wrap purple"><i data-lucide="building-2" style="width:20px;height:20px"></i></div>
-    <div class="stat-label">القسم</div>
-    <div class="stat-value" id="s-dept">—</div>
-  </div>
+  <div class="stat"><div class="stat-icon">📋</div><div class="stat-value" id="s-tasks">—</div><div class="stat-label">مهامي المعلقة</div></div>
+  <div class="stat"><div class="stat-icon">🔔</div><div class="stat-value" id="s-notif">—</div><div class="stat-label">إشعارات جديدة</div></div>
+  <div class="stat"><div class="stat-icon">📝</div><div class="stat-value" id="s-req">—</div><div class="stat-label">طلباتي</div></div>
+  <div class="stat"><div class="stat-icon">🏢</div><div class="stat-value" id="s-dept">—</div><div class="stat-label">القسم</div></div>
 </div>
-<div class="card"><div class="card-h"><h3><i data-lucide="alert-circle" style="width:16px;height:16px;color:var(--fll-gold)"></i> مهام عاجلة</h3></div><div class="card-b" id="urgent-tasks"></div></div>
-<div class="card"><div class="card-h"><h3><i data-lucide="bell" style="width:16px;height:16px;color:var(--fll-accent)"></i> آخر الإشعارات</h3></div><div class="card-b" id="recent-notif"></div></div>
+<div class="card"><div class="card-h"><h3>مهام عاجلة</h3></div><div class="card-b" id="urgent-tasks"></div></div>
+<div class="card"><div class="card-h"><h3>آخر الإشعارات</h3></div><div class="card-b" id="recent-notif"></div></div>
 </div>
 
 <!-- TASKS -->
 <div class="tc" id="tab-tasks">
-<div class="card"><div class="card-h"><h3><i data-lucide="list-checks" style="width:16px;height:16px;color:var(--fll-accent)"></i> مهامي</h3></div>
+<div class="card"><div class="card-h"><h3>مهامي — AWS DynamoDB</h3></div>
 <div class="card-b"><table class="tbl"><thead><tr><th>المهمة</th><th>المسند من</th><th>القسم</th><th>الأولوية</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-tasks"></tbody></table></div></div>
 </div>
 
 <!-- REQUESTS -->
 <div class="tc" id="tab-requests">
-<div class="card"><div class="card-h"><h3><i data-lucide="file-plus" style="width:16px;height:16px;color:var(--fll-success)"></i> طلب جديد</h3></div><div class="card-b">
+<div class="card"><div class="card-h"><h3>طلب جديد</h3></div><div class="card-b">
   <div class="form-group"><label class="form-label">نوع الطلب</label><select class="form-select" id="rq-type"><option value="leave">إجازة</option><option value="advance">سلفة</option><option value="transfer">نقل قسم</option><option value="equipment">معدات</option><option value="other">أخرى</option></select></div>
   <div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="rq-desc" rows="3" placeholder="اشرح طلبك..."></textarea></div>
-  <button class="btn btn-primary" onclick="submitRequest()"><i data-lucide="send" style="width:14px;height:14px"></i> إرسال الطلب</button>
+  <button class="btn btn-primary" onclick="submitRequest()">📤 إرسال الطلب</button>
 </div></div>
-<div class="card"><div class="card-h"><h3><i data-lucide="history" style="width:16px;height:16px;color:var(--fll-info)"></i> طلباتي السابقة</h3></div><div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>النوع</th><th>التفاصيل</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-requests"></tbody></table></div></div>
+<div class="card"><div class="card-h"><h3>طلباتي السابقة</h3></div><div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>النوع</th><th>التفاصيل</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-requests"></tbody></table></div></div>
 </div>
 
 <!-- NOTIFICATIONS -->
 <div class="tc" id="tab-notifications">
-<div class="card"><div class="card-h"><h3><i data-lucide="bell-ring" style="width:16px;height:16px;color:var(--fll-gold)"></i> الإشعارات</h3></div><div class="card-b" id="notif-list"></div></div>
+<div class="card"><div class="card-h"><h3>الإشعارات — AWS DynamoDB</h3></div><div class="card-b" id="notif-list"></div></div>
 </div>
 
 <!-- PROFILE -->
 <div class="tc" id="tab-profile">
-<div class="card"><div class="card-h"><h3><i data-lucide="user-cog" style="width:16px;height:16px;color:var(--fll-info)"></i> بياناتي</h3></div><div class="card-b"><div class="info-grid" id="profile-info"></div></div></div>
+<div class="card"><div class="card-h"><h3>بياناتي</h3></div><div class="card-b"><div class="info-grid" id="profile-info"></div></div></div>
 </div>
 
 </div>
@@ -235,15 +112,12 @@ const sb=supabase.createClient(SB_URL,SB_KEY);
 const user=JSON.parse(localStorage.getItem('fll_user')||'null');
 if(!user)window.location.href='/unified-login';
 document.getElementById('u-name').textContent=user?.name||user?.email||'';
-// Set date
-document.getElementById('current-date').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-
+function logout(){localStorage.clear();location.href='/'}
+function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
 function showTab(n,btn){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');if(btn)btn.classList.add('active')}
-
-const _tk=localStorage.getItem('fll_token')||'';
-function awsH(){const h={'Content-Type':'application/json'};if(_tk)h['Authorization']='Bearer '+_tk;return h}
-async function awsGet(p){try{const r=await fetch(AWS+p,{headers:awsH()});if(r.status===401){location.href='/unified-login';return{items:[]}}return await r.json()}catch(e){return{items:[]}}}
-async function awsPost(p,b){try{const r=await fetch(AWS+p,{method:'POST',headers:awsH(),body:JSON.stringify(b)});if(r.status===401){location.href='/unified-login';return{error:'unauthorized'}}return await r.json()}catch(e){return{error:e.message}}}
+function badge(t,c){return`<span class="badge badge-${c}">${t}</span>`}
+async function awsGet(p){try{const r=await fetch(AWS+p);return await r.json()}catch(e){return{items:[]}}}
+async function awsPost(p,b){try{const r=await fetch(AWS+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return await r.json()}catch(e){return{error:e.message}}}
 
 let D={staff:null,tasks:[],notifications:[],approvals:[]};
 async function loadAll(){
@@ -266,50 +140,49 @@ function render(){
   document.getElementById('s-dept').textContent=D.staff?.department||D.staff?.role||'—';
 
   // Urgent tasks
-  document.getElementById('urgent-tasks').innerHTML=pending.slice(0,3).map(t=>`<div class="urgent-item"><i data-lucide="circle-dot" style="width:14px;height:14px;color:var(--fll-gold);flex-shrink:0"></i><div><strong>${esc(t.title)||'—'}</strong> <span style="color:var(--fll-text-secondary);font-size:11px">من: ${esc(t.assigned_by)||'—'}</span></div></div>`).join('')||'<p style="color:var(--fll-text-secondary);text-align:center;padding:16px">لا توجد مهام عاجلة</p>';
+  document.getElementById('urgent-tasks').innerHTML=pending.slice(0,3).map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${t.title||'—'}</strong> <span style="color:var(--muted);font-size:11px">من: ${t.assigned_by||'—'}</span></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد مهام عاجلة</p>';
 
   // Recent notifs
-  document.getElementById('recent-notif').innerHTML=D.notifications.slice(0,4).map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${esc(n.title)||'إشعار'}</div><div style="font-size:11px;color:var(--fll-text-secondary)">${esc(n.message)||''}</div></div></div>`).join('')||'<p style="color:var(--fll-text-secondary);text-align:center;padding:16px">لا توجد إشعارات</p>';
+  document.getElementById('recent-notif').innerHTML=D.notifications.slice(0,4).map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div><div style="font-size:11px;color:var(--muted)">${n.message||''}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد إشعارات</p>';
 
   // Tasks table
   const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
   const stL={pending:'معلق',in_progress:'قيد التنفيذ',completed:'مكتمل'};
   const stC={pending:'yellow',in_progress:'blue',completed:'green'};
-  document.getElementById('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr><td><strong>${esc(t.title)||'—'}</strong></td><td>${esc(t.assigned_by)||'—'}</td><td>${esc(t.department)||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td><td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td><td>${t.createdAt?new Date(t.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--fll-text-secondary)">لا توجد مهام</td></tr>';
+  document.getElementById('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr><td><strong>${t.title||'—'}</strong></td><td>${t.assigned_by||'—'}</td><td>${t.department||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td><td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td><td>${t.createdAt?new Date(t.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد مهام</td></tr>';
 
   // Requests/approvals
   const typeL={leave:'إجازة',advance:'سلفة',transfer:'نقل',equipment:'معدات',payout:'دفعة',other:'أخرى'};
-  document.getElementById('tbl-requests').innerHTML=D.approvals.map((a,i)=>`<tr><td>#${i+1}</td><td>${badge(typeL[a.type]||a.type||'—','purple')}</td><td>${esc(a.description)||'—'}</td><td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td><td>${a.createdAt?new Date(a.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--fll-text-secondary)">لا توجد طلبات</td></tr>';
+  document.getElementById('tbl-requests').innerHTML=D.approvals.map((a,i)=>`<tr><td>#${i+1}</td><td>${badge(typeL[a.type]||a.type||'—','purple')}</td><td>${a.description||'—'}</td><td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td><td>${a.createdAt?new Date(a.createdAt).toLocaleDateString('ar-SA'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
 
   // Notifications
-  document.getElementById('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${esc(n.title)||'إشعار'}</div><div style="font-size:12px;color:var(--fll-text-secondary)">${esc(n.message)||''}</div><div style="font-size:11px;color:var(--fll-text-tertiary)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div></div>`).join('')||'<p style="color:var(--fll-text-secondary);text-align:center;padding:20px">لا توجد إشعارات</p>';
+  document.getElementById('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item"><div class="notif-dot"></div><div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div><div style="font-size:12px;color:var(--muted)">${n.message||''}</div><div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div></div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات</p>';
 
   // Profile
   const s=D.staff||{};
   document.getElementById('profile-info').innerHTML=`
-    <div class="info-item"><label>الاسم</label><span>${esc(s.full_name||s.name||user?.name)||'—'}</span></div>
-    <div class="info-item"><label>البريد</label><span>${esc(s.email||user?.email)||'—'}</span></div>
-    <div class="info-item"><label>القسم</label><span>${esc(s.department)||'—'}</span></div>
-    <div class="info-item"><label>المسمى</label><span>${esc(s.position_title)||'—'}</span></div>
-    <div class="info-item"><label>الدور</label><span>${esc(s.role)||'—'}</span></div>
-    <div class="info-item"><label>الجوال</label><span>${esc(s.phone)||'—'}</span></div>
-    <div class="info-item"><label>الحالة</label><span>${s.is_active!==false?badge('نشط','green'):badge('معطل','red')}</span></div>
+    <div class="info-item"><label>الاسم</label><span>${s.full_name||s.name||user?.name||'—'}</span></div>
+    <div class="info-item"><label>البريد</label><span>${s.email||user?.email||'—'}</span></div>
+    <div class="info-item"><label>القسم</label><span>${s.department||'—'}</span></div>
+    <div class="info-item"><label>المسمى</label><span>${s.position_title||'—'}</span></div>
+    <div class="info-item"><label>الدور</label><span>${s.role||'—'}</span></div>
+    <div class="info-item"><label>الجوال</label><span>${s.phone||'—'}</span></div>
+    <div class="info-item"><label>الحالة</label><span>${s.is_active!==false?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">معطل</span>'}</span></div>
     <div class="info-item"><label>تاريخ الانضمام</label><span>${s.created_at?new Date(s.created_at).toLocaleDateString('ar-SA'):'—'}</span></div>`;
-
-  // Re-init Lucide icons for dynamic content
-  try{lucide.createIcons()}catch(e){}
 }
 
 async function submitRequest(){
   const type=document.getElementById('rq-type').value;
   const desc=document.getElementById('rq-desc').value;
-  if(!desc)return showToast('التفاصيل مطلوبة','error');
+  if(!desc)return toast('التفاصيل مطلوبة','error');
   const body={entityId:'request',approvalId:'REQ-'+Date.now(),type,requested_by:user?.email||'staff',status:'pending',description:desc,step_ts:new Date().toISOString(),created_at:new Date().toISOString()};
+  // Save to Supabase approvals too for redundancy
   const r=await awsPost('/api/approvals',body);
   if(r.error&&!r.id){
+    // Fallback to Supabase
     await sb.from('audit_log').insert({action:'request',performed_by:user?.email,details:'طلب: '+type+' — '+desc});
   }
-  showToast('تم إرسال الطلب بنجاح','success');document.getElementById('rq-desc').value='';loadAll();
+  toast('✅ تم إرسال الطلب');document.getElementById('rq-desc').value='';loadAll();
 }
 
 loadAll();

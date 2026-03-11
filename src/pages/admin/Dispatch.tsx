@@ -15,7 +15,6 @@ import {
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
   Navigation, Phone, Star, Layers, Filter, Zap,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +48,7 @@ interface Order {
 }
 
 // ─── API base ─────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
 
 // ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [
@@ -131,7 +130,8 @@ export default function Dispatch() {
   const mapRef = useRef<MapRef>(null);
   const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
-  const [dataSource, setDataSource] = useState<"loading" | "live" | "mock">("loading");
+  const [loadingData, setLoadingData] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
@@ -139,44 +139,11 @@ export default function Dispatch() {
   const [showDrivers, setShowDrivers] = useState(true);
   const [showOrders, setShowOrders] = useState(true);
 
-  // ── Fetch data: Supabase → API fallback → mock ──
+  // ── Fetch real data from API, fall back to mock ──────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
-      // 1) Try Supabase first (direct DB)
-      if (supabase) {
-        try {
-          const { data: couriers } = await supabase
-            .from("couriers")
-            .select("id, full_name, full_name_ar, phone, city, platform, vehicle_type, status, latitude, longitude");
-
-          if (cancelled) return;
-
-          if (couriers && couriers.length > 0) {
-            const mapped: Driver[] = couriers.map((c) => {
-              const statusMap: Record<string, DriverStatus> = { active: "available", inactive: "offline", suspended: "offline" };
-              return {
-                id: c.id,
-                name: c.full_name_ar || c.full_name || "—",
-                phone: c.phone || "",
-                rating: 4.5,
-                status: statusMap[c.status] || "offline",
-                lat: c.latitude ? parseFloat(c.latitude) : 24.7136 + (Math.random() - 0.5) * 0.08,
-                lng: c.longitude ? parseFloat(c.longitude) : 46.6753 + (Math.random() - 0.5) * 0.08,
-                vehicle: c.vehicle_type || "—",
-              };
-            });
-            setDrivers(mapped);
-            if (!cancelled) setDataSource("live");
-            return;
-          }
-        } catch {
-          // Supabase failed, try API next
-        }
-      }
-
-      // 2) Try REST API fallback
       try {
         const [driversRes, ordersRes] = await Promise.all([
           fetch(`${API_BASE}/api/drivers`),
@@ -192,22 +159,21 @@ export default function Dispatch() {
 
         if (cancelled) return;
 
+        // Normalise — API may return { drivers: [...] } or [...]
         const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.drivers ?? driversData.data ?? []);
         const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.orders ?? ordersData.data ?? []);
 
         if (rawDrivers.length > 0) setDrivers(rawDrivers);
         if (rawOrders.length > 0) setOrders(rawOrders);
-        if (!cancelled) setDataSource("live");
-        return;
       } catch {
-        // API also failed
+        if (!cancelled) setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
+      } finally {
+        if (!cancelled) setLoadingData(false);
       }
-
-      // 3) Mock fallback
-      if (!cancelled) setDataSource("mock");
     }
 
     fetchData();
+    // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
@@ -260,12 +226,18 @@ export default function Dispatch() {
       {/* CSS for pulse animation */}
       <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0.6)} 50%{box-shadow:0 0 0 8px rgba(217,119,6,0)} }`}</style>
 
-      {/* Loading banner */}
-      {dataSource === "loading" && (
+      {/* API error / loading banner */}
+      {loadingData && (
         <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", fontSize: "12px", color: "var(--con-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} />
           جارٍ تحميل بيانات السائقين والطلبات...
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+      {!loadingData && apiError && (
+        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-warning-subtle,#fef3c7)", borderBottom: "1px solid var(--con-warning)", fontSize: "12px", color: "var(--con-warning)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <AlertTriangle size={12} />
+          {apiError}
         </div>
       )}
 
@@ -278,11 +250,8 @@ export default function Dispatch() {
         flexShrink: 0,
         flexWrap: "wrap",
       }}>
-        <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", marginLeft: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", marginLeft: "0.5rem" }}>
           لوحة الإرسال المباشر
-          {dataSource === "live" && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "100px", background: "var(--con-success-subtle,#dcfce7)", color: "var(--con-success)" }}>مباشر</span>}
-          {dataSource === "mock" && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "100px", background: "var(--con-warning-subtle,#fef3c7)", color: "var(--con-warning)" }}>تجريبي</span>}
-          {dataSource === "loading" && <RefreshCw size={12} style={{ animation: "spin 1s linear infinite", color: "var(--con-text-muted)" }} />}
         </h1>
         <div style={{ display: "flex", gap: "0.75rem", flex: 1, flexWrap: "wrap" }}>
           {[

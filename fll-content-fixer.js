@@ -80,14 +80,12 @@
         btn.textContent = 'جاري الإرسال...';
 
         try {
-          // Send contact form data + confirmation email via Lambda
+          // Send confirmation email via Lambda
           if (email) {
-            const message = data.message || data.subject || data.content || '';
-            const phone = data.phone || data.sender_phone || '';
             await fetch(API + '/api/contact-confirm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sender_email: email, name: name, message: message, phone: phone })
+              body: JSON.stringify({ sender_email: email, name: name })
             });
           }
 
@@ -101,12 +99,10 @@
     });
   }
 
-  let _cfTimer = null;
-  function debouncedFixContent() { if (_cfTimer) clearTimeout(_cfTimer); _cfTimer = setTimeout(fixContent, 300); }
-  function init() { fixContent(); setTimeout(fixContent, 1000); }
+  function init() { fixContent(); setTimeout(fixContent, 800); setTimeout(fixContent, 2500); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  new MutationObserver(debouncedFixContent)
+  new MutationObserver(() => setTimeout(fixContent, 300))
     .observe(document.body || document.documentElement, { childList: true, subtree: true });
 })();

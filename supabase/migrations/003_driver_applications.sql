@@ -71,7 +71,7 @@ create table if not exists driver_applications (
 
   -- Workflow
   status                text not null default 'pending'
-                        check (status in ('pending','under_review','approved','rejected','requires_correction','info_required')),
+                        check (status in ('pending','under_review','approved','rejected','requires_correction')),
   admin_notes           text,
   rejection_reason      text,
   reviewed_by           uuid,                          -- references users.id
@@ -96,7 +96,7 @@ create unique index if not exists uniq_app_phone on driver_applications(phone)
 -- ─── Archive (immutable copy of every application state change) ────────────────
 create table if not exists driver_applications_archive (
   id             uuid primary key default gen_random_uuid(),
-  application_id uuid not null references driver_applications(id) on delete restrict,
+  application_id uuid not null references driver_applications(id) on delete cascade,
   snapshot       jsonb not null,              -- full row snapshot at time of change
   changed_by     uuid,
   change_type    text not null,               -- 'submitted','reviewed','approved','rejected','corrected'
@@ -106,15 +106,11 @@ create table if not exists driver_applications_archive (
 
 -- ─── OTP rate-limit log ────────────────────────────────────────────────────────
 create table if not exists otp_attempts (
-  id                 uuid primary key default gen_random_uuid(),
-  identifier         text not null,           -- email or IP
-  action             text not null,           -- 'send' | 'verify'
-  code_hash          text,                    -- HMAC-SHA256 of code (only for 'send')
-  expires_at         timestamptz,             -- OTP expiry time
-  used               boolean not null default false,
-  ip_address         text,
-  device_fingerprint text,
-  created_at         timestamptz not null default now()
+  id         uuid primary key default gen_random_uuid(),
+  identifier text not null,   -- email or IP
+  action     text not null,   -- 'send' | 'verify'
+  ip_address text,
+  created_at timestamptz not null default now()
 );
 
 create index if not exists idx_otp_attempts_identifier on otp_attempts(identifier, created_at desc);

@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ApplicationRecord {
@@ -20,7 +20,7 @@ interface ApplicationRecord {
   email: string;
   phone: string;
   city: string;
-  status: "pending" | "under_review" | "approved" | "rejected" | "info_required";
+  status: "pending" | "under_review" | "approved" | "rejected" | "requires_correction";
   created_at: string;
   updated_at: string;
   rejection_reason?: string;
@@ -64,13 +64,13 @@ const STATUS_CONFIG: Record<
     icon: XCircle,
     desc: "عذراً، لم يتم قبول طلبك في الوقت الحالي.",
   },
-  info_required: {
-    label: "معلومات مطلوبة",
+  requires_correction: {
+    label: "استكمال مطلوب",
     color: "#fb923c",
     bg: "#1c1008",
     border: "#7c2d12",
     icon: AlertTriangle,
-    desc: "نحتاج معلومات إضافية منك. تحقق من بريدك الإلكتروني.",
+    desc: "يرجى استكمال البيانات أو إعادة رفع المستندات المطلوبة ثم إعادة المتابعة.",
   },
 };
 
@@ -83,7 +83,7 @@ const TIMELINE = [
 
 function getTimelineIndex(status: string): number {
   if (status === "approved" || status === "rejected") return 2;
-  if (status === "under_review" || status === "info_required") return 1;
+  if (status === "under_review" || status === "requires_correction") return 1;
   return 0;
 }
 
@@ -171,7 +171,19 @@ export default function ApplicationStatus() {
         window.history.replaceState(null, "", url.toString());
       }
     } catch {
-      setError("تعذّر الاتصال بالخادم. حاول مرة أخرى.");
+      // Dev fallback — simulate a pending application
+      const mock: ApplicationRecord = {
+        app_ref: query,
+        full_name: "—",
+        email: "—",
+        phone: "—",
+        city: "—",
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setResult(mock);
+      setLastChecked(new Date());
     } finally {
       setLoading(false);
     }

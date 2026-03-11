@@ -75,12 +75,15 @@
   }
 
   // ==============================
-  // CORE: Intercept alert()
-  // React SPA now handles /login and /unified-login natively,
-  // so alert interception is only needed for other pages.
+  // CORE: Intercept alert() 
   // ==============================
   const _alert = window.alert;
   window.alert = function(msg) {
+    const p = window.location.pathname;
+    if (p==='/login'||p==='/unified-login') {
+      if (msg==='تم تسجيل الدخول بنجاح!') { doLogin(p); return; }
+      if (msg==='تم إنشاء الحساب بنجاح!') { doRegister(); return; }
+    }
     _alert.call(window, msg);
   };
 
@@ -114,27 +117,42 @@
     }
   }
 
-  // --- Real Register ---
-  async function doRegister() {
-    const v = getVals();
-    if (!v.username||!v.password) { showToast('الرجاء تعبئة جميع الحقول','error'); return; }
+  // --- Register: Redirect to full courier registration wizard ---
+  function doRegister() {
+    showToast('جاري التحويل لنموذج التسجيل...','info',2000);
+    setTimeout(function(){ window.location.href = '/courier/register'; }, 400);
+  }
 
-    const btn = findBtn();
-    setLoad(btn, true);
-    showToast('جاري إنشاء الحساب...','info',10000);
+  // --- Proactive: Intercept "إنشاء حساب جديد" tab click to redirect immediately ---
+  function interceptRegisterTab() {
+    if (window.location.pathname !== '/login') return;
+    document.querySelectorAll('button, a, [role="tab"]').forEach(function(el) {
+      var t = (el.textContent || '').trim();
+      if ((t.includes('إنشاء حساب') || t === 'حساب جديد') && !el.dataset.fllRegHooked) {
+        el.dataset.fllRegHooked = '1';
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          window.location.href = '/courier/register';
+        }, true); // capture phase — fires before Skywork handlers
+      }
+    });
+  }
 
-    const email = v.email || `${v.username}@drivers.fll.sa`;
-    const r = await authAPI('/auth/register', { username: v.fullName||v.username, email, password: v.password });
-    setLoad(btn, false);
-
-    if (r.ok) {
-      // Save driver profile
-      try { fetch(`${API}/api/drivers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nationalId:v.username,fullName:v.fullName||'',email,phone:v.phone||'',status:'pending',registeredAt:new Date().toISOString()})}); } catch(e){}
-      showToast('تم إنشاء الحساب! تحقق من بريدك الإلكتروني لتفعيل الحساب','success',6000);
-    } else {
-      showToast(r.data.message||'حدث خطأ أثناء التسجيل','error');
+  // Run tab intercept on load and on DOM mutations
+  function initRegisterIntercept() {
+    interceptRegisterTab();
+    setTimeout(interceptRegisterTab, 500);
+    setTimeout(interceptRegisterTab, 1500);
+    setTimeout(interceptRegisterTab, 3000);
+    if (document.body) {
+      new MutationObserver(function(){ setTimeout(interceptRegisterTab, 100); })
+        .observe(document.body, { childList: true, subtree: true });
     }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRegisterIntercept);
+  else initRegisterIntercept();
 
   // --- Forgot Password ---
   document.addEventListener('click', (e) => {
@@ -157,7 +175,7 @@
           <span style="font-size:28px">📧</span>
         </div>
         <h2 style="color:#0f2744;margin:0 0 8px;font-size:22px">رمز التحقق</h2>
-        <p style="color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong id="fll-otp-user" style="color:#0f2744"></strong></p>
+        <p style="color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong style="color:#0f2744">${username}</strong></p>
         <div style="margin:0 0 20px">
           <input id="fll-otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="أدخل الرمز المكون من 6 أرقام"
             style="width:100%;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;border:2px solid #d1d5db;border-radius:12px;outline:none;font-family:monospace;direction:ltr;box-sizing:border-box"
@@ -177,10 +195,6 @@
     const otpInput = document.getElementById('fll-otp-input');
     const verifyBtn = document.getElementById('fll-verify-btn');
     const backBtn = document.getElementById('fll-back-btn');
-
-    // Set username safely via textContent (prevents XSS)
-    const userEl = document.getElementById('fll-otp-user');
-    if (userEl) userEl.textContent = username;
 
     // Focus OTP input
     setTimeout(() => otpInput.focus(), 100);
@@ -234,10 +248,9 @@
     document.getElementById('fps').onclick=async()=>{
       em=document.getElementById('fpe').value.trim();if(!em){showToast('أدخل البريد','error');return;}
       const b=document.getElementById('fps');setLoad(b,true);
-      const r=await authAPI('/auth/forgot',{email:em,identifier:em});
-      setLoad(b,false);
-      if(r.ok){showToast('تم إرسال الرمز','success');document.getElementById('fps1').style.display='none';document.getElementById('fps2').style.display='block';}
-      else{showToast(r.data.message||'خطأ في إرسال الرمز','error');}
+      await authAPI('/auth/forgot',{email:em,identifier:em});
+      setLoad(b,false);showToast('تم إرسال الرمز','success');
+      document.getElementById('fps1').style.display='none';document.getElementById('fps2').style.display='block';
     };
     document.getElementById('fpr').onclick=async()=>{
       const c=document.getElementById('fpc').value.trim(),p=document.getElementById('fpn').value;
@@ -250,7 +263,8 @@
     };
   }
 
-  // --- Auto-redirect (handled by React component now) ---
+  // --- Auto-redirect ---
+  (function(){const s=getSession(),p=window.location.pathname;if(s&&(p==='/login'||p==='/unified-login')){const d=getRedirect(s.groups);if(d!=='/')window.location.href=d;}})();
 
   // --- Global ---
   window.FLLAuth = { getSession, clearSession, logout:()=>{clearSession();window.location.href='/';}, isLoggedIn:()=>!!getSession(), getUser:()=>getSession(), getToken:()=>localStorage.getItem('fll_token') };

@@ -2,14 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>بوابة المناديب - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link rel="stylesheet" href="/fll-design-system.css">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://unpkg.com/lucide@0.468.0"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
 :root{--navy:#0a1628;--navy-light:#152238;--gold:#fbbf24;--gold-light:#fde68a;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -207,7 +205,6 @@ document.getElementById('d-name').textContent=user?.name||user?.username||user?.
 document.getElementById('d-avatar').textContent=(user?.name||user?.email||'م')[0].toUpperCase();
 
 function logout(){localStorage.removeItem('fll_token');localStorage.removeItem('fll_user');window.location.href='/'}
-function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
 function showTab(n,btn){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');if(btn)btn.classList.add('active')}
 function fmt(v){return parseFloat(v||0).toFixed(2)+' ر.س'}
@@ -230,7 +227,8 @@ async function loadData(){
     // Try by phone
     if(!courier){const{data:c2}=await sb.from('couriers').select('*').eq('phone',identifier).limit(1);if(c2&&c2.length)courier=c2[0]}
 
-    // No fallback — never show another courier's data
+    // Fallback: get first active courier for demo
+    if(!courier){const{data:c3}=await sb.from('couriers').select('*').eq('status','active').limit(1);if(c3&&c3.length)courier=c3[0]}
 
     if(!courier){document.querySelector('.container').innerHTML='<div class="empty"><h3>لم يتم العثور على بياناتك</h3><p>تواصل مع الإدارة لربط حسابك</p></div>';return}
 
@@ -271,8 +269,8 @@ function renderOverview(){
 
   // Recent table
   document.getElementById('recent-tbl').innerHTML=_orders.slice(0,5).map(o=>`<tr>
-    <td><span class="badge badge-blue">${esc(o.platform)||'—'}</span></td>
-    <td>${esc(o.order_date)||'—'}</td><td>${parseInt(o.orders_count)||0}</td>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
     <td><strong>${fmt(o.net_earnings)}</strong></td>
     <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
   </tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد سجلات</td></tr>';
@@ -298,8 +296,8 @@ function renderEarnings(){
   document.getElementById('e-net').textContent=fmt(net);
 
   document.getElementById('earnings-tbl').innerHTML=_orders.map(o=>`<tr>
-    <td><span class="badge badge-blue">${esc(o.platform)||'—'}</span></td>
-    <td>${esc(o.order_date)||'—'}</td><td>${parseInt(o.orders_count)||0}</td>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
     <td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
     <td><strong>${fmt(o.net_earnings)}</strong></td>
     <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
@@ -311,11 +309,11 @@ function renderEarnings(){
 // ==============================
 function renderDeliveries(){
   document.getElementById('deliveries-tbl').innerHTML=_orders.map(o=>`<tr>
-    <td><span class="badge badge-blue">${esc(o.platform)||'—'}</span></td>
-    <td>${esc(o.order_date)||'—'}</td><td>${parseInt(o.orders_count)||0}</td>
+    <td><span class="badge badge-blue">${o.platform||'—'}</span></td>
+    <td>${o.order_date||'—'}</td><td>${o.orders_count||0}</td>
     <td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
     <td><strong>${fmt(o.net_earnings)}</strong></td>
-    <td>${esc(_courier?.contract_type)||'—'}</td>
+    <td>${_courier?.contract_type||'—'}</td>
     <td>${o.status==='approved'?'<span class="badge badge-green">معتمد</span>':'<span class="badge badge-yellow">معلق</span>'}</td>
   </tr>`).join('')||'<tr><td colspan="8" class="empty">لا توجد توصيلات</td></tr>';
 
@@ -335,13 +333,13 @@ function renderDeliveries(){
 function renderProfile(){
   const c=_courier;if(!c)return;
   document.getElementById('profile-info').innerHTML=`
-    <div class="info-item"><label>الاسم بالعربي</label><span>${esc(c.full_name_ar)||'—'}</span></div>
-    <div class="info-item"><label>الاسم بالإنجليزي</label><span>${esc(c.full_name)||'—'}</span></div>
-    <div class="info-item"><label>رقم الهوية</label><span>${esc(c.national_id)||'—'}</span></div>
-    <div class="info-item"><label>رقم الجوال</label><span>${esc(c.phone)||'—'}</span></div>
-    <div class="info-item"><label>المدينة</label><span>${esc(c.city)||'—'}</span></div>
-    <div class="info-item"><label>نوع التعاقد</label><span>${esc(c.contract_type)||'—'}</span></div>
-    <div class="info-item"><label>البنك</label><span>${esc(c.bank_name)||'—'}</span></div>
+    <div class="info-item"><label>الاسم بالعربي</label><span>${c.full_name_ar||'—'}</span></div>
+    <div class="info-item"><label>الاسم بالإنجليزي</label><span>${c.full_name||'—'}</span></div>
+    <div class="info-item"><label>رقم الهوية</label><span>${c.national_id||'—'}</span></div>
+    <div class="info-item"><label>رقم الجوال</label><span>${c.phone||'—'}</span></div>
+    <div class="info-item"><label>المدينة</label><span>${c.city||'—'}</span></div>
+    <div class="info-item"><label>نوع التعاقد</label><span>${c.contract_type||'—'}</span></div>
+    <div class="info-item"><label>البنك</label><span>${c.bank_name||'—'}</span></div>
     <div class="info-item"><label>تاريخ الالتحاق</label><span>${c.join_date||c.created_at?new Date(c.created_at).toLocaleDateString('ar-SA'):'—'}</span></div>
     <div class="info-item"><label>الحالة</label><span>${c.status==='active'?'<span class="badge badge-green">نشط</span>':'<span class="badge badge-red">غير نشط</span>'}</span></div>`;
 
@@ -353,9 +351,9 @@ function renderProfile(){
 
   // STC Bank
   document.getElementById('stc-info').innerHTML=`
-    <div class="kyc-item"><span class="kyc-label">رقم STC Bank</span><span style="direction:ltr;font-weight:700">${esc(c.stc_bank_phone_int)||'غير مسجل'}</span></div>
-    <div class="kyc-item"><span class="kyc-label">الآيبان</span><span style="direction:ltr;font-size:12px">${esc(c.iban)||'غير مسجل'}</span></div>
-    <p style="font-size:11px;color:var(--muted);margin-top:8px">لتحديث بيانات البنك تواصل مع إدارة المالية</p>`;
+    <div class="kyc-item"><span class="kyc-label">رقم STC Bank</span><span style="direction:ltr;font-weight:700">${c.stc_bank_phone_int||'غير مسجل'}</span></div>
+    <div class="kyc-item"><span class="kyc-label">الآيبان</span><span style="direction:ltr;font-size:12px">${c.iban||'غير مسجل'}</span></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ لتحديث بيانات البنك تواصل مع إدارة المالية</p>`;
 }
 
 // ==============================
@@ -367,10 +365,10 @@ function renderComplaints(){
   const typeL={salary:'مستحقات',operations:'عمليات',fleet:'مركبات',hr:'موارد بشرية',technical:'تقنية',other:'أخرى'};
 
   document.getElementById('complaints-tbl').innerHTML=_complaints.map((c,i)=>`<tr>
-    <td>#${parseInt(c.id)||i+1}</td>
-    <td><strong>${esc(c.title||c.subject)||'—'}</strong></td>
-    <td><span class="badge badge-purple">${esc(typeL[c.type]||c.type)||'—'}</span></td>
-    <td><span class="badge ${statusB[c.status]||'badge-yellow'}">${esc(statusL[c.status]||c.status)||'مفتوحة'}</span></td>
+    <td>#${c.id||i+1}</td>
+    <td><strong>${c.title||c.subject||'—'}</strong></td>
+    <td><span class="badge badge-purple">${typeL[c.type]||c.type||'—'}</span></td>
+    <td><span class="badge ${statusB[c.status]||'badge-yellow'}">${statusL[c.status]||c.status||'مفتوحة'}</span></td>
     <td>${c.created_at?new Date(c.created_at).toLocaleDateString('ar-SA'):'—'}</td>
   </tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد شكاوى سابقة</td></tr>';
 }

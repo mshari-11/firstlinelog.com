@@ -69,17 +69,10 @@
   btn.onclick = () => { isOpen = !isOpen; box.classList.toggle('open', isOpen); if(isOpen) input.focus(); };
   document.getElementById('fll-chat-close').onclick = () => { isOpen = false; box.classList.remove('open'); };
 
-  function escapeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
   function addMsg(text, role) {
     const d = document.createElement('div');
     d.className = 'fll-msg ' + role;
-    const safe = escapeHTML(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-    d.innerHTML = '<div class="fll-msg-bubble">' + safe + '</div>';
+    d.innerHTML = '<div class="fll-msg-bubble">' + text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '</div>';
     msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
   }

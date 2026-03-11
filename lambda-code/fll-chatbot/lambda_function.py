@@ -92,9 +92,12 @@ def lambda_handler(event, context):
             'model': MODEL_ID
         })
         
+    except bedrock.exceptions.ClientError as e:
+        print(f"Bedrock error: {e}")
+        return cors_response(500, {'error': 'خطأ في خدمة الذكاء الاصطناعي', 'details': str(e)})
     except Exception as e:
-        print(f"Chatbot error: {e}")
-        return cors_response(500, {'error': 'خطأ في خدمة الذكاء الاصطناعي'})
+        print(f"Error: {e}")
+        return cors_response(500, {'error': 'خطأ في النظام', 'details': str(e)})
 
 def cors_response(status, body):
     return {

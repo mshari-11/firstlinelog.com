@@ -2,14 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
 <title>العمليات - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link rel="stylesheet" href="/fll-design-system.css">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="https://unpkg.com/lucide@0.468.0"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="/fll-shared.js"></script>
 <style>
 :root{--navy:#0a1628;--navy-light:#152238;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
@@ -44,40 +42,38 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
     <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
     <a href="/staff-finance.html"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
     <a href="/staff-hr.html"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html" class="active"><i data-lucide="radar" style="width:16px;height:16px"></i> العمليات</a>
-    <a href="/staff-fleet.html"><i data-lucide="car" style="width:16px;height:16px"></i> المركبات</a>
+    <a href="/staff-ops.html" class="active"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
+    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
   </div>
-  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button></div>
+  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
 </div>
 <div class="container">
-  <div class="page-header"><div><div class="page-title"><i data-lucide="radar" style="width:26px;height:26px;color:#22d3ee"></i> إدارة العمليات</div><div class="page-sub" id="current-date"></div></div></div>
+  <div class="page-header"><div><div class="page-title">إدارة العمليات</div><div class="page-sub" id="current-date"></div></div></div>
 
   <div class="stats-row">
-    <div class="stat"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="package" style="width:18px;height:18px;color:#38bdf8"></i><span class="stat-label">إجمالي الطلبات</span></div><div class="stat-value" id="s-orders">—</div></div>
-    <div class="stat green"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="check-circle-2" style="width:18px;height:18px;color:#22c55e"></i><span class="stat-label">معتمدة</span></div><div class="stat-value" id="s-approved">—</div></div>
-    <div class="stat gold"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="clock" style="width:18px;height:18px;color:#fbbf24"></i><span class="stat-label">معلقة</span></div><div class="stat-value" id="s-pending">—</div></div>
-    <div class="stat red"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="message-circle-warning" style="width:18px;height:18px;color:#ef4444"></i><span class="stat-label">الشكاوى</span></div><div class="stat-value" id="s-complaints">—</div></div>
-    <div class="stat purple"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="truck" style="width:18px;height:18px;color:#a78bfa"></i><span class="stat-label">إجمالي توصيلات</span></div><div class="stat-value" id="s-deliveries">—</div></div>
+    <div class="stat"><div class="stat-label">إجمالي الطلبات</div><div class="stat-value" id="s-orders">—</div></div>
+    <div class="stat green"><div class="stat-label">معتمدة</div><div class="stat-value" id="s-approved">—</div></div>
+    <div class="stat gold"><div class="stat-label">معلقة</div><div class="stat-value" id="s-pending">—</div></div>
+    <div class="stat red"><div class="stat-label">الشكاوى</div><div class="stat-value" id="s-complaints">—</div></div>
+    <div class="stat purple"><div class="stat-label">إجمالي توصيلات</div><div class="stat-value" id="s-deliveries">—</div></div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('orders',this)"><i data-lucide="package" style="width:14px;height:14px"></i> الطلبات</button>
-    <button class="tab" onclick="showTab('complaints',this)"><i data-lucide="message-circle-warning" style="width:14px;height:14px"></i> الشكاوى</button>
-    <button class="tab" onclick="showTab('analytics',this)"><i data-lucide="bar-chart-3" style="width:14px;height:14px"></i> التحليلات</button>
-    <button class="tab" onclick="showTab('sla',this)"><i data-lucide="timer" style="width:14px;height:14px"></i> متابعة SLA</button>
-    <button class="tab" onclick="showTab('regions',this)"><i data-lucide="map-pin" style="width:14px;height:14px"></i> إدارة المناطق</button>
-    <button class="tab" onclick="showTab('escalations',this)"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i> التصعيدات</button>
-    <a class="tab" href="/dispatch-map.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i data-lucide="map" style="width:14px;height:14px"></i> الخريطة الحية</a>
-    <button class="tab" onclick="showTab('alerts',this)"><i data-lucide="bell-ring" style="width:14px;height:14px"></i> التنبيهات</button>
+    <button class="tab active" onclick="showTab('orders',this)">الطلبات</button>
+    <button class="tab" onclick="showTab('complaints',this)">الشكاوى</button>
+    <button class="tab" onclick="showTab('analytics',this)">التحليلات</button>
+    <button class="tab" onclick="showTab('sla',this)">متابعة SLA</button>
+    <button class="tab" onclick="showTab('regions',this)">إدارة المناطق</button>
+    <button class="tab" onclick="showTab('escalations',this)">التصعيدات</button>
   </div>
 
   <div id="tab-orders">
-    <div class="card"><div class="card-h"><h3><i data-lucide="package" style="width:16px;height:16px;color:#38bdf8"></i> جميع الطلبات</h3></div>
+    <div class="card"><div class="card-h"><h3>جميع الطلبات</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="orders-tbl"></tbody></table></div></div>
   </div>
 
   <div id="tab-complaints" style="display:none">
-    <div class="card"><div class="card-h"><h3><i data-lucide="message-circle-warning" style="width:16px;height:16px;color:#ef4444"></i> الشكاوى والاستفسارات</h3></div>
+    <div class="card"><div class="card-h"><h3>الشكاوى والاستفسارات</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>رقم التذكرة</th><th>المندوب</th><th>التصنيف</th><th>الأولوية</th><th>الموضوع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="complaints-tbl"></tbody></table></div></div>
   </div>
 
@@ -102,63 +98,15 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
 
   <!-- ESCALATIONS TAB (NEW) -->
   <div id="tab-escalations" style="display:none">
-    <div class="card"><div class="card-h"><h3><i data-lucide="alert-triangle" style="width:16px;height:16px;color:#ef4444"></i> التصعيدات — شكاوى تجاوزت SLA</h3></div>
+    <div class="card"><div class="card-h"><h3>التصعيدات — شكاوى تجاوزت SLA</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>الشكوى</th><th>القسم المسؤول</th><th>المدة</th><th>حالة التصعيد</th><th>المصعّد إلى</th></tr></thead><tbody id="esc-tbl"></tbody></table></div></div>
-  </div>
-
-  <!-- LIVE MAP TAB (NEW) -->
-  <div id="tab-live-map" style="display:none">
-    <div class="card"><div class="card-h"><h3><i data-lucide="map" style="width:16px;height:16px;color:#22c55e"></i> الخريطة الحية — مواقع المناديب</h3></div>
-    <div class="card-b">
-      <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:12px;padding:40px;text-align:center">
-        <i data-lucide="map-pin" style="width:48px;height:48px;color:var(--green);margin-bottom:12px"></i>
-        <div style="font-size:16px;font-weight:700;color:white;margin-bottom:6px">الخريطة الحية</div>
-        <div style="font-size:13px;color:var(--muted)">تتبع مواقع المناديب في الوقت الحقيقي — سيُربط بـ Google Maps API</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px">
-          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="navigation" style="width:20px;height:20px;color:#22c55e;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">في المهمة</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
-          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="coffee" style="width:20px;height:20px;color:#fbbf24;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">في الانتظار</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
-          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="wifi-off" style="width:20px;height:20px;color:#ef4444;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">غير متصل</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
-          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="users" style="width:20px;height:20px;color:#38bdf8;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">الإجمالي</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
-        </div>
-      </div>
-    </div></div>
-  </div>
-
-  <!-- ALERTS TAB (NEW) -->
-  <div id="tab-alerts" style="display:none">
-    <div class="card"><div class="card-h"><h3><i data-lucide="bell-ring" style="width:16px;height:16px;color:#fbbf24"></i> التنبيهات التشغيلية</h3></div>
-    <div class="card-b">
-      <div style="display:grid;gap:10px">
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(239,68,68,0.15);border-radius:12px;background:rgba(239,68,68,0.04)">
-          <i data-lucide="alert-circle" style="width:20px;height:20px;color:#ef4444;flex-shrink:0"></i>
-          <div><div style="font-size:13px;font-weight:600;color:white">شكاوى تجاوزت SLA</div><div style="font-size:11px;color:var(--muted)">تنبيه تلقائي عند تجاوز 24 ساعة</div></div>
-          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(239,68,68,0.15);color:#fca5a5">مفعّل</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(251,191,36,0.15);border-radius:12px;background:rgba(251,191,36,0.04)">
-          <i data-lucide="truck" style="width:20px;height:20px;color:#fbbf24;flex-shrink:0"></i>
-          <div><div style="font-size:13px;font-weight:600;color:white">انخفاض أداء المناديب</div><div style="font-size:11px;color:var(--muted)">أقل من 10 طلبات يومياً</div></div>
-          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(251,191,36,0.15);color:#fde68a">مفعّل</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(56,189,248,0.15);border-radius:12px;background:rgba(56,189,248,0.04)">
-          <i data-lucide="file-up" style="width:20px;height:20px;color:#38bdf8;flex-shrink:0"></i>
-          <div><div style="font-size:13px;font-weight:600;color:white">تقارير المنصات المتأخرة</div><div style="font-size:11px;color:var(--muted)">تنبيه إذا لم يُرفع التقرير حتى 14:00</div></div>
-          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(56,189,248,0.15);color:#7dd3fc">مفعّل</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--glass)">
-          <i data-lucide="shield-alert" style="width:20px;height:20px;color:#a78bfa;flex-shrink:0"></i>
-          <div><div style="font-size:13px;font-weight:600;color:white">كشف تلاعب مالي</div><div style="font-size:11px;color:var(--muted)">أنماط غير طبيعية في الأرباح</div></div>
-          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:var(--glass);color:var(--muted)">غير مفعّل</span>
-        </div>
-      </div>
-    </div></div>
   </div>
 </div>
 <script>
 const user=checkAuth();if(!user)throw'no auth';setUserInfo(user);const db=initSupabase();
 function showTab(n,btn){document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).style.display='block';if(btn)btn.classList.add('active');}
 let ch1,ch2;
-// Original loadAll — fully replaced by unified version below to avoid redundant DB queries
-async function _loadAll_legacy(){
+async function loadAll(){
   const {data:orders}=await db.from('orders').select('*, couriers(full_name_ar,full_name)').order('order_date',{ascending:false});
   const {data:complaints}=await db.from('complaints').select('*').order('created_at',{ascending:false});
 
@@ -195,80 +143,39 @@ async function _loadAll_legacy(){
     const statusLabel={new:'جديد',assigned:'معيّن',in_progress:'قيد المعالجة',resolved:'محلول',closed:'مغلق'};
     const statusColor={new:'yellow',assigned:'blue',in_progress:'blue',resolved:'green',closed:'green'};
     document.getElementById('complaints-tbl').innerHTML=complaints.map(c=>`<tr>
-      <td><strong>${esc(c.ticket_id)}</strong></td>
-      <td>${esc(c.driver_name)||'—'}</td>
+      <td><strong>${c.ticket_id}</strong></td>
+      <td>${c.driver_name||'—'}</td>
       <td>${badge(c.category||'—','blue')}</td>
-      <td><span class="priority-dot" style="background:${prioColor[c.priority]||'#999'}"></span>${esc(prioLabel[c.priority]||c.priority)}</td>
-      <td>${esc(c.subject)}</td>
+      <td><span class="priority-dot" style="background:${prioColor[c.priority]||'#999'}"></span>${prioLabel[c.priority]||c.priority}</td>
+      <td>${c.subject}</td>
       <td>${badge(statusLabel[c.status]||c.status,statusColor[c.status]||'blue')}</td>
       <td>${formatDate(c.created_at)}</td></tr>`).join('');
   }
 }
+loadAll();
 
 // === NEW Ops tabs: SLA, Regions, Escalations ===
-// Reuses data from loadAll above — no redundant DB queries
-let _opsComplaints=[], _opsCouriers=[], _opsOrders=[];
-loadAll=async function(){
-  // Unified loadAll — single set of DB queries for all tabs
-  const{data:complaints}=await db.from('complaints').select('*').order('created_at',{ascending:false});
+const _origOpsLoad=loadAll;
+loadAll=async function(){await _origOpsLoad();try{
+  const{data:complaints}=await db.from('complaints').select('*');
   const{data:couriers}=await db.from('couriers').select('*');
-  const{data:orders}=await db.from('orders').select('*, couriers(full_name_ar,full_name,city)').order('order_date',{ascending:false});
-  _opsComplaints=complaints||[];_opsCouriers=couriers||[];_opsOrders=orders||[];
+  const{data:orders}=await db.from('orders').select('*,couriers(city)');
 
-  // Render original tabs using fetched data
-  if(orders){
-    const approved=orders.filter(o=>o.status==='approved'),pending=orders.filter(o=>o.status==='pending');
-    let totalDel=0;orders.forEach(o=>totalDel+=o.orders_count||0);
-    document.getElementById('s-orders').textContent=orders.length;
-    document.getElementById('s-approved').textContent=approved.length;
-    document.getElementById('s-pending').textContent=pending.length;
-    document.getElementById('s-deliveries').textContent=totalDel.toLocaleString('ar-SA');
-    document.getElementById('orders-tbl').innerHTML=orders.map(o=>`<tr>
-      <td><strong>${esc(o.couriers?.full_name_ar)||'—'}</strong></td>
-      <td>${badge(o.platform,'blue')}</td><td>${formatDate(o.order_date)}</td>
-      <td>${parseInt(o.orders_count)||0}</td><td>${formatMoney(o.gross_earnings)}</td>
-      <td>${formatMoney(o.deductions)}</td><td><strong>${formatMoney(o.net_earnings)}</strong></td>
-      <td>${o.status==='approved'?badge('معتمد','green'):badge('معلق','yellow')}</td></tr>`).join('');
-    const byPlat={};orders.forEach(o=>{byPlat[o.platform]=(byPlat[o.platform]||0)+(o.orders_count||0);});
-    if(ch1)ch1.destroy();
-    ch1=new Chart(document.getElementById('chart-orders'),{type:'pie',data:{labels:Object.keys(byPlat),datasets:[{data:Object.values(byPlat),backgroundColor:['#f59e0b','#0ea5e9','#10b981','#6366f1','#ef4444','#ec4899','#8b5cf6']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic'}}}}}});
-    const byDate={};orders.forEach(o=>{byDate[o.order_date]=(byDate[o.order_date]||0)+(o.orders_count||0);});
-    const dates=Object.keys(byDate).sort();
-    if(ch2)ch2.destroy();
-    ch2=new Chart(document.getElementById('chart-daily'),{type:'line',data:{labels:dates,datasets:[{label:'التوصيلات',data:dates.map(d=>byDate[d]),borderColor:'#0f2744',backgroundColor:'rgba(15,39,68,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'IBM Plex Sans Arabic'}}},y:{ticks:{font:{family:'IBM Plex Sans Arabic'}}}}}});
-  }
-  if(complaints){
-    document.getElementById('s-complaints').textContent=complaints.length;
-    const prioColor={urgent:'#ef4444',high:'#f59e0b',medium:'#0ea5e9',low:'#10b981'};
-    const prioLabel={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
-    const statusLabel={new:'جديد',assigned:'معيّن',in_progress:'قيد المعالجة',resolved:'محلول',closed:'مغلق'};
-    const statusColor={new:'yellow',assigned:'blue',in_progress:'blue',resolved:'green',closed:'green'};
-    document.getElementById('complaints-tbl').innerHTML=complaints.map(c=>`<tr>
-      <td><strong>${esc(c.ticket_id)}</strong></td>
-      <td>${esc(c.driver_name)||'—'}</td>
-      <td>${badge(c.category||'—','blue')}</td>
-      <td><span class="priority-dot" style="background:${prioColor[c.priority]||'#999'}"></span>${esc(prioLabel[c.priority]||c.priority)}</td>
-      <td>${esc(c.subject)}</td>
-      <td>${badge(statusLabel[c.status]||c.status,statusColor[c.status]||'blue')}</td>
-      <td>${formatDate(c.created_at)}</td></tr>`).join('');
-  }
-  try{
   // SLA Tab
-  document.getElementById('sla-tbl').innerHTML=_opsComplaints.map((c,i)=>{
+  document.getElementById('sla-tbl').innerHTML=(complaints||[]).map((c,i)=>{
     const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;
     const sla=hrs>=48?'🔴 تجاوز 48h':hrs>=24?'🟡 تجاوز 24h':'🟢 ضمن SLA';
-    return`<tr><td>#${parseInt(c.id)||i+1}</td><td>${esc(c.title||c.subject)||'—'}</td><td>${esc(c.type||c.category)||'—'}</td><td>${hrs} ساعة</td><td>${sla}</td><td>${hrs>=24?'✅ أُرسل':'—'}</td><td>${hrs>=48?'✅ أُرسل':'—'}</td></tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
+    return`<tr><td>#${c.id||i+1}</td><td>${c.title||c.subject||'—'}</td><td>${c.type||c.category||'—'}</td><td>${hrs} ساعة</td><td>${sla}</td><td>${hrs>=24?'✅ أُرسل':'—'}</td><td>${hrs>=48?'✅ أُرسل':'—'}</td></tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
 
   // Regions Tab
-  const byCity={};_opsCouriers.forEach(c=>{const ci=c.city||'غير محدد';if(!byCity[ci])byCity[ci]={t:0,a:0,o:0,e:0};byCity[ci].t++;if(c.status==='active')byCity[ci].a++});
-  _opsOrders.forEach(o=>{const ci=o.couriers?.city||'غير محدد';if(byCity[ci]){byCity[ci].o+=(o.orders_count||0);byCity[ci].e+=+(o.net_earnings||0)}});
-  document.getElementById('regions-tbl').innerHTML=Object.entries(byCity).sort((a,b)=>b[1].t-a[1].t).map(([n,d])=>`<tr><td>—</td><td><strong>${esc(n)}</strong></td><td>${d.t}</td><td>${d.a}</td><td>${d.o}</td><td>${d.e.toFixed(2)} ر.س</td></tr>`).join('');
+  const byCity={};(couriers||[]).forEach(c=>{const ci=c.city||'غير محدد';if(!byCity[ci])byCity[ci]={t:0,a:0,o:0,e:0};byCity[ci].t++;if(c.status==='active')byCity[ci].a++});
+  (orders||[]).forEach(o=>{const ci=o.couriers?.city||'غير محدد';if(byCity[ci]){byCity[ci].o+=(o.orders_count||0);byCity[ci].e+=+(o.net_earnings||0)}});
+  document.getElementById('regions-tbl').innerHTML=Object.entries(byCity).sort((a,b)=>b[1].t-a[1].t).map(([n,d])=>`<tr><td>—</td><td><strong>${n}</strong></td><td>${d.t}</td><td>${d.a}</td><td>${d.o}</td><td>${d.e.toFixed(2)} ر.س</td></tr>`).join('');
 
   // Escalations Tab
-  const escItems=_opsComplaints.filter(c=>{const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;return hrs>=48&&c.status!=='resolved'&&c.status!=='closed'});
-  document.getElementById('esc-tbl').innerHTML=escItems.map((c,i)=>{const hrs=Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000);return`<tr><td>#${parseInt(c.id)||i+1}</td><td>${esc(c.title)||'—'}</td><td>${esc(c.type)||'—'}</td><td>${hrs}h</td><td><span style="color:var(--red);font-weight:700">🔴 متصعّد</span></td><td>الإدارة العليا</td></tr>`}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد تصعيدات</td></tr>';
-  }catch(e){console.error('Ops v4:',e)}
-};loadAll();
+  const esc=(complaints||[]).filter(c=>{const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;return hrs>=48&&c.status!=='resolved'&&c.status!=='closed'});
+  document.getElementById('esc-tbl').innerHTML=esc.map((c,i)=>{const hrs=Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000);return`<tr><td>#${c.id||i+1}</td><td>${c.title||'—'}</td><td>${c.type||'—'}</td><td>${hrs}h</td><td><span style="color:var(--red);font-weight:700">🔴 متصعّد</span></td><td>الإدارة العليا</td></tr>`}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد تصعيدات</td></tr>';
+}catch(e){console.error('Ops v4:',e)}};loadAll();
 try{lucide.createIcons()}catch(e){}
 </script>
 </body></html>

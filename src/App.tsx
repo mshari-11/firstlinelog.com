@@ -33,6 +33,10 @@ import AdminReconciliation from "@/pages/admin/Reconciliation";
 import AdminPageBuilder from "@/pages/admin/PageBuilder";
 import AdminDispatch from "@/pages/admin/Dispatch";
 
+// ── Courier / public pages ────────────────────────────────────────────────────
+import CourierRegister from "@/pages/courier/Register";
+import ApplicationStatus from "@/pages/courier/ApplicationStatus";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -87,6 +91,10 @@ export default function App() {
                fll-login-fixer.js + fll-auth-connector.js static scripts ── */}
           <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
           <Route path="/unified-login" element={<LoginShell title="تسجيل الدخول الموحّد" />} />
+
+          {/* ── Courier registration & status (public) ── */}
+          <Route path="/courier/register" element={<CourierRegister />} />
+          <Route path="/application-status" element={<ApplicationStatus />} />
 
           {/* ── Fallback: redirect unknown routes to admin login ── */}
           <Route path="*" element={<Navigate to="/admin/login" replace />} />

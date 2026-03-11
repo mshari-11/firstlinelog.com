@@ -46,42 +46,45 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
 </head>
 <body>
 <div class="top-bar">
-  <h1>👥 الموارد البشرية</h1>
+  <h1><i data-lucide="users" style="width:22px;height:22px;color:#a78bfa"></i> الموارد البشرية</h1>
   <div class="top-bar-nav">
-    <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
+    <a href="/admin-dashboard.html"><i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> الإدارة</a>
     <a href="/staff-finance.html"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
     <a href="/staff-hr.html" class="active"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
-    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
+    <a href="/staff-ops.html"><i data-lucide="radar" style="width:16px;height:16px"></i> العمليات</a>
+    <a href="/staff-fleet.html"><i data-lucide="car" style="width:16px;height:16px"></i> المركبات</a>
   </div>
-  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
+  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button></div>
 </div>
 <div class="container">
-  <div class="page-header"><div><div class="page-title">إدارة الموارد البشرية</div><div class="page-sub" id="current-date"></div></div></div>
+  <div class="page-header"><div><div class="page-title"><i data-lucide="user-round-cog" style="width:26px;height:26px;color:#a78bfa"></i> إدارة الموارد البشرية</div><div class="page-sub" id="current-date"></div></div></div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-label">الموظفين</div><div class="stat-value" id="s-staff">—</div></div>
-    <div class="stat green"><div class="stat-label">المناديب</div><div class="stat-value" id="s-couriers">—</div></div>
-    <div class="stat gold"><div class="stat-label">النشطين</div><div class="stat-value" id="s-active">—</div></div>
-    <div class="stat purple"><div class="stat-label">الأقسام</div><div class="stat-value" id="s-depts">—</div></div>
+    <div class="stat"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="user-check" style="width:18px;height:18px;color:#38bdf8"></i><span class="stat-label">الموظفين</span></div><div class="stat-value" id="s-staff">—</div></div>
+    <div class="stat green"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="bike" style="width:18px;height:18px;color:#22c55e"></i><span class="stat-label">المناديب</span></div><div class="stat-value" id="s-couriers">—</div></div>
+    <div class="stat gold"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="activity" style="width:18px;height:18px;color:#fbbf24"></i><span class="stat-label">النشطين</span></div><div class="stat-value" id="s-active">—</div></div>
+    <div class="stat purple"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="building-2" style="width:18px;height:18px;color:#a78bfa"></i><span class="stat-label">الأقسام</span></div><div class="stat-value" id="s-depts">—</div></div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('staff',this)">الموظفين</button>
-    <button class="tab" onclick="showTab('couriers',this)">المناديب</button>
-    <button class="tab" onclick="showTab('departments',this)">الأقسام</button>
-    <button class="tab" onclick="showTab('attendance',this)">الحضور والانصراف</button>
-    <button class="tab" onclick="showTab('tasks',this)">المهام</button>
-    <button class="tab" onclick="showTab('performance',this)">تقييم الأداء</button>
+    <button class="tab active" onclick="showTab('staff',this)"><i data-lucide="user-check" style="width:14px;height:14px"></i> الموظفين</button>
+    <button class="tab" onclick="showTab('couriers',this)"><i data-lucide="bike" style="width:14px;height:14px"></i> المناديب</button>
+    <button class="tab" onclick="showTab('departments',this)"><i data-lucide="building-2" style="width:14px;height:14px"></i> الأقسام</button>
+    <button class="tab" onclick="showTab('attendance',this)"><i data-lucide="clock" style="width:14px;height:14px"></i> الحضور والانصراف</button>
+    <button class="tab" onclick="showTab('tasks',this)"><i data-lucide="list-checks" style="width:14px;height:14px"></i> المهام</button>
+    <button class="tab" onclick="showTab('performance',this)"><i data-lucide="award" style="width:14px;height:14px"></i> تقييم الأداء</button>
+    <button class="tab" onclick="showTab('onboarding',this)"><i data-lucide="user-plus" style="width:14px;height:14px"></i> التوظيف</button>
+    <button class="tab" onclick="showTab('contracts',this)"><i data-lucide="file-signature" style="width:14px;height:14px"></i> العقود</button>
+    <button class="tab" onclick="showTab('documents',this)"><i data-lucide="folder-open" style="width:14px;height:14px"></i> المستندات</button>
   </div>
 
   <div id="tab-staff">
-    <div class="card"><div class="card-h"><h3>جدول الموظفين</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="user-check" style="width:16px;height:16px;color:#38bdf8"></i> جدول الموظفين</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>البريد</th><th>القسم</th><th>المسمى الوظيفي</th><th>الجوال</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="staff-tbl"></tbody></table></div></div>
   </div>
 
   <div id="tab-couriers" style="display:none">
-    <div class="card"><div class="card-h"><h3>جدول المناديب</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="bike" style="width:16px;height:16px;color:#22c55e"></i> جدول المناديب</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>المدينة</th><th>البنك</th><th>نوع التعاقد</th><th>تاريخ الالتحاق</th><th>الحالة</th></tr></thead><tbody id="couriers-tbl"></tbody></table></div></div>
   </div>
 
@@ -89,22 +92,90 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
     <div class="dept-grid" id="depts-grid"></div>
   </div>
 
-  <!-- ATTENDANCE TAB (NEW) -->
   <div id="tab-attendance" style="display:none">
-    <div class="card"><div class="card-h"><h3>سجل الحضور والانصراف</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="clock" style="width:16px;height:16px;color:#fbbf24"></i> سجل الحضور والانصراف</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>الموظف</th><th>القسم</th><th>التاريخ</th><th>وقت الدخول</th><th>وقت الخروج</th><th>الساعات</th><th>الحالة</th></tr></thead><tbody id="attendance-tbl"></tbody></table></div></div>
   </div>
 
-  <!-- TASKS TAB (NEW) -->
   <div id="tab-tasks" style="display:none">
-    <div class="card"><div class="card-h"><h3>المهام الداخلية</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="list-checks" style="width:16px;height:16px;color:#a78bfa"></i> المهام الداخلية</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المهمة</th><th>من</th><th>إلى</th><th>القسم</th><th>الأولوية</th><th>الحالة</th><th>تاريخ الإنشاء</th></tr></thead><tbody id="tasks-tbl"></tbody></table></div></div>
   </div>
 
-  <!-- PERFORMANCE TAB (NEW) -->
   <div id="tab-performance" style="display:none">
-    <div class="card"><div class="card-h"><h3>تقييم الأداء</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="award" style="width:16px;height:16px;color:#fbbf24"></i> تقييم الأداء</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>الموظف/المندوب</th><th>القسم</th><th>الفترة</th><th>التوصيلات</th><th>الشكاوى</th><th>التقييم</th><th>ملاحظات</th></tr></thead><tbody id="perf-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- NEW TABS: Onboarding, Contracts, Documents -->
+  <div id="tab-onboarding" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="user-plus" style="width:16px;height:16px;color:#22c55e"></i> طلبات التوظيف الجديدة</h3></div>
+    <div class="card-b">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+        <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:12px;padding:20px;text-align:center">
+          <i data-lucide="file-text" style="width:28px;height:28px;color:#22c55e;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:600;color:white">طلب جديد</div>
+          <div style="font-size:11px;color:var(--muted)">Veri5now</div>
+        </div>
+        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:12px;padding:20px;text-align:center">
+          <i data-lucide="scan" style="width:28px;height:28px;color:#38bdf8;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:600;color:white">التحقق من الهوية</div>
+          <div style="font-size:11px;color:var(--muted)">eKYC</div>
+        </div>
+        <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:20px;text-align:center">
+          <i data-lucide="file-signature" style="width:28px;height:28px;color:#a78bfa;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:600;color:white">توقيع العقد</div>
+          <div style="font-size:11px;color:var(--muted)">eSign</div>
+        </div>
+        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);border-radius:12px;padding:20px;text-align:center">
+          <i data-lucide="check-circle-2" style="width:28px;height:28px;color:#fbbf24;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:600;color:white">تفعيل الحساب</div>
+          <div style="font-size:11px;color:var(--muted)">Onboarding</div>
+        </div>
+      </div>
+      <table class="tbl"><thead><tr><th>الاسم</th><th>الهوية</th><th>المدينة</th><th>المرحلة</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+      <tbody id="onboarding-tbl"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">نظام التوظيف Veri5now قيد الإعداد</td></tr></tbody></table>
+    </div></div>
+  </div>
+
+  <div id="tab-contracts" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="file-signature" style="width:16px;height:16px;color:#a78bfa"></i> العقود النشطة</h3></div>
+    <div class="card-b">
+      <table class="tbl"><thead><tr><th>الموظف/المندوب</th><th>نوع العقد</th><th>تاريخ البداية</th><th>تاريخ النهاية</th><th>الحالة</th><th>التوقيع</th></tr></thead>
+      <tbody id="contracts-tbl"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">نظام العقود الإلكترونية Veri5now قيد الإعداد</td></tr></tbody></table>
+    </div></div>
+  </div>
+
+  <div id="tab-documents" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="folder-open" style="width:16px;height:16px;color:#fb923c"></i> مستودع المستندات</h3></div>
+    <div class="card-b">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="file-text" style="width:28px;height:28px;color:#38bdf8;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">عقود العمل</div>
+        </div>
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="id-card" style="width:28px;height:28px;color:#22c55e;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">الهويات</div>
+        </div>
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="car" style="width:28px;height:28px;color:#fbbf24;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">رخص القيادة</div>
+        </div>
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="shield-check" style="width:28px;height:28px;color:#a78bfa;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">التأمينات</div>
+        </div>
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="banknote" style="width:28px;height:28px;color:#ef4444;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">كشوف الرواتب</div>
+        </div>
+        <div style="background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer">
+          <i data-lucide="stamp" style="width:28px;height:28px;color:#fb923c;margin-bottom:8px"></i>
+          <div style="font-size:12px;font-weight:600;color:white">شهادات الخبرة</div>
+        </div>
+      </div>
+    </div></div>
   </div>
 </div>
 

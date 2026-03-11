@@ -43,38 +43,40 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
     <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
     <a href="/staff-finance.html"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
     <a href="/staff-hr.html"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html" class="active"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
-    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
+    <a href="/staff-ops.html" class="active"><i data-lucide="radar" style="width:16px;height:16px"></i> العمليات</a>
+    <a href="/staff-fleet.html"><i data-lucide="car" style="width:16px;height:16px"></i> المركبات</a>
   </div>
-  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
+  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button></div>
 </div>
 <div class="container">
-  <div class="page-header"><div><div class="page-title">إدارة العمليات</div><div class="page-sub" id="current-date"></div></div></div>
+  <div class="page-header"><div><div class="page-title"><i data-lucide="radar" style="width:26px;height:26px;color:#22d3ee"></i> إدارة العمليات</div><div class="page-sub" id="current-date"></div></div></div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-label">إجمالي الطلبات</div><div class="stat-value" id="s-orders">—</div></div>
-    <div class="stat green"><div class="stat-label">معتمدة</div><div class="stat-value" id="s-approved">—</div></div>
-    <div class="stat gold"><div class="stat-label">معلقة</div><div class="stat-value" id="s-pending">—</div></div>
-    <div class="stat red"><div class="stat-label">الشكاوى</div><div class="stat-value" id="s-complaints">—</div></div>
-    <div class="stat purple"><div class="stat-label">إجمالي توصيلات</div><div class="stat-value" id="s-deliveries">—</div></div>
+    <div class="stat"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="package" style="width:18px;height:18px;color:#38bdf8"></i><span class="stat-label">إجمالي الطلبات</span></div><div class="stat-value" id="s-orders">—</div></div>
+    <div class="stat green"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="check-circle-2" style="width:18px;height:18px;color:#22c55e"></i><span class="stat-label">معتمدة</span></div><div class="stat-value" id="s-approved">—</div></div>
+    <div class="stat gold"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="clock" style="width:18px;height:18px;color:#fbbf24"></i><span class="stat-label">معلقة</span></div><div class="stat-value" id="s-pending">—</div></div>
+    <div class="stat red"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="message-circle-warning" style="width:18px;height:18px;color:#ef4444"></i><span class="stat-label">الشكاوى</span></div><div class="stat-value" id="s-complaints">—</div></div>
+    <div class="stat purple"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="truck" style="width:18px;height:18px;color:#a78bfa"></i><span class="stat-label">إجمالي توصيلات</span></div><div class="stat-value" id="s-deliveries">—</div></div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('orders',this)">الطلبات</button>
-    <button class="tab" onclick="showTab('complaints',this)">الشكاوى</button>
-    <button class="tab" onclick="showTab('analytics',this)">التحليلات</button>
-    <button class="tab" onclick="showTab('sla',this)">متابعة SLA</button>
-    <button class="tab" onclick="showTab('regions',this)">إدارة المناطق</button>
-    <button class="tab" onclick="showTab('escalations',this)">التصعيدات</button>
+    <button class="tab active" onclick="showTab('orders',this)"><i data-lucide="package" style="width:14px;height:14px"></i> الطلبات</button>
+    <button class="tab" onclick="showTab('complaints',this)"><i data-lucide="message-circle-warning" style="width:14px;height:14px"></i> الشكاوى</button>
+    <button class="tab" onclick="showTab('analytics',this)"><i data-lucide="bar-chart-3" style="width:14px;height:14px"></i> التحليلات</button>
+    <button class="tab" onclick="showTab('sla',this)"><i data-lucide="timer" style="width:14px;height:14px"></i> متابعة SLA</button>
+    <button class="tab" onclick="showTab('regions',this)"><i data-lucide="map-pin" style="width:14px;height:14px"></i> إدارة المناطق</button>
+    <button class="tab" onclick="showTab('escalations',this)"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i> التصعيدات</button>
+    <button class="tab" onclick="showTab('live-map',this)"><i data-lucide="map" style="width:14px;height:14px"></i> الخريطة الحية</button>
+    <button class="tab" onclick="showTab('alerts',this)"><i data-lucide="bell-ring" style="width:14px;height:14px"></i> التنبيهات</button>
   </div>
 
   <div id="tab-orders">
-    <div class="card"><div class="card-h"><h3>جميع الطلبات</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="package" style="width:16px;height:16px;color:#38bdf8"></i> جميع الطلبات</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="orders-tbl"></tbody></table></div></div>
   </div>
 
   <div id="tab-complaints" style="display:none">
-    <div class="card"><div class="card-h"><h3>الشكاوى والاستفسارات</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="message-circle-warning" style="width:16px;height:16px;color:#ef4444"></i> الشكاوى والاستفسارات</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>رقم التذكرة</th><th>المندوب</th><th>التصنيف</th><th>الأولوية</th><th>الموضوع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="complaints-tbl"></tbody></table></div></div>
   </div>
 
@@ -99,8 +101,55 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
 
   <!-- ESCALATIONS TAB (NEW) -->
   <div id="tab-escalations" style="display:none">
-    <div class="card"><div class="card-h"><h3>التصعيدات — شكاوى تجاوزت SLA</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="alert-triangle" style="width:16px;height:16px;color:#ef4444"></i> التصعيدات — شكاوى تجاوزت SLA</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>الشكوى</th><th>القسم المسؤول</th><th>المدة</th><th>حالة التصعيد</th><th>المصعّد إلى</th></tr></thead><tbody id="esc-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- LIVE MAP TAB (NEW) -->
+  <div id="tab-live-map" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="map" style="width:16px;height:16px;color:#22c55e"></i> الخريطة الحية — مواقع المناديب</h3></div>
+    <div class="card-b">
+      <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:12px;padding:40px;text-align:center">
+        <i data-lucide="map-pin" style="width:48px;height:48px;color:var(--green);margin-bottom:12px"></i>
+        <div style="font-size:16px;font-weight:700;color:white;margin-bottom:6px">الخريطة الحية</div>
+        <div style="font-size:13px;color:var(--muted)">تتبع مواقع المناديب في الوقت الحقيقي — سيُربط بـ Google Maps API</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px">
+          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="navigation" style="width:20px;height:20px;color:#22c55e;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">في المهمة</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
+          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="coffee" style="width:20px;height:20px;color:#fbbf24;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">في الانتظار</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
+          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="wifi-off" style="width:20px;height:20px;color:#ef4444;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">غير متصل</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
+          <div style="background:var(--glass);border-radius:10px;padding:12px"><i data-lucide="users" style="width:20px;height:20px;color:#38bdf8;margin-bottom:4px"></i><div style="font-size:11px;color:var(--muted)">الإجمالي</div><div style="font-size:18px;font-weight:700;color:white">—</div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ALERTS TAB (NEW) -->
+  <div id="tab-alerts" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="bell-ring" style="width:16px;height:16px;color:#fbbf24"></i> التنبيهات التشغيلية</h3></div>
+    <div class="card-b">
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(239,68,68,0.15);border-radius:12px;background:rgba(239,68,68,0.04)">
+          <i data-lucide="alert-circle" style="width:20px;height:20px;color:#ef4444;flex-shrink:0"></i>
+          <div><div style="font-size:13px;font-weight:600;color:white">شكاوى تجاوزت SLA</div><div style="font-size:11px;color:var(--muted)">تنبيه تلقائي عند تجاوز 24 ساعة</div></div>
+          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(239,68,68,0.15);color:#fca5a5">مفعّل</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(251,191,36,0.15);border-radius:12px;background:rgba(251,191,36,0.04)">
+          <i data-lucide="truck" style="width:20px;height:20px;color:#fbbf24;flex-shrink:0"></i>
+          <div><div style="font-size:13px;font-weight:600;color:white">انخفاض أداء المناديب</div><div style="font-size:11px;color:var(--muted)">أقل من 10 طلبات يومياً</div></div>
+          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(251,191,36,0.15);color:#fde68a">مفعّل</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(56,189,248,0.15);border-radius:12px;background:rgba(56,189,248,0.04)">
+          <i data-lucide="file-up" style="width:20px;height:20px;color:#38bdf8;flex-shrink:0"></i>
+          <div><div style="font-size:13px;font-weight:600;color:white">تقارير المنصات المتأخرة</div><div style="font-size:11px;color:var(--muted)">تنبيه إذا لم يُرفع التقرير حتى 14:00</div></div>
+          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(56,189,248,0.15);color:#7dd3fc">مفعّل</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--glass)">
+          <i data-lucide="shield-alert" style="width:20px;height:20px;color:#a78bfa;flex-shrink:0"></i>
+          <div><div style="font-size:13px;font-weight:600;color:white">كشف تلاعب مالي</div><div style="font-size:11px;color:var(--muted)">أنماط غير طبيعية في الأرباح</div></div>
+          <span style="margin-right:auto;font-size:11px;padding:3px 10px;border-radius:8px;background:var(--glass);color:var(--muted)">غير مفعّل</span>
+        </div>
+      </div>
+    </div></div>
   </div>
 </div>
 <script>

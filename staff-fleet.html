@@ -44,57 +44,93 @@ body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200
 <div class="top-bar">
   <h1>🚗 إدارة المركبات</h1>
   <div class="top-bar-nav">
-    <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
+    <a href="/admin-dashboard.html"><i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> الإدارة</a>
     <a href="/staff-finance.html"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
     <a href="/staff-hr.html"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
-    <a href="/staff-fleet.html" class="active"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
+    <a href="/staff-ops.html"><i data-lucide="radar" style="width:16px;height:16px"></i> العمليات</a>
+    <a href="/staff-fleet.html" class="active"><i data-lucide="car" style="width:16px;height:16px"></i> المركبات</a>
   </div>
-  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
+  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()"><i data-lucide="log-out" style="width:14px;height:14px"></i> خروج</button></div>
 </div>
 <div class="container">
-  <div class="page-header"><div><div class="page-title">إدارة المركبات والأسطول</div><div class="page-sub" id="current-date"></div></div></div>
+  <div class="page-header"><div><div class="page-title"><i data-lucide="car" style="width:26px;height:26px;color:#22d3ee"></i> إدارة المركبات والأسطول</div><div class="page-sub" id="current-date"></div></div></div>
 
   <div class="stats-row">
-    <div class="stat"><div class="stat-label">إجمالي المركبات</div><div class="stat-value" id="s-total">—</div></div>
-    <div class="stat green"><div class="stat-label">نشطة</div><div class="stat-value" id="s-active">—</div></div>
-    <div class="stat gold"><div class="stat-label">صيانة</div><div class="stat-value" id="s-maint">—</div></div>
-    <div class="stat red"><div class="stat-label">تأمين منتهي قريباً</div><div class="stat-value" id="s-expiring">—</div></div>
+    <div class="stat"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="car" style="width:18px;height:18px;color:#38bdf8"></i><span class="stat-label">إجمالي المركبات</span></div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat green"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="check-circle-2" style="width:18px;height:18px;color:#22c55e"></i><span class="stat-label">نشطة</span></div><div class="stat-value" id="s-active">—</div></div>
+    <div class="stat gold"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="wrench" style="width:18px;height:18px;color:#fbbf24"></i><span class="stat-label">صيانة</span></div><div class="stat-value" id="s-maint">—</div></div>
+    <div class="stat red"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i data-lucide="alert-triangle" style="width:18px;height:18px;color:#ef4444"></i><span class="stat-label">تأمين منتهي قريباً</span></div><div class="stat-value" id="s-expiring">—</div></div>
   </div>
 
-  <!-- Tabs (NEW) -->
-  <div class="tabs" style="display:flex;gap:2px;background:#e2e8f0;border-radius:10px;padding:3px;margin-bottom:20px">
-    <button class="tab active" onclick="showFleetTab('vehicles',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:white;font-family:inherit;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)">المركبات</button>
-    <button class="tab" onclick="showFleetTab('maintenance',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">الصيانة</button>
-    <button class="tab" onclick="showFleetTab('assignments',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">التعيينات</button>
-    <button class="tab" onclick="showFleetTab('insurance',this)" style="flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)">التأمين والفحص</button>
+  <div class="tabs">
+    <button class="tab active" onclick="showFleetTab('vehicles',this)"><i data-lucide="car" style="width:14px;height:14px"></i> المركبات</button>
+    <button class="tab" onclick="showFleetTab('maintenance',this)"><i data-lucide="wrench" style="width:14px;height:14px"></i> الصيانة</button>
+    <button class="tab" onclick="showFleetTab('assignments',this)"><i data-lucide="link" style="width:14px;height:14px"></i> التعيينات</button>
+    <button class="tab" onclick="showFleetTab('insurance',this)"><i data-lucide="shield-check" style="width:14px;height:14px"></i> التأمين والفحص</button>
+    <button class="tab" onclick="showFleetTab('costs',this)"><i data-lucide="receipt" style="width:14px;height:14px"></i> التكاليف</button>
+    <button class="tab" onclick="showFleetTab('fuel',this)"><i data-lucide="fuel" style="width:14px;height:14px"></i> الوقود</button>
   </div>
 
   <div id="ftab-vehicles">
   <div class="vehicle-cards" id="v-cards"></div>
 
   <div class="card">
-    <div class="card-h"><h3>جدول المركبات التفصيلي</h3></div>
+    <div class="card-h"><h3><i data-lucide="list" style="width:16px;height:16px;color:#38bdf8"></i> جدول المركبات التفصيلي</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>اللوحة</th><th>النوع</th><th>الماركة</th><th>الموديل</th><th>السنة</th><th>اللون</th><th>المندوب</th><th>التأمين</th><th>الفحص</th><th>الحالة</th></tr></thead><tbody id="v-tbl"></tbody></table></div>
   </div>
   </div><!-- end ftab-vehicles -->
 
-  <!-- MAINTENANCE TAB (NEW) -->
   <div id="ftab-maintenance" style="display:none">
-    <div class="card"><div class="card-h"><h3>سجل الصيانة</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="wrench" style="width:16px;height:16px;color:#fbbf24"></i> سجل الصيانة</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>نوع الصيانة</th><th>التاريخ</th><th>التكلفة</th><th>الورشة</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody id="maint-tbl"></tbody></table></div></div>
   </div>
 
   <!-- ASSIGNMENTS TAB (NEW) -->
   <div id="ftab-assignments" style="display:none">
-    <div class="card"><div class="card-h"><h3>تعيينات المركبات — ربط مركبة بمندوب</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="link" style="width:16px;height:16px;color:#a78bfa"></i> تعيينات المركبات — ربط مركبة بمندوب</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>المندوب</th><th>تاريخ التعيين</th><th>تاريخ الإنهاء</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody id="assign-tbl"></tbody></table></div></div>
   </div>
 
   <!-- INSURANCE TAB (NEW) -->
   <div id="ftab-insurance" style="display:none">
-    <div class="card"><div class="card-h"><h3>التأمين والفحص الدوري</h3></div>
+    <div class="card"><div class="card-h"><h3><i data-lucide="shield-check" style="width:16px;height:16px;color:#22c55e"></i> التأمين والفحص الدوري</h3></div>
     <div class="card-b"><table class="tbl"><thead><tr><th>المركبة</th><th>نوع التأمين</th><th>تاريخ الانتهاء</th><th>الأيام المتبقية</th><th>حالة الفحص</th><th>تنبيه</th></tr></thead><tbody id="ins-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- COSTS TAB (NEW) -->
+  <div id="ftab-costs" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="receipt" style="width:16px;height:16px;color:#fb923c"></i> تكاليف الأسطول</h3></div>
+    <div class="card-b">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px">
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;padding:16px;text-align:center">
+          <i data-lucide="fuel" style="width:24px;height:24px;color:#ef4444;margin-bottom:6px"></i>
+          <div style="font-size:11px;color:var(--muted)">وقود</div><div style="font-size:18px;font-weight:700;color:white">—</div>
+        </div>
+        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);border-radius:12px;padding:16px;text-align:center">
+          <i data-lucide="wrench" style="width:24px;height:24px;color:#fbbf24;margin-bottom:6px"></i>
+          <div style="font-size:11px;color:var(--muted)">صيانة</div><div style="font-size:18px;font-weight:700;color:white">—</div>
+        </div>
+        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:12px;padding:16px;text-align:center">
+          <i data-lucide="shield" style="width:24px;height:24px;color:#38bdf8;margin-bottom:6px"></i>
+          <div style="font-size:11px;color:var(--muted)">تأمين</div><div style="font-size:18px;font-weight:700;color:white">—</div>
+        </div>
+        <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:16px;text-align:center">
+          <i data-lucide="banknote" style="width:24px;height:24px;color:#a78bfa;margin-bottom:6px"></i>
+          <div style="font-size:11px;color:var(--muted)">إجمالي</div><div style="font-size:18px;font-weight:700;color:white">—</div>
+        </div>
+      </div>
+      <table class="tbl"><thead><tr><th>المركبة</th><th>نوع التكلفة</th><th>المبلغ</th><th>التاريخ</th><th>ملاحظات</th></tr></thead>
+      <tbody><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">نظام تتبع التكاليف قيد الإعداد — سيُربط بالمحرك المالي</td></tr></tbody></table>
+    </div></div>
+  </div>
+
+  <!-- FUEL TAB (NEW) -->
+  <div id="ftab-fuel" style="display:none">
+    <div class="card"><div class="card-h"><h3><i data-lucide="fuel" style="width:16px;height:16px;color:#ef4444"></i> سجل الوقود</h3></div>
+    <div class="card-b">
+      <table class="tbl"><thead><tr><th>المركبة</th><th>التاريخ</th><th>الكمية (لتر)</th><th>المبلغ</th><th>عداد الكيلومترات</th><th>المحطة</th></tr></thead>
+      <tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">نظام تتبع الوقود قيد الإعداد</td></tr></tbody></table>
+    </div></div>
   </div>
 </div>
 <script>
@@ -145,7 +181,7 @@ async function loadAll(){
 }
 
 // === NEW: Fleet tab switching + data for new tabs ===
-function showFleetTab(n,btn){document.querySelectorAll('[id^="ftab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>{t.style.background='transparent';t.style.color='var(--muted)';t.style.boxShadow='none'});document.getElementById('ftab-'+n).style.display='block';if(btn){btn.style.background='white';btn.style.color='var(--navy)';btn.style.boxShadow='0 1px 3px rgba(0,0,0,.1)'}}
+function showFleetTab(n,btn){document.querySelectorAll('[id^="ftab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('ftab-'+n).style.display='block';if(btn)btn.classList.add('active')}
 
 const _origFleetLoad=loadAll;
 loadAll=async function(){await _origFleetLoad();try{

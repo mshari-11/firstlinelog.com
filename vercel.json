@@ -17,7 +17,8 @@
           { "source": "/compliance", "destination": "/" },
           { "source": "/operational-model", "destination": "/" },
           { "source": "/employee-services", "destination": "/" },
-          { "source": "/github-management", "destination": "/" }
+          { "source": "/github-management", "destination": "/" },
+          { "source": "/ops/dispatch", "destination": "/dispatch-map.html" }
     ],
     "headers": [
           {

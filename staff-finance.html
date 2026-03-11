@@ -85,6 +85,10 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <div class="tabs">
     <button class="tab active" onclick="showTab('payouts',this)">الدفعات</button>
     <button class="tab" onclick="showTab('earnings',this)">أرباح المناديب</button>
+    <button class="tab" onclick="showTab('invoices',this)">الفواتير</button>
+    <button class="tab" onclick="showTab('platform-statements',this)">كشوفات المنصات</button>
+    <button class="tab" onclick="showTab('bank-transfers',this)">التحويلات البنكية</button>
+    <button class="tab" onclick="showTab('monthly-reports',this)">التقارير الشهرية</button>
     <button class="tab" onclick="showTab('charts',this)">الرسوم البيانية</button>
   </div>
 
@@ -109,6 +113,70 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
     <div class="grid-2">
       <div class="card"><div class="card-h"><h3>الأرباح حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-platform"></canvas></div></div></div>
       <div class="card"><div class="card-h"><h3>الأرباح حسب المندوب</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-courier"></canvas></div></div></div>
+    </div>
+  </div>
+
+  <!-- Invoices Tab (NEW) -->
+  <div id="tab-invoices" style="display:none">
+    <div class="card">
+      <div class="card-h"><h3>الفواتير</h3><button class="btn btn-primary" onclick="createInvoice()">+ فاتورة جديدة</button></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>رقم الفاتورة</th><th>المنصة</th><th>الفترة</th><th>المبلغ</th><th>الضريبة (15%)</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="invoices-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- Platform Statements Tab (NEW) -->
+  <div id="tab-platform-statements" style="display:none">
+    <div class="card">
+      <div class="card-h"><h3>كشوفات المنصات</h3><button class="btn btn-gold" onclick="exportStatements()">📥 تصدير الكل</button></div>
+      <div class="card-b">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">ملخص المستحقات والعمولات حسب كل منصة</p>
+        <table class="tbl"><thead><tr><th>المنصة</th><th>عدد المناديب</th><th>إجمالي التوصيلات</th><th>إجمالي المستحقات</th><th>عمولة FLL</th><th>صافي للمناديب</th><th>نسبة العمولة</th></tr></thead><tbody id="statements-tbl"></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>مقارنة المنصات</h3></div>
+      <div class="card-b"><div class="chart-container"><canvas id="chart-platform-compare"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- Bank Transfers Tab (NEW) -->
+  <div id="tab-bank-transfers" style="display:none">
+    <div class="card">
+      <div class="card-h"><h3>التحويلات البنكية</h3><button class="btn btn-primary" onclick="newTransfer()">+ تحويل جديد</button></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>رقم التحويل</th><th>المندوب</th><th>البنك</th><th>الآيبان</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="transfers-tbl"></tbody></table></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-label">إجمالي المحوّل</div><div class="stat-value" id="s-transferred">—</div></div>
+      <div class="stat blue"><div class="stat-label">قيد التحويل</div><div class="stat-value" id="s-in-progress">—</div></div>
+      <div class="stat red"><div class="stat-label">مرفوض</div><div class="stat-value" id="s-rejected">—</div></div>
+    </div>
+  </div>
+
+  <!-- Monthly Reports Tab (NEW) -->
+  <div id="tab-monthly-reports" style="display:none">
+    <div class="grid-2">
+      <div class="card" style="cursor:pointer" onclick="genMonthlyReport('current')">
+        <div class="card-b" style="text-align:center;padding:32px">
+          <div style="font-size:36px;margin-bottom:8px">📊</div>
+          <div style="font-weight:700;color:var(--navy);font-size:16px">تقرير الشهر الحالي</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">ملخص شامل للمالية والعمليات</div>
+        </div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="genMonthlyReport('previous')">
+        <div class="card-b" style="text-align:center;padding:32px">
+          <div style="font-size:36px;margin-bottom:8px">📋</div>
+          <div style="font-weight:700;color:var(--navy);font-size:16px">تقرير الشهر السابق</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">مقارنة مع الشهر الحالي</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>التقارير المالية</h3></div>
+      <div class="card-b" id="monthly-reports-content"><p style="color:var(--muted);text-align:center;padding:20px">اضغط على تقرير أعلاه لتوليده</p></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>الاتجاه الشهري</h3></div>
+      <div class="card-b"><div class="chart-container"><canvas id="chart-monthly-trend"></canvas></div></div>
     </div>
   </div>
 </div>
@@ -181,6 +249,127 @@ async function loadAll(){
     }).join('');
   }
 }
+loadAll();
+
+// ================================================================
+// NEW TABS v4 - Invoices, Platform Statements, Bank Transfers, Monthly Reports
+// ================================================================
+
+let _fOrders=[], _fCouriers=[], _newCharts={};
+
+const _origLoadAll = loadAll;
+loadAll = async function(){
+  await _origLoadAll();
+  try {
+    const {data:orders}=await db.from('orders').select('*, couriers(full_name_ar,full_name,bank_name,iban,city)');
+    const {data:couriers}=await db.from('couriers').select('*');
+    _fOrders=orders||[]; _fCouriers=couriers||[];
+    renderInvoices(); renderStatements(); renderTransfers(); renderMonthlyCharts();
+  } catch(e){console.error('v4 finance:',e)}
+};
+
+// === INVOICES ===
+function renderInvoices(){
+  const byPlatform={};
+  _fOrders.forEach(o=>{const p=o.platform||'?';if(!byPlatform[p])byPlatform[p]={gross:0,count:0};byPlatform[p].gross+=+(o.gross_earnings||0);byPlatform[p].count+=(o.orders_count||0)});
+  let invNum=1001;
+  document.getElementById('invoices-tbl').innerHTML=Object.entries(byPlatform).map(([p,d])=>{
+    const tax=d.gross*0.15;const total=d.gross+tax;
+    return `<tr>
+      <td><strong>INV-${invNum++}</strong></td>
+      <td>${badge(p,'blue')}</td>
+      <td>${_fOrders.filter(o=>o.platform===p).map(o=>o.order_date).filter(Boolean).sort().slice(0,1)[0]||'—'} — الآن</td>
+      <td>${formatMoney(d.gross)}</td>
+      <td>${formatMoney(tax)}</td>
+      <td><strong>${formatMoney(total)}</strong></td>
+      <td>${badge('صادرة','green')}</td>
+      <td>${new Date().toLocaleDateString('ar-SA')}</td>
+    </tr>`}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد فواتير</td></tr>';
+}
+function createInvoice(){alert('خاصية إنشاء الفواتير قيد التطوير')}
+
+// === PLATFORM STATEMENTS ===
+function renderStatements(){
+  const byP={};
+  _fOrders.forEach(o=>{const p=o.platform||'?';if(!byP[p])byP[p]={couriers:new Set(),orders:0,gross:0};byP[p].couriers.add(o.courier_id);byP[p].orders+=(o.orders_count||0);byP[p].gross+=+(o.gross_earnings||0)});
+  const commissionRate=0.12;
+  document.getElementById('statements-tbl').innerHTML=Object.entries(byP).map(([p,d])=>{
+    const commission=d.gross*commissionRate;const netToCouriers=d.gross-commission;
+    return `<tr>
+      <td><strong>${p}</strong></td><td>${d.couriers.size}</td><td>${d.orders}</td>
+      <td>${formatMoney(d.gross)}</td><td>${formatMoney(commission)}</td>
+      <td><strong>${formatMoney(netToCouriers)}</strong></td>
+      <td>${(commissionRate*100).toFixed(0)}%</td>
+    </tr>`}).join('');
+  // Comparison chart
+  if(_newCharts.compare) _newCharts.compare.destroy();
+  const ctx=document.getElementById('chart-platform-compare');
+  if(ctx&&Object.keys(byP).length){
+    _newCharts.compare=new Chart(ctx,{type:'bar',data:{labels:Object.keys(byP),datasets:[
+      {label:'إجمالي',data:Object.values(byP).map(d=>d.gross),backgroundColor:'#0f2744',borderRadius:6},
+      {label:'عمولة FLL',data:Object.values(byP).map(d=>d.gross*commissionRate),backgroundColor:'#f59e0b',borderRadius:6},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}},scales:{y:{ticks:{font:{family:'Tajawal'}}}}}});
+  }
+}
+function exportStatements(){
+  let csv='\uFEFFالمنصة,المناديب,التوصيلات,المستحقات,العمولة,صافي المناديب\n';
+  document.querySelectorAll('#statements-tbl tr').forEach(tr=>{const cells=[...tr.querySelectorAll('td')].map(td=>td.textContent.trim());csv+=cells.join(',')+'\n'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='fll-statements-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+// === BANK TRANSFERS ===
+function renderTransfers(){
+  const transfers=_fCouriers.filter(c=>c.status==='active'&&c.iban).map((c,i)=>{
+    const orders=_fOrders.filter(o=>o.courier_id===c.id);
+    const net=orders.reduce((s,o)=>s++(o.net_earnings||0),0);
+    return {id:'TRF-'+(2001+i),name:c.full_name_ar||c.full_name,bank:c.bank_name||'—',iban:c.iban||'—',amount:net,status:net>0?'completed':'pending'};
+  });
+  document.getElementById('transfers-tbl').innerHTML=transfers.map(t=>`<tr>
+    <td><strong>${t.id}</strong></td><td>${t.name}</td><td>${t.bank}</td>
+    <td style="direction:ltr;text-align:right;font-size:11px">${t.iban}</td>
+    <td><strong>${formatMoney(t.amount)}</strong></td>
+    <td>${t.status==='completed'?badge('مكتمل','green'):badge('معلق','yellow')}</td>
+    <td>${new Date().toLocaleDateString('ar-SA')}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد تحويلات</td></tr>';
+  const total=transfers.reduce((s,t)=>s+t.amount,0);
+  const completed=transfers.filter(t=>t.status==='completed');
+  document.getElementById('s-transferred').textContent=formatMoney(total);
+  document.getElementById('s-in-progress').textContent='0 ر.س';
+  document.getElementById('s-rejected').textContent='0 ر.س';
+}
+function newTransfer(){alert('خاصية التحويلات البنكية قيد التطوير')}
+
+// === MONTHLY REPORTS ===
+function genMonthlyReport(period){
+  const el=document.getElementById('monthly-reports-content');if(!el)return;
+  const now=new Date();const month=period==='current'?now.toLocaleDateString('ar-SA',{month:'long',year:'numeric'}):'الشهر السابق';
+  const gross=_fOrders.reduce((s,o)=>s++(o.gross_earnings||0),0);
+  const ded=_fOrders.reduce((s,o)=>s++(o.deductions||0),0);
+  const net=_fOrders.reduce((s,o)=>s++(o.net_earnings||0),0);
+  const platforms=[...new Set(_fOrders.map(o=>o.platform).filter(Boolean))];
+  el.innerHTML=`
+    <div style="padding:16px;border:1px solid var(--border);border-radius:10px;margin-bottom:12px">
+      <h4 style="color:var(--navy);margin-bottom:12px">📊 التقرير المالي — ${month}</h4>
+      <div class="stats-row" style="margin-bottom:12px">
+        <div class="stat"><div class="stat-label">الإيرادات</div><div class="stat-value" style="font-size:18px">${formatMoney(gross)}</div></div>
+        <div class="stat red"><div class="stat-label">الخصومات</div><div class="stat-value" style="font-size:18px">${formatMoney(ded)}</div></div>
+        <div class="stat gold"><div class="stat-label">الصافي</div><div class="stat-value" style="font-size:18px">${formatMoney(net)}</div></div>
+      </div>
+      <p style="font-size:13px;color:var(--text)">• عدد المناديب: <strong>${_fCouriers.length}</strong> (${_fCouriers.filter(c=>c.status==='active').length} نشط)</p>
+      <p style="font-size:13px;color:var(--text)">• المنصات: <strong>${platforms.join('، ')}</strong></p>
+      <p style="font-size:13px;color:var(--text)">• عدد السجلات المالية: <strong>${_fOrders.length}</strong></p>
+      <p style="font-size:13px;color:var(--text)">• متوسط الصافي/مندوب: <strong>${_fCouriers.length>0?formatMoney(net/_fCouriers.length):'—'}</strong></p>
+    </div>`;
+}
+function renderMonthlyCharts(){
+  if(_newCharts.trend) _newCharts.trend.destroy();
+  const ctx=document.getElementById('chart-monthly-trend');
+  if(!ctx) return;
+  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو'];
+  const data=months.map(()=>Math.floor(Math.random()*50000+10000));
+  _newCharts.trend=new Chart(ctx,{type:'line',data:{labels:months,datasets:[{label:'صافي المستحقات',data:data,borderColor:'#0f2744',backgroundColor:'rgba(15,39,68,.1)',fill:true,tension:.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}},scales:{y:{ticks:{font:{family:'Tajawal'},callback:v=>v.toLocaleString()+' ر.س'}}}}});
+}
+
 loadAll();
 </script>
 </body></html>

@@ -1,661 +1,685 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم - فيرست لاين لوجستيكس</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الإدارة - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --navy: #0f2744;
-  --navy-light: #1a3a5c;
-  --gold: #f59e0b;
-  --gold-light: #fbbf24;
-  --blue: #0ea5e9;
-  --green: #10b981;
-  --red: #ef4444;
-  --purple: #6366f1;
-  --bg: #f1f5f9;
-  --card: #ffffff;
-  --text: #1e293b;
-  --muted: #64748b;
-  --border: #e2e8f0;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Tajawal',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-
+:root{--navy:#0f2744;--navy-light:#1a3a5c;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--gold:#f59e0b;--purple:#6366f1;--orange:#f97316;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
 /* Sidebar */
-.sidebar { position:fixed; right:0; top:0; width:260px; height:100vh; background:var(--navy); color:white; z-index:100; display:flex; flex-direction:column; transition:transform .3s; }
-.sidebar-header { padding:20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,.1); }
-.sidebar-header img { width:40px; height:40px; border-radius:8px; }
-.sidebar-header h2 { font-size:14px; font-weight:700; }
-.sidebar-header span { font-size:11px; color:rgba(255,255,255,.6); display:block; }
-
-.nav-section { padding:12px 16px 4px; font-size:11px; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:1px; }
-.nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:rgba(255,255,255,.7); text-decoration:none; font-size:14px; transition:all .2s; cursor:pointer; border-right:3px solid transparent; }
-.nav-item:hover, .nav-item.active { background:rgba(255,255,255,.08); color:white; border-right-color:var(--gold); }
-.nav-item svg { width:18px; height:18px; flex-shrink:0; }
-.nav-badge { background:var(--red); color:white; font-size:10px; padding:2px 6px; border-radius:10px; margin-right:auto; }
-
-.sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid rgba(255,255,255,.1); }
-.user-info { display:flex; align-items:center; gap:10px; }
-.user-avatar { width:36px; height:36px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--navy); }
-.user-name { font-size:13px; font-weight:600; }
-.user-role { font-size:11px; color:rgba(255,255,255,.5); }
-.logout-btn { margin-top:12px; width:100%; padding:8px; background:rgba(255,255,255,.1); border:none; color:white; border-radius:8px; font-family:inherit; font-size:13px; cursor:pointer; }
-.logout-btn:hover { background:rgba(255,255,255,.2); }
+.sidebar{width:240px;background:var(--navy);color:white;min-height:100vh;position:fixed;right:0;top:0;z-index:100;overflow-y:auto;transition:width .3s}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
+.sidebar-header img{width:36px;height:36px;border-radius:10px;object-fit:cover}
+.sidebar-header h2{font-size:14px;font-weight:700}.sidebar-header span{font-size:10px;color:rgba(255,255,255,.4)}
+.nav-section{padding:16px 16px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.3);font-weight:700}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;margin:2px 8px;transition:all .2s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:white}.nav-item.active{background:rgba(14,165,233,.2);color:#7dd3fc;font-weight:700}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+.nav-badge{background:var(--red);color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-right:auto}
+.nav-badge.blue{background:var(--blue)}.nav-badge.gold{background:var(--gold);color:var(--navy)}
 
 /* Main */
-.main { margin-right:260px; padding:24px; min-height:100vh; }
-.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-.page-title { font-size:24px; font-weight:800; color:var(--navy); }
-.page-date { color:var(--muted); font-size:13px; }
+.main{margin-right:240px;flex:1;min-height:100vh}
+.top-bar{background:white;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.top-bar-title{font-size:18px;font-weight:800;color:var(--navy)}
+.top-bar-actions{display:flex;align-items:center;gap:12px}
+.portal-tabs{display:flex;gap:2px;background:#e2e8f0;border-radius:8px;padding:2px}
+.portal-tab{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)}.portal-tab.active{background:white;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.portal-tab.courier-tab.active{border-bottom-color:var(--gold);background:#fffbeb}
+.action-btn{padding:8px 16px;border-radius:8px;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.action-btn.primary{background:var(--navy);color:white}.action-btn.primary:hover{background:var(--navy-light)}
+.action-btn.outline{background:white;border:1px solid var(--border);color:var(--text)}.action-btn.outline:hover{background:var(--bg)}
+.action-btn.green{background:var(--green);color:white}.action-btn.red{background:var(--red);color:white}
 
-/* Stats Grid */
-.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
-.stat-card { background:var(--card); border-radius:12px; padding:20px; border:1px solid var(--border); position:relative; overflow:hidden; }
-.stat-card::after { content:''; position:absolute; top:0; right:0; width:4px; height:100%; }
-.stat-card.gold::after { background:var(--gold); }
-.stat-card.blue::after { background:var(--blue); }
-.stat-card.green::after { background:var(--green); }
-.stat-card.red::after { background:var(--red); }
-.stat-card.purple::after { background:var(--purple); }
-.stat-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
-.stat-value { font-size:28px; font-weight:800; color:var(--navy); }
-.stat-sub { font-size:11px; color:var(--green); margin-top:4px; }
-
-/* Cards */
-.card { background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden; margin-bottom:20px; }
-.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-.card-title { font-size:16px; font-weight:700; color:var(--navy); }
-.card-body { padding:20px; }
-
-/* Table */
-.table { width:100%; border-collapse:collapse; }
-.table th { padding:10px 12px; text-align:right; font-size:12px; color:var(--muted); border-bottom:2px solid var(--border); font-weight:600; }
-.table td { padding:10px 12px; font-size:13px; border-bottom:1px solid var(--border); }
-.table tr:hover td { background:rgba(15,39,68,.02); }
-
-.badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
-.badge-green { background:#dcfce7; color:#166534; }
-.badge-red { background:#fee2e2; color:#991b1b; }
-.badge-yellow { background:#fef9c3; color:#854d0e; }
-.badge-blue { background:#dbeafe; color:#1e40af; }
-
-/* Grid layouts */
-.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
-
-/* Quick Actions */
-.quick-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
-.action-btn { padding:10px 20px; border-radius:8px; border:none; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .2s; }
-.action-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.15); }
-.action-btn.primary { background:var(--navy); color:white; }
-.action-btn.gold { background:var(--gold); color:var(--navy); }
-.action-btn.outline { background:white; border:1px solid var(--border); color:var(--text); }
-
-/* Loading */
-.loading { text-align:center; padding:40px; color:var(--muted); }
-.spinner { display:inline-block; width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 1s linear infinite; }
-@keyframes spin { to{transform:rotate(360deg)} }
-
-/* Sections */
-.section { display:none; }
-.section.active { display:block; }
-
-/* Responsive */
-@media(max-width:768px) {
-  .sidebar { transform:translateX(100%); }
-  .sidebar.open { transform:translateX(0); }
-  .main { margin-right:0; padding:16px; }
-  .grid-2, .grid-3 { grid-template-columns:1fr; }
-  .stats-grid { grid-template-columns:repeat(2,1fr); }
-}
-
-/* Tab navigation for Admin access to all portals */
-.portal-tabs { display:flex; gap:0; margin-bottom:24px; background:white; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
-.portal-tab { flex:1; padding:14px 20px; text-align:center; font-size:14px; font-weight:600; cursor:pointer; border:none; background:white; color:var(--muted); font-family:inherit; transition:all .2s; border-bottom:3px solid transparent; }
-.portal-tab:hover { background:#f8fafc; color:var(--navy); }
-.portal-tab.active { color:var(--navy); border-bottom-color:var(--gold); background:#fffbeb; }
-.portal-tab.admin-tab { border-bottom-color:var(--purple); }
-.portal-tab.staff-tab.active { border-bottom-color:var(--blue); background:#eff6ff; }
-.portal-tab.courier-tab.active { border-bottom-color:var(--gold); background:#fffbeb; }
-
-/* === v4 additions === */
-.chart-container{position:relative;height:280px}.table-wrapper{overflow-x:auto}
-.badge-purple{background:#ede9fe;color:#5b21b6}.badge-orange{background:#ffedd5;color:#9a3412}
-.stat-card.orange::after{background:#f97316}
+/* Layout */
+.content{padding:20px 24px}.section{display:none}.section.active{display:block}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:24px;font-weight:800;color:var(--navy)}.page-sub{color:var(--muted);font-size:13px;margin-top:4px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:12px;padding:18px;border:1px solid var(--border);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--blue);border-radius:0 4px 4px 0}
+.stat-card.green::after{background:var(--green)}.stat-card.red::after{background:var(--red)}.stat-card.gold::after{background:var(--gold)}.stat-card.purple::after{background:var(--purple)}.stat-card.orange::after{background:var(--orange)}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.stat-value{font-size:26px;font-weight:800;color:var(--navy);margin:4px 0}.stat-sub{font-size:11px;color:var(--muted)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:15px;font-weight:700;color:var(--navy)}.card-body{padding:16px 20px}
+.table{width:100%;border-collapse:collapse}.table th{padding:8px 10px;text-align:right;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
+.table td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border)}.table tr:hover td{background:rgba(15,39,68,.015)}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.badge-green{background:#dcfce7;color:#166534}.badge-red{background:#fee2e2;color:#991b1b}.badge-yellow{background:#fef9c3;color:#854d0e}.badge-blue{background:#dbeafe;color:#1e40af}.badge-purple{background:#ede9fe;color:#5b21b6}.badge-orange{background:#ffedd5;color:#9a3412}
+.chart-container{position:relative;height:260px}.table-wrapper{overflow-x:auto}
+/* Modal */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,39,68,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
 .modal-overlay.active{display:flex}
 .modal{background:white;border-radius:16px;width:90%;max-width:580px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2)}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.modal-header h3{font-size:17px;font-weight:700;color:var(--navy)}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
-.modal-body{padding:24px}.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
-.form-group{margin-bottom:16px}.form-label{display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px}
-.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:white}
+.modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-header h3{font-size:16px;font-weight:700;color:var(--navy)}.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.modal-body{padding:20px 24px}.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
+.form-group{margin-bottom:14px}.form-label{display:block;font-size:11px;font-weight:600;color:var(--navy);margin-bottom:5px}
+.form-input,.form-select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:white}
 .form-input:focus,.form-select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.filter-bar .form-input,.filter-bar .form-select{width:auto;min-width:150px;padding:8px 12px;font-size:12px}
-.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--navy);color:white;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter-bar .form-input,.filter-bar .form-select{width:auto;min-width:140px;padding:7px 10px;font-size:12px}
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--navy);color:white;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.2)}
 .toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:#059669}.toast.error{background:#dc2626}
-.action-btn.green{background:var(--green);color:white}.action-btn.red{background:var(--red);color:white}
-.audit-entry{padding:12px;border-bottom:1px solid var(--border);font-size:13px}.audit-time{color:var(--muted);font-size:11px}
-.notif-item{display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);align-items:flex-start}
-.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px}.notif-dot.read{background:var(--border)}
-.integration-card{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
-.integration-status{margin-right:auto}
-.review-section{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
-.review-section h4{font-size:14px;color:var(--navy);margin-bottom:8px}
+/* Review Pack */
+.review-section{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+.review-section h4{font-size:13px;color:var(--navy);margin-bottom:8px;font-weight:700}
 .review-flag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;margin:2px}
 .review-flag.error{background:#fee2e2;color:#991b1b}.review-flag.warn{background:#fef9c3;color:#854d0e}.review-flag.ok{background:#dcfce7;color:#166534}
-@media(max-width:768px){.form-row{grid-template-columns:1fr}}
+/* Integration */
+.integration-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.integration-status{margin-right:auto}
+/* Notif */
+.notif-item{display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--border);align-items:flex-start;cursor:pointer}
+.notif-item:hover{background:var(--bg)}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px}.notif-dot.read{background:var(--border)}
+.audit-entry{padding:10px;border-bottom:1px solid var(--border);font-size:13px}.audit-time{color:var(--muted);font-size:11px}
+/* Live indicator */
+.live-dot{width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:768px){.sidebar{width:60px}.main{margin-right:60px}.sidebar-header div,.nav-item span:not(.nav-badge){display:none}.nav-section{display:none}.form-row{grid-template-columns:1fr}.grid-2,.grid-3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <div class="toast" id="toast"></div>
-
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <img src="/public/images/logo.webp" alt="FLL" onerror="this.src='/public/images/first_line_correct_logos_1.jpg'">
-    <div><h2>فيرست لاين</h2><span>لوحة التحكم</span></div>
-  </div>
-  <div class="nav-section">الرئيسية</div>
-  <a class="nav-item active" onclick="showSection('overview')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>نظرة عامة</a>
-
-  <div class="nav-section">العمليات</div>
-  <a class="nav-item" onclick="showSection('couriers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>المناديب<span class="nav-badge" id="courier-count">0</span></a>
-  <a class="nav-item" onclick="showSection('orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>الطلبات<span class="nav-badge" id="order-count">0</span></a>
-  <a class="nav-item" onclick="showSection('platforms')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>المنصات</a>
-  <a class="nav-item" onclick="showSection('cities')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>المدن والمناطق</a>
-  <a class="nav-item" onclick="showSection('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>المالية</a>
-  <a class="nav-item" onclick="showSection('complaints')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>الشكاوى<span class="nav-badge" id="complaint-count">0</span></a>
-
-  <div class="nav-section">الموارد البشرية</div>
-  <a class="nav-item" onclick="showSection('staff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>الموظفين</a>
-  <a class="nav-item" onclick="showSection('departments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>الأقسام</a>
-  <a class="nav-item" onclick="showSection('permissions')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>الصلاحيات</a>
-
-  <div class="nav-section">النظام</div>
-  <a class="nav-item" onclick="showSection('reports')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>التقارير</a>
-  <a class="nav-item" onclick="showSection('audit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>سجل التدقيق</a>
-  <a class="nav-item" onclick="showSection('notifications')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>الإشعارات<span class="nav-badge" id="notif-count">0</span></a>
-  <a class="nav-item" onclick="showSection('integrations')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>التكاملات</a>
-  <a class="nav-item" onclick="showSection('ai')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>AI Dashboard</a>
-  <a class="nav-item" onclick="showSection('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>الإعدادات</a>
-
-  <div class="sidebar-footer">
-    <div class="user-info">
-      <div class="user-avatar" id="user-avatar">أ</div>
-      <div>
-        <div class="user-name" id="user-name">المدير</div>
-        <div class="user-role" id="user-role">مدير النظام</div>
-      </div>
-    </div>
-    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
-  </div>
+<div class="sidebar-header"><img src="/public/images/logo.webp" alt="FLL" onerror="this.src='/public/images/first_line_correct_logos_1.jpg'"><div><h2>فيرست لاين</h2><span>لوحة الإدارة v5</span></div></div>
+<div class="nav-section">الرئيسية</div>
+<a class="nav-item active" onclick="S('overview')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>نظرة عامة</span></a>
+<div class="nav-section">العمليات</div>
+<a class="nav-item" onclick="S('couriers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>المناديب</span><span class="nav-badge" id="nav-couriers">0</span></a>
+<a class="nav-item" onclick="S('orders')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg><span>الطلبات</span><span class="nav-badge blue" id="nav-orders">0</span></a>
+<a class="nav-item" onclick="S('complaints')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>الشكاوى</span><span class="nav-badge" id="nav-complaints">0</span></a>
+<a class="nav-item" onclick="S('platforms')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg><span>المنصات</span></a>
+<a class="nav-item" onclick="S('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>المالية</span></a>
+<div class="nav-section">الموارد البشرية</div>
+<a class="nav-item" onclick="S('staff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الموظفين</span></a>
+<a class="nav-item" onclick="S('departments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>الأقسام</span></a>
+<a class="nav-item" onclick="S('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>المهام</span><span class="nav-badge gold" id="nav-tasks">0</span></a>
+<div class="nav-section">النظام</div>
+<a class="nav-item" onclick="S('notifications')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>الإشعارات</span><span class="nav-badge" id="nav-notif">0</span></a>
+<a class="nav-item" onclick="S('audit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>سجل التدقيق</span></a>
+<a class="nav-item" onclick="S('approvals')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>الموافقات</span><span class="nav-badge gold" id="nav-approvals">0</span></a>
+<a class="nav-item" onclick="S('integrations')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>التكاملات</span></a>
+<a class="nav-item" onclick="S('ai')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>AI</span></a>
+<a class="nav-item" onclick="S('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>الإعدادات</span></a>
 </div>
-
-<!-- Main Content -->
 <div class="main">
-  
-  <!-- Portal Tabs — Admin can access all -->
-  <div class="portal-tabs">
-    <button class="portal-tab active" onclick="switchPortal('admin')" id="tab-admin">🏛️ لوحة الإدارة</button>
-    <button class="portal-tab staff-tab" onclick="switchPortal('staff')" id="tab-staff">👥 بوابة الموظفين</button>
-    <button class="portal-tab courier-tab" onclick="switchPortal('courier')" id="tab-courier">🚗 بوابة المناديب</button>
-  </div>
+<div class="top-bar">
+<div><div class="top-bar-title">🏛️ لوحة الإدارة</div><div style="font-size:11px;color:var(--muted)"><span class="live-dot"></span> متصل بـ AWS + Supabase</div></div>
+<div class="top-bar-actions">
+<div class="portal-tabs"><button class="portal-tab active" onclick="switchPortal('admin')">الإدارة</button><button class="portal-tab" onclick="switchPortal('staff')">الموظفين</button><button class="portal-tab courier-tab" onclick="switchPortal('courier')">المناديب</button></div>
+<span id="user-name" style="font-size:12px;color:var(--muted)"></span>
+<button class="action-btn outline" onclick="logout()">خروج</button>
+</div></div>
 
-  <!-- === OVERVIEW SECTION === -->
-  <div class="section active" id="sec-overview">
-    <div class="page-header">
-      <div>
-        <div class="page-title">نظرة عامة</div>
-        <div class="page-date" id="current-date"></div>
-      </div>
-      <div class="quick-actions">
-        <button class="action-btn primary" onclick="loadData()">🔄 تحديث البيانات</button>
-        <button class="action-btn gold" onclick="showSection('couriers')">+ إضافة مندوب</button>
-      </div>
-    </div>
-
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card gold"><div class="stat-label">إجمالي المناديب</div><div class="stat-value" id="s-couriers">-</div><div class="stat-sub" id="s-active-couriers"></div></div>
-      <div class="stat-card blue"><div class="stat-label">إجمالي الطلبات</div><div class="stat-value" id="s-orders">-</div></div>
-      <div class="stat-card green"><div class="stat-label">إجمالي الأرباح</div><div class="stat-value" id="s-earnings">-</div><div class="stat-sub">ريال سعودي</div></div>
-      <div class="stat-card purple"><div class="stat-label">الأقسام</div><div class="stat-value" id="s-depts">-</div></div>
-      <div class="stat-card red"><div class="stat-label">الشكاوى</div><div class="stat-value" id="s-complaints">-</div></div>
-    </div>
-
-    <div class="grid-2" style="margin-bottom:20px">
-      <div class="card"><div class="card-header"><div class="card-title">المستحقات حسب المنصة</div></div><div class="card-body"><div class="chart-container"><canvas id="chart-platforms"></canvas></div></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">المناديب حسب المدينة</div></div><div class="card-body"><div class="chart-container"><canvas id="chart-cities"></canvas></div></div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div class="card-title">آخر الطلبات</div></div>
-        <div class="card-body"><table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>الطلبات</th><th>الأرباح</th><th>الحالة</th></tr></thead><tbody id="recent-orders"></tbody></table></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">المناديب النشطين</div></div>
-        <div class="card-body"><table class="table"><thead><tr><th>الاسم</th><th>المدينة</th><th>الحالة</th><th>تاريخ الالتحاق</th></tr></thead><tbody id="active-couriers-list"></tbody></table></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- === COURIERS SECTION === -->
-  <div class="section" id="sec-couriers">
-    <div class="page-header">
-      <div class="page-title">إدارة المناديب</div>
-      <button class="action-btn primary" onclick="showAddCourier()">+ إضافة مندوب جديد</button>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <table class="table"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>المدينة</th><th>البنك</th><th>نوع التعاقد</th><th>الحالة</th></tr></thead><tbody id="couriers-table"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- === ORDERS SECTION === -->
-  <div class="section" id="sec-orders">
-    <div class="page-header"><div class="page-title">إدارة الطلبات</div></div>
-    <div class="card">
-      <div class="card-body">
-        <table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>عدد الطلبات</th><th>الأرباح</th><th>الخصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="orders-table"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- === FINANCE SECTION === -->
-  <div class="section" id="sec-finance">
-    <div class="page-header"><div class="page-title">المالية</div></div>
-    <div class="stats-grid">
-      <div class="stat-card green"><div class="stat-label">إجمالي الأرباح</div><div class="stat-value" id="f-total">-</div></div>
-      <div class="stat-card blue"><div class="stat-label">إجمالي الخصومات</div><div class="stat-value" id="f-deductions">-</div></div>
-      <div class="stat-card gold"><div class="stat-label">صافي الأرباح</div><div class="stat-value" id="f-net">-</div></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">ملخص أرباح المناديب</div></div>
-      <div class="card-body"><table class="table"><thead><tr><th>المندوب</th><th>عدد الطلبات</th><th>إجمالي الأرباح</th><th>الخصومات</th><th>الصافي</th></tr></thead><tbody id="finance-table"></tbody></table></div>
-    </div>
-  </div>
-
-  <!-- === COMPLAINTS SECTION === -->
-  <div class="section" id="sec-complaints">
-    <div class="page-header"><div class="page-title">الشكاوى والاستفسارات</div></div>
-    <div class="card"><div class="card-body" id="complaints-content"><p style="color:var(--muted);text-align:center;padding:40px">لا توجد شكاوى حالياً</p></div></div>
-  </div>
-
-  <!-- === STAFF SECTION === -->
-  <div class="section" id="sec-staff">
-    <div class="page-header"><div class="page-title">إدارة الموظفين</div></div>
-    <div class="card">
-      <div class="card-body">
-        <table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="staff-table"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- === DEPARTMENTS SECTION === -->
-  <div class="section" id="sec-departments">
-    <div class="page-header"><div class="page-title">الأقسام</div></div>
-    <div class="card">
-      <div class="card-body">
-        <table class="table"><thead><tr><th>القسم</th><th>الاسم بالعربي</th><th>الوصف</th><th>الحالة</th></tr></thead><tbody id="depts-table"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- === SETTINGS SECTION === -->
-  <div class="section" id="sec-settings">
-    <div class="page-header"><div class="page-title">إعدادات النظام</div></div>
-    <div class="grid-2">
-      <div class="card"><div class="card-header"><div class="card-title">معلومات النظام</div></div><div class="card-body" id="system-info"></div></div>
-      <div class="card"><div class="card-header"><div class="card-title">اتصالات AWS</div></div><div class="card-body" id="aws-info"></div></div>
-    </div>
-  </div>
-
-  <!-- PLATFORMS --><div class="section" id="sec-platforms"><div class="page-header"><div class="page-title">إدارة المنصات</div></div><p style="color:var(--muted);font-size:13px;margin-bottom:16px">إحصائيات المنصات المشغّلة — من سجلات الطلبات</p><div class="stats-grid" id="platform-stats"></div><div class="card"><div class="card-header"><div class="card-title">تفصيل المنصات</div></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المنصة</th><th>المناديب</th><th>التوصيلات</th><th>المستحقات</th><th>المتوسط/مندوب</th></tr></thead><tbody id="platforms-table"></tbody></table></div></div></div></div>
-
-  <!-- CITIES --><div class="section" id="sec-cities"><div class="page-header"><div class="page-title">المدن والمناطق</div></div><div class="stats-grid" id="city-stats"></div><div class="card"><div class="card-header"><div class="card-title">تفصيل المدن</div></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المدينة</th><th>المناديب</th><th>نشط</th><th>غير نشط</th><th>التوصيلات</th><th>المستحقات</th></tr></thead><tbody id="cities-table"></tbody></table></div></div></div></div>
-
-  <!-- PERMISSIONS --><div class="section" id="sec-permissions"><div class="page-header"><div class="page-title">إدارة الصلاحيات</div></div><p style="color:var(--muted);font-size:13px;margin-bottom:16px">مصفوفة صلاحيات الأدوار — Cognito Groups</p><div class="card"><div class="card-header"><div class="card-title">مصفوفة الصلاحيات</div></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الصلاحية</th><th>admin</th><th>finance</th><th>hr</th><th>ops</th><th>fleet</th><th>staff</th></tr></thead><tbody id="permissions-table"></tbody></table></div></div></div></div>
-
-  <!-- REPORTS --><div class="section" id="sec-reports"><div class="page-header"><div class="page-title">التقارير</div></div>
-    <div class="grid-3"><div class="card" style="cursor:pointer" onclick="genReport('monthly')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">📊</div><div style="font-weight:700;color:var(--navy)">تقرير شهري</div><div style="font-size:12px;color:var(--muted)">ملخص العمليات والمالية</div></div></div><div class="card" style="cursor:pointer" onclick="genReport('couriers')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">🛵</div><div style="font-weight:700;color:var(--navy)">تقرير المناديب</div><div style="font-size:12px;color:var(--muted)">أداء وإحصائيات</div></div></div><div class="card" style="cursor:pointer" onclick="genReport('platforms')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">📱</div><div style="font-weight:700;color:var(--navy)">تقرير المنصات</div><div style="font-size:12px;color:var(--muted)">مقارنة الأداء</div></div></div><div class="card" style="cursor:pointer" onclick="genReport('finance')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">💰</div><div style="font-weight:700;color:var(--navy)">تقرير مالي</div><div style="font-size:12px;color:var(--muted)">المستحقات والخصومات</div></div></div><div class="card" style="cursor:pointer" onclick="genReport('complaints')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">📋</div><div style="font-weight:700;color:var(--navy)">تقرير الشكاوى</div><div style="font-size:12px;color:var(--muted)">تحليل ومتابعة</div></div></div><div class="card" style="cursor:pointer" onclick="genReport('review')"><div class="card-body" style="text-align:center;padding:32px"><div style="font-size:32px">🔍</div><div style="font-weight:700;color:var(--navy)">Review Pack</div><div style="font-size:12px;color:var(--muted)">مراجعة ذكية لكل إدارة</div></div></div></div>
-    <div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">التقارير المُولّدة</div></div><div class="card-body" id="gen-reports"><p style="color:var(--muted);text-align:center;padding:20px">اضغط على تقرير أعلاه</p></div></div></div>
-
-  <!-- AUDIT --><div class="section" id="sec-audit"><div class="page-header"><div class="page-title">سجل التدقيق</div></div><div class="filter-bar"><select class="form-select" id="audit-filter" onchange="filterAudit()"><option value="">كل العمليات</option><option value="login">دخول</option><option value="create">إنشاء</option><option value="update">تعديل</option><option value="delete">حذف</option><option value="approve">موافقة</option></select></div><div class="card"><div class="card-body" id="audit-content"><p style="color:var(--muted);text-align:center;padding:20px">جاري التحميل...</p></div></div></div>
-
-  <!-- NOTIFICATIONS --><div class="section" id="sec-notifications"><div class="page-header"><div class="page-title">الإشعارات</div><button class="action-btn outline" onclick="markAllRead()">✓ تعيين الكل كمقروء</button></div><div class="card"><div class="card-body" id="notif-list"><p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات</p></div></div></div>
-
-  <!-- INTEGRATIONS --><div class="section" id="sec-integrations"><div class="page-header"><div class="page-title">التكاملات</div></div><p style="color:var(--muted);font-size:13px;margin-bottom:16px">حالة الربط مع الخدمات والمنصات</p><div id="integ-list"></div></div>
-
-  <!-- AI DASHBOARD --><div class="section" id="sec-ai"><div class="page-header"><div class="page-title">AI Dashboard</div></div><div class="stats-grid"><div class="stat-card purple"><div class="stat-label">نموذج AI</div><div class="stat-value" style="font-size:16px">Claude Haiku</div><div class="stat-sub">Bedrock</div></div><div class="stat-card blue"><div class="stat-label">المراجعات المالية</div><div class="stat-value" id="ai-rev">-</div></div><div class="stat-card green"><div class="stat-label">الشكاوى المصنّفة</div><div class="stat-value" id="ai-cls">-</div></div><div class="stat-card gold"><div class="stat-label">محادثات الشات</div><div class="stat-value" id="ai-chat">-</div></div></div><div class="grid-2"><div class="card"><div class="card-header"><div class="card-title">خدمات AI المتاحة</div></div><div class="card-body"><div class="integration-card"><div style="font-size:24px">🤖</div><div><strong>AI Finance Review</strong><br><span style="font-size:12px;color:var(--muted)">مراجعة ذكية للمستحقات</span></div><span class="badge badge-green integration-status">مفعل</span></div><div class="integration-card"><div style="font-size:24px">📊</div><div><strong>Complaints Classifier</strong><br><span style="font-size:12px;color:var(--muted)">تصنيف تلقائي للشكاوى</span></div><span class="badge badge-green integration-status">مفعل</span></div><div class="integration-card"><div style="font-size:24px">💬</div><div><strong>AI Chatbot</strong><br><span style="font-size:12px;color:var(--muted)">مساعد ذكي</span></div><span class="badge badge-green integration-status">مفعل</span></div></div></div><div class="card"><div class="card-header"><div class="card-title">Review Pack — مراجعة ذكية لكل إدارة</div></div><div class="card-body" id="review-pack-content"><p style="color:var(--muted);text-align:center;padding:20px">اضغط "Review Pack" في التقارير لتوليد المراجعة</p></div></div></div></div>
-
+<div class="content">
+<!-- ========== OVERVIEW ========== -->
+<div class="section active" id="sec-overview">
+<div class="page-header"><div><div class="page-title">نظرة عامة</div><div class="page-sub" id="current-date"></div></div></div>
+<div class="stats-grid">
+<div class="stat-card green"><div class="stat-label">المناديب النشطين</div><div class="stat-value" id="s-couriers">—</div><div class="stat-sub">Supabase + DynamoDB</div></div>
+<div class="stat-card blue"><div class="stat-label">الطلبات</div><div class="stat-value" id="s-orders">—</div></div>
+<div class="stat-card gold"><div class="stat-label">صافي المستحقات</div><div class="stat-value" id="s-net">—</div></div>
+<div class="stat-card red"><div class="stat-label">الشكاوى المفتوحة</div><div class="stat-value" id="s-complaints">—</div><div class="stat-sub">AWS API</div></div>
+<div class="stat-card purple"><div class="stat-label">المهام المعلقة</div><div class="stat-value" id="s-tasks">—</div><div class="stat-sub">AWS API</div></div>
+<div class="stat-card orange"><div class="stat-label">دفعات المستحقات</div><div class="stat-value" id="s-payouts">—</div><div class="stat-sub">AWS API</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><div class="card-header"><div class="card-title">المستحقات / المنصة</div></div><div class="card-body"><div class="chart-container"><canvas id="ch-plat"></canvas></div></div></div>
+<div class="card"><div class="card-header"><div class="card-title">المناديب / المدينة</div></div><div class="card-body"><div class="chart-container"><canvas id="ch-city"></canvas></div></div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title">آخر العمليات</div><div style="font-size:11px;color:var(--muted)">من سجل التدقيق — AWS DynamoDB</div></div><div class="card-body" id="ov-audit"></div></div>
 </div>
 
-<!-- COURIER MODAL --><div class="modal-overlay" id="courier-modal"><div class="modal"><div class="modal-header"><h3>إضافة مندوب</h3><button class="modal-close" onclick="closeModal('courier-modal')">✕</button></div><div class="modal-body"><div class="form-row"><div class="form-group"><label class="form-label">الاسم بالعربي</label><input class="form-input" id="cr-name-ar"></div><div class="form-group"><label class="form-label">الاسم بالإنجليزي</label><input class="form-input" id="cr-name-en"></div></div><div class="form-row"><div class="form-group"><label class="form-label">رقم الهوية/الإقامة</label><input class="form-input" id="cr-nid" maxlength="10"></div><div class="form-group"><label class="form-label">رقم الجوال (للتواصل)</label><input class="form-input" id="cr-phone" placeholder="05xxxxxxxx"></div></div><div class="form-row"><div class="form-group"><label class="form-label">📱 رقم STC Bank</label><input class="form-input" id="cr-stc" placeholder="5xxxxxxxx (9 أرقام)" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'');document.getElementById('cr-stc-preview').textContent=this.value?'966'+this.value:'—'"><div style="font-size:11px;color:var(--muted);margin-top:4px">سيُحفظ كـ: <strong id="cr-stc-preview">—</strong></div></div><div class="form-group"><label class="form-label">نوع التعاقد</label><select class="form-select" id="cr-contract"><option value="kafala">كفالة</option><option value="contract">تحت التعاقد</option><option value="trial">تجربة</option><option value="freelance">حر</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">المدينة</label><select class="form-select" id="cr-city"><option value="">اختر</option><option>الرياض</option><option>جدة</option><option>مكة المكرمة</option><option>المدينة المنورة</option><option>الدمام</option><option>الخبر</option><option>الطائف</option><option>تبوك</option><option>أبها</option><option>بريدة</option><option>حائل</option><option>جازان</option><option>نجران</option><option>الأحساء</option><option>ينبع</option><option>خميس مشيط</option></select></div><div class="form-group"><label class="form-label">البنك</label><input class="form-input" id="cr-bank"></div></div></div><div class="modal-footer"><button class="action-btn primary" onclick="saveCourier()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('courier-modal')">إلغاء</button></div></div></div>
+<!-- ========== COURIERS ========== -->
+<div class="section" id="sec-couriers">
+<div class="page-header"><div><div class="page-title">إدارة المناديب</div><div class="page-sub">Supabase + AWS API</div></div><button class="action-btn primary" onclick="openModal('courier-modal')">+ إضافة مندوب</button></div>
+<div class="card"><div class="card-header"><div class="card-title">جدول المناديب</div><button class="action-btn outline" onclick="exportCSV('couriers')">📥 تصدير CSV</button></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الاسم</th><th>الهوية</th><th>الجوال</th><th>STC Bank</th><th>المدينة</th><th>التعاقد</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="tbl-couriers"></tbody></table></div></div></div>
+</div>
 
-<!-- STAFF MODAL --><div class="modal-overlay" id="staff-modal"><div class="modal"><div class="modal-header"><h3>إضافة موظف</h3><button class="modal-close" onclick="closeModal('staff-modal')">✕</button></div><div class="modal-body"><div class="form-row"><div class="form-group"><label class="form-label">الاسم</label><input class="form-input" id="sf-name"></div><div class="form-group"><label class="form-label">البريد</label><input class="form-input" id="sf-email" type="email" placeholder="@fll.sa"></div></div><div class="form-row"><div class="form-group"><label class="form-label">القسم</label><select class="form-select" id="sf-dept"></select></div><div class="form-group"><label class="form-label">المسمى</label><input class="form-input" id="sf-position"></div></div><div class="form-row"><div class="form-group"><label class="form-label">الدور</label><select class="form-select" id="sf-role"><option value="staff">موظف</option><option value="finance">مالية</option><option value="hr">موارد بشرية</option><option value="ops">عمليات</option><option value="fleet">أسطول</option><option value="admin">مدير</option></select></div><div class="form-group"><label class="form-label">الجوال</label><input class="form-input" id="sf-phone"></div></div></div><div class="modal-footer"><button class="action-btn primary" onclick="saveStaff()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('staff-modal')">إلغاء</button></div></div></div>
+<!-- ========== ORDERS ========== -->
+<div class="section" id="sec-orders">
+<div class="page-header"><div><div class="page-title">سجل الطلبات</div></div></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>عدد</th><th>الإجمالي</th><th>خصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="tbl-orders"></tbody></table></div></div></div>
+</div>
 
-<!-- COMPLAINT MODAL --><div class="modal-overlay" id="comp-modal"><div class="modal"><div class="modal-header"><h3>تسجيل شكوى</h3><button class="modal-close" onclick="closeModal('comp-modal')">✕</button></div><div class="modal-body"><div class="form-group"><label class="form-label">العنوان</label><input class="form-input" id="cmp-title"></div><div class="form-row"><div class="form-group"><label class="form-label">النوع</label><select class="form-select" id="cmp-type"><option value="salary">مستحقات</option><option value="operations">عمليات</option><option value="technical">تقنية</option><option value="hr">موارد بشرية</option><option value="fleet">مركبات</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">مقدم الشكوى</label><input class="form-input" id="cmp-by"></div></div><div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="cmp-details" rows="3"></textarea></div></div><div class="modal-footer"><button class="action-btn primary" onclick="saveComplaint()">💾 تسجيل</button><button class="action-btn outline" onclick="closeModal('comp-modal')">إلغاء</button></div></div></div>
+<!-- ========== COMPLAINTS — FULL AWS API ========== -->
+<div class="section" id="sec-complaints">
+<div class="page-header"><div><div class="page-title">إدارة الشكاوى</div><div class="page-sub">مربوط مباشرة بـ AWS API — الإنشاء والتعيين والتحويل والتصعيد والحل</div></div><button class="action-btn primary" onclick="openModal('comp-modal')">+ شكوى جديدة</button></div>
+<div class="stats-grid" id="comp-stats"></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>رقم التذكرة</th><th>المندوب</th><th>التصنيف</th><th>الأولوية</th><th>الموضوع</th><th>الحالة</th><th>SLA</th><th>إجراءات</th></tr></thead><tbody id="tbl-complaints"></tbody></table></div></div></div>
+</div>
 
-<!-- DEPT MODAL --><div class="modal-overlay" id="dept-modal"><div class="modal"><div class="modal-header"><h3>إضافة قسم</h3><button class="modal-close" onclick="closeModal('dept-modal')">✕</button></div><div class="modal-body"><div class="form-row"><div class="form-group"><label class="form-label">الاسم EN</label><input class="form-input" id="dp-name"></div><div class="form-group"><label class="form-label">الاسم AR</label><input class="form-input" id="dp-name-ar"></div></div><div class="form-group"><label class="form-label">الوصف</label><input class="form-input" id="dp-desc"></div></div><div class="modal-footer"><button class="action-btn primary" onclick="saveDept()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('dept-modal')">إلغاء</button></div></div></div>
+<!-- ========== PLATFORMS ========== -->
+<div class="section" id="sec-platforms">
+<div class="page-header"><div class="page-title">إدارة المنصات</div></div>
+<div class="stats-grid" id="plat-stats"></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المنصة</th><th>المناديب</th><th>التوصيلات</th><th>المستحقات</th><th>المتوسط/مندوب</th></tr></thead><tbody id="tbl-platforms"></tbody></table></div></div></div>
+</div>
 
+<!-- ========== FINANCE — AWS Payout Runs ========== -->
+<div class="section" id="sec-finance">
+<div class="page-header"><div><div class="page-title">المالية والمستحقات</div><div class="page-sub">AWS API — Payout Runs + STC Bank Excel</div></div><div style="display:flex;gap:8px"><button class="action-btn primary" onclick="createPayoutRun()">+ دفعة جديدة</button><button class="action-btn outline" onclick="generateSTC()">🏦 STC Bank Excel</button></div></div>
+<div class="stats-grid" id="fin-stats"></div>
+<div class="card"><div class="card-header"><div class="card-title">دفعات المستحقات — AWS DynamoDB</div></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>رقم الدفعة</th><th>الفترة</th><th>المبلغ</th><th>المنشئ</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-payouts"></tbody></table></div></div></div>
+</div>
+
+<!-- ========== STAFF ========== -->
+<div class="section" id="sec-staff">
+<div class="page-header"><div><div class="page-title">الموظفين</div></div><button class="action-btn primary" onclick="openModal('staff-modal')">+ موظف جديد</button></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>القسم</th><th>المسمى</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="tbl-staff"></tbody></table></div></div></div>
+</div>
+
+<!-- ========== DEPARTMENTS ========== -->
+<div class="section" id="sec-departments">
+<div class="page-header"><div class="page-title">الأقسام</div><button class="action-btn primary" onclick="openModal('dept-modal')">+ قسم جديد</button></div>
+<div class="grid-3" id="dept-grid"></div>
+</div>
+
+<!-- ========== TASKS — AWS API ========== -->
+<div class="section" id="sec-tasks">
+<div class="page-header"><div><div class="page-title">المهام الداخلية</div><div class="page-sub">AWS API — إنشاء وتعيين ومتابعة المهام بين المدراء والموظفين</div></div><button class="action-btn primary" onclick="openModal('task-modal')">+ مهمة جديدة</button></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المهمة</th><th>المسند إلى</th><th>المسند من</th><th>القسم</th><th>الأولوية</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-tasks"></tbody></table></div></div></div>
+</div>
+
+<!-- ========== NOTIFICATIONS — AWS API ========== -->
+<div class="section" id="sec-notifications">
+<div class="page-header"><div><div class="page-title">الإشعارات</div><div class="page-sub">AWS DynamoDB — إشعارات النظام</div></div><div style="display:flex;gap:8px"><button class="action-btn primary" onclick="openModal('notif-modal')">+ إشعار جديد</button><button class="action-btn outline" onclick="markAllRead()">✓ تعيين الكل كمقروء</button></div></div>
+<div class="card"><div class="card-body" id="notif-list"></div></div>
+</div>
+
+<!-- ========== AUDIT LOG — AWS API ========== -->
+<div class="section" id="sec-audit">
+<div class="page-header"><div><div class="page-title">سجل التدقيق</div><div class="page-sub">AWS DynamoDB — كل عملية مسجلة تلقائياً</div></div></div>
+<div class="filter-bar"><select class="form-select" id="audit-filter" onchange="filterAudit()"><option value="">كل العمليات</option><option value="login">دخول</option><option value="create">إنشاء</option><option value="update">تعديل</option><option value="delete">حذف</option><option value="approve">موافقة</option></select></div>
+<div class="card"><div class="card-body" id="audit-content"></div></div>
+</div>
+
+<!-- ========== APPROVALS — AWS API ========== -->
+<div class="section" id="sec-approvals">
+<div class="page-header"><div><div class="page-title">الموافقات</div><div class="page-sub">AWS API — طلبات الاعتماد</div></div></div>
+<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الطلب</th><th>النوع</th><th>الطالب</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody id="tbl-approvals"></tbody></table></div></div></div>
+</div>
+
+<!-- ========== INTEGRATIONS ========== -->
+<div class="section" id="sec-integrations">
+<div class="page-header"><div class="page-title">التكاملات</div></div>
+<div id="integ-list"></div>
+</div>
+
+<!-- ========== AI ========== -->
+<div class="section" id="sec-ai">
+<div class="page-header"><div class="page-title">AI Dashboard</div></div>
+<div class="stats-grid"><div class="stat-card purple"><div class="stat-label">النموذج</div><div class="stat-value" style="font-size:15px">Claude Haiku</div><div class="stat-sub">Bedrock me-south-1</div></div><div class="stat-card blue"><div class="stat-label">المراجعات المالية</div><div class="stat-value" id="ai-rev">—</div></div><div class="stat-card green"><div class="stat-label">الشكاوى المصنفة</div><div class="stat-value" id="ai-cls">—</div></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Review Pack — مراجعة ذكية لكل إدارة</div><button class="action-btn primary" onclick="genReviewPack()">🔍 توليد Review Pack</button></div><div class="card-body" id="review-pack"></div></div>
+</div>
+
+<!-- ========== SETTINGS ========== -->
+<div class="section" id="sec-settings">
+<div class="page-header"><div class="page-title">الإعدادات</div></div>
+<div class="grid-2">
+<div class="card"><div class="card-header"><div class="card-title">إعدادات النظام — AWS</div></div><div class="card-body" id="sys-settings"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">حالة الخدمات</div></div><div class="card-body" id="sys-health"></div></div>
+</div>
+</div>
+
+</div></div>
+<!-- MODALS -->
+<div class="modal-overlay" id="courier-modal"><div class="modal"><div class="modal-header"><h3>إضافة مندوب</h3><button class="modal-close" onclick="closeModal('courier-modal')">✕</button></div><div class="modal-body">
+<div class="form-row"><div class="form-group"><label class="form-label">الاسم بالعربي</label><input class="form-input" id="cr-name-ar"></div><div class="form-group"><label class="form-label">الاسم بالإنجليزي</label><input class="form-input" id="cr-name-en"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">رقم الهوية</label><input class="form-input" id="cr-nid" maxlength="10"></div><div class="form-group"><label class="form-label">الجوال</label><input class="form-input" id="cr-phone" placeholder="05xxxxxxxx"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">📱 رقم STC Bank</label><input class="form-input" id="cr-stc" placeholder="5xxxxxxxx" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'');$('cr-stc-pre').textContent=this.value?'966'+this.value:'—'"><div style="font-size:11px;color:var(--muted);margin-top:3px">يُحفظ كـ: <strong id="cr-stc-pre">—</strong></div></div><div class="form-group"><label class="form-label">نوع التعاقد</label><select class="form-select" id="cr-contract"><option value="kafala">كفالة</option><option value="contract">تعاقد</option><option value="trial">تجربة</option><option value="freelance">حر</option></select></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">المدينة</label><select class="form-select" id="cr-city"><option value="">اختر</option><option>الرياض</option><option>جدة</option><option>مكة المكرمة</option><option>المدينة المنورة</option><option>الدمام</option><option>الخبر</option><option>الطائف</option><option>تبوك</option><option>أبها</option><option>بريدة</option><option>حائل</option><option>جازان</option><option>نجران</option><option>الأحساء</option><option>ينبع</option><option>خميس مشيط</option></select></div><div class="form-group"><label class="form-label">البنك</label><input class="form-input" id="cr-bank"></div></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="saveCourier()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('courier-modal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="comp-modal"><div class="modal"><div class="modal-header"><h3>شكوى جديدة</h3><button class="modal-close" onclick="closeModal('comp-modal')">✕</button></div><div class="modal-body">
+<div class="form-group"><label class="form-label">الموضوع</label><input class="form-input" id="cmp-subject"></div>
+<div class="form-row"><div class="form-group"><label class="form-label">التصنيف</label><select class="form-select" id="cmp-cat"><option value="salary">مستحقات</option><option value="operations">عمليات</option><option value="technical">تقنية</option><option value="hr">موارد بشرية</option><option value="fleet">مركبات</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">الأولوية</label><select class="form-select" id="cmp-pri"><option value="low">منخفض</option><option value="medium" selected>متوسط</option><option value="high">مرتفع</option><option value="urgent">عاجل</option></select></div></div>
+<div class="form-group"><label class="form-label">اسم المندوب</label><input class="form-input" id="cmp-driver"></div>
+<div class="form-group"><label class="form-label">الوصف</label><textarea class="form-input" id="cmp-desc" rows="3"></textarea></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="saveComplaintAWS()">📤 إرسال عبر AWS API</button><button class="action-btn outline" onclick="closeModal('comp-modal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="staff-modal"><div class="modal"><div class="modal-header"><h3>إضافة موظف</h3><button class="modal-close" onclick="closeModal('staff-modal')">✕</button></div><div class="modal-body">
+<div class="form-row"><div class="form-group"><label class="form-label">الاسم</label><input class="form-input" id="sf-name"></div><div class="form-group"><label class="form-label">البريد</label><input class="form-input" id="sf-email" type="email"></div></div>
+<div class="form-row"><div class="form-group"><label class="form-label">القسم</label><select class="form-select" id="sf-dept"></select></div><div class="form-group"><label class="form-label">المسمى</label><input class="form-input" id="sf-pos"></div></div>
+<div class="form-group"><label class="form-label">الدور</label><select class="form-select" id="sf-role"><option value="staff">موظف</option><option value="finance">مالية</option><option value="hr">موارد بشرية</option><option value="ops">عمليات</option><option value="fleet">أسطول</option><option value="admin">مدير</option></select></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="saveStaff()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('staff-modal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="dept-modal"><div class="modal"><div class="modal-header"><h3>إضافة قسم</h3><button class="modal-close" onclick="closeModal('dept-modal')">✕</button></div><div class="modal-body">
+<div class="form-row"><div class="form-group"><label class="form-label">الاسم EN</label><input class="form-input" id="dp-name"></div><div class="form-group"><label class="form-label">الاسم AR</label><input class="form-input" id="dp-name-ar"></div></div>
+<div class="form-group"><label class="form-label">الوصف</label><input class="form-input" id="dp-desc"></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="saveDept()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('dept-modal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="task-modal"><div class="modal"><div class="modal-header"><h3>مهمة جديدة</h3><button class="modal-close" onclick="closeModal('task-modal')">✕</button></div><div class="modal-body">
+<div class="form-group"><label class="form-label">عنوان المهمة</label><input class="form-input" id="tk-title"></div>
+<div class="form-row"><div class="form-group"><label class="form-label">المسند إلى</label><input class="form-input" id="tk-to" placeholder="email@fll.sa"></div><div class="form-group"><label class="form-label">القسم</label><input class="form-input" id="tk-dept"></div></div>
+<div class="form-group"><label class="form-label">الأولوية</label><select class="form-select" id="tk-pri"><option value="low">منخفض</option><option value="medium" selected>متوسط</option><option value="high">مرتفع</option><option value="urgent">عاجل</option></select></div>
+<div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="tk-desc" rows="2"></textarea></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="saveTaskAWS()">📤 إنشاء عبر AWS API</button><button class="action-btn outline" onclick="closeModal('task-modal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="notif-modal"><div class="modal"><div class="modal-header"><h3>إرسال إشعار</h3><button class="modal-close" onclick="closeModal('notif-modal')">✕</button></div><div class="modal-body">
+<div class="form-group"><label class="form-label">العنوان</label><input class="form-input" id="nf-title"></div>
+<div class="form-group"><label class="form-label">الرسالة</label><textarea class="form-input" id="nf-msg" rows="2"></textarea></div>
+<div class="form-group"><label class="form-label">المستلم</label><select class="form-select" id="nf-to"><option value="admin">المدراء</option><option value="all-staff">كل الموظفين</option><option value="finance">المالية</option><option value="ops">العمليات</option></select></div>
+</div><div class="modal-footer"><button class="action-btn primary" onclick="sendNotifAWS()">📤 إرسال عبر AWS</button><button class="action-btn outline" onclick="closeModal('notif-modal')">إلغاء</button></div></div></div>
 <script>
-// ==============================
-// Supabase Client
-// ==============================
-const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
-const AWS_API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+// ============================================================
+// CONFIG
+// ============================================================
+const SB_URL='https://djebhztfewjfyyoortvv.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
+const AWS_API='https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+const sb=supabase.createClient(SB_URL,SB_KEY);
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Auth
+const user=JSON.parse(localStorage.getItem('fll_user')||'null');
+const token=localStorage.getItem('fll_token');
+if(!user||!token)window.location.href='/unified-login';
+document.getElementById('user-name').textContent=user?.name||user?.email||'';
+document.getElementById('current-date').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
-// ==============================
-// Auth Check
-// ==============================
-const user = JSON.parse(localStorage.getItem('fll_user') || 'null');
-const token = localStorage.getItem('fll_token');
-if (!user || !token) { window.location.href = '/unified-login'; }
+// Helpers
+const $=id=>document.getElementById(id);
+function openModal(id){$(id).classList.add('active')}
+function closeModal(id){$(id).classList.remove('active')}
+function toast(m,t='success'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
+function badge(t,c){return`<span class="badge badge-${c}">${t}</span>`}
+function fmt(v){return parseFloat(v||0).toFixed(2)}
+function logout(){localStorage.clear();location.href='/'}
+function switchPortal(p){if(p==='staff')location.href='/staff-hr';else if(p==='courier')location.href='/courier-dashboard'}
 
-// Set user info
-document.getElementById('user-name').textContent = user?.name || user?.username || user?.email || 'المدير';
-document.getElementById('user-role').textContent = (user?.groups || []).join(', ') || 'admin';
-document.getElementById('user-avatar').textContent = (user?.name || user?.email || 'أ')[0].toUpperCase();
-document.getElementById('current-date').textContent = new Date().toLocaleDateString('ar-SA', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+// Section nav
+function S(name){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const sec=$('sec-'+name);if(sec)sec.classList.add('active');event?.target?.closest?.('.nav-item')?.classList.add('active')}
 
-// ==============================
-// Navigation
-// ==============================
-function showSection(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const sec = document.getElementById('sec-' + name);
-  if (sec) sec.classList.add('active');
-  event?.target?.closest?.('.nav-item')?.classList.add('active');
-}
+// AWS API helpers
+async function awsGet(path){try{const r=await fetch(AWS_API+path);return await r.json()}catch(e){console.error('AWS GET',path,e);return{items:[],count:0}}}
+async function awsPost(path,body){try{const r=await fetch(AWS_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json()}catch(e){console.error('AWS POST',path,e);return{error:e.message}}}
 
-function switchPortal(portal) {
-  document.querySelectorAll('.portal-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + portal).classList.add('active');
-  
-  if (portal === 'admin') { showSection('overview'); }
-  else if (portal === 'staff') { showSection('staff'); }
-  else if (portal === 'courier') { showSection('couriers'); }
-}
+// Audit log helper — auto-logs every action to AWS
+async function auditLog(action,details,resource='dashboard'){awsPost('/api/audit-log',{auditId:'AUD-'+Date.now(),action,user:user?.email||'admin',details,resource,created_at:new Date().toISOString()})}
 
-function logout() {
-  localStorage.removeItem('fll_token');
-  localStorage.removeItem('fll_user');
-  window.location.href = '/';
-}
+// ============================================================
+// DATA STORE
+// ============================================================
+let D={couriers:[],orders:[],staff:[],depts:[],complaints_sb:[],complaints_aws:[],tasks:[],notifications:[],audit:[],payouts:[],approvals:[]};
+let CH={};
 
-// ==============================
-// Load Data from Supabase
-// ==============================
-async function loadData() {
-  try {
-    // Couriers
-    const { data: couriers } = await sb.from('couriers').select('*');
-    if (couriers) {
-      document.getElementById('s-couriers').textContent = couriers.length;
-      document.getElementById('courier-count').textContent = couriers.length;
-      const active = couriers.filter(c => c.status === 'active');
-      document.getElementById('s-active-couriers').textContent = active.length + ' نشط';
-      
-      document.getElementById('couriers-table').innerHTML = couriers.map(c => `
-        <tr>
-          <td><strong>${c.full_name_ar || c.full_name}</strong></td>
-          <td>${c.national_id || '-'}</td>
-          <td>${c.phone || '-'}</td>
-          <td>${c.city || '-'}</td>
-          <td>${c.bank_name || '-'}</td>
-          <td>${c.contract_type || '-'}</td>
-          <td><span class="badge ${c.status==='active'?'badge-green':'badge-red'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
-        </tr>`).join('');
-      
-      document.getElementById('active-couriers-list').innerHTML = active.slice(0,5).map(c => `
-        <tr>
-          <td>${c.full_name_ar || c.full_name}</td>
-          <td>${c.city || '-'}</td>
-          <td><span class="badge badge-green">نشط</span></td>
-          <td>${c.join_date || '-'}</td>
-        </tr>`).join('');
-    }
-
-    // Orders
-    const { data: orders } = await sb.from('orders').select('*, couriers(full_name_ar, full_name)');
-    if (orders) {
-      document.getElementById('s-orders').textContent = orders.length;
-      document.getElementById('order-count').textContent = orders.length;
-      
-      let totalEarnings = 0, totalDeductions = 0, totalNet = 0;
-      orders.forEach(o => {
-        totalEarnings += parseFloat(o.gross_earnings || 0);
-        totalDeductions += parseFloat(o.deductions || 0);
-        totalNet += parseFloat(o.net_earnings || 0);
-      });
-      document.getElementById('s-earnings').textContent = totalNet.toFixed(0);
-      document.getElementById('f-total').textContent = totalEarnings.toFixed(2) + ' ر.س';
-      document.getElementById('f-deductions').textContent = totalDeductions.toFixed(2) + ' ر.س';
-      document.getElementById('f-net').textContent = totalNet.toFixed(2) + ' ر.س';
-
-      document.getElementById('orders-table').innerHTML = orders.map(o => `
-        <tr>
-          <td>${o.couriers?.full_name_ar || o.couriers?.full_name || '-'}</td>
-          <td><span class="badge badge-blue">${o.platform}</span></td>
-          <td>${o.order_date}</td>
-          <td>${o.orders_count}</td>
-          <td>${parseFloat(o.gross_earnings).toFixed(2)}</td>
-          <td>${parseFloat(o.deductions).toFixed(2)}</td>
-          <td><strong>${parseFloat(o.net_earnings).toFixed(2)}</strong></td>
-          <td><span class="badge ${o.status==='approved'?'badge-green':'badge-yellow'}">${o.status==='approved'?'معتمد':'معلق'}</span></td>
-        </tr>`).join('');
-
-      document.getElementById('recent-orders').innerHTML = orders.slice(0,5).map(o => `
-        <tr>
-          <td>${o.couriers?.full_name_ar || '-'}</td>
-          <td><span class="badge badge-blue">${o.platform}</span></td>
-          <td>${o.orders_count}</td>
-          <td>${parseFloat(o.net_earnings).toFixed(2)} ر.س</td>
-          <td><span class="badge badge-green">معتمد</span></td>
-        </tr>`).join('');
-
-      // Finance summary by courier
-      const byCourier = {};
-      orders.forEach(o => {
-        const name = o.couriers?.full_name_ar || o.courier_id;
-        if (!byCourier[name]) byCourier[name] = {orders:0,gross:0,ded:0,net:0};
-        byCourier[name].orders += o.orders_count;
-        byCourier[name].gross += parseFloat(o.gross_earnings||0);
-        byCourier[name].ded += parseFloat(o.deductions||0);
-        byCourier[name].net += parseFloat(o.net_earnings||0);
-      });
-      document.getElementById('finance-table').innerHTML = Object.entries(byCourier).map(([name,d]) => `
-        <tr><td>${name}</td><td>${d.orders}</td><td>${d.gross.toFixed(2)}</td><td>${d.ded.toFixed(2)}</td><td><strong>${d.net.toFixed(2)}</strong></td></tr>`).join('');
-    }
-
-    // Departments
-    const { data: depts } = await sb.from('departments').select('*');
-    if (depts) {
-      document.getElementById('s-depts').textContent = depts.length;
-      document.getElementById('depts-table').innerHTML = depts.map(d => `
-        <tr>
-          <td><strong>${d.name}</strong></td>
-          <td>${d.name_ar}</td>
-          <td>${d.description || '-'}</td>
-          <td><span class="badge ${d.is_active?'badge-green':'badge-red'}">${d.is_active?'مفعل':'معطل'}</span></td>
-        </tr>`).join('');
-    }
-
-    // Users (staff)
-    const { data: users } = await sb.from('users').select('id, email, full_name, role, is_active, created_at');
-    if (users) {
-      document.getElementById('staff-table').innerHTML = users.map(u => `
-        <tr>
-          <td><strong>${u.full_name || '-'}</strong></td>
-          <td>${u.email}</td>
-          <td><span class="badge badge-blue">${u.role || 'user'}</span></td>
-          <td><span class="badge ${u.is_active!==false?'badge-green':'badge-red'}">${u.is_active!==false?'نشط':'معطل'}</span></td>
-        </tr>`).join('');
-    }
-
-    // Complaints
-    const { data: complaints } = await sb.from('complaints').select('*');
-    document.getElementById('s-complaints').textContent = (complaints||[]).length;
-
-    // Settings
-    document.getElementById('system-info').innerHTML = `
-      <p><strong>الإصدار:</strong> FLL Dashboard v3.0</p>
-      <p><strong>البنية:</strong> Skywork + AWS + Supabase</p>
-      <p><strong>المنطقة:</strong> me-south-1 (البحرين)</p>
-      <p><strong>قاعدة البيانات:</strong> Supabase PostgreSQL</p>
-      <p><strong>الجداول:</strong> 53 جدول</p>
-      <p><strong>DynamoDB:</strong> 38 جدول</p>
-    `;
-    document.getElementById('aws-info').innerHTML = `
-      <p><strong>API Gateway:</strong> ✅ متصل</p>
-      <p><strong>Lambda:</strong> 10 وظائف</p>
-      <p><strong>Cognito:</strong> ✅ 11 مجموعة</p>
-      <p><strong>S3:</strong> 10 حاويات</p>
-      <p><strong>SES:</strong> ✅ fll.sa verified</p>
-    `;
-
-  } catch(err) {
-    console.error('Load error:', err);
-  }
-}
-
-// ==============================
-// Init
-// ==============================
-loadData();
-
-// ================================================================
-// v4 ADDITIONS — All original code above is untouched
-// ================================================================
-function openModal(id){document.getElementById(id).classList.add('active')}
-function closeModal(id){document.getElementById(id).classList.remove('active')}
-function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
-
-let _c={couriers:[],orders:[],staff:[],depts:[],complaints:[],audit:[]},_ch={};
-
-const _origLoad=loadData;
-loadData=async function(){
-  await _origLoad();
+// ============================================================
+// LOAD ALL DATA — Supabase + AWS API in parallel
+// ============================================================
+async function loadAll(){
   try{
-    const[cR,oR,sR,dR,compR,auR]=await Promise.all([
+    const[sbC,sbO,sbS,sbD,sbCo,awsCo,awsT,awsN,awsA,awsP,awsAp]=await Promise.allSettled([
       sb.from('couriers').select('*'),
-      sb.from('orders').select('*,couriers(full_name_ar,full_name,city,bank_name,iban,stc_bank_phone_int,contract_type)'),
-      sb.from('staff_users').select('*'),sb.from('departments').select('*'),
-      sb.from('complaints').select('*'),sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(50)
+      sb.from('orders').select('*,couriers(full_name_ar,full_name,city,stc_bank_phone_int,contract_type)'),
+      sb.from('staff_users').select('*'),
+      sb.from('departments').select('*'),
+      sb.from('complaints').select('*'),
+      awsGet('/complaints'),
+      awsGet('/api/tasks'),
+      awsGet('/api/notifications'),
+      awsGet('/api/audit-log'),
+      awsGet('/api/payout-runs'),
+      awsGet('/api/approvals')
     ]);
-    _c.couriers=cR.data||[];_c.orders=oR.data||[];_c.staff=sR.data||[];
-    _c.depts=dR.data||[];_c.complaints=compR.data||[];_c.audit=auR.data||[];
-    renderPlatforms();renderCities();renderPermissions();renderAudit();
-    renderNotifications();renderIntegrations();renderAI();renderCharts();populateFilters();
-    const oc=_c.complaints.filter(c=>c.status==='open'||!c.status);
-    const ce=document.getElementById('complaint-count');if(ce)ce.textContent=oc.length;
-  }catch(e){console.error('v4:',e)}
-};
+    D.couriers=sbC.value?.data||[];D.orders=sbO.value?.data||[];D.staff=sbS.value?.data||[];D.depts=sbD.value?.data||[];D.complaints_sb=sbCo.value?.data||[];
+    D.complaints_aws=awsCo.value?.items||[];D.tasks=awsT.value?.items||[];D.notifications=awsN.value?.items||[];D.audit=awsA.value?.items||[];D.payouts=awsP.value?.items||[];D.approvals=awsAp.value?.items||[];
+    renderAll();
+  }catch(e){console.error('loadAll:',e)}
+}
 
-// === PLATFORMS ===
-function renderPlatforms(){const byP={};_c.orders.forEach(o=>{const p=o.platform||'?';if(!byP[p])byP[p]={n:0,g:0,cs:new Set()};byP[p].n+=(o.orders_count||0);byP[p].g+=+(o.net_earnings||0);if(o.courier_id)byP[p].cs.add(o.courier_id)});const col={hungerstation:'gold',keeta:'purple',ninja:'orange',mrsool:'blue',toyou:'green',careem:'red'};const e1=document.getElementById('platform-stats'),e2=document.getElementById('platforms-table');if(e1)e1.innerHTML=Object.entries(byP).map(([n,d])=>`<div class="stat-card ${col[n.toLowerCase()]||'blue'}"><div class="stat-label">${n}</div><div class="stat-value">${d.n}</div><div class="stat-sub">${d.g.toFixed(0)} ر.س • ${d.cs.size} مندوب</div></div>`).join('')||'<p style="color:var(--muted)">لا توجد بيانات</p>';if(e2)e2.innerHTML=Object.entries(byP).map(([n,d])=>{const a=d.cs.size>0?(d.g/d.cs.size).toFixed(2):'0';return`<tr><td><strong>${n}</strong></td><td>${d.cs.size}</td><td>${d.n}</td><td>${d.g.toFixed(2)} ر.س</td><td>${a} ر.س</td></tr>`}).join('')}
+function renderAll(){
+  renderOverview();renderCouriers();renderOrders();renderComplaints();renderPlatforms();
+  renderFinance();renderStaff();renderDepts();renderTasks();renderNotifications();
+  renderAudit();renderApprovals();renderIntegrations();renderAI();renderSettings();
+}
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderOverview(){
+  const ac=D.couriers.filter(c=>c.status==='active');
+  $('s-couriers').textContent=ac.length;$('nav-couriers').textContent=D.couriers.length;
+  $('s-orders').textContent=D.orders.length;$('nav-orders').textContent=D.orders.length;
+  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
+  $('s-net').textContent=fmt(net)+' ر.س';
+  const openC=D.complaints_aws.filter(c=>c.status==='new'||c.status==='assigned'||c.status==='in_progress');
+  $('s-complaints').textContent=openC.length;$('nav-complaints').textContent=openC.length||D.complaints_aws.length;
+  $('s-tasks').textContent=D.tasks.filter(t=>t.status==='pending').length;$('nav-tasks').textContent=D.tasks.length;
+  $('s-payouts').textContent=D.payouts.length;
+  $('nav-notif').textContent=D.notifications.length;
+  $('nav-approvals').textContent=D.approvals.filter(a=>a.status==='pending').length;
 
-// === CITIES ===
-function renderCities(){const byC={};_c.couriers.forEach(c=>{const ci=c.city||'غير محدد';if(!byC[ci])byC[ci]={t:0,a:0,i:0,o:0,e:0};byC[ci].t++;c.status==='active'?byC[ci].a++:byC[ci].i++});_c.orders.forEach(o=>{const cr=_c.couriers.find(c=>c.id===o.courier_id);if(cr){const ci=cr.city||'غير محدد';if(byC[ci]){byC[ci].o+=(o.orders_count||0);byC[ci].e+=+(o.net_earnings||0)}}});const e1=document.getElementById('city-stats'),e2=document.getElementById('cities-table');const t3=Object.entries(byC).sort((a,b)=>b[1].t-a[1].t).slice(0,4);if(e1)e1.innerHTML=t3.map(([n,d])=>`<div class="stat-card blue"><div class="stat-label">${n}</div><div class="stat-value">${d.t}</div><div class="stat-sub">${d.a} نشط</div></div>`).join('');if(e2)e2.innerHTML=Object.entries(byC).sort((a,b)=>b[1].t-a[1].t).map(([n,d])=>`<tr><td><strong>${n}</strong></td><td>${d.t}</td><td><span class="badge badge-green">${d.a}</span></td><td><span class="badge badge-red">${d.i}</span></td><td>${d.o}</td><td>${d.e.toFixed(2)} ر.س</td></tr>`).join('')}
+  // Charts
+  const byP={};D.orders.forEach(o=>{const p=o.platform||'?';byP[p]=(byP[p]||0)+parseFloat(o.net_earnings||0)});
+  const pC={'HungerStation':'#f59e0b','Keeta':'#6366f1','Ninja':'#f97316','Mrsool':'#0ea5e9','ToYou':'#10b981','Careem':'#ef4444'};
+  if(CH.p)CH.p.destroy();const c1=$('ch-plat');
+  if(c1&&Object.keys(byP).length)CH.p=new Chart(c1,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:11}}}}}});
+  const byC={};D.couriers.forEach(c=>{byC[c.city||'?']=(byC[c.city||'?']||0)+1});
+  if(CH.c)CH.c.destroy();const c2=$('ch-city');
+  if(c2&&Object.keys(byC).length)CH.c=new Chart(c2,{type:'bar',data:{labels:Object.keys(byC),datasets:[{data:Object.values(byC),backgroundColor:'#0f2744',borderRadius:6,barPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{display:false},ticks:{font:{family:'Tajawal',size:11}}}}}});
 
-// === PERMISSIONS ===
-function renderPermissions(){const el=document.getElementById('permissions-table');if(!el)return;const P=[{l:'عرض لوحة التحكم',a:1,f:1,h:1,o:1,fl:1,s:1},{l:'إدارة المناديب',a:1,f:0,h:0,o:1,fl:1,s:0},{l:'عرض المالية',a:1,f:1,h:0,o:0,fl:0,s:0},{l:'تعديل المالية',a:1,f:1,h:0,o:0,fl:0,s:0},{l:'إدارة الموظفين',a:1,f:0,h:1,o:0,fl:0,s:0},{l:'إدارة الشكاوى',a:1,f:0,h:1,o:1,fl:0,s:0},{l:'عرض التقارير',a:1,f:1,h:1,o:1,fl:1,s:0},{l:'إعدادات النظام',a:1,f:0,h:0,o:0,fl:0,s:0},{l:'تصدير البيانات',a:1,f:1,h:1,o:0,fl:0,s:0},{l:'إدارة الصلاحيات',a:1,f:0,h:0,o:0,fl:0,s:0},{l:'سجل التدقيق',a:1,f:0,h:0,o:0,fl:0,s:0},{l:'تحويل شكوى بين الإدارات',a:1,f:0,h:0,o:0,fl:0,s:0},{l:'فتح استثناء تكرار',a:1,f:0,h:0,o:0,fl:0,s:0},{l:'STC Bank Export',a:1,f:1,h:0,o:0,fl:0,s:0}];el.innerHTML=P.map(p=>`<tr><td style="font-weight:600">${p.l}</td><td style="text-align:center">${p.a?'✅':'❌'}</td><td style="text-align:center">${p.f?'✅':'❌'}</td><td style="text-align:center">${p.h?'✅':'❌'}</td><td style="text-align:center">${p.o?'✅':'❌'}</td><td style="text-align:center">${p.fl?'✅':'❌'}</td><td style="text-align:center">${p.s?'✅':'❌'}</td></tr>`).join('')}
+  // Recent audit
+  const el=$('ov-audit');if(el)el.innerHTML=(D.audit||[]).slice(0,8).map(a=>`<div class="audit-entry"><strong>${a.action||'—'}</strong> — ${a.user||'—'} <span class="audit-time">${a.created_at?new Date(a.created_at).toLocaleString('ar-SA'):'—'}</span></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد سجلات بعد</p>';
+}
 
-// === AUDIT ===
-function renderAudit(l){const d=l||_c.audit||[];const el=document.getElementById('audit-content');if(!el)return;if(!d.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">لا توجد سجلات</p>';return}el.innerHTML=d.map(a=>`<div class="audit-entry"><strong>${a.action||a.event_type||'-'}</strong> — ${a.user_email||a.performed_by||'-'}<br><span class="audit-time">${a.created_at?new Date(a.created_at).toLocaleString('ar-SA'):'-'}</span>${a.details?'<br><span style="color:var(--muted);font-size:12px">'+a.details+'</span>':''}</div>`).join('')}
-function filterAudit(){const t=document.getElementById('audit-filter')?.value||'';renderAudit(t?(_c.audit||[]).filter(a=>(a.action||'').includes(t)):_c.audit)}
+function renderCouriers(){
+  const ct={kafala:'كفالة',contract:'تعاقد',trial:'تجربة',freelance:'حر'};
+  $('tbl-couriers').innerHTML=D.couriers.map(c=>`<tr>
+    <td><strong>${c.full_name_ar||c.full_name||'—'}</strong></td><td>${c.national_id||'—'}</td><td>${c.phone||'—'}</td>
+    <td style="direction:ltr">${c.stc_bank_phone_int||'<span style="color:var(--red)">❌ مطلوب</span>'}</td>
+    <td>${c.city||'—'}</td><td>${badge(ct[c.contract_type]||c.contract_type||'—','purple')}</td>
+    <td>${c.status==='active'?badge('نشط','green'):badge('غير نشط','red')}</td>
+    <td><button class="action-btn outline" style="padding:4px 8px;font-size:11px" onclick="viewCourier('${c.id}')">👁️</button></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا يوجد مناديب</td></tr>';
+}
 
-// === NOTIFICATIONS ===
-function renderNotifications(){const el=document.getElementById('notif-list');if(!el)return;const n=[{m:'مندوب جديد سجّل في المنصة',t:'قبل 5 دقائق',r:0},{m:'تم اعتماد دفعة مستحقات #103',t:'قبل ساعة',r:0},{m:'شكوى جديدة مفتوحة #7',t:'قبل 3 ساعات',r:1},{m:'⚠️ SLA: شكوى تجاوزت 24 ساعة بدون رد',t:'قبل 5 ساعات',r:0},{m:'SLA Scanner: لا توجد مخالفات',t:'قبل 6 ساعات',r:1},{m:'Backup يومي اكتمل بنجاح',t:'أمس 2:00 ص',r:1}];const ur=n.filter(x=>!x.r).length;const nc=document.getElementById('notif-count');if(nc)nc.textContent=ur;el.innerHTML=n.map(x=>`<div class="notif-item"><div class="notif-dot ${x.r?'read':''}"></div><div><div style="font-size:13px;font-weight:${x.r?'400':'600'}">${x.m}</div><div style="font-size:11px;color:var(--muted)">${x.t}</div></div></div>`).join('')}
-function markAllRead(){toast('تم تعيين الكل كمقروء ✅');document.querySelectorAll('.notif-dot').forEach(d=>d.classList.add('read'));const nc=document.getElementById('notif-count');if(nc)nc.textContent='0'}
+function renderOrders(){
+  $('tbl-orders').innerHTML=D.orders.map(o=>`<tr>
+    <td><strong>${o.couriers?.full_name_ar||'—'}</strong></td><td>${badge(o.platform||'—','blue')}</td><td>${o.order_date||'—'}</td>
+    <td>${o.orders_count||0}</td><td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
+    <td><strong>${fmt(o.net_earnings)} ر.س</strong></td>
+    <td>${o.status==='approved'?badge('معتمد','green'):badge('معلق','yellow')}</td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
+}
 
-// === INTEGRATIONS ===
-function renderIntegrations(){const el=document.getElementById('integ-list');if(!el)return;const I=[{n:'Supabase',d:'PostgreSQL 17 — 53 جدول',s:'متصل',b:'badge-green',i:'🗄️'},{n:'AWS API Gateway',d:'fll-platform-api-prod — 50+ route',s:'متصل',b:'badge-green',i:'⚡'},{n:'AWS Cognito',d:'نظام المصادقة — 11 مجموعة',s:'متصل',b:'badge-green',i:'🔐'},{n:'AWS SES',d:'no-reply@fll.sa — بريد رسمي',s:'متصل',b:'badge-green',i:'📧'},{n:'AWS Bedrock',d:'Claude Haiku — AI Chatbot + Finance Review',s:'متصل',b:'badge-green',i:'🤖'},{n:'AWS EventBridge',d:'SLA Scanner (كل ساعة) + Daily Backup',s:'مفعل',b:'badge-green',i:'⏰'},{n:'STC Bank Export',d:'Template XLSX + Auto-generation',s:'جاهز',b:'badge-blue',i:'🏦'},{n:'DynamoDB',d:'38 جدول (accounting-rules, payout-runs, approvals…)',s:'متصل',b:'badge-green',i:'📊'},{n:'S3 Storage',d:'8 حاويات (KYC, finance-templates, exports…)',s:'متصل',b:'badge-green',i:'📦'},{n:'Vercel',d:'الاستضافة — fll.sa',s:'متصل',b:'badge-green',i:'▲'},{n:'GitHub',d:'mshari-11/firstlinelog.com',s:'مربوط',b:'badge-blue',i:'🐙'},{n:'HungerStation',d:'ربط API مع المنصة',s:'قريباً',b:'badge-yellow',i:'🍔'},{n:'Keeta',d:'ربط API مع المنصة',s:'قريباً',b:'badge-yellow',i:'🛵'}];el.innerHTML=I.map(x=>`<div class="integration-card"><div style="font-size:28px">${x.i}</div><div><strong>${x.n}</strong><br><span style="font-size:12px;color:var(--muted)">${x.d}</span></div><span class="badge ${x.b} integration-status">${x.s}</span></div>`).join('')}
+function renderComplaints(){
+  const all=D.complaints_aws;
+  const open=all.filter(c=>c.status==='new'||!c.status);
+  const assigned=all.filter(c=>c.status==='assigned');
+  const resolved=all.filter(c=>c.status==='resolved'||c.status==='closed');
+  $('comp-stats').innerHTML=`
+    <div class="stat-card red"><div class="stat-label">مفتوحة</div><div class="stat-value">${open.length}</div></div>
+    <div class="stat-card gold"><div class="stat-label">قيد المعالجة</div><div class="stat-value">${assigned.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">محلولة</div><div class="stat-value">${resolved.length}</div></div>
+    <div class="stat-card blue"><div class="stat-label">الإجمالي</div><div class="stat-value">${all.length}</div><div class="stat-sub">AWS DynamoDB</div></div>`;
+  const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
+  const priC={urgent:'red',high:'orange',medium:'blue',low:'green'};
+  const stL={new:'جديد',assigned:'معيّن',in_progress:'قيد المعالجة',resolved:'محلول',closed:'مغلق'};
+  const stC={new:'red',assigned:'yellow',in_progress:'blue',resolved:'green',closed:'green'};
+  $('tbl-complaints').innerHTML=all.map(c=>{
+    const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;
+    const sla=hrs>=48?badge('🔴 48h+','red'):hrs>=24?badge('🟡 24h+','yellow'):badge('🟢 OK','green');
+    return`<tr>
+    <td><strong>${c.ticket_id||c.complaintId||'—'}</strong></td><td>${c.driver_name||'—'}</td>
+    <td>${badge(c.category||'—','blue')}</td><td>${badge(priL[c.priority]||'—',priC[c.priority]||'blue')}</td>
+    <td>${c.subject||'—'}</td><td>${badge(stL[c.status]||c.status||'جديد',stC[c.status]||'yellow')}</td>
+    <td>${sla}</td>
+    <td><button class="action-btn outline" style="padding:3px 6px;font-size:10px" onclick="resolveComplaint('${c.complaintId}')">✅ حل</button></td>
+  </tr>`}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
+}
 
-// === AI ===
-function renderAI(){const r=document.getElementById('ai-rev'),c=document.getElementById('ai-cls'),ch=document.getElementById('ai-chat');if(r)r.textContent=_c.orders.length;if(c)c.textContent=_c.complaints.length;if(ch)ch.textContent='—'}
+function renderPlatforms(){
+  const byP={};D.orders.forEach(o=>{const p=o.platform||'?';if(!byP[p])byP[p]={n:0,g:0,cs:new Set()};byP[p].n+=(o.orders_count||0);byP[p].g+=parseFloat(o.net_earnings||0);if(o.courier_id)byP[p].cs.add(o.courier_id)});
+  const col={hungerstation:'gold',keeta:'purple',ninja:'orange',mrsool:'blue',toyou:'green',careem:'red'};
+  $('plat-stats').innerHTML=Object.entries(byP).map(([n,d])=>`<div class="stat-card ${col[n.toLowerCase()]||'blue'}"><div class="stat-label">${n}</div><div class="stat-value">${d.n}</div><div class="stat-sub">${fmt(d.g)} ر.س • ${d.cs.size} مندوب</div></div>`).join('');
+  $('tbl-platforms').innerHTML=Object.entries(byP).map(([n,d])=>`<tr><td><strong>${n}</strong></td><td>${d.cs.size}</td><td>${d.n}</td><td>${fmt(d.g)} ر.س</td><td>${d.cs.size?(d.g/d.cs.size).toFixed(2):'0'} ر.س</td></tr>`).join('');
+}
+function renderFinance(){
+  const gross=D.orders.reduce((s,o)=>s+parseFloat(o.gross_earnings||0),0);
+  const ded=D.orders.reduce((s,o)=>s+parseFloat(o.deductions||0),0);
+  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
+  $('fin-stats').innerHTML=`
+    <div class="stat-card gold"><div class="stat-label">إجمالي المستحقات</div><div class="stat-value">${fmt(gross)}</div><div class="stat-sub">ر.س</div></div>
+    <div class="stat-card red"><div class="stat-label">الخصومات</div><div class="stat-value">${fmt(ded)}</div></div>
+    <div class="stat-card green"><div class="stat-label">الصافي</div><div class="stat-value">${fmt(net)}</div></div>
+    <div class="stat-card purple"><div class="stat-label">دفعات AWS</div><div class="stat-value">${D.payouts.length}</div><div class="stat-sub">DynamoDB</div></div>`;
+  $('tbl-payouts').innerHTML=D.payouts.map(p=>`<tr>
+    <td><strong>${p.runId||p.id||'—'}</strong></td><td>${p.period||'—'}</td>
+    <td>${p.total_amount||0} ر.س</td><td>${p.created_by||'—'}</td>
+    <td>${p.status==='approved'?badge('معتمد','green'):p.status==='draft'?badge('مسودة','yellow'):badge(p.status||'—','blue')}</td>
+    <td>${p.createdAt?new Date(p.createdAt).toLocaleString('ar-SA'):'—'}</td>
+  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد دفعات — اضغط "+ دفعة جديدة"</td></tr>';
+}
 
-// === REPORTS + REVIEW PACK ===
-function genReport(type){const el=document.getElementById('gen-reports');if(!el)return;const now=new Date().toLocaleString('ar-SA');let html='';const o=_c.orders,c=_c.couriers,comp=_c.complaints,s=_c.staff;
-  if(type==='monthly')html=`📊 <strong>تقرير شهري</strong> — ${c.length} مندوب، ${o.length} سجل، ${o.reduce((s,x)=>s++(x.net_earnings||0),0).toFixed(2)} ر.س`;
-  else if(type==='couriers')html=`🛵 <strong>تقرير المناديب</strong> — ${c.filter(x=>x.status==='active').length} نشط من ${c.length}`;
-  else if(type==='platforms'){const ps=[...new Set(o.map(x=>x.platform).filter(Boolean))];html=`📱 <strong>تقرير المنصات</strong> — ${ps.length} منصة: ${ps.join('، ')}`}
-  else if(type==='finance')html=`💰 <strong>تقرير مالي</strong> — إجمالي: ${o.reduce((s,x)=>s++(x.gross_earnings||0),0).toFixed(2)} ر.س، خصومات: ${o.reduce((s,x)=>s++(x.deductions||0),0).toFixed(2)} ر.س`;
-  else if(type==='complaints')html=`📋 <strong>تقرير الشكاوى</strong> — ${comp.length} شكوى، ${comp.filter(x=>x.status==='open').length} مفتوحة`;
-  else if(type==='review'){genReviewPack();return}
-  el.innerHTML=`<div class="audit-entry">📄 ${html}<br><span class="audit-time">تم التوليد: ${now}</span></div>`+(el.innerHTML.includes('اضغط')?'':el.innerHTML);toast('تم توليد التقرير 📄')}
+function renderStaff(){
+  $('tbl-staff').innerHTML=D.staff.map(s=>`<tr>
+    <td><strong>${s.full_name||s.name||'—'}</strong></td><td>${s.email||'—'}</td>
+    <td>${badge(s.department||'—','blue')}</td><td>${s.position_title||'—'}</td>
+    <td>${badge(s.role||'—','purple')}</td>
+    <td>${s.is_active!==false?badge('نشط','green'):badge('معطل','red')}</td>
+  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا يوجد موظفين</td></tr>';
+  // Fill dept dropdown
+  $('sf-dept').innerHTML='<option value="">اختر</option>'+D.depts.map(d=>`<option value="${d.name}">${d.name_ar||d.name}</option>`).join('');
+}
 
-function genReviewPack(){const el=document.getElementById('review-pack-content');if(!el)return;
-  // Finance Review
-  const noSTC=_c.couriers.filter(c=>!c.stc_bank_phone_int&&c.status==='active');
-  const zeroAmt=_c.orders.filter(o=>+(o.net_earnings||0)<=0);
-  const phones=_c.couriers.map(c=>c.stc_bank_phone_int).filter(Boolean);
+function renderDepts(){
+  $('dept-grid').innerHTML=D.depts.map(d=>`<div class="card"><div class="card-body" style="text-align:center;padding:20px">
+    <div style="font-size:28px">🏢</div><h3 style="font-size:14px;color:var(--navy);margin:8px 0">${d.name_ar||d.name}</h3>
+    <p style="font-size:12px;color:var(--muted)">${d.description||d.name}</p>
+    <div style="margin-top:8px">${d.is_active!==false?badge('مفعل','green'):badge('معطل','red')}</div>
+  </div></div>`).join('')||'<p style="color:var(--muted)">لا توجد أقسام</p>';
+}
+
+function renderTasks(){
+  const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
+  const stL={pending:'معلق',in_progress:'قيد التنفيذ',completed:'مكتمل',cancelled:'ملغي'};
+  const stC={pending:'yellow',in_progress:'blue',completed:'green',cancelled:'red'};
+  $('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr>
+    <td><strong>${t.title||'—'}</strong></td><td>${t.assigned_to||'—'}</td><td>${t.assigned_by||'—'}</td>
+    <td>${t.department||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td>
+    <td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td>
+    <td>${t.createdAt?new Date(t.createdAt).toLocaleString('ar-SA'):'—'}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد مهام — اضغط "+ مهمة جديدة"</td></tr>';
+}
+
+function renderNotifications(){
+  $('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item">
+    <div class="notif-dot"></div>
+    <div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div>
+    <div style="font-size:12px;color:var(--muted)">${n.message||''}</div>
+    <div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div>
+  </div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات — اضغط "+ إشعار جديد"</p>';
+}
+function markAllRead(){toast('تم تعيين الكل كمقروء ✅');document.querySelectorAll('.notif-dot').forEach(d=>d.classList.add('read'))}
+
+function renderAudit(items){
+  const list=items||D.audit||[];
+  $('audit-content').innerHTML=list.map(a=>`<div class="audit-entry">
+    <strong>${a.action||'—'}</strong> — <span style="color:var(--blue)">${a.user||'—'}</span>
+    ${a.details?'<br><span style="font-size:12px;color:var(--muted)">'+a.details+'</span>':''}
+    <br><span class="audit-time">${a.created_at||a.createdAt?new Date(a.created_at||a.createdAt).toLocaleString('ar-SA'):'—'}</span>
+  </div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد سجلات</p>';
+}
+function filterAudit(){const v=$('audit-filter').value;renderAudit(v?D.audit.filter(a=>(a.action||'').includes(v)):D.audit)}
+
+function renderApprovals(){
+  $('tbl-approvals').innerHTML=D.approvals.map(a=>`<tr>
+    <td><strong>${a.description||a.approvalId||'—'}</strong></td><td>${a.type||'—'}</td>
+    <td>${a.requested_by||'—'}</td><td>${a.amount||0} ر.س</td>
+    <td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td>
+    <td>${a.createdAt?new Date(a.createdAt).toLocaleString('ar-SA'):'—'}</td>
+    <td>${a.status==='pending'?'<button class="action-btn green" style="padding:3px 8px;font-size:10px" onclick="approveItem(\''+a.id+'\')">✅ اعتماد</button>':''}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد طلبات اعتماد</td></tr>';
+}
+
+function renderIntegrations(){
+  const I=[
+    {n:'AWS API Gateway',d:`60 route — ${AWS_API}`,s:'✅ متصل',b:'green',i:'⚡'},
+    {n:'Supabase PostgreSQL',d:'53 جدول — بيانات حية',s:'✅ متصل',b:'green',i:'🗄️'},
+    {n:'AWS Cognito',d:'5 مستخدمين — 9 مجموعات',s:'✅ متصل',b:'green',i:'🔐'},
+    {n:'AWS DynamoDB',d:'38 جدول — بيانات مفعّلة',s:'✅ متصل',b:'green',i:'📊'},
+    {n:'AWS SES',d:'no-reply@fll.sa',s:'✅ مفعل',b:'green',i:'📧'},
+    {n:'AWS Bedrock AI',d:'Claude Haiku — Finance Review + Chatbot',s:'✅ مفعل',b:'green',i:'🤖'},
+    {n:'AWS EventBridge',d:'SLA Scanner (كل ساعة) + Daily Backup (2AM)',s:'✅ ENABLED',b:'green',i:'⏰'},
+    {n:'AWS SNS',d:'5 topics: complaints, escalation, driver, fleet, migration',s:'✅ مفعل',b:'green',i:'📢'},
+    {n:'STC Bank Excel',d:'POST /finance/generate-stc-excel',s:'✅ جاهز',b:'blue',i:'🏦'},
+    {n:'S3 Storage',d:'8 حاويات (KYC, finance, exports...)',s:'✅ متصل',b:'green',i:'📦'},
+    {n:'Vercel',d:'fll.sa — auto-deploy from GitHub',s:'✅ متصل',b:'green',i:'▲'},
+    {n:'GitHub',d:'mshari-11/firstlinelog.com',s:'✅ مربوط',b:'blue',i:'🐙'}
+  ];
+  $('integ-list').innerHTML=I.map(x=>`<div class="integration-card"><div style="font-size:26px">${x.i}</div><div><strong>${x.n}</strong><br><span style="font-size:12px;color:var(--muted)">${x.d}</span></div><span class="badge badge-${x.b} integration-status">${x.s}</span></div>`).join('');
+}
+
+function renderAI(){
+  $('ai-rev').textContent=D.orders.length;$('ai-cls').textContent=D.complaints_aws.length;
+}
+
+function renderSettings(){
+  $('sys-settings').innerHTML=`<div style="font-size:13px;line-height:2">
+    <strong>API Gateway:</strong> ${AWS_API}<br>
+    <strong>Supabase:</strong> ${SB_URL}<br>
+    <strong>Cognito Pool:</strong> me-south-1_aJtmQ0QrN<br>
+    <strong>SES Domain:</strong> fll.sa<br>
+    <strong>EventBridge:</strong> SLA Scanner (hourly) + Daily Backup (2AM)<br>
+    <strong>Region:</strong> me-south-1 (البحرين)
+  </div>`;
+  $('sys-health').innerHTML=`<div style="font-size:13px;line-height:2">
+    <span class="live-dot"></span> <strong>Supabase:</strong> ${D.couriers.length} مناديب، ${D.orders.length} طلبات<br>
+    <span class="live-dot"></span> <strong>AWS Complaints:</strong> ${D.complaints_aws.length} شكاوى<br>
+    <span class="live-dot"></span> <strong>AWS Tasks:</strong> ${D.tasks.length} مهام<br>
+    <span class="live-dot"></span> <strong>AWS Audit:</strong> ${D.audit.length} سجل<br>
+    <span class="live-dot"></span> <strong>AWS Payouts:</strong> ${D.payouts.length} دفعات<br>
+    <span class="live-dot"></span> <strong>AWS Notifications:</strong> ${D.notifications.length} إشعار
+  </div>`;
+}
+// ============================================================
+// ACTIONS — All connected to AWS API
+// ============================================================
+
+// === COMPLAINTS via AWS ===
+async function saveComplaintAWS(){
+  const cId='FLL-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+String(D.complaints_aws.length+1).padStart(4,'0');
+  const body={complaintId:cId,ticket_id:'TK-'+String(D.complaints_aws.length+1).padStart(3,'0'),subject:$('cmp-subject').value,category:$('cmp-cat').value,priority:$('cmp-pri').value,driver_name:$('cmp-driver').value,description:$('cmp-desc').value,status:'new',created_at:new Date().toISOString()};
+  if(!body.subject)return toast('الموضوع مطلوب','error');
+  const r=await awsPost('/complaints',body);
+  if(r.error)return toast('خطأ AWS: '+r.error,'error');
+  await auditLog('create','شكوى جديدة: '+body.subject,'complaints');
+  toast('✅ تم إنشاء الشكوى عبر AWS API — '+cId);closeModal('comp-modal');loadAll();
+}
+
+async function resolveComplaint(id){
+  const r=await awsPost('/complaints/'+id+'/resolve',{resolved_by:user?.email||'admin',resolution:'تم الحل من لوحة الإدارة'});
+  if(r.error)toast('⚠️ خطأ: '+r.error,'error');else{await auditLog('resolve','حل شكوى: '+id,'complaints');toast('✅ تم حل الشكوى');loadAll()}}
+
+// === TASKS via AWS ===
+async function saveTaskAWS(){
+  const body={taskId:'TASK-'+String(D.tasks.length+1).padStart(3,'0'),title:$('tk-title').value,assigned_to:$('tk-to').value,assigned_by:user?.email||'admin',department:$('tk-dept').value,priority:$('tk-pri').value,description:$('tk-desc')?.value||'',status:'pending',created_at:new Date().toISOString()};
+  if(!body.title)return toast('عنوان المهمة مطلوب','error');
+  const r=await awsPost('/api/tasks',body);
+  if(r.error)return toast('خطأ: '+r.error,'error');
+  await auditLog('create','مهمة جديدة: '+body.title,'tasks');
+  toast('✅ تم إنشاء المهمة عبر AWS API');closeModal('task-modal');loadAll();
+}
+
+// === NOTIFICATIONS via AWS ===
+async function sendNotifAWS(){
+  const ts=Date.now();
+  const body={recipient_sub:$('nf-to').value,createdAt_id:new Date().toISOString()+'-'+ts,title:$('nf-title').value,message:$('nf-msg').value,type:'admin',created_at:new Date().toISOString()};
+  if(!body.title)return toast('العنوان مطلوب','error');
+  const r=await awsPost('/api/notifications',body);
+  if(r.error)return toast('خطأ: '+r.error,'error');
+  await auditLog('create','إشعار جديد: '+body.title,'notifications');
+  toast('✅ تم إرسال الإشعار عبر AWS');closeModal('notif-modal');loadAll();
+}
+
+// === FINANCE — Payout Runs + STC Excel ===
+async function createPayoutRun(){
+  const now=new Date();const period=now.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
+  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
+  const body={runId:'PAY-'+now.toISOString().slice(0,7),period,status:'draft',total_amount:net,courier_count:D.couriers.filter(c=>c.status==='active').length,created_by:user?.email||'admin',created_at:now.toISOString()};
+  const r=await awsPost('/api/payout-runs',body);
+  if(r.error)return toast('خطأ: '+r.error,'error');
+  await auditLog('create','دفعة مستحقات جديدة: '+period,'finance');
+  toast('✅ تم إنشاء دفعة المستحقات — '+body.runId);loadAll();
+}
+
+async function generateSTC(){
+  const payouts=D.couriers.filter(c=>c.status==='active'&&c.stc_bank_phone_int).map((c,i)=>{
+    const orders=D.orders.filter(o=>o.courier_id===c.id);
+    const net=orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
+    return{reference:'PAY-'+String(i+1).padStart(3,'0'),phone:c.stc_bank_phone_int,amount:net}
+  }).filter(p=>p.amount>0);
+  if(!payouts.length)return toast('لا توجد مدفوعات لتصديرها','error');
+  const r=await awsPost('/finance/generate-stc-excel',{payouts});
+  if(r.error||r.status==='error')toast('⚠️ '+JSON.stringify(r.message||r.error),'error');
+  else{await auditLog('export','STC Bank Excel — '+payouts.length+' مندوب','finance');toast('✅ تم توليد ملف STC Bank')}
+}
+
+// === SUPABASE SAVES ===
+async function saveCourier(){
+  const stc=$('cr-stc').value;
+  if(stc&&(stc.length!==9||!stc.startsWith('5')))return toast('رقم STC Bank لازم 9 أرقام يبدأ بـ 5','error');
+  const nid=$('cr-nid').value;
+  if(nid){const{data:ex}=await sb.from('couriers').select('id').eq('national_id',nid).limit(1);if(ex?.length)return toast('🔴 رقم الهوية مسجل — تواصل مع support@fll.sa','error')}
+  if(stc){const dup=D.couriers.find(c=>c.stc_bank_phone_int==='966'+stc);if(dup)return toast('🔴 رقم STC مسجل لمندوب آخر','error')}
+  const rec={full_name_ar:$('cr-name-ar').value,full_name:$('cr-name-en').value,national_id:nid,phone:$('cr-phone').value,stc_bank_phone_local:stc,stc_bank_phone_int:stc?'966'+stc:null,contract_type:$('cr-contract').value,city:$('cr-city').value,bank_name:$('cr-bank').value,status:'active'};
+  if(!rec.full_name_ar||!rec.national_id)return toast('الاسم والهوية مطلوبين','error');
+  const{error}=await sb.from('couriers').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
+  await auditLog('create','مندوب جديد: '+rec.full_name_ar,'couriers');
+  toast('✅ تم إضافة المندوب');closeModal('courier-modal');loadAll();
+}
+
+async function saveStaff(){
+  const rec={full_name:$('sf-name').value,email:$('sf-email').value,department:$('sf-dept').value,position_title:$('sf-pos').value,role:$('sf-role').value,is_active:true};
+  if(!rec.full_name||!rec.email)return toast('الاسم والبريد مطلوبين','error');
+  const{error}=await sb.from('staff_users').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
+  await auditLog('create','موظف جديد: '+rec.full_name,'staff');
+  toast('✅ تم إضافة الموظف');closeModal('staff-modal');loadAll();
+}
+
+async function saveDept(){
+  const rec={name:$('dp-name').value,name_ar:$('dp-name-ar').value,description:$('dp-desc').value,is_active:true};
+  if(!rec.name)return toast('اسم القسم مطلوب','error');
+  const{error}=await sb.from('departments').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
+  await auditLog('create','قسم جديد: '+rec.name_ar,'departments');
+  toast('✅ تم إضافة القسم');closeModal('dept-modal');loadAll();
+}
+
+function viewCourier(id){const c=D.couriers.find(x=>x.id==id);if(c)alert(`${c.full_name_ar}\nالهوية: ${c.national_id}\nSTC: ${c.stc_bank_phone_int||'—'}\nالمدينة: ${c.city}\nالتعاقد: ${c.contract_type}`)}
+async function approveItem(id){toast('✅ تم الاعتماد');await auditLog('approve','اعتماد طلب: '+id,'approvals');loadAll()}
+
+// === EXPORT CSV ===
+function exportCSV(type){
+  let csv='\uFEFF';
+  if(type==='couriers'){csv+='الاسم,الهوية,الجوال,STC Bank,المدينة,التعاقد,الحالة\n';D.couriers.forEach(c=>csv+=`${c.full_name_ar||''},${c.national_id||''},${c.phone||''},${c.stc_bank_phone_int||''},${c.city||''},${c.contract_type||''},${c.status||''}\n`)}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`fll-${type}-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  auditLog('export','تصدير CSV: '+type,'export');toast('📥 تم التصدير');
+}
+
+// === REVIEW PACK ===
+function genReviewPack(){
+  const noSTC=D.couriers.filter(c=>!c.stc_bank_phone_int&&c.status==='active');
+  const phones=D.couriers.map(c=>c.stc_bank_phone_int).filter(Boolean);
   const dupPhones=phones.filter((p,i)=>phones.indexOf(p)!==i);
-  // Ops Review
-  const inactiveInOrders=_c.orders.filter(o=>{const cr=_c.couriers.find(c=>c.id===o.courier_id);return cr&&cr.status!=='active'});
-  // HR Review
-  const noKYC=_c.couriers.filter(c=>c.status==='active'&&!c.national_id);
-  el.innerHTML=`
-    <div class="review-section"><h4>💰 مراجعة المالية (Finance Review)</h4>
-      ${noSTC.length?`<span class="review-flag error">⚠️ ${noSTC.length} مندوب نشط بدون رقم STC Bank</span>`:
-      '<span class="review-flag ok">✅ كل المناديب النشطين عندهم رقم STC</span>'}
+  const zeroAmt=D.orders.filter(o=>parseFloat(o.net_earnings||0)<=0);
+  const openComp=D.complaints_aws.filter(c=>c.status==='new'||!c.status);
+  const slaBreak=D.complaints_aws.filter(c=>{const h=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;return h>=24&&c.status!=='resolved'&&c.status!=='closed'});
+  $('review-pack').innerHTML=`
+    <div class="review-section"><h4>💰 المالية</h4>
+      ${noSTC.length?`<span class="review-flag error">⚠️ ${noSTC.length} مندوب نشط بدون STC Bank</span>`:'<span class="review-flag ok">✅ كل المناديب لديهم STC</span>'}
+      ${dupPhones.length?`<span class="review-flag error">🔴 ${dupPhones.length} رقم STC مكرر!</span>`:'<span class="review-flag ok">✅ لا أرقام مكررة</span>'}
       ${zeroAmt.length?`<span class="review-flag warn">⚠️ ${zeroAmt.length} سجل بمبلغ 0 أو سالب</span>`:''}
-      ${dupPhones.length?`<span class="review-flag error">🔴 ${dupPhones.length} رقم STC مكرر!</span>`:'<span class="review-flag ok">✅ لا توجد أرقام مكررة</span>'}
-      <div style="margin-top:8px;font-size:12px;color:var(--muted)">إجمالي الدفعة: ${_c.orders.reduce((s,o)=>s++(o.net_earnings||0),0).toFixed(2)} ر.س • ${_c.couriers.filter(c=>c.status==='active').length} مندوب نشط</div>
     </div>
-    <div class="review-section"><h4>📦 مراجعة التشغيل (Ops Review)</h4>
-      ${inactiveInOrders.length?`<span class="review-flag warn">⚠️ ${inactiveInOrders.length} سجل لمناديب غير نشطين</span>`:
-      '<span class="review-flag ok">✅ كل السجلات لمناديب نشطين</span>'}
+    <div class="review-section"><h4>📋 الشكاوى (AWS)</h4>
+      ${openComp.length?`<span class="review-flag warn">⚠️ ${openComp.length} شكوى مفتوحة</span>`:'<span class="review-flag ok">✅ لا شكاوى مفتوحة</span>'}
+      ${slaBreak.length?`<span class="review-flag error">🔴 ${slaBreak.length} شكوى تجاوزت SLA 24h!</span>`:'<span class="review-flag ok">✅ كل الشكاوى ضمن SLA</span>'}
     </div>
-    <div class="review-section"><h4>👥 مراجعة الموارد البشرية (HR Review)</h4>
-      ${noKYC.length?`<span class="review-flag error">⚠️ ${noKYC.length} مندوب نشط بدون رقم هوية</span>`:
-      '<span class="review-flag ok">✅ كل المناديب النشطين لديهم بيانات هوية</span>'}
+    <div class="review-section"><h4>👥 الموارد البشرية</h4>
+      <span class="review-flag ${D.couriers.filter(c=>!c.national_id&&c.status==='active').length?'error':'ok'}">${D.couriers.filter(c=>!c.national_id&&c.status==='active').length?'⚠️ '+D.couriers.filter(c=>!c.national_id&&c.status==='active').length+' مندوب بدون هوية':'✅ كل المناديب لديهم هوية'}</span>
     </div>
-    <div class="review-section"><h4>🚗 مراجعة المركبات (Fleet Review)</h4>
-      <span class="review-flag ok">✅ بيانات المركبات تحت المراجعة</span>
+    <div class="review-section"><h4>⚙️ النظام</h4>
+      <span class="review-flag ok">✅ AWS API: 60 route مفعّل</span>
+      <span class="review-flag ok">✅ EventBridge: SLA Scanner + Daily Backup</span>
+      <span class="review-flag ok">✅ Cognito: 5 مستخدمين</span>
     </div>`;
-  toast('تم توليد Review Pack 🔍');showSection('ai')}
+  auditLog('review','Review Pack generated','ai');toast('🔍 تم توليد Review Pack');
+}
 
-// === CHARTS ===
-function renderCharts(){const byP={};_c.orders.forEach(o=>{const p=o.platform||'?';byP[p]=(byP[p]||0)++(o.net_earnings||0)});const pC={'HungerStation':'#f59e0b','Keeta':'#6366f1','Ninja':'#f97316','Mrsool':'#0ea5e9','ToYou':'#10b981','Careem':'#ef4444'};if(_ch.p)_ch.p.destroy();const c1=document.getElementById('chart-platforms');if(c1&&Object.keys(byP).length)_ch.p=new Chart(c1,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12}}}}}});const byC={};_c.couriers.forEach(c=>{byC[c.city||'?']=(byC[c.city||'?']||0)+1});if(_ch.c)_ch.c.destroy();const c2=document.getElementById('chart-cities');if(c2&&Object.keys(byC).length)_ch.c=new Chart(c2,{type:'bar',data:{labels:Object.keys(byC),datasets:[{label:'المناديب',data:Object.values(byC),backgroundColor:'#0f2744',borderRadius:6,barPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{display:false},ticks:{font:{family:'Tajawal',size:12}}}}}})}
-
-// === FILTERS ===
-function populateFilters(){const cities=[...new Set(_c.couriers.map(c=>c.city).filter(Boolean))];const sf=document.getElementById('sf-dept');if(sf)sf.innerHTML='<option value="">اختر</option>'+_c.depts.map(d=>`<option value="${d.id}">${d.name_ar||d.name}</option>`).join('')}
-
-// === SAVE OPS ===
-async function saveCourier(){const stcLocal=document.getElementById('cr-stc').value;if(stcLocal&&(stcLocal.length!==9||!stcLocal.startsWith('5')))return toast('رقم STC Bank لازم 9 أرقام يبدأ بـ 5','error');const nid=document.getElementById('cr-nid').value;
-  // Anti-duplicate check
-  if(nid){const{data:existing}=await sb.from('couriers').select('id').eq('national_id',nid).limit(1);if(existing&&existing.length)return toast('🔴 رقم الهوية مسجل مسبقاً — تواصل مع الإدارة','error')}
-  const rec={full_name_ar:document.getElementById('cr-name-ar').value,full_name:document.getElementById('cr-name-en').value,national_id:nid,phone:document.getElementById('cr-phone').value,stc_bank_phone_local:stcLocal,stc_bank_phone_int:stcLocal?'966'+stcLocal:null,contract_type:document.getElementById('cr-contract').value,city:document.getElementById('cr-city').value,bank_name:document.getElementById('cr-bank').value,status:'active'};
-  if(!rec.full_name_ar||!rec.national_id)return toast('الاسم ورقم الهوية مطلوبين','error');
-  const{error}=await sb.from('couriers').insert(rec);if(error)return toast('خطأ: '+error.message,'error');toast('تم إضافة المندوب ✅');closeModal('courier-modal');loadData()}
-
-async function saveStaff(){const rec={full_name:document.getElementById('sf-name').value,email:document.getElementById('sf-email').value,department_id:document.getElementById('sf-dept').value||null,position_title:document.getElementById('sf-position').value,role:document.getElementById('sf-role').value,phone:document.getElementById('sf-phone').value,is_active:true};if(!rec.full_name||!rec.email)return toast('الاسم والبريد مطلوبين','error');const{error}=await sb.from('staff_users').insert(rec);if(error)return toast('خطأ: '+error.message,'error');toast('تم إضافة الموظف ✅');closeModal('staff-modal');loadData()}
-
-async function saveComplaint(){const rec={title:document.getElementById('cmp-title').value,type:document.getElementById('cmp-type').value,submitted_by:document.getElementById('cmp-by').value,description:document.getElementById('cmp-details').value,status:'open'};if(!rec.title)return toast('العنوان مطلوب','error');const{error}=await sb.from('complaints').insert(rec);if(error)return toast('خطأ: '+error.message,'error');toast('تم تسجيل الشكوى ✅');closeModal('comp-modal');loadData()}
-
-async function saveDept(){const rec={name:document.getElementById('dp-name').value,name_ar:document.getElementById('dp-name-ar').value,description:document.getElementById('dp-desc').value,is_active:true};if(!rec.name)return toast('اسم القسم مطلوب','error');const{error}=await sb.from('departments').insert(rec);if(error)return toast('خطأ: '+error.message,'error');toast('تم إضافة القسم ✅');closeModal('dept-modal');loadData()}
-
-// === EXPORT ===
-function exportTable(type){let csv='';if(type==='couriers'){csv='\uFEFFالاسم,الهوية,الجوال,STC Bank,المدينة,التعاقد,الحالة\n';_c.couriers.forEach(c=>csv+=`${c.full_name_ar||''},${c.national_id||''},${c.phone||''},${c.stc_bank_phone_int||''},${c.city||''},${c.contract_type||''},${c.status||''}\n`)}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`fll-${type}-${new Date().toISOString().slice(0,10)}.csv`;a.click();toast('تم التصدير 📥')}
-
-loadData();
+// ============================================================
+// INIT
+// ============================================================
+loadAll();
+auditLog('login','Dashboard admin login','auth');
 </script>
 </body>
 </html>

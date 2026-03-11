@@ -116,8 +116,10 @@ function logout(){localStorage.clear();location.href='/'}
 function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
 function showTab(n,btn){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');if(btn)btn.classList.add('active')}
 function badge(t,c){return`<span class="badge badge-${c}">${t}</span>`}
-async function awsGet(p){try{const r=await fetch(AWS+p);return await r.json()}catch(e){return{items:[]}}}
-async function awsPost(p,b){try{const r=await fetch(AWS+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return await r.json()}catch(e){return{error:e.message}}}
+const _tk=localStorage.getItem('fll_token')||'';
+function awsH(){const h={'Content-Type':'application/json'};if(_tk)h['Authorization']='Bearer '+_tk;return h}
+async function awsGet(p){try{const r=await fetch(AWS+p,{headers:awsH()});if(r.status===401){location.href='/unified-login';return{items:[]}}return await r.json()}catch(e){return{items:[]}}}
+async function awsPost(p,b){try{const r=await fetch(AWS+p,{method:'POST',headers:awsH(),body:JSON.stringify(b)});if(r.status===401){location.href='/unified-login';return{error:'unauthorized'}}return await r.json()}catch(e){return{error:e.message}}}
 
 let D={staff:null,tasks:[],notifications:[],approvals:[]};
 async function loadAll(){

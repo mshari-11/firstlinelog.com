@@ -6,7 +6,7 @@
 <link rel="icon" href="/public/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
 <script src="/fll-shared.js"></script>
 <style>
 :root{--navy:#0a1628;--navy-light:#152238;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
@@ -137,7 +137,6 @@ async function loadAll(){
     <div class="dept-card"><h4>${d.name_ar||d.name}</h4><p>${d.description||d.name}</p>
     <div style="margin-top:8px">${d.is_active?badge('مفعل','green'):badge('معطل','red')}</div></div>`).join('');
 }
-loadAll();
 
 // === NEW: Attendance, Tasks, Performance ===
 const _origHRLoad=loadAll;

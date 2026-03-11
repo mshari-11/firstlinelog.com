@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
 <style>
 :root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
@@ -382,9 +382,10 @@ function switchPortal(p){if(p==='staff')location.href='/staff-hr';else if(p==='c
 // Section nav
 function S(name){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const sec=$('sec-'+name);if(sec)sec.classList.add('active');event?.target?.closest?.('.nav-item')?.classList.add('active')}
 
-// AWS API helpers
-async function awsGet(path){try{const r=await fetch(AWS_API+path);return await r.json()}catch(e){console.error('AWS GET',path,e);return{items:[],count:0}}}
-async function awsPost(path,body){try{const r=await fetch(AWS_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json()}catch(e){console.error('AWS POST',path,e);return{error:e.message}}}
+// AWS API helpers (with auth token)
+function awsHeaders(){const h={'Content-Type':'application/json'};if(token)h['Authorization']='Bearer '+token;return h}
+async function awsGet(path){try{const r=await fetch(AWS_API+path,{headers:awsHeaders()});if(r.status===401){window.location.href='/unified-login';return{items:[],count:0}}return await r.json()}catch(e){console.error('AWS GET',path,e);return{items:[],count:0}}}
+async function awsPost(path,body){try{const r=await fetch(AWS_API+path,{method:'POST',headers:awsHeaders(),body:JSON.stringify(body)});if(r.status===401){window.location.href='/unified-login';return{error:'unauthorized'}}return await r.json()}catch(e){console.error('AWS POST',path,e);return{error:e.message}}}
 
 // Audit log helper — auto-logs every action to AWS
 async function auditLog(action,details,resource='dashboard'){awsPost('/api/audit-log',{auditId:'AUD-'+Date.now(),action,user:user?.email||'admin',details,resource,created_at:new Date().toISOString()})}
@@ -771,7 +772,7 @@ function toggleAI(){aiOpen=!aiOpen;document.getElementById('ai-panel').classList
 async function sendAI(){
   const input=document.getElementById('ai-input');const q=input.value.trim();if(!q)return;input.value='';
   const msgs=document.getElementById('ai-messages');
-  msgs.innerHTML+='<div class="ai-msg user">'+q+'</div>';
+  const uDiv=document.createElement('div');uDiv.className='ai-msg user';uDiv.textContent=q;msgs.appendChild(uDiv);
   msgs.innerHTML+='<div class="ai-msg bot loading" id="ai-loading">يفكر...</div>';
   msgs.scrollTop=msgs.scrollHeight;
   try{
@@ -779,7 +780,7 @@ async function sendAI(){
     const r=await fetch(AWS_API+'/api/ai-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,context:ctx})});
     const d=await r.json();
     const el=document.getElementById('ai-loading');if(el)el.remove();
-    msgs.innerHTML+='<div class="ai-msg bot">'+(d.response||d.message||'عذراً، حدث خطأ.')+'</div>';
+    const bDiv=document.createElement('div');bDiv.className='ai-msg bot';bDiv.textContent=d.response||d.message||'عذراً، حدث خطأ.';msgs.appendChild(bDiv);
   }catch(e){
     const el=document.getElementById('ai-loading');if(el)el.remove();
     msgs.innerHTML+='<div class="ai-msg bot" style="color:var(--red)">لم يتم الاتصال بـ Bedrock — تأكد من تفعيل Lambda /api/ai-chat</div>';

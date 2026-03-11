@@ -4,6 +4,9 @@
  */
 const AWS_API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 function checkAuth(){const u=JSON.parse(localStorage.getItem('fll_user')||'null');if(!u||!localStorage.getItem('fll_token')){window.location.href='/unified-login';return null;}return u;}
+function fllAuthHeaders(){const h={'Content-Type':'application/json'};const t=localStorage.getItem('fll_token');if(t)h['Authorization']='Bearer '+t;return h;}
+async function fllGet(path){try{const r=await fetch(AWS_API+path,{headers:fllAuthHeaders()});if(r.status===401){window.location.href='/unified-login';return{items:[],count:0}}return await r.json()}catch(e){console.error('API GET',path,e);return{items:[],count:0}}}
+async function fllPost(path,body){try{const r=await fetch(AWS_API+path,{method:'POST',headers:fllAuthHeaders(),body:JSON.stringify(body)});if(r.status===401){window.location.href='/unified-login';return{error:'unauthorized'}}return await r.json()}catch(e){console.error('API POST',path,e);return{error:e.message}}}
 function logout(){localStorage.removeItem('fll_token');localStorage.removeItem('fll_user');window.location.href='/';}
 function setUserInfo(user){
   const el=id=>document.getElementById(id);

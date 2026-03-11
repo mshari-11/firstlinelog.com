@@ -58,6 +58,9 @@
     <button class="tab active" onclick="showTab('orders',this)">الطلبات</button>
     <button class="tab" onclick="showTab('complaints',this)">الشكاوى</button>
     <button class="tab" onclick="showTab('analytics',this)">التحليلات</button>
+    <button class="tab" onclick="showTab('sla',this)">متابعة SLA</button>
+    <button class="tab" onclick="showTab('regions',this)">إدارة المناطق</button>
+    <button class="tab" onclick="showTab('escalations',this)">التصعيدات</button>
   </div>
 
   <div id="tab-orders">
@@ -75,6 +78,24 @@
       <div class="card"><div class="card-h"><h3>الطلبات حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-orders"></canvas></div></div></div>
       <div class="card"><div class="card-h"><h3>التوصيلات اليومية</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-daily"></canvas></div></div></div>
     </div>
+  </div>
+
+  <!-- SLA TAB (NEW) -->
+  <div id="tab-sla" style="display:none">
+    <div class="card"><div class="card-h"><h3>متابعة SLA — الشكاوى</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>الشكوى</th><th>القسم</th><th>عمر الشكوى</th><th>حالة SLA</th><th>تذكير 24h</th><th>تصعيد 48h</th></tr></thead><tbody id="sla-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- REGIONS TAB (NEW) -->
+  <div id="tab-regions" style="display:none">
+    <div class="card"><div class="card-h"><h3>إدارة المناطق والمدن</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>المنطقة</th><th>المدينة</th><th>المناديب</th><th>نشط</th><th>التوصيلات</th><th>المستحقات</th></tr></thead><tbody id="regions-tbl"></tbody></table></div></div>
+  </div>
+
+  <!-- ESCALATIONS TAB (NEW) -->
+  <div id="tab-escalations" style="display:none">
+    <div class="card"><div class="card-h"><h3>التصعيدات — شكاوى تجاوزت SLA</h3></div>
+    <div class="card-b"><table class="tbl"><thead><tr><th>#</th><th>الشكوى</th><th>القسم المسؤول</th><th>المدة</th><th>حالة التصعيد</th><th>المصعّد إلى</th></tr></thead><tbody id="esc-tbl"></tbody></table></div></div>
   </div>
 </div>
 <script>
@@ -128,5 +149,28 @@ async function loadAll(){
   }
 }
 loadAll();
+
+// === NEW Ops tabs: SLA, Regions, Escalations ===
+const _origOpsLoad=loadAll;
+loadAll=async function(){await _origOpsLoad();try{
+  const{data:complaints}=await db.from('complaints').select('*');
+  const{data:couriers}=await db.from('couriers').select('*');
+  const{data:orders}=await db.from('orders').select('*,couriers(city)');
+
+  // SLA Tab
+  document.getElementById('sla-tbl').innerHTML=(complaints||[]).map((c,i)=>{
+    const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;
+    const sla=hrs>=48?'🔴 تجاوز 48h':hrs>=24?'🟡 تجاوز 24h':'🟢 ضمن SLA';
+    return`<tr><td>#${c.id||i+1}</td><td>${c.title||c.subject||'—'}</td><td>${c.type||c.category||'—'}</td><td>${hrs} ساعة</td><td>${sla}</td><td>${hrs>=24?'✅ أُرسل':'—'}</td><td>${hrs>=48?'✅ أُرسل':'—'}</td></tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
+
+  // Regions Tab
+  const byCity={};(couriers||[]).forEach(c=>{const ci=c.city||'غير محدد';if(!byCity[ci])byCity[ci]={t:0,a:0,o:0,e:0};byCity[ci].t++;if(c.status==='active')byCity[ci].a++});
+  (orders||[]).forEach(o=>{const ci=o.couriers?.city||'غير محدد';if(byCity[ci]){byCity[ci].o+=(o.orders_count||0);byCity[ci].e+=+(o.net_earnings||0)}});
+  document.getElementById('regions-tbl').innerHTML=Object.entries(byCity).sort((a,b)=>b[1].t-a[1].t).map(([n,d])=>`<tr><td>—</td><td><strong>${n}</strong></td><td>${d.t}</td><td>${d.a}</td><td>${d.o}</td><td>${d.e.toFixed(2)} ر.س</td></tr>`).join('');
+
+  // Escalations Tab
+  const esc=(complaints||[]).filter(c=>{const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;return hrs>=48&&c.status!=='resolved'&&c.status!=='closed'});
+  document.getElementById('esc-tbl').innerHTML=esc.map((c,i)=>{const hrs=Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000);return`<tr><td>#${c.id||i+1}</td><td>${c.title||'—'}</td><td>${c.type||'—'}</td><td>${hrs}h</td><td><span style="color:var(--red);font-weight:700">🔴 متصعّد</span></td><td>الإدارة العليا</td></tr>`}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد تصعيدات</td></tr>';
+}catch(e){console.error('Ops v4:',e)}};loadAll();
 </script>
 </body></html>

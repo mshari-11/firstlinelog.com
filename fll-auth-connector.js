@@ -160,7 +160,7 @@
           <span style="font-size:28px">📧</span>
         </div>
         <h2 style="color:#0f2744;margin:0 0 8px;font-size:22px">رمز التحقق</h2>
-        <p style="color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong style="color:#0f2744">${username}</strong></p>
+        <p style="color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong id="fll-otp-user" style="color:#0f2744"></strong></p>
         <div style="margin:0 0 20px">
           <input id="fll-otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="أدخل الرمز المكون من 6 أرقام"
             style="width:100%;padding:14px;text-align:center;font-size:24px;letter-spacing:8px;border:2px solid #d1d5db;border-radius:12px;outline:none;font-family:monospace;direction:ltr;box-sizing:border-box"
@@ -180,6 +180,10 @@
     const otpInput = document.getElementById('fll-otp-input');
     const verifyBtn = document.getElementById('fll-verify-btn');
     const backBtn = document.getElementById('fll-back-btn');
+
+    // Set username safely via textContent (prevents XSS)
+    const userEl = document.getElementById('fll-otp-user');
+    if (userEl) userEl.textContent = username;
 
     // Focus OTP input
     setTimeout(() => otpInput.focus(), 100);
@@ -233,9 +237,10 @@
     document.getElementById('fps').onclick=async()=>{
       em=document.getElementById('fpe').value.trim();if(!em){showToast('أدخل البريد','error');return;}
       const b=document.getElementById('fps');setLoad(b,true);
-      await authAPI('/auth/forgot',{email:em,identifier:em});
-      setLoad(b,false);showToast('تم إرسال الرمز','success');
-      document.getElementById('fps1').style.display='none';document.getElementById('fps2').style.display='block';
+      const r=await authAPI('/auth/forgot',{email:em,identifier:em});
+      setLoad(b,false);
+      if(r.ok){showToast('تم إرسال الرمز','success');document.getElementById('fps1').style.display='none';document.getElementById('fps2').style.display='block';}
+      else{showToast(r.data.message||'خطأ في إرسال الرمز','error');}
     };
     document.getElementById('fpr').onclick=async()=>{
       const c=document.getElementById('fpc').value.trim(),p=document.getElementById('fpn').value;

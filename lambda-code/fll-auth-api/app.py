@@ -14,8 +14,8 @@ import hashlib
 import base64
 
 region = os.environ.get('REGION', 'me-south-1')
-user_pool_id = os.environ.get('USER_POOL_ID', 'me-south-1_aJtmQ0QrN')
-client_id = os.environ.get('COGNITO_CLIENT_ID', '6n49ej8fl92i9rtotbk5o9o0d1')
+user_pool_id = os.environ['USER_POOL_ID']
+client_id = os.environ['COGNITO_CLIENT_ID']
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 cognito = boto3.client('cognito-idp', region_name=region)
@@ -48,7 +48,7 @@ def handler(event, context):
     
     try:
         body = json.loads(event.get('body', '{}')) if event.get('body') else {}
-    except:
+    except (json.JSONDecodeError, TypeError):
         body = {}
     
     # Route handling
@@ -151,7 +151,7 @@ def login(body):
         return cors(403, {'message': 'الحساب غير مؤكد. يرجى تأكيد البريد الإلكتروني أولاً', 'needsConfirmation': True})
     except Exception as e:
         print(f"Login error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def respond_mfa(body):
     """Handle MFA code verification after login"""
@@ -164,13 +164,15 @@ def respond_mfa(body):
         return cors(400, {'message': 'البيانات المطلوبة ناقصة'})
     
     try:
+        # Use correct response key based on challenge type
+        challenge_key = 'SMS_MFA_CODE' if challenge == 'SMS_MFA' else 'EMAIL_OTP_CODE'
         params = {
             'UserPoolId': user_pool_id,
             'ClientId': client_id,
             'ChallengeName': challenge,
             'ChallengeResponses': {
                 'USERNAME': username,
-                'EMAIL_OTP_CODE': code
+                challenge_key: code
             },
             'Session': session
         }
@@ -208,7 +210,7 @@ def respond_mfa(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق'})
     except Exception as e:
         print(f"MFA error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def register(body):
     email = body.get('email', '')
@@ -240,7 +242,7 @@ def register(body):
         return cors(400, {'message': 'كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل مع أرقام وحروف كبيرة وصغيرة'})
     except Exception as e:
         print(f"Register error: {e}")
-        return cors(500, {'message': 'خطأ في التسجيل', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التسجيل'})
 
 def verify_code(body):
     email = body.get('email', body.get('username', ''))
@@ -267,7 +269,7 @@ def verify_code(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق. اطلب رمز جديد'})
     except Exception as e:
         print(f"Verify error: {e}")
-        return cors(500, {'message': 'خطأ في التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التحقق'})
 
 def forgot_password(body):
     email = body.get('email', body.get('username', ''))
@@ -319,7 +321,7 @@ def reset_password(body):
         return cors(400, {'message': 'كلمة المرور الجديدة ضعيفة'})
     except Exception as e:
         print(f"Reset error: {e}")
-        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور'})
 
 def resend_code(body):
     email = body.get('email', body.get('username', ''))

@@ -2,11 +2,7 @@
  * FLL Shared Dashboard Module v1.0
  * مشترك بين كل صفحات Staff الفرعية
  */
-const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
 const AWS_API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
-let sb;
-function initSupabase(){sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return sb;}
 function checkAuth(){const u=JSON.parse(localStorage.getItem('fll_user')||'null');if(!u||!localStorage.getItem('fll_token')){window.location.href='/unified-login';return null;}return u;}
 function logout(){localStorage.removeItem('fll_token');localStorage.removeItem('fll_user');window.location.href='/';}
 function setUserInfo(user){

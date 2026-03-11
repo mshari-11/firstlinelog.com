@@ -39,14 +39,14 @@
     });
   }
 
-  // Run on load + delays for SPA
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { fixImages(); setTimeout(fixImages, 500); setTimeout(fixImages, 1500); setTimeout(fixImages, 3000); });
-  } else {
-    fixImages(); setTimeout(fixImages, 500); setTimeout(fixImages, 1500); setTimeout(fixImages, 3000);
-  }
+  // Run on load + debounced MutationObserver
+  let _imgTimer = null;
+  function debouncedFixImages() { if (_imgTimer) clearTimeout(_imgTimer); _imgTimer = setTimeout(fixImages, 200); }
+  function init() { fixImages(); setTimeout(fixImages, 1000); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 
   // Watch for new images (SPA route changes)
-  const observer = new MutationObserver(() => fixImages());
-  observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(debouncedFixImages)
+    .observe(document.body || document.documentElement, { childList: true, subtree: true });
 })();

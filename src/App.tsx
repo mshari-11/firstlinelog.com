@@ -1,4 +1,19 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+/**
+ * FLL Admin Console — React SPA
+ *
+ * This SPA handles:
+ *   /admin/login          → Admin login (Supabase auth)
+ *   /admin-panel/*        → Admin panel pages
+ *   /courier/register     → Courier registration
+ *   /courier/portal       → Courier portal
+ *   /application-status   → Public application status tracking
+ *   /login                → Driver login (static JS handles Cognito OTP)
+ *   /unified-login        → Staff login  (static JS handles Cognito OTP)
+ *
+ * Public site pages (/about, /contact, etc.) are served by the static
+ * root index.html (Skywork bundle) via vercel.json rewrites — NOT this SPA.
+ */
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,6 +80,7 @@ import AdminDispatch from "@/pages/admin/Dispatch";
 // بوابة المندوب
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
+import ApplicationStatus from "@/pages/courier/ApplicationStatus";
 
 // صفحات الخدمات
 import CouriersService from "@/pages/services/CouriersService";
@@ -113,9 +129,9 @@ export default function App() {
               </Route>
 
               {/* ===== Auth ===== */}
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/unified-login" element={<UnifiedLogin />} />
+              <Route path="/unified-login" element={<LoginShell title="تسجيل الدخول الموحّد" />} />
 
               {/* ===== صفحات الخدمات الفرعية ===== */}
               <Route path="/services/couriers" element={<CouriersService />} />
@@ -133,6 +149,7 @@ export default function App() {
               {/* ===== بوابة المندوب ===== */}
               <Route path="/courier/register" element={<CourierRegister />} />
               <Route path="/courier/portal" element={<AdminAuthProvider><CourierPortal /></AdminAuthProvider>} />
+              <Route path="/application-status" element={<ApplicationStatus />} />
 
               {/* ===== لوحة الإدارة القديمة (Admin Panel) ===== */}
               <Route path="/admin-panel" element={<AdminAuthProvider><AdminPanelLayout /></AdminAuthProvider>}>
@@ -150,6 +167,8 @@ export default function App() {
                 <Route path="reconciliation" element={<PermissionGuard permission="finance"><AdminReconciliation /></PermissionGuard>} />
                 <Route path="page-builder" element={<AdminPageBuilder />} />
                 <Route path="dispatch" element={<AdminDispatch />} />
+                {/* Default → dashboard */}
+                <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
 
               {/* ==================== الصفحات العامة (مع Layout) ==================== */}
@@ -180,5 +199,24 @@ export default function App() {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+/** Minimal shell for /login and /unified-login — the static JS scripts take over */
+function LoginShell({ title }: { title: string }) {
+  return (
+    <div
+      id="fll-login-root"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0b1622",
+        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+      }}
+    >
+      <p style={{ color: "#7e8ca2", fontSize: "14px" }}>{title}</p>
+    </div>
   );
 }

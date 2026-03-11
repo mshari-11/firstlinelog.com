@@ -48,7 +48,10 @@ interface Order {
   estimatedTime?: number;
 }
 
-// ─── Mock data (Riyadh area) ──────────────────────────────────────────────────
+// ─── API base ─────────────────────────────────────────────────────────────────
+const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+
+// ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [
   { id: "D01", name: "محمد العتيبي",   phone: "0501234567", rating: 4.8, status: "available",  lat: 24.7136, lng: 46.6753, vehicle: "دراجة نارية" },
   { id: "D02", name: "خالد الزهراني",  phone: "0512345678", rating: 4.5, status: "busy",       lat: 24.7250, lng: 46.6900, vehicle: "سيارة",       activeOrderId: "O02" },
@@ -130,57 +133,84 @@ export default function Dispatch() {
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [dataSource, setDataSource] = useState<"loading" | "live" | "mock">("loading");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [showDrivers, setShowDrivers] = useState(true);
+  const [showOrders, setShowOrders] = useState(true);
 
-  // ── Fetch real data from Supabase, fall back to mock ──
+  // ── Fetch data: Supabase → API fallback → mock ──
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
-      if (!supabase) {
-        setDataSource("mock");
-        return;
+      // 1) Try Supabase first (direct DB)
+      if (supabase) {
+        try {
+          const { data: couriers } = await supabase
+            .from("couriers")
+            .select("id, full_name, full_name_ar, phone, city, platform, vehicle_type, status, latitude, longitude");
+
+          if (cancelled) return;
+
+          if (couriers && couriers.length > 0) {
+            const mapped: Driver[] = couriers.map((c) => {
+              const statusMap: Record<string, DriverStatus> = { active: "available", inactive: "offline", suspended: "offline" };
+              return {
+                id: c.id,
+                name: c.full_name_ar || c.full_name || "—",
+                phone: c.phone || "",
+                rating: 4.5,
+                status: statusMap[c.status] || "offline",
+                lat: c.latitude ? parseFloat(c.latitude) : 24.7136 + (Math.random() - 0.5) * 0.08,
+                lng: c.longitude ? parseFloat(c.longitude) : 46.6753 + (Math.random() - 0.5) * 0.08,
+                vehicle: c.vehicle_type || "—",
+              };
+            });
+            setDrivers(mapped);
+            if (!cancelled) setDataSource("live");
+            return;
+          }
+        } catch {
+          // Supabase failed, try API next
+        }
       }
 
+      // 2) Try REST API fallback
       try {
-        const { data: couriers } = await supabase
-          .from("couriers")
-          .select("id, full_name, full_name_ar, phone, city, platform, vehicle_type, status, latitude, longitude");
+        const [driversRes, ordersRes] = await Promise.all([
+          fetch(`${API_BASE}/api/drivers`),
+          fetch(`${API_BASE}/api/orders`),
+        ]);
+
+        if (!driversRes.ok || !ordersRes.ok) throw new Error("API error");
+
+        const [driversData, ordersData] = await Promise.all([
+          driversRes.json(),
+          ordersRes.json(),
+        ]);
 
         if (cancelled) return;
 
-        if (couriers && couriers.length > 0) {
-          const mapped: Driver[] = couriers.map((c) => {
-            const statusMap: Record<string, DriverStatus> = { active: "available", inactive: "offline", suspended: "offline" };
-            return {
-              id: c.id,
-              name: c.full_name_ar || c.full_name || "—",
-              phone: c.phone || "",
-              rating: 4.5,
-              status: statusMap[c.status] || "offline",
-              lat: c.latitude ? parseFloat(c.latitude) : 24.7136 + (Math.random() - 0.5) * 0.08,
-              lng: c.longitude ? parseFloat(c.longitude) : 46.6753 + (Math.random() - 0.5) * 0.08,
-              vehicle: c.vehicle_type || "—",
-            };
-          });
-          setDrivers(mapped);
-          setDataSource("live");
-        } else {
-          setDataSource("mock");
-        }
+        const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.drivers ?? driversData.data ?? []);
+        const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.orders ?? ordersData.data ?? []);
+
+        if (rawDrivers.length > 0) setDrivers(rawDrivers);
+        if (rawOrders.length > 0) setOrders(rawOrders);
+        if (!cancelled) setDataSource("live");
+        return;
       } catch {
-        if (!cancelled) setDataSource("mock");
+        // API also failed
       }
+
+      // 3) Mock fallback
+      if (!cancelled) setDataSource("mock");
     }
 
     fetchData();
     const interval = setInterval(fetchData, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [orderSearch, setOrderSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
-  const [showDrivers, setShowDrivers] = useState(true);
-  const [showOrders, setShowOrders] = useState(true);
 
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;
@@ -229,6 +259,15 @@ export default function Dispatch() {
 
       {/* CSS for pulse animation */}
       <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0.6)} 50%{box-shadow:0 0 0 8px rgba(217,119,6,0)} }`}</style>
+
+      {/* Loading banner */}
+      {dataSource === "loading" && (
+        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", fontSize: "12px", color: "var(--con-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} />
+          جارٍ تحميل بيانات السائقين والطلبات...
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
 
       {/* ── Top KPI bar ── */}
       <div style={{

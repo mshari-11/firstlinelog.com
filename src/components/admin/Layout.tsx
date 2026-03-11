@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { AdminSidebar } from "./Sidebar";
-import ChatWidget from "@/components/chat/ChatWidget";
 
 export function AdminLayout() {
   const { user, loading } = useAuth();
@@ -63,11 +62,6 @@ export function AdminLayout() {
       <main className="con-main">
         <Outlet />
       </main>
-      <ChatWidget
-        userRole={user.role || "staff"}
-        userId={user.id}
-        userName={user.full_name || user.email}
-      />
     </div>
   );
 }

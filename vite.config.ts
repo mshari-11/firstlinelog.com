@@ -26,8 +26,10 @@ export default defineConfig({
     },
   },
   build: {
+    // Output into dist/ — vercel.json rewrites admin routes to /dist/index.html
     outDir: "dist",
     emptyOutDir: true,
+    // Use spa.html as SPA entry (keeps root index.html as the static public site)
     rollupOptions: {
       input: path.resolve(__dirname, "spa.html"),
     },

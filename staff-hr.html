@@ -141,17 +141,14 @@ async function loadAll(){
 // === NEW: Attendance, Tasks, Performance ===
 const _origHRLoad=loadAll;
 loadAll=async function(){await _origHRLoad();try{
-  // Attendance (sample data - will connect to real DB later)
-  const staff=await db.from('staff_users').select('full_name,department');
-  document.getElementById('attendance-tbl').innerHTML=(staff.data||[]).map(s=>{const h=Math.floor(Math.random()*3+6);return`<tr><td><strong>${s.full_name||'—'}</strong></td><td>${s.department||'—'}</td><td>${new Date().toLocaleDateString('ar-SA')}</td><td>08:00</td><td>${8+h}:00</td><td>${h} ساعات</td><td>${badge('حاضر','green')}</td></tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
+  // Attendance — placeholder until real attendance tracking is connected
+  document.getElementById('attendance-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام الحضور والانصراف قيد الإعداد — سيُربط مع جدول attendance في Supabase</td></tr>';
 
   // Tasks
   document.getElementById('tasks-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام المهام قيد الإعداد — سيُربط مع جدول tasks في Supabase</td></tr>';
 
-  // Performance
-  const couriers=await db.from('couriers').select('full_name_ar,city,status');
-  const orders=await db.from('orders').select('courier_id,orders_count');
-  document.getElementById('perf-tbl').innerHTML=(couriers.data||[]).filter(c=>c.status==='active').map(c=>`<tr><td><strong>${c.full_name_ar||'—'}</strong></td><td>${c.city||'—'}</td><td>مارس 2026</td><td>—</td><td>—</td><td><span style="color:var(--gold)">★★★★☆</span></td><td>—</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
+  // Performance — placeholder until real performance evaluation is connected
+  document.getElementById('perf-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام تقييم الأداء قيد الإعداد — سيُربط مع نظام التقييم</td></tr>';
 }catch(e){console.error('HR v4:',e)}};loadAll();
 try{lucide.createIcons()}catch(e){}
 </script>

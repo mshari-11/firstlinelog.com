@@ -98,6 +98,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradi
 
 <script src="/fll-shared.js"></script>
 <script>
+const user=checkAuth();if(!user)throw'no auth';
 const API=window.AWS_API||'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 
 async function loadIntegrations(){
@@ -223,7 +224,7 @@ async function loadIntegrations(){
     document.getElementById('s-agents').textContent=totalAgents;
     
   }catch(err){
-    list.innerHTML=`<p style="color:var(--red);text-align:center">خطأ في تحميل التكاملات: ${err.message}</p>`;
+    list.textContent='خطأ في تحميل التكاملات: '+err.message;
   }
 }
 

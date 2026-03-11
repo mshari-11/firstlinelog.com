@@ -374,9 +374,10 @@ const $=id=>document.getElementById(id);
 function openModal(id){$(id).classList.add('active')}
 function closeModal(id){$(id).classList.remove('active')}
 function toast(m,t='success'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
-function badge(t,c){return`<span class="badge badge-${c}">${t}</span>`}
+function esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function badge(t,c){return`<span class="badge badge-${esc(c)}">${esc(t)}</span>`}
 function fmt(v){return parseFloat(v||0).toFixed(2)}
-function logout(){localStorage.clear();location.href='/'}
+function logout(){localStorage.removeItem('fll_token');localStorage.removeItem('fll_user');location.href='/';}
 function switchPortal(p){if(p==='staff')location.href='/staff-hr';else if(p==='courier')location.href='/courier-dashboard'}
 
 // Section nav
@@ -867,22 +868,11 @@ async function loadDailyClose(){
   document.getElementById('close-files').textContent='—';
   document.getElementById('close-payouts').textContent='—';
   document.getElementById('close-recon').textContent='—';
-  // Show last 7 days simulated
-  const days=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10))}
-  document.getElementById('daily-close-tbl').innerHTML=days.map((d,i)=>`<tr>
-    <td><strong>${d}</strong></td>
-    <td>23:00</td><td>23:${String(Math.floor(Math.random()*10+2)).padStart(2,'0')}</td>
-    <td>${Math.floor(Math.random()*5+3)}</td>
-    <td>${Math.floor(Math.random()*4+1)}</td>
-    <td>${i===2?'<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#fee2e2;color:#991b1b">1 فرق</span>':'<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dcfce7;color:#166534">0</span>'}</td>
-    <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:${i===0?'#dbeafe':'#dcfce7'};color:${i===0?'#1e40af':'#166534'}">${i===0?'جاري':'مكتمل'}</span></td>
-  </tr>`).join('');
+  // Daily close history — placeholder until Step Functions pipeline is operational
+  document.getElementById('daily-close-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">الإقفال اليومي عبر Step Functions غير مفعّل بعد — سيعمل تلقائياً الساعة 23:00 عند تفعيل المحرك المالي</td></tr>';
 }
 function triggerDailyClose(){
-  showToast('⚡ تم تشغيل الإقفال اليومي عبر Step Functions','success');
-  document.getElementById('close-status').textContent='قيد التنفيذ...';
-  document.getElementById('close-status').style.color='#f59e0b';
-  setTimeout(()=>{document.getElementById('close-status').textContent='مكتمل ✓';document.getElementById('close-status').style.color='#10b981';showToast('✅ اكتمل الإقفال اليومي','success')},3000);
+  showToast('الإقفال اليومي غير مفعّل بعد — يحتاج تفعيل Step Functions','warning');
 }
 </script>
 </body>

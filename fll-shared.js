@@ -1,8 +1,16 @@
 /**
- * FLL Shared Dashboard Module v1.0
+ * FLL Shared Dashboard Module v1.1
  * مشترك بين كل صفحات Staff الفرعية
  */
 const AWS_API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+
+// --- XSS Protection ---
+function esc(str){if(str==null)return '';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// --- Supabase Init (used by staff-hr, staff-ops, staff-fleet, staff-finance) ---
+const _FLL_SB_URL='https://djebhztfewjfyyoortvv.supabase.co';
+const _FLL_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
+function initSupabase(){return supabase.createClient(_FLL_SB_URL,_FLL_SB_KEY);}
 function checkAuth(){const u=JSON.parse(localStorage.getItem('fll_user')||'null');if(!u||!localStorage.getItem('fll_token')){window.location.href='/unified-login';return null;}return u;}
 function fllAuthHeaders(){const h={'Content-Type':'application/json'};const t=localStorage.getItem('fll_token');if(t)h['Authorization']='Bearer '+t;return h;}
 async function fllGet(path){try{const r=await fetch(AWS_API+path,{headers:fllAuthHeaders()});if(r.status===401){window.location.href='/unified-login';return{items:[],count:0}}return await r.json()}catch(e){console.error('API GET',path,e);return{items:[],count:0}}}
@@ -25,7 +33,7 @@ function showToast(msg,type='info'){
 }
 function formatMoney(n){return parseFloat(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2})+' ر.س';}
 function formatDate(d){return d?new Date(d).toLocaleDateString('ar-SA'):'—';}
-function badge(text,color){return `<span style="padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;background:${color==='green'?'rgba(34,197,94,0.15)':color==='red'?'rgba(239,68,68,0.15)':color==='yellow'?'rgba(251,191,36,0.15)':color==='blue'?'rgba(56,189,248,0.15)':color==='purple'?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.05)'};color:${color==='green'?'#86efac':color==='red'?'#fca5a5':color==='yellow'?'#fde68a':color==='blue'?'#7dd3fc':color==='purple'?'#c4b5fd':'#94a3b8'}">${text}</span>`;}
+function badge(text,color){return `<span style="padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;background:${color==='green'?'rgba(34,197,94,0.15)':color==='red'?'rgba(239,68,68,0.15)':color==='yellow'?'rgba(251,191,36,0.15)':color==='blue'?'rgba(56,189,248,0.15)':color==='purple'?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.05)'};color:${color==='green'?'#86efac':color==='red'?'#fca5a5':color==='yellow'?'#fde68a':color==='blue'?'#7dd3fc':color==='purple'?'#c4b5fd':'#94a3b8'}">${esc(text)}</span>`;}
 console.log('✅ FLL Shared Module loaded');
 // v6 dark theme + lucide icons
 try{lucide.createIcons()}catch(e){}

@@ -554,14 +554,14 @@ async function processUpload(file){
   const platform=document.getElementById('upload-platform').value;
   const date=document.getElementById('upload-date').value;
   const el=document.getElementById('upload-status');
-  el.innerHTML=`<div style="background:#dbeafe;padding:12px;border-radius:8px;font-size:13px;color:#1e40af">⏳ جاري رفع ${file.name} لمنصة ${platform}...</div>`;
+  el.innerHTML=`<div style="background:#dbeafe;padding:12px;border-radius:8px;font-size:13px;color:#1e40af">⏳ جاري تسجيل ${esc(file.name)} لمنصة ${esc(platform)}...</div>`;
   try{
     const batchId='batch-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
-    // Record upload in DynamoDB
-    await fetch(AWS_API+'/api/system-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'upload-'+batchId,setting_key:'file_upload',batch_id:batchId,platform_code:platform,report_date:date,file_name:file.name,file_size:file.size,status:'uploaded',uploaded_by:user.email||user.username,uploaded_at:new Date().toISOString()})});
-    el.innerHTML=`<div style="background:#dcfce7;padding:12px;border-radius:8px;font-size:13px;color:#166534">✅ تم رفع <strong>${file.name}</strong> بنجاح — Batch: ${batchId}<br>المسار: s3://fll-ops-raw/platform=${platform}/date=${date}/</div>`;
+    // Record upload metadata in DynamoDB (file content NOT uploaded to S3 yet — S3 upload requires Lambda presigned URL)
+    await fetch(AWS_API+'/api/system-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'upload-'+batchId,setting_key:'file_upload',batch_id:batchId,platform_code:platform,report_date:date,file_name:file.name,file_size:file.size,status:'metadata_only',uploaded_by:user.email||user.username,uploaded_at:new Date().toISOString()})});
+    el.innerHTML=`<div style="background:#fef9c3;padding:12px;border-radius:8px;font-size:13px;color:#854d0e">⚠️ تم تسجيل بيانات <strong>${esc(file.name)}</strong> — Batch: ${esc(batchId)}<br>الملف لم يُرفع إلى S3 بعد — يحتاج تفعيل S3 presigned upload عبر Lambda</div>`;
     loadUploads();
-  }catch(err){el.innerHTML=`<div style="background:#fee2e2;padding:12px;border-radius:8px;font-size:13px;color:#991b1b">❌ خطأ: ${err.message}</div>`}
+  }catch(err){el.textContent='خطأ: '+err.message;}
 }
 async function loadUploads(){
   try{
@@ -623,25 +623,20 @@ async function loadReconciliation(){
   try{
     const r=await fetch(AWS_API+'/api/system-settings');const d=await r.json();
     const uploads=(d.items||[]).filter(i=>i.setting_key==='file_upload');
+    // Show actual upload status per platform — no fake random data
     const platforms=['hungerstation','keeta','ninja','mrsool','toyou'];
-    let matched=0,variance=0,pending=0;
+    let matched=0,variance=0,pending=platforms.length;
     document.getElementById('recon-tbl').innerHTML=platforms.map(p=>{
       const up=uploads.find(u=>u.platform_code===p);
-      const pTotal=Math.floor(Math.random()*50000+10000);
-      const cTotal=pTotal-Math.floor(Math.random()*500);
-      const diff=pTotal-cTotal;const pct=((diff/pTotal)*100).toFixed(2);
-      const status=pct<2?'matched':'variance';
-      if(status==='matched')matched++;else variance++;
+      if(!up) return `<tr><td><strong>${esc(p)}</strong></td><td colspan="6" style="text-align:center;color:var(--muted)">لم يُرفع تقرير بعد — التسوية غير متاحة</td></tr>`;
+      pending--;
       return `<tr>
-        <td><strong>${p}</strong></td>
+        <td><strong>${esc(p)}</strong></td>
         <td>${new Date().toLocaleDateString('ar-SA')}</td>
-        <td>${formatMoney(pTotal)}</td>
-        <td>${formatMoney(cTotal)}</td>
-        <td style="color:${diff>0?'var(--red)':'var(--green)'}"><strong>${formatMoney(diff)}</strong></td>
-        <td>${pct}%</td>
-        <td>${status==='matched'?badge('متطابق','green'):badge('فرق','red')}</td>
+        <td colspan="4" style="text-align:center;color:var(--muted)">بانتظار محرك التسوية (Step Functions)</td>
+        <td>${badge('بانتظار المعالجة','yellow')}</td>
       </tr>`}).join('');
-    document.getElementById('r-today').textContent=platforms.length;
+    document.getElementById('r-today').textContent=uploads.length;
     document.getElementById('r-matched').textContent=matched;
     document.getElementById('r-variance').textContent=variance;
     document.getElementById('r-pending').textContent=pending;
@@ -667,17 +662,14 @@ async function generateAIInsight(type){
   document.getElementById('ai-timestamp').textContent=new Date().toLocaleString('ar-SA');
   el.innerHTML='<div style="text-align:center;padding:30px"><div style="font-size:32px;animation:spin 1s linear infinite">⏳</div><p style="margin-top:8px;color:var(--muted)">جاري التحليل بالذكاء الاصطناعي...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
   await new Promise(r=>setTimeout(r,1500));
-  const insights={
-    daily_summary:{title:'📊 ملخص اليوم المالي',metrics:[{label:'إجمالي الإيرادات',value:'17,400 ر.س',change:'+12%'},{label:'صافي الربح',value:'4,350 ر.س',change:'+8%'},{label:'عدد الطلبات',value:'342',change:'+15%'},{label:'متوسط ربح/طلب',value:'12.72 ر.س',change:'-2%'}],summary:'أداء اليوم أفضل من المتوسط الأسبوعي بنسبة 12%. هنقرستيشن أعلى منصة إيراداً (38%) تليها كيتا (25%). لا توجد فروقات مالية كبيرة.'},
-    platform_comparison:{title:'🏪 مقارنة أداء المنصات',metrics:[{label:'الأعلى إيراداً',value:'هنقرستيشن',change:'38%'},{label:'الأعلى ربحية',value:'كيتا',change:'15.2%'},{label:'الأقل ربحية',value:'تويو',change:'6.1%'},{label:'الأكثر نمواً',value:'نينجا',change:'+22%'}],summary:'كيتا تحقق أعلى هامش ربح (15.2%) رغم أن إيراداتها أقل من هنقرستيشن. تويو بحاجة مراجعة بطاقة الأسعار — هامش 6.1% منخفض.'},
-    anomaly_detection:{title:'🔍 كشف الأنماط غير الطبيعية',metrics:[{label:'تنبيهات',value:'3',change:'⚠️'},{label:'مشبوهة',value:'1',change:'🔴'},{label:'طبيعية',value:'339',change:'✅'},{label:'نسبة الشذوذ',value:'0.9%',change:''}],summary:'تم رصد 3 أنماط: (1) سائق DRV-002 حقق 47 طلب في 6 ساعات — يحتاج مراجعة (2) فرق 340 ر.س في تسوية مرسول (3) تأخر 2 ملف تقرير.'},
-    driver_profitability:{title:'👤 ربحية السائقين',metrics:[{label:'أعلى ربحية',value:'أحمد محمد',change:'18.5%'},{label:'أقل ربحية',value:'خالد العمري',change:'4.2%'},{label:'متوسط الربحية',value:'11.3%',change:''},{label:'تحت الحد الأدنى',value:'1 سائق',change:'⚠️'}],summary:'أحمد محمد الأكثر ربحية (18.5%) بسبب عمله على هنقرستيشن+كيتا. خالد العمري يحتاج مراجعة — ربحيته 4.2% تحت الحد الأدنى المقبول (8%).'}
-  };
-  const d=insights[type]||insights.daily_summary;
-  el.innerHTML=`<h4 style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:14px">${d.title}</h4>
-    <div class="stats-row" style="margin-bottom:16px">${d.metrics.map(m=>`<div class="stat"><div class="stat-label">${m.label}</div><div class="stat-value" style="font-size:18px">${m.value}</div><div class="stat-sub">${m.change}</div></div>`).join('')}</div>
-    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px"><h5 style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--navy)">💡 التحليل والتوصيات</h5><p style="font-size:13px;color:var(--text);line-height:1.8">${d.summary}</p></div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted)">المصدر: Athena fll_finance_db + AI Financial Report Analyst | Confidence: 87%</div>`;
+  // AI insights not yet connected — show placeholder
+  const titles={daily_summary:'ملخص اليوم المالي',platform_comparison:'مقارنة أداء المنصات',anomaly_detection:'كشف الأنماط غير الطبيعية',driver_profitability:'ربحية السائقين'};
+  el.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted)">
+    <div style="font-size:32px;margin-bottom:12px">🤖</div>
+    <h4 style="font-size:16px;font-weight:700;margin-bottom:8px">${esc(titles[type]||'تحليل')}</h4>
+    <p style="font-size:13px">خدمة AI Financial Report Analyst غير مفعّلة بعد.</p>
+    <p style="font-size:12px;margin-top:8px">سيتم ربطها بـ Bedrock AgentCore عند تفعيل الميزة.</p>
+  </div>`;
 }
 
 // === PROFITABILITY ===
@@ -709,7 +701,9 @@ async function loadProfitability(){
     if(ctx1)_newCharts.profitPlatform=new Chart(ctx1,{type:'bar',data:{labels:Object.keys(byPlatform),datasets:[{label:'ربح',data:Object.values(byPlatform).map(d=>d.profit),backgroundColor:'#10b981',borderRadius:6},{label:'تكلفة مركبات',data:Object.values(byPlatform).map(d=>d.vehicleCost),backgroundColor:'#ef4444',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'IBM Plex Sans Arabic'}}}}}});
     if(_newCharts.profitContract)_newCharts.profitContract.destroy();
     const ctx2=document.getElementById('chart-profit-contract');
-    if(ctx2)_newCharts.profitContract=new Chart(ctx2,{type:'doughnut',data:{labels:['Freelancer','Kafala','Company','Ajir'],datasets:[{data:[45,25,20,10],backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false}});
+    // Contract type breakdown: derive from actual orders data
+    const byContract={};orders.forEach(o=>{const ct=o.contract_type||'unknown';byContract[ct]=(byContract[ct]||0)+(o.orders_count||1)});
+    if(ctx2&&Object.keys(byContract).length)_newCharts.profitContract=new Chart(ctx2,{type:'doughnut',data:{labels:Object.keys(byContract),datasets:[{data:Object.values(byContract),backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false}});
     // Nected rules display
     if(nected&&nected.rules){
       document.getElementById('nected-rules-display').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">${(nected.rules||[]).map(r=>{
@@ -731,7 +725,6 @@ showTab=function(name,btn){
 
 
 loadAll();
-try{lucide.createIcons()}catch(e){}
 try{lucide.createIcons()}catch(e){}
 </script>
 </body></html>

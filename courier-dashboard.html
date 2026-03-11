@@ -4,13 +4,14 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بوابة المناديب - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{--navy:#0f2744;--gold:#f59e0b;--gold-light:#fbbf24;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--purple:#6366f1;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(251,191,36,0.06) 0%,transparent 50%);pointer-events:none;z-index:0}
 
 /* Header */
 .header{background:linear-gradient(135deg,var(--navy) 0%,#1a3a5c 100%);color:white;padding:20px 24px;position:sticky;top:0;z-index:50}
@@ -279,7 +280,7 @@ function renderOverview(){
   const ctx=document.getElementById('chart-overview');
   if(ctx&&Object.keys(byP).length){
     const pC={'HungerStation':'#f59e0b','Keeta':'#6366f1','Ninja':'#f97316','Mrsool':'#0ea5e9','ToYou':'#10b981','Careem':'#ef4444'};
-    _ch.ov=new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:12}}}}}})
+    _ch.ov=new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic',size:12}}}}}})
   }
 }
 
@@ -321,7 +322,7 @@ function renderDeliveries(){
   if(ctx&&_orders.length){
     const byDate={};_orders.forEach(o=>{const d=o.order_date||'غير محدد';byDate[d]=(byDate[d]||0)+(o.orders_count||0)});
     const dates=Object.keys(byDate).sort();
-    _ch.del=new Chart(ctx,{type:'bar',data:{labels:dates,datasets:[{label:'التوصيلات',data:dates.map(d=>byDate[d]),backgroundColor:'#0f2744',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'Tajawal'}}}}}})
+    _ch.del=new Chart(ctx,{type:'bar',data:{labels:dates,datasets:[{label:'التوصيلات',data:dates.map(d=>byDate[d]),backgroundColor:'#0f2744',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{family:'IBM Plex Sans Arabic'}}}}}})
   }
 }
 
@@ -389,6 +390,7 @@ async function submitComplaint(){
 
 // Init
 loadData();
+try{lucide.createIcons()}catch(e){}
 </script>
 </body>
 </html>

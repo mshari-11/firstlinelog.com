@@ -4,11 +4,13 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بوابة الموظفين - فيرست لاين لوجستيكس</title>
 <link rel="icon" href="/public/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#0f2744;--blue:#0ea5e9;--green:#10b981;--red:#ef4444;--gold:#f59e0b;--purple:#6366f1;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(56,189,248,0.06) 0%,transparent 50%);pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:#1c2d47;border-radius:3px}
 .header{background:var(--navy);color:white;padding:16px 24px;position:sticky;top:0;z-index:50}
 .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .header h1{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
@@ -22,7 +24,7 @@
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
 .stat{background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center}
 .stat-icon{font-size:24px;margin-bottom:4px}.stat-value{font-size:22px;font-weight:800;color:var(--navy)}.stat-label{font-size:11px;color:var(--muted)}
-.card{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);backdrop-filter:blur(10px);margin-bottom:16px;overflow:hidden}
 .card-h{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .card-h h3{font-size:15px;font-weight:700;color:var(--navy)}.card-b{padding:16px 20px}
 .tbl{width:100%;border-collapse:collapse}.tbl th{padding:8px 10px;text-align:right;font-size:11px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600}
@@ -36,7 +38,7 @@
 .form-input,.form-select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px}
 .form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
 .btn{padding:10px 20px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
-.btn-primary{background:var(--navy);color:white}.btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
+.btn-primary{background:linear-gradient(135deg,var(--blue-deep),#7c3aed);color:white;box-shadow:0 4px 15px rgba(2,132,199,0.3)}.btn-outline{background:white;border:1px solid var(--border);color:var(--text)}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--navy);color:white;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.2)}
 .toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:#059669}.toast.error{background:#dc2626}
 .notif-item{display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--border);align-items:flex-start}
@@ -50,7 +52,7 @@
 <div class="header">
 <div class="header-top">
   <h1>👤 بوابة الموظفين</h1>
-  <div style="display:flex;gap:6px"><a class="nav-link" href="/admin-dashboard">🏛️ الإدارة</a><a class="nav-link" href="/staff-finance">💰 المالية</a><a class="nav-link" href="/staff-hr">👥 HR</a><a class="nav-link" href="/staff-ops">📦 العمليات</a><a class="nav-link" href="/staff-fleet">🚗 المركبات</a></div>
+  <div style="display:flex;gap:6px"><a class="nav-link" href="/admin-dashboard"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a><a class="nav-link" href="/staff-finance"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a><a class="nav-link" href="/staff-hr">👥 HR</a><a class="nav-link" href="/staff-ops"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a><a class="nav-link" href="/staff-fleet"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a></div>
   <div class="header-actions"><span id="u-name"></span><button onclick="logout()">خروج</button></div>
 </div>
 <div class="tabs">
@@ -184,6 +186,7 @@ async function submitRequest(){
 }
 
 loadAll();
+try{lucide.createIcons()}catch(e){}
 </script>
 </body>
 </html>

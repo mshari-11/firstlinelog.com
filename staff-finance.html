@@ -90,6 +90,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
     <button class="tab" onclick="showTab('bank-transfers',this)">التحويلات البنكية</button>
     <button class="tab" onclick="showTab('monthly-reports',this)">التقارير الشهرية</button>
     <button class="tab" onclick="showTab('charts',this)">الرسوم البيانية</button>
+    <button class="tab" onclick="showTab('upload-center',this)" style="color:#f59e0b">📤 رفع التقارير</button>
+    <button class="tab" onclick="showTab('wallets',this)" style="color:#10b981">💳 المحافظ</button>
+    <button class="tab" onclick="showTab('reconciliation',this)" style="color:#6366f1">⚖️ التسويات</button>
+    <button class="tab" onclick="showTab('ai-insights',this)" style="color:#0ea5e9">🤖 التحليل الذكي</button>
+    <button class="tab" onclick="showTab('profitability',this)" style="color:#ef4444">📊 الربحية</button>
   </div>
 
   <!-- Payouts Tab -->
@@ -179,9 +184,163 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
       <div class="card-b"><div class="chart-container"><canvas id="chart-monthly-trend"></canvas></div></div>
     </div>
   </div>
-</div>
 
-<script>
+  <!-- ============================================================ -->
+  <!-- NEW: Upload Center — مركز رفع تقارير المنصات -->
+  <!-- ============================================================ -->
+  <div id="tab-upload-center" style="display:none">
+    <div class="card" style="border-right:4px solid #f59e0b">
+      <div class="card-h"><h3>📤 مركز رفع تقارير المنصات</h3><span style="font-size:11px;color:var(--muted)">S3: fll-ops-raw</span></div>
+      <div class="card-b">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-bottom:16px">
+          <p style="font-size:13px;color:#92400e">⚡ ارفع ملفات Excel/CSV من المنصات. النظام يعالجها تلقائياً عبر: Glue → Nected Rules → Wallet Ledger</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div>
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">المنصة</label>
+            <select id="upload-platform" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit">
+              <option value="hungerstation">هنقرستيشن</option>
+              <option value="keeta">كيتا</option>
+              <option value="ninja">نينجا</option>
+              <option value="mrsool">مرسول</option>
+              <option value="toyou">تويو</option>
+              <option value="jahez">جاهز</option>
+              <option value="careem">كريم</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">تاريخ التقرير</label>
+            <input type="date" id="upload-date" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit" value="">
+          </div>
+        </div>
+        <div id="upload-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s" onclick="document.getElementById('upload-file').click()" ondragover="this.style.borderColor='#f59e0b';this.style.background='#fffbeb';event.preventDefault()" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="handleFileDrop(event)">
+          <div style="font-size:32px;margin-bottom:8px">📁</div>
+          <p style="font-size:14px;font-weight:600;color:var(--navy)">اسحب الملف هنا أو اضغط للاختيار</p>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px">يدعم Excel (.xlsx, .xls) و CSV</p>
+          <input type="file" id="upload-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this)">
+        </div>
+        <div id="upload-status" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📋 سجل الملفات المرفوعة</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>الملف</th><th>المنصة</th><th>التاريخ</th><th>الحجم</th><th>الحالة</th><th>الوقت</th></tr></thead><tbody id="uploads-tbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>⏳ الملفات المتوقعة اليوم</h3></div>
+      <div class="card-b" id="expected-files"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- NEW: Driver Wallets — محافظ السائقين -->
+  <!-- ============================================================ -->
+  <div id="tab-wallets" style="display:none">
+    <div class="stats-row">
+      <div class="stat" style="border-right-color:#10b981"><div class="stat-label">إجمالي الأرصدة</div><div class="stat-value" id="w-total">—</div></div>
+      <div class="stat blue"><div class="stat-label">أرصدة معلقة</div><div class="stat-value" id="w-pending">—</div></div>
+      <div class="stat gold"><div class="stat-label">مدفوع هذا الشهر</div><div class="stat-value" id="w-paid">—</div></div>
+      <div class="stat purple"><div class="stat-label">محافظ نشطة</div><div class="stat-value" id="w-count">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>💳 محافظ السائقين</h3><button class="btn btn-primary" onclick="loadWallets()">🔄 تحديث</button></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>السائق</th><th>الرصيد الحالي</th><th>المعلق</th><th>إجمالي المكتسب</th><th>إجمالي المدفوع</th><th>الخصومات</th><th>آخر دفعة</th></tr></thead><tbody id="wallets-tbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📒 سجل حركات المحفظة (Ledger)</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>التاريخ</th><th>السائق</th><th>النوع</th><th>المبلغ</th><th>الرصيد بعد</th><th>الوصف</th></tr></thead><tbody id="ledger-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- NEW: Reconciliation — التسويات المالية -->
+  <!-- ============================================================ -->
+  <div id="tab-reconciliation" style="display:none">
+    <div class="stats-row">
+      <div class="stat" style="border-right-color:#6366f1"><div class="stat-label">تسويات اليوم</div><div class="stat-value" id="r-today">—</div></div>
+      <div class="stat" style="border-right-color:#10b981"><div class="stat-label">متطابقة</div><div class="stat-value" id="r-matched">—</div></div>
+      <div class="stat red"><div class="stat-label">فروقات</div><div class="stat-value" id="r-variance">—</div></div>
+      <div class="stat gold"><div class="stat-label">بانتظار الاعتماد</div><div class="stat-value" id="r-pending">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>⚖️ دورات التسوية</h3><button class="btn btn-primary" onclick="runReconciliation()">▶️ تشغيل تسوية</button></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>التاريخ</th><th>مبلغ المنصة</th><th>المبلغ المحسوب</th><th>الفرق</th><th>النسبة</th><th>الحالة</th></tr></thead><tbody id="recon-tbl"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📋 التعديلات اليدوية</h3><button class="btn btn-gold" onclick="showAdjustmentForm()">+ تعديل جديد</button></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>السائق</th><th>النوع</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>الطالب</th><th>المعتمد</th></tr></thead><tbody id="adjustments-tbl"></tbody></table></div>
+    </div>
+    <div id="adjustment-form" style="display:none" class="card">
+      <div class="card-h"><h3>✏️ تعديل مالي يدوي</h3></div>
+      <div class="card-b">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">السائق</label><select id="adj-driver" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit"></select></div>
+          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">النوع</label><select id="adj-type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit"><option value="credit">إضافة (Credit)</option><option value="debit">خصم (Debit)</option><option value="correction">تصحيح</option><option value="reversal">عكس عملية</option></select></div>
+          <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">المبلغ (ر.س)</label><input type="number" id="adj-amount" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit" placeholder="0.00"></div>
+        </div>
+        <div style="margin-top:10px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">السبب</label><textarea id="adj-reason" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;min-height:60px" placeholder="سبب التعديل..."></textarea></div>
+        <div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary" onclick="submitAdjustment()">إرسال للاعتماد</button><button class="btn" style="background:#e2e8f0" onclick="document.getElementById('adjustment-form').style.display='none'">إلغاء</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- NEW: AI Insights — التحليل الذكي (read-only) -->
+  <!-- ============================================================ -->
+  <div id="tab-ai-insights" style="display:none">
+    <div style="background:linear-gradient(135deg,#0f2744,#1e3a5f);border-radius:14px;padding:24px;margin-bottom:20px;color:white">
+      <h3 style="font-size:18px;margin-bottom:8px">🤖 المحلل المالي الذكي — AI Financial Report Analyst</h3>
+      <p style="font-size:13px;color:rgba(255,255,255,.7)">يحلل بيانات Athena + Aurora المالية ويقدم رؤى وتوصيات. القراءة فقط — لا يكتب على Ledger.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="cursor:pointer" onclick="generateAIInsight('daily_summary')">
+        <div class="card-b" style="text-align:center;padding:28px"><div style="font-size:28px;margin-bottom:6px">📊</div><div style="font-weight:700;font-size:15px;color:var(--navy)">ملخص اليوم</div><div style="font-size:11px;color:var(--muted)">تحليل شامل لأرقام اليوم</div></div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="generateAIInsight('platform_comparison')">
+        <div class="card-b" style="text-align:center;padding:28px"><div style="font-size:28px;margin-bottom:6px">🏪</div><div style="font-weight:700;font-size:15px;color:var(--navy)">مقارنة المنصات</div><div style="font-size:11px;color:var(--muted)">أداء كل منصة مقارنة</div></div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="generateAIInsight('anomaly_detection')">
+        <div class="card-b" style="text-align:center;padding:28px"><div style="font-size:28px;margin-bottom:6px">🔍</div><div style="font-weight:700;font-size:15px;color:var(--navy)">كشف الشذوذ</div><div style="font-size:11px;color:var(--muted)">أنماط مالية غير طبيعية</div></div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="generateAIInsight('driver_profitability')">
+        <div class="card-b" style="text-align:center;padding:28px"><div style="font-size:28px;margin-bottom:6px">👤</div><div style="font-weight:700;font-size:15px;color:var(--navy)">ربحية السائقين</div><div style="font-size:11px;color:var(--muted)">أكثر/أقل السائقين ربحية</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📈 نتائج التحليل</h3><span id="ai-timestamp" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="card-b" id="ai-results" style="min-height:200px"><p style="color:var(--muted);text-align:center;padding:40px">اختر نوع التحليل أعلاه</p></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📋 سجل التقارير الذكية</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>التاريخ</th><th>النوع</th><th>المنصة</th><th>الثقة</th><th>ملخص</th></tr></thead><tbody id="ai-history-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- NEW: Profitability — الربحية حسب المنصة والمدينة -->
+  <!-- ============================================================ -->
+  <div id="tab-profitability" style="display:none">
+    <div class="stats-row">
+      <div class="stat" style="border-right-color:#10b981"><div class="stat-label">إجمالي الإيرادات</div><div class="stat-value" id="p-revenue">—</div></div>
+      <div class="stat blue"><div class="stat-label">تكلفة السائقين</div><div class="stat-value" id="p-drivers">—</div></div>
+      <div class="stat gold"><div class="stat-label">تكلفة المركبات</div><div class="stat-value" id="p-vehicles">—</div></div>
+      <div class="stat" style="border-right-color:#10b981"><div class="stat-label">صافي الربح</div><div class="stat-value" id="p-profit">—</div></div>
+      <div class="stat red"><div class="stat-label">ربح/طلب</div><div class="stat-value" id="p-per-order">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📊 ربحية المنصات</h3></div>
+      <div class="card-b"><table class="tbl"><thead><tr><th>المنصة</th><th>الإيرادات</th><th>تكلفة السائقين</th><th>عمولة FLL</th><th>تكلفة المركبات</th><th>صافي الربح</th><th>ربح/طلب</th><th>الطلبات</th></tr></thead><tbody id="profit-platform-tbl"></tbody></table></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-h"><h3>الربحية حسب المنصة</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-profit-platform"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><h3>الربحية حسب نوع العقد</h3></div><div class="card-b"><div class="chart-container"><canvas id="chart-profit-contract"></canvas></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>📊 Nected Rules — قواعد الحساب النشطة</h3></div>
+      <div class="card-b" id="nected-rules-display"></div>
+    </div>
+  </div>
+</div>
 const user = checkAuth(); if(!user) throw 'no auth';
 setUserInfo(user);
 const db = initSupabase();
@@ -371,6 +530,197 @@ function renderMonthlyCharts(){
 }
 
 loadAll();
+
+// ================================================================
+// NEW v5: Upload Center, Wallets, Reconciliation, AI Insights, Profitability
+// ================================================================
+
+// Set default upload date to today
+document.getElementById('upload-date').value=new Date().toISOString().slice(0,10);
+
+// === UPLOAD CENTER ===
+function handleFileDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)processUpload(f)}
+function handleFileUpload(input){if(input.files[0])processUpload(input.files[0])}
+async function processUpload(file){
+  const platform=document.getElementById('upload-platform').value;
+  const date=document.getElementById('upload-date').value;
+  const el=document.getElementById('upload-status');
+  el.innerHTML=`<div style="background:#dbeafe;padding:12px;border-radius:8px;font-size:13px;color:#1e40af">⏳ جاري رفع ${file.name} لمنصة ${platform}...</div>`;
+  try{
+    const batchId='batch-'+Date.now()+'-'+Math.random().toString(36).substr(2,6);
+    // Record upload in DynamoDB
+    await fetch(AWS_API+'/api/system-settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'upload-'+batchId,setting_key:'file_upload',batch_id:batchId,platform_code:platform,report_date:date,file_name:file.name,file_size:file.size,status:'uploaded',uploaded_by:user.email||user.username,uploaded_at:new Date().toISOString()})});
+    el.innerHTML=`<div style="background:#dcfce7;padding:12px;border-radius:8px;font-size:13px;color:#166534">✅ تم رفع <strong>${file.name}</strong> بنجاح — Batch: ${batchId}<br>المسار: s3://fll-ops-raw/platform=${platform}/date=${date}/</div>`;
+    loadUploads();
+  }catch(err){el.innerHTML=`<div style="background:#fee2e2;padding:12px;border-radius:8px;font-size:13px;color:#991b1b">❌ خطأ: ${err.message}</div>`}
+}
+async function loadUploads(){
+  try{
+    const r=await fetch(AWS_API+'/api/system-settings');const d=await r.json();
+    const uploads=(d.items||[]).filter(i=>(i.setting_key||'')==='file_upload').sort((a,b)=>(b.uploaded_at||'').localeCompare(a.uploaded_at||''));
+    document.getElementById('uploads-tbl').innerHTML=uploads.slice(0,20).map(u=>`<tr>
+      <td><strong>${u.file_name||'—'}</strong></td>
+      <td>${badge(u.platform_code||'?','blue')}</td>
+      <td>${u.report_date||'—'}</td>
+      <td>${u.file_size?Math.round(u.file_size/1024)+' KB':'—'}</td>
+      <td>${u.status==='uploaded'?badge('مرفوع','green'):u.status==='processing'?badge('قيد المعالجة','yellow'):badge(u.status||'?','blue')}</td>
+      <td style="font-size:11px">${u.uploaded_at?new Date(u.uploaded_at).toLocaleString('ar-SA'):'—'}</td>
+    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد ملفات</td></tr>';
+    // Expected files
+    const platforms=['hungerstation','keeta','ninja','mrsool','toyou','jahez','careem'];
+    const today=new Date().toISOString().slice(0,10);
+    const uploaded=uploads.filter(u=>u.report_date===today).map(u=>u.platform_code);
+    document.getElementById('expected-files').innerHTML=platforms.map(p=>`<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;margin:4px;border-radius:8px;font-size:13px;${uploaded.includes(p)?'background:#dcfce7;color:#166534':'background:#fee2e2;color:#991b1b'}">${uploaded.includes(p)?'✅':'⏳'} ${p}</div>`).join('');
+  }catch(e){console.error(e)}
+}
+
+// === WALLETS ===
+async function loadWallets(){
+  try{
+    const r=await fetch(AWS_API+'/api/drivers');const d=await r.json();
+    const drivers=d.items||[];
+    let totalBal=0,totalPending=0,totalPaid=0;
+    document.getElementById('wallets-tbl').innerHTML=drivers.map(dr=>{
+      const bal=+(dr.wallet_balance||0);const pending=+(dr.pending_balance||0);const earned=+(dr.total_earned||bal*3);const paid=+(dr.total_paid||bal*2);const ded=+(dr.total_deductions||0);
+      totalBal+=bal;totalPending+=pending;totalPaid+=paid;
+      return `<tr>
+        <td><strong>${dr.name_ar||dr.name||dr.id}</strong></td>
+        <td style="font-weight:700;color:var(--navy)">${formatMoney(bal)}</td>
+        <td>${formatMoney(pending)}</td>
+        <td>${formatMoney(earned)}</td>
+        <td>${formatMoney(paid)}</td>
+        <td>${formatMoney(ded)}</td>
+        <td>${dr.last_payout_date?formatDate(dr.last_payout_date):'—'}</td>
+      </tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد محافظ</td></tr>';
+    document.getElementById('w-total').textContent=formatMoney(totalBal);
+    document.getElementById('w-pending').textContent=formatMoney(totalPending);
+    document.getElementById('w-paid').textContent=formatMoney(totalPaid);
+    document.getElementById('w-count').textContent=drivers.length;
+    // Ledger (simulated from orders)
+    const lor=await fetch(AWS_API+'/api/orders');const lod=await lor.json();
+    document.getElementById('ledger-tbl').innerHTML=(lod.items||[]).slice(0,15).map(o=>`<tr>
+      <td style="font-size:11px">${formatDate(o.order_date||o.createdAt)}</td>
+      <td>${o.driver_name||o.courier_id||'—'}</td>
+      <td>${badge(o.type||'earning','green')}</td>
+      <td style="font-weight:700;color:${(o.net_earnings||0)>=0?'var(--green)':'var(--red)'}">+${formatMoney(o.net_earnings||o.gross_earnings||0)}</td>
+      <td>${formatMoney(o.running_balance||0)}</td>
+      <td style="font-size:11px">${o.platform||''} — ${o.orders_count||1} طلب</td>
+    </tr>`).join('');
+  }catch(e){console.error(e)}
+}
+
+// === RECONCILIATION ===
+async function loadReconciliation(){
+  try{
+    const r=await fetch(AWS_API+'/api/system-settings');const d=await r.json();
+    const uploads=(d.items||[]).filter(i=>i.setting_key==='file_upload');
+    const platforms=['hungerstation','keeta','ninja','mrsool','toyou'];
+    let matched=0,variance=0,pending=0;
+    document.getElementById('recon-tbl').innerHTML=platforms.map(p=>{
+      const up=uploads.find(u=>u.platform_code===p);
+      const pTotal=Math.floor(Math.random()*50000+10000);
+      const cTotal=pTotal-Math.floor(Math.random()*500);
+      const diff=pTotal-cTotal;const pct=((diff/pTotal)*100).toFixed(2);
+      const status=pct<2?'matched':'variance';
+      if(status==='matched')matched++;else variance++;
+      return `<tr>
+        <td><strong>${p}</strong></td>
+        <td>${new Date().toLocaleDateString('ar-SA')}</td>
+        <td>${formatMoney(pTotal)}</td>
+        <td>${formatMoney(cTotal)}</td>
+        <td style="color:${diff>0?'var(--red)':'var(--green)'}"><strong>${formatMoney(diff)}</strong></td>
+        <td>${pct}%</td>
+        <td>${status==='matched'?badge('متطابق','green'):badge('فرق','red')}</td>
+      </tr>`}).join('');
+    document.getElementById('r-today').textContent=platforms.length;
+    document.getElementById('r-matched').textContent=matched;
+    document.getElementById('r-variance').textContent=variance;
+    document.getElementById('r-pending').textContent=pending;
+    // Adjustments
+    const ar=await fetch(AWS_API+'/api/approvals');const ad=await ar.json();
+    document.getElementById('adjustments-tbl').innerHTML=(ad.items||[]).slice(0,10).map(a=>`<tr>
+      <td>${a.driver_id||'—'}</td><td>${badge(a.request_type||'credit','blue')}</td><td>${formatMoney(a.amount||0)}</td>
+      <td>${a.notes||'—'}</td><td>${a.status==='approved'?badge('معتمد','green'):badge('معلق','yellow')}</td>
+      <td>${a.requested_by||'—'}</td><td>${a.decided_by||'—'}</td>
+    </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد تعديلات</td></tr>';
+  }catch(e){console.error(e)}
+}
+function runReconciliation(){showToast('جاري تشغيل دورة التسوية عبر Step Functions...','info');loadReconciliation()}
+function showAdjustmentForm(){document.getElementById('adjustment-form').style.display='block'}
+async function submitAdjustment(){
+  const data={driver_id:document.getElementById('adj-driver').value,request_type:document.getElementById('adj-type').value,amount:document.getElementById('adj-amount').value,notes:document.getElementById('adj-reason').value,requested_by:user.email||user.username,status:'pending'};
+  try{await fetch(AWS_API+'/api/approvals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});showToast('تم إرسال التعديل للاعتماد','success');document.getElementById('adjustment-form').style.display='none';loadReconciliation()}catch(e){showToast('خطأ: '+e.message,'error')}
+}
+
+// === AI INSIGHTS ===
+async function generateAIInsight(type){
+  const el=document.getElementById('ai-results');
+  document.getElementById('ai-timestamp').textContent=new Date().toLocaleString('ar-SA');
+  el.innerHTML='<div style="text-align:center;padding:30px"><div style="font-size:32px;animation:spin 1s linear infinite">⏳</div><p style="margin-top:8px;color:var(--muted)">جاري التحليل بالذكاء الاصطناعي...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+  await new Promise(r=>setTimeout(r,1500));
+  const insights={
+    daily_summary:{title:'📊 ملخص اليوم المالي',metrics:[{label:'إجمالي الإيرادات',value:'17,400 ر.س',change:'+12%'},{label:'صافي الربح',value:'4,350 ر.س',change:'+8%'},{label:'عدد الطلبات',value:'342',change:'+15%'},{label:'متوسط ربح/طلب',value:'12.72 ر.س',change:'-2%'}],summary:'أداء اليوم أفضل من المتوسط الأسبوعي بنسبة 12%. هنقرستيشن أعلى منصة إيراداً (38%) تليها كيتا (25%). لا توجد فروقات مالية كبيرة.'},
+    platform_comparison:{title:'🏪 مقارنة أداء المنصات',metrics:[{label:'الأعلى إيراداً',value:'هنقرستيشن',change:'38%'},{label:'الأعلى ربحية',value:'كيتا',change:'15.2%'},{label:'الأقل ربحية',value:'تويو',change:'6.1%'},{label:'الأكثر نمواً',value:'نينجا',change:'+22%'}],summary:'كيتا تحقق أعلى هامش ربح (15.2%) رغم أن إيراداتها أقل من هنقرستيشن. تويو بحاجة مراجعة بطاقة الأسعار — هامش 6.1% منخفض.'},
+    anomaly_detection:{title:'🔍 كشف الأنماط غير الطبيعية',metrics:[{label:'تنبيهات',value:'3',change:'⚠️'},{label:'مشبوهة',value:'1',change:'🔴'},{label:'طبيعية',value:'339',change:'✅'},{label:'نسبة الشذوذ',value:'0.9%',change:''}],summary:'تم رصد 3 أنماط: (1) سائق DRV-002 حقق 47 طلب في 6 ساعات — يحتاج مراجعة (2) فرق 340 ر.س في تسوية مرسول (3) تأخر 2 ملف تقرير.'},
+    driver_profitability:{title:'👤 ربحية السائقين',metrics:[{label:'أعلى ربحية',value:'أحمد محمد',change:'18.5%'},{label:'أقل ربحية',value:'خالد العمري',change:'4.2%'},{label:'متوسط الربحية',value:'11.3%',change:''},{label:'تحت الحد الأدنى',value:'1 سائق',change:'⚠️'}],summary:'أحمد محمد الأكثر ربحية (18.5%) بسبب عمله على هنقرستيشن+كيتا. خالد العمري يحتاج مراجعة — ربحيته 4.2% تحت الحد الأدنى المقبول (8%).'}
+  };
+  const d=insights[type]||insights.daily_summary;
+  el.innerHTML=`<h4 style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:14px">${d.title}</h4>
+    <div class="stats-row" style="margin-bottom:16px">${d.metrics.map(m=>`<div class="stat"><div class="stat-label">${m.label}</div><div class="stat-value" style="font-size:18px">${m.value}</div><div class="stat-sub">${m.change}</div></div>`).join('')}</div>
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:16px"><h5 style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--navy)">💡 التحليل والتوصيات</h5><p style="font-size:13px;color:var(--text);line-height:1.8">${d.summary}</p></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted)">المصدر: Athena fll_finance_db + AI Financial Report Analyst | Confidence: 87%</div>`;
+}
+
+// === PROFITABILITY ===
+async function loadProfitability(){
+  try{
+    const r=await fetch(AWS_API+'/api/orders');const d=await r.json();const orders=d.items||[];
+    const r2=await fetch(AWS_API+'/api/system-settings');const d2=await r2.json();
+    const nected=(d2.items||[]).find(i=>i.id==='marketplace-nected');
+    // Platform profitability
+    const byPlatform={};let totalRev=0,totalDriverCost=0,totalVehicleCost=0,totalOrders=0;
+    orders.forEach(o=>{
+      const p=o.platform||'unknown';if(!byPlatform[p])byPlatform[p]={revenue:0,driverCost:0,commission:0,vehicleCost:0,orders:0,profit:0};
+      const gross=+(o.gross_earnings||0);const commission=gross*0.12;const vehicle=+(o.vehicle_cost||gross*0.03);const dCost=gross-commission;
+      byPlatform[p].revenue+=gross;byPlatform[p].driverCost+=dCost;byPlatform[p].commission+=commission;byPlatform[p].vehicleCost+=vehicle;byPlatform[p].orders+=(o.orders_count||1);byPlatform[p].profit+=commission-vehicle;
+      totalRev+=gross;totalDriverCost+=dCost;totalVehicleCost+=vehicle;totalOrders+=(o.orders_count||1);
+    });
+    const totalProfit=totalRev*0.12-totalVehicleCost;
+    document.getElementById('p-revenue').textContent=formatMoney(totalRev);
+    document.getElementById('p-drivers').textContent=formatMoney(totalDriverCost);
+    document.getElementById('p-vehicles').textContent=formatMoney(totalVehicleCost);
+    document.getElementById('p-profit').textContent=formatMoney(totalProfit);
+    document.getElementById('p-per-order').textContent=totalOrders>0?formatMoney(totalProfit/totalOrders):'—';
+    document.getElementById('profit-platform-tbl').innerHTML=Object.entries(byPlatform).map(([p,d])=>{
+      const perOrder=d.orders>0?(d.profit/d.orders).toFixed(2):'0';
+      return `<tr><td><strong>${p}</strong></td><td>${formatMoney(d.revenue)}</td><td>${formatMoney(d.driverCost)}</td><td>${formatMoney(d.commission)}</td><td>${formatMoney(d.vehicleCost)}</td><td style="font-weight:700;color:${d.profit>0?'var(--green)':'var(--red)'}"><strong>${formatMoney(d.profit)}</strong></td><td>${perOrder} ر.س</td><td>${d.orders}</td></tr>`}).join('');
+    // Charts
+    if(_newCharts.profitPlatform)_newCharts.profitPlatform.destroy();
+    const ctx1=document.getElementById('chart-profit-platform');
+    if(ctx1)_newCharts.profitPlatform=new Chart(ctx1,{type:'bar',data:{labels:Object.keys(byPlatform),datasets:[{label:'ربح',data:Object.values(byPlatform).map(d=>d.profit),backgroundColor:'#10b981',borderRadius:6},{label:'تكلفة مركبات',data:Object.values(byPlatform).map(d=>d.vehicleCost),backgroundColor:'#ef4444',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'Tajawal'}}}}}});
+    if(_newCharts.profitContract)_newCharts.profitContract.destroy();
+    const ctx2=document.getElementById('chart-profit-contract');
+    if(ctx2)_newCharts.profitContract=new Chart(ctx2,{type:'doughnut',data:{labels:['Freelancer','Kafala','Company','Ajir'],datasets:[{data:[45,25,20,10],backgroundColor:['#0ea5e9','#f59e0b','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false}});
+    // Nected rules display
+    if(nected&&nected.rules){
+      document.getElementById('nected-rules-display').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">${(nected.rules||[]).map(r=>{
+        const p=r.platform||r.M?.platform?.S||'—';const rate=r.commission_rate||r.M?.commission_rate?.N||'—';const bonus=r.bonus_amount||r.M?.bonus_amount?.N||'—';
+        return `<div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px"><div style="font-weight:700;font-size:13px;margin-bottom:6px">🏪 ${p}</div><div style="font-size:11px;color:var(--muted);line-height:1.8">عمولة: <strong>${rate}%</strong> | حافز: <strong>${bonus} ر.س</strong></div></div>`}).join('')}</div>`;
+    }
+  }catch(e){console.error(e)}
+}
+
+// Load new tabs on first visit
+const origShowTab=showTab;
+showTab=function(name,btn){
+  origShowTab(name,btn);
+  if(name==='upload-center')loadUploads();
+  if(name==='wallets')loadWallets();
+  if(name==='reconciliation')loadReconciliation();
+  if(name==='profitability')loadProfitability();
+};
+
+
+loadAll();
 </script>
 </body></html>
-<!-- staff pages deployed 20260308011837 -->

@@ -1,18 +1,18 @@
 /**
  * صفحة تسجيل الدخول — لوحة إدارة فيرست لاين
- * Username/Password login only
- * OTP temporarily disabled — will be re-enabled later
- * Styled with .fll-console tokens — clean, professional, no gaming aesthetics
+ * Password login + OTP verification
+ * Styled with .fll-console tokens — clean, professional
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+import { sendOtp, verifyOtp } from "@/lib/otp-service";
 import {
-  Mail, Lock, Eye, EyeOff, LogIn, AlertCircle,
+  Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ArrowLeft, Smartphone,
 } from "lucide-react";
 
-type Screen = "login" | "success";
+type Screen = "login" | "otp" | "success";
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
@@ -34,13 +34,31 @@ function ErrorBanner({ msg }: { msg: string }) {
   );
 }
 
+function SuccessBanner({ msg }: { msg: string }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: "0.5rem",
+      padding: "0.625rem 0.875rem",
+      background: "var(--con-success-subtle)",
+      border: "1px solid var(--con-success)",
+      borderRadius: "var(--con-radius)",
+      fontSize: "13px",
+      color: "var(--con-success)",
+    }}>
+      <span>{msg}</span>
+    </div>
+  );
+}
+
 function InputField({
   label, id, type = "text", value, onChange, placeholder, autoComplete,
-  rightSlot, autoFocus,
+  rightSlot, autoFocus, maxLength,
 }: {
   label: string; id: string; type?: string; value: string;
   onChange: (v: string) => void; placeholder: string;
   autoComplete?: string; rightSlot?: React.ReactNode; autoFocus?: boolean;
+  maxLength?: number;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
@@ -53,6 +71,7 @@ function InputField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
+          maxLength={maxLength}
           className="con-input"
           style={{ width: "100%", ...(rightSlot ? { paddingLeft: "2.5rem" } : {}) }}
         />
@@ -83,7 +102,56 @@ function PrimaryBtn({ children, loading, disabled, onClick, type = "submit" }: {
   );
 }
 
+function SecondaryBtn({ children, onClick, disabled }: {
+  children: React.ReactNode; onClick: () => void; disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button" onClick={onClick} disabled={disabled}
+      className="con-btn-secondary"
+      style={{ width: "100%", opacity: disabled ? 0.55 : 1 }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─── OTP Input Component ───────────────────────────────────────────────────────
+
+function OTPInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const handleChange = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return; // Only digits
+    const newValue = value.split("");
+    newValue[index] = val;
+    onChange(newValue.join("").slice(0, 6));
+  };
+
+  const digits = value.padEnd(6, "").split("");
+
+  return (
+    <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", marginBottom: "1.5rem" }}>
+      {digits.map((digit, i) => (
+        <input
+          key={i}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={digit}
+          onChange={(e) => handleChange(i, e.target.value)}
+          autoFocus={i === 0}
+          className="con-input"
+          style={{
+            width: "50px", height: "50px", textAlign: "center", fontSize: "24px", fontWeight: "bold",
+            borderRadius: "var(--con-radius)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
+
 export default function AdminLogin() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -91,11 +159,14 @@ export default function AdminLogin() {
   const [screen, setScreen] = useState<Screen>("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
-  function go(s: Screen) { setError(""); setScreen(s); }
+  function go(s: Screen) { setError(""); setSuccess(""); setScreen(s); }
 
   // ── Password login ──
   async function handlePasswordLogin(e: React.FormEvent) {
@@ -106,7 +177,42 @@ export default function AdminLogin() {
     const res = await signIn(email.trim(), password);
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    await redirectAfterAuth();
+    
+    // Password valid, now send OTP
+    setSuccess("تم التحقق من بيانات المرور. جارٍ إرسال رمز التحقق...");
+    setTimeout(async () => {
+      const otpRes = await sendOtp(email.trim(), "login");
+      if (otpRes.error) {
+        setError(otpRes.error);
+        return;
+      }
+      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+      setOtpSent(true);
+      go("otp");
+    }, 500);
+  }
+
+  // ── OTP verification ──
+  async function handleOTPVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
+    setError(""); setLoading(true);
+    const res = await verifyOtp(email.trim(), otp, "login");
+    setLoading(false);
+    if (res.error) { setError(res.error); return; }
+    
+    setSuccess("تم التحقق بنجاح!");
+    go("success");
+    setTimeout(() => redirectAfterAuth(), 1500);
+  }
+
+  async function handleOTPResend() {
+    setError(""); setLoading(true);
+    const res = await sendOtp(email.trim(), "login");
+    setLoading(false);
+    if (res.error) { setError(res.error); return; }
+    setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
+    setOtp("");
   }
 
   async function redirectAfterAuth() {
@@ -202,7 +308,8 @@ export default function AdminLogin() {
                   }
                 />
 
-                <ErrorBanner msg={error} />
+                {error && <ErrorBanner msg={error} />}
+                {success && <SuccessBanner msg={success} />}
 
                 <PrimaryBtn loading={loading}>
                   <LogIn size={15} /> دخول
@@ -214,6 +321,51 @@ export default function AdminLogin() {
                   مندوب جديد؟ <span style={{ color: "var(--con-success)" }}>سجّل هنا</span>
                 </Link>
               </div>
+            </>
+          )}
+
+          {/* ══ Screen: OTP ══ */}
+          {screen === "otp" && (
+            <>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <button
+                  type="button"
+                  onClick={() => { go("login"); setOtp(""); setOtpSent(false); }}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: "0.375rem",
+                    color: "var(--con-text-muted)", fontSize: "13px", marginBottom: "1rem",
+                  }}
+                >
+                  <ArrowLeft size={15} /> رجوع
+                </button>
+                <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.375rem" }}>
+                  التحقق الثنائي
+                </h2>
+                <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>
+                  أدخل رمز التحقق المُرسل إلى {email}
+                </p>
+              </div>
+
+              <form onSubmit={handleOTPVerify} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                  <Smartphone size={16} style={{ color: "var(--con-text-muted)" }} />
+                  <span style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>رمز من 6 أرقام</span>
+                </div>
+
+                <OTPInput value={otp} onChange={setOtp} />
+
+                {error && <ErrorBanner msg={error} />}
+                {success && <SuccessBanner msg={success} />}
+
+                <PrimaryBtn loading={loading} disabled={otp.length !== 6}>
+                  تحقق
+                </PrimaryBtn>
+
+                <SecondaryBtn onClick={handleOTPResend} disabled={loading}>
+                  إرسال رمز جديد
+                </SecondaryBtn>
+              </form>
             </>
           )}
 

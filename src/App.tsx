@@ -37,6 +37,12 @@ import AdminDriverWallet from "@/pages/admin/DriverWallet";
 import AdminReconciliation from "@/pages/admin/Reconciliation";
 import AdminPageBuilder from "@/pages/admin/PageBuilder";
 import AdminDispatch from "@/pages/admin/Dispatch";
+import FinanceDashboard from "@/pages/admin/FinanceDashboard";
+import Revenue from "@/pages/admin/Revenue";
+import Expenses from "@/pages/admin/Expenses";
+import CashFlow from "@/pages/admin/CashFlow";
+import FinancialReports from "@/pages/admin/FinancialReports";
+import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +82,12 @@ export default function App() {
             <Route path="couriers" element={<PermissionGuard permission="couriers"><AdminCouriers /></PermissionGuard>} />
             <Route path="orders" element={<PermissionGuard permission="orders"><AdminPanelOrders /></PermissionGuard>} />
             <Route path="finance" element={<PermissionGuard permission="finance"><AdminFinance /></PermissionGuard>} />
+            <Route path="finance-dashboard" element={<PermissionGuard permission="finance"><FinanceDashboard /></PermissionGuard>} />
+            <Route path="revenue" element={<PermissionGuard permission="finance"><Revenue /></PermissionGuard>} />
+            <Route path="expenses" element={<PermissionGuard permission="finance"><Expenses /></PermissionGuard>} />
+            <Route path="cashflow" element={<PermissionGuard permission="finance"><CashFlow /></PermissionGuard>} />
+            <Route path="financial-reports" element={<PermissionGuard permission="finance"><FinancialReports /></PermissionGuard>} />
+            <Route path="ai-finance" element={<PermissionGuard permission="finance"><AIFinanceAnalysis /></PermissionGuard>} />
             <Route path="reports" element={<PermissionGuard permission="reports"><AdminPanelReports /></PermissionGuard>} />
             <Route path="vehicles" element={<AdminVehicles />} />
             <Route path="staff" element={<AdminStaff />} />

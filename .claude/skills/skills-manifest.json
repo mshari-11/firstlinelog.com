@@ -1,0 +1,36 @@
+{
+  "name": "fll-agent-skills",
+  "owner": {
+    "name": "First Line Logistics",
+    "email": "admin@fll.sa"
+  },
+  "metadata": {
+    "description": "FLL custom skills for First Line Logistics operating system",
+    "version": "1.0.0",
+    "region": "me-south-1",
+    "domain": "fll.sa"
+  },
+  "plugins": [
+    {
+      "name": "fll-core-skills",
+      "description": "Core FLL business skills: finance engine, driver onboarding, deployment, and system upgrade",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./fll-finance",
+        "./fll-onboarding",
+        "./fll-deploy",
+        "./fll-world-class-upgrade"
+      ]
+    },
+    {
+      "name": "design-skills",
+      "description": "Frontend design and UI development skills",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./frontend-design"
+      ]
+    }
+  ]
+}

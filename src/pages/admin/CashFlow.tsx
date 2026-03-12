@@ -147,7 +147,7 @@ function KPICard({ label, value, change, icon: Icon, accent, warning }: KPICardP
 // ─── Metric Row ───────────────────────────────────────────────────────────────
 function MetricRow({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div style({
+    <div style={{
       display: "flex",
       justifyContent: "space-between",
       padding: "12px 0",

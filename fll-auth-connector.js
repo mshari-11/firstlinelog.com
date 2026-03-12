@@ -1,10 +1,11 @@
 /**
  * FLL Auth Connector v3.0 — Production
- * 
+ * OTP temporarily disabled — will be re-enabled later
+ *
  * Strategy: The Skywork React bundle does client-side validation only,
  * then calls alert("تم تسجيل الدخول بنجاح!" or "تم إنشاء الحساب بنجاح!").
  * We intercept this alert() and replace it with real AWS Cognito API calls.
- * 
+ *
  * Pages:
  * - /login          → نظام السائقين والمناديب (login + register tabs)
  * - /unified-login  → نظام الإداريين والموظفين (login only)
@@ -101,11 +102,13 @@
     const r = await authAPI('/auth/login', { username: id, password: pw });
     setLoad(btn, false);
 
-    if (r.ok && r.data.challenge === 'EMAIL_OTP') {
-      // MFA Required — show OTP input
-      showToast('تم إرسال رمز التحقق إلى بريدك الإلكتروني 📧','info',6000);
-      showMFAInput(id, r.data.session, page);
-    } else if (r.ok && r.data.token) {
+    // OTP temporarily disabled — will be re-enabled later
+    // if (r.ok && r.data.challenge === 'EMAIL_OTP') {
+    //   // MFA Required — show OTP input
+    //   showToast('تم إرسال رمز التحقق إلى بريدك الإلكتروني 📧','info',6000);
+    //   showMFAInput(id, r.data.session, page);
+    // } else
+    if (r.ok && r.data.token) {
       saveSession(r.data);
       try { fetch(`${API}/api/audit-log`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',actor:r.data.email||r.data.username,resource_type:page==='/login'?'driver':'staff',timestamp:new Date().toISOString()})}); } catch(e){}
       showToast(`مرحباً ${r.data.name||r.data.username}! جاري التحويل...`,'success');

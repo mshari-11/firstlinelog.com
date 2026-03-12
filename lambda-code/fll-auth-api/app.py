@@ -1,11 +1,12 @@
 """
 FLL Auth API v3.0
-- Login with EMAIL_OTP MFA support
+OTP temporarily disabled — will be re-enabled later
+- Login with EMAIL_OTP MFA support (DISABLED)
 - Register with email verification
 - Forgot password with OTP
 - Verify OTP code
 - Reset password
-- Custom OTP via AWS SES (no-reply@fll.sa)
+- Custom OTP via AWS SES (no-reply@fll.sa) (DISABLED)
 """
 import json
 import boto3

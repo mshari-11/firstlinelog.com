@@ -31,6 +31,15 @@
       "skills": [
         "./frontend-design"
       ]
+    },
+    {
+      "name": "observability-skills",
+      "description": "Monitoring, telemetry, and observability skills for tracking Claude Code usage and costs",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./fll-monitoring"
+      ]
     }
   ]
 }

@@ -40,6 +40,10 @@ import AdminReconciliation from "@/pages/admin/Reconciliation";
 import AdminPageBuilder from "@/pages/admin/PageBuilder";
 import AdminDispatch from "@/pages/admin/Dispatch";
 
+// ── Guides / Showcase pages ─────────────────────────────────────────────────
+import ReactHooksGuide from "@/pages/guides/ReactHooksGuide";
+import FitnessProfile from "@/pages/guides/FitnessProfile";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -86,6 +90,10 @@ export default function App() {
           {/* ── Login pages ── */}
           <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
           <Route path="/unified-login" element={<UnifiedLogin />} />
+
+          {/* ── Guides / Showcase (public) ── */}
+          <Route path="/guides/react-hooks" element={<ReactHooksGuide />} />
+          <Route path="/guides/fitness-profile" element={<FitnessProfile />} />
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />

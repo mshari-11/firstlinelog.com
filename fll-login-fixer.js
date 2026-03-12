@@ -1,8 +1,9 @@
 /**
- * FLL Login Fixer v2.0
- * - يعترض form submit مباشرة (بدل الاعتماد على alert)
- * - يشيل validation رقم الهاتف
- * - يضيف أيقونة إظهار كلمة المرور
+ * FLL Login Fixer v3.0
+ * OTP disabled — direct password login only
+ * - Intercepts form submit
+ * - Sends to AWS Cognito API
+ * - Auto-redirects on success
  */
 (function() {
   const p = location.pathname;
@@ -95,12 +96,8 @@
       });
       const data = await r.json();
 
-      if (data.challenge === 'EMAIL_OTP') {
-        // Show OTP page - dispatch custom event for auth-connector
-        window.dispatchEvent(new CustomEvent('fll-mfa-required', { detail: { username, session: data.session, page: p } }));
-        showOTPPage(username, data.session);
-      } else if (data.token) {
-        // Direct login success
+      if (data.token) {
+        // Direct login success — no OTP
         localStorage.setItem('fll_token', data.token || '');
         localStorage.setItem('fll_user', JSON.stringify({ email: data.user?.email || username, name: data.user?.name || '', groups: data.user?.groups || [] }));
         showToast('تم تسجيل الدخول بنجاح! ✅');
@@ -119,73 +116,6 @@
       btn.textContent = origText;
       btn.style.opacity = '1';
     }
-  }
-
-  function showOTPPage(username, session) {
-    const main = document.querySelector('main') || document.querySelector('[class*="content"]') || document.querySelector('form')?.parentElement?.parentElement;
-    if (!main) return;
-
-    main.innerHTML = `
-      <div style="max-width:420px;margin:40px auto;padding:32px 24px;text-align:center;direction:rtl;font-family:'Segoe UI',Tahoma,sans-serif">
-        <div style="width:72px;height:72px;margin:0 auto 20px;background:linear-gradient(135deg,#0f2744,#1e3a5f);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(15,39,68,0.3)">
-          <span style="font-size:32px">📧</span>
-        </div>
-        <h2 style="color:#0f2744;margin:0 0 8px;font-size:24px;font-weight:700">رمز التحقق</h2>
-        <p style="color:#64748b;font-size:14px;margin:0 0 28px;line-height:1.7">تم إرسال رمز التحقق إلى بريدك الإلكتروني<br><strong style="color:#0f2744;font-size:15px">${username}</strong></p>
-        <div style="margin:0 0 24px">
-          <input id="fll-otp" type="text" inputmode="numeric" maxlength="6" placeholder="------"
-            style="width:100%;padding:16px;text-align:center;font-size:28px;letter-spacing:12px;border:2px solid #d1d5db;border-radius:12px;outline:none;font-family:monospace;direction:ltr;box-sizing:border-box;transition:border-color .2s"
-            onfocus="this.style.borderColor='#0f2744'" onblur="this.style.borderColor='#d1d5db'">
-        </div>
-        <button id="fll-verify" style="width:100%;padding:16px;background:linear-gradient(135deg,#0f2744,#1e3a5f);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 15px rgba(15,39,68,0.3)">
-          ✓ تأكيد الرمز
-        </button>
-        <p style="color:#94a3b8;font-size:12px;margin:16px 0 0">⏱ الرمز صالح لمدة 3 دقائق</p>
-        <button onclick="location.reload()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;margin-top:16px;font-family:inherit;text-decoration:underline">↩ العودة لتسجيل الدخول</button>
-      </div>`;
-
-    const otpInput = document.getElementById('fll-otp');
-    const verifyBtn = document.getElementById('fll-verify');
-    setTimeout(() => otpInput.focus(), 200);
-
-    otpInput.addEventListener('input', () => {
-      otpInput.value = otpInput.value.replace(/\D/g, '');
-      if (otpInput.value.length === 6) verifyBtn.click();
-    });
-
-    verifyBtn.addEventListener('click', async () => {
-      const code = otpInput.value.trim();
-      if (code.length !== 6) { showToast('أدخل الرمز المكون من 6 أرقام'); return; }
-      verifyBtn.disabled = true;
-      verifyBtn.textContent = 'جاري التحقق...';
-      try {
-        const r = await fetch(API + '/auth/respond-mfa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, code, session, challenge: 'EMAIL_OTP' })
-        });
-        const data = await r.json();
-        if (data.token) {
-          localStorage.setItem('fll_token', data.token);
-          localStorage.setItem('fll_user', JSON.stringify({ email: data.user?.email || username, name: data.user?.name || '', groups: data.user?.groups || [] }));
-          showToast('تم تسجيل الدخول بنجاح! ✅');
-          const redirect = getRedirectPath(data.user?.groups || []);
-          setTimeout(() => { window.location.href = redirect; }, 1000);
-        } else {
-          showToast(data.message || 'رمز التحقق غير صحيح ❌');
-          verifyBtn.disabled = false;
-          verifyBtn.textContent = '✓ تأكيد الرمز';
-          otpInput.value = '';
-          otpInput.focus();
-        }
-      } catch(e) {
-        showToast('خطأ في الاتصال');
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = '✓ تأكيد الرمز';
-      }
-    });
-
-    otpInput.addEventListener('keydown', e => { if (e.key === 'Enter') verifyBtn.click(); });
   }
 
   function getRedirectPath(groups) {

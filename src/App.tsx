@@ -6,8 +6,8 @@
  *   /admin-panel/*        → Admin panel pages
  *   /courier/register     → Courier registration
  *   /courier/portal       → Courier portal
- *   /login                → Driver login (static JS handles Cognito OTP)
- *   /unified-login        → Staff login  (static JS handles Cognito OTP)
+ *   /unified-login        → Unified portal (Staff & Courier selection)
+ *   /login                → Driver login (static JS handles auth)
  *
  * Public site pages (/about, /contact, etc.) are served by the static
  * root index.html (Skywork bundle) via vercel.json rewrites — NOT this SPA.
@@ -44,6 +44,9 @@ import CashFlow from "@/pages/admin/CashFlow";
 import FinancialReports from "@/pages/admin/FinancialReports";
 import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 
+// ── Unified Login Portal ──────────────────────────────────────────────────────
+import UnifiedPortal from "@/pages/UnifiedPortal";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -59,7 +62,17 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* ── Admin login ── */}
+          {/* ── Unified Login Portal (Staff & Courier selection) ── */}
+          <Route
+            path="/unified-login"
+            element={
+              <AdminAuthProvider>
+                <UnifiedPortal />
+              </AdminAuthProvider>
+            }
+          />
+
+          {/* ── Admin login (direct access) ── */}
           <Route
             path="/admin/login"
             element={
@@ -100,25 +113,23 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
 
-          {/* ── Login pages — rendered by this SPA shell, actual auth handled by
-               fll-login-fixer.js + fll-auth-connector.js static scripts ── */}
+          {/* ── Login pages — backwards compatibility ── */}
           <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
-          <Route path="/unified-login" element={<LoginShell title="تسجيل الدخول الموحّد" />} />
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />
           <Route path="/courier/portal" element={<CourierPortal />} />
           <Route path="/application-status" element={<ApplicationStatus />} />
 
-          {/* ── Fallback: redirect unknown routes to admin login ── */}
-          <Route path="*" element={<Navigate to="/admin/login" replace />} />
+          {/* ── Fallback: redirect unknown routes to unified login ── */}
+          <Route path="*" element={<Navigate to="/unified-login" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
-/** Minimal shell for /login and /unified-login — the static JS scripts take over */
+/** Minimal shell for /login — the static JS scripts take over */
 function LoginShell({ title }: { title: string }) {
   return (
     <div

@@ -17,7 +17,7 @@ export interface VerifyOTPResponse {
 }
 
 // Get the Lambda URL from environment
-const OTP_LAMBDA_URL = import.meta.env.VITE_OTP_LAMBDA_URL || 'https://fll-otp-service.lambda-url.me-south-1.on.aws';
+const OTP_LAMBDA_URL = import.meta.env.VITE_OTP_LAMBDA_URL || 'https://o7voyhz35ketac4igeohlpdrxi0jhplj.lambda-url.me-south-1.on.aws';
 
 /**
  * Send OTP to email

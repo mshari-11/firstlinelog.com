@@ -287,7 +287,7 @@ def send_otp(email, otp_type):
     otp_record = {
         'email': email,
         'otp_type': otp_type,
-        'code': otp_code,
+        'otp_code': otp_code,
         'attempts': 0,
         'expires_at': expires_at,
         'verified_at': None
@@ -357,7 +357,7 @@ def verify_otp(email, code, otp_type):
         return {'error': 'Maximum verification attempts exceeded', 'code': 400}
     
     # Verify code
-    if otp_record.get('code') != code:
+    if otp_record.get('otp_code') != code:
         # Increment attempts
         new_attempts = attempts + 1
         supabase_request('PATCH', 'otp_requests', 

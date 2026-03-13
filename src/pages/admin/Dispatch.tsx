@@ -139,15 +139,15 @@ export default function Dispatch() {
   const [showDrivers, setShowDrivers] = useState(true);
   const [showOrders, setShowOrders] = useState(true);
 
-  // ── Fetch real data from API, fall back to mock ──────────────────────────────
+  // ── Fetch real data from dispatch API, fall back to mock ─────────────────────
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
       try {
         const [driversRes, ordersRes] = await Promise.all([
-          fetch(`${API_BASE}/api/drivers`),
-          fetch(`${API_BASE}/api/orders`),
+          fetch(`${API_BASE}/api/dispatch/available`),
+          fetch(`${API_BASE}/api/dispatch/active`),
         ]);
 
         if (!driversRes.ok || !ordersRes.ok) throw new Error("API error");
@@ -159,12 +159,12 @@ export default function Dispatch() {
 
         if (cancelled) return;
 
-        // Normalise — API may return { drivers: [...] } or [...]
-        const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.drivers ?? driversData.data ?? []);
-        const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.orders ?? ordersData.data ?? []);
+        const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.items ?? driversData.data ?? []);
+        const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.items ?? ordersData.data ?? []);
 
         if (rawDrivers.length > 0) setDrivers(rawDrivers);
         if (rawOrders.length > 0) setOrders(rawOrders);
+        if (!cancelled) setApiError(null);
       } catch {
         if (!cancelled) setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
       } finally {
@@ -187,7 +187,17 @@ export default function Dispatch() {
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 14, duration: 800 });
   }, []);
 
-  function assignOrder(orderId: string, driverId: string) {
+  async function assignOrder(orderId: string, driverId: string) {
+    try {
+      const res = await fetch(`${API_BASE}/api/dispatch/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId, driver_id: driverId }),
+      });
+      if (!res.ok) throw new Error("فشل إسناد الطلب");
+    } catch {
+      setApiError("تعذّر إسناد الطلب — تم التحديث محلياً فقط");
+    }
     setOrders((prev) => prev.map((o) => o.id === orderId
       ? { ...o, status: "assigned", assignedDriverId: driverId, estimatedTime: Math.floor(Math.random() * 15) + 5 }
       : o
@@ -199,7 +209,17 @@ export default function Dispatch() {
     setSelectedOrder(null);
   }
 
-  function updateOrderStatus(orderId: string, status: OrderStatus) {
+  async function updateOrderStatus(orderId: string, status: OrderStatus) {
+    try {
+      const res = await fetch(`${API_BASE}/api/dispatch/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId, status }),
+      });
+      if (!res.ok) throw new Error("فشل تحديث الحالة");
+    } catch {
+      setApiError("تعذّر تحديث الحالة — تم التحديث محلياً فقط");
+    }
     setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status } : o));
     if (status === "delivered" || status === "cancelled") {
       const order = orders.find((o) => o.id === orderId);

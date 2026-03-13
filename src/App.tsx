@@ -43,6 +43,7 @@ import Expenses from "@/pages/admin/Expenses";
 import CashFlow from "@/pages/admin/CashFlow";
 import FinancialReports from "@/pages/admin/FinancialReports";
 import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
+import AdminComplaints from "@/pages/admin/Complaints";
 
 // ── Unified Login Portal ──────────────────────────────────────────────────────
 import UnifiedPortal from "@/pages/UnifiedPortal";
@@ -102,13 +103,14 @@ export default function App() {
             <Route path="financial-reports" element={<PermissionGuard permission="finance"><FinancialReports /></PermissionGuard>} />
             <Route path="ai-finance" element={<PermissionGuard permission="finance"><AIFinanceAnalysis /></PermissionGuard>} />
             <Route path="reports" element={<PermissionGuard permission="reports"><AdminPanelReports /></PermissionGuard>} />
-            <Route path="vehicles" element={<AdminVehicles />} />
-            <Route path="staff" element={<AdminStaff />} />
+            <Route path="vehicles" element={<PermissionGuard permission="couriers"><AdminVehicles /></PermissionGuard>} />
+            <Route path="staff" element={<PermissionGuard permission="couriers"><AdminStaff /></PermissionGuard>} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="wallet" element={<PermissionGuard permission="finance"><AdminDriverWallet /></PermissionGuard>} />
             <Route path="reconciliation" element={<PermissionGuard permission="finance"><AdminReconciliation /></PermissionGuard>} />
-            <Route path="page-builder" element={<AdminPageBuilder />} />
-            <Route path="dispatch" element={<AdminDispatch />} />
+            <Route path="page-builder" element={<PermissionGuard permission="reports"><AdminPageBuilder /></PermissionGuard>} />
+            <Route path="dispatch" element={<PermissionGuard permission="orders"><AdminDispatch /></PermissionGuard>} />
+            <Route path="complaints" element={<PermissionGuard permission="complaints"><AdminComplaints /></PermissionGuard>} />
             {/* Default → dashboard */}
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>

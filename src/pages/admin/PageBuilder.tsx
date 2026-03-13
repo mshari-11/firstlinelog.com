@@ -9,7 +9,7 @@ import {
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, Landmark, GitCompare, Map, GripVertical,
   Eye, EyeOff, ToggleLeft, ToggleRight, Save, RotateCcw,
-  Info, CheckCircle2,
+  Info, CheckCircle2, TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -32,6 +32,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, Landmark, GitCompare, Map,
+  TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
 };
 
 function PageIcon({ name, size = 15 }: { name: string; size?: number }) {
@@ -41,20 +42,26 @@ function PageIcon({ name, size = 15 }: { name: string; size?: number }) {
 
 // ─── Default page registry ────────────────────────────────────────────────────
 const DEFAULT_PAGES: PageConfig[] = [
-  { id: "dashboard",      label: "الرئيسية",           path: "/admin-panel/dashboard",      group: "التشغيل",          icon: "LayoutDashboard", enabled: true,  order: 0,  isCore: true },
-  { id: "couriers",       label: "المناديب",            path: "/admin-panel/couriers",       group: "التشغيل",          icon: "Users",           enabled: true,  order: 1 },
-  { id: "orders",         label: "الطلبات",             path: "/admin-panel/orders",         group: "التشغيل",          icon: "ClipboardList",   enabled: true,  order: 2 },
-  { id: "complaints",     label: "الشكاوى",             path: "/admin-panel/complaints",     group: "التشغيل",          icon: "MessageSquare",   enabled: true,  order: 3 },
-  { id: "finance",        label: "الرواتب والمالية",   path: "/admin-panel/finance",        group: "المالية والموارد", icon: "Wallet",          enabled: true,  order: 4,  permission: "finance" },
-  { id: "wallet",         label: "محافظ السائقين",     path: "/admin-panel/wallet",         group: "المالية والموارد", icon: "Landmark",        enabled: true,  order: 5,  permission: "finance" },
-  { id: "reconciliation", label: "مطابقة مالية",       path: "/admin-panel/reconciliation", group: "المالية والموارد", icon: "GitCompare",      enabled: true,  order: 6,  permission: "finance" },
-  { id: "reports",        label: "التقارير",            path: "/admin-panel/reports",        group: "المالية والموارد", icon: "BarChart3",       enabled: true,  order: 7,  permission: "reports" },
-  { id: "excel",          label: "استيراد Excel",      path: "/admin-panel/excel",          group: "المالية والموارد", icon: "FileSpreadsheet", enabled: true,  order: 8,  permission: "excel" },
-  { id: "dispatch",       label: "الخريطة والإرسال",   path: "/admin-panel/dispatch",       group: "التشغيل",          icon: "Map",             enabled: true,  order: 9 },
-  { id: "vehicles",       label: "المركبات",            path: "/admin-panel/vehicles",       group: "الأصول والموظفون", icon: "Car",             enabled: true,  order: 10 },
-  { id: "staff",          label: "الأقسام والموظفين",  path: "/admin-panel/staff",          group: "الأصول والموظفون", icon: "Building2",       enabled: true,  order: 11 },
-  { id: "settings",       label: "الإعدادات",           path: "/admin-panel/settings",       group: "النظام",           icon: "Settings2",       enabled: true,  order: 12, isCore: true },
-  { id: "pagebuilder",    label: "منشئ الصفحات",        path: "/admin-panel/page-builder",   group: "النظام",           icon: "LayoutDashboard", enabled: true,  order: 13, isCore: true },
+  { id: "dashboard",          label: "الرئيسية",           path: "/admin-panel/dashboard",          group: "التشغيل",          icon: "LayoutDashboard", enabled: true,  order: 0,  isCore: true },
+  { id: "couriers",           label: "المناديب",            path: "/admin-panel/couriers",           group: "التشغيل",          icon: "Users",           enabled: true,  order: 1 },
+  { id: "orders",             label: "الطلبات",             path: "/admin-panel/orders",             group: "التشغيل",          icon: "ClipboardList",   enabled: true,  order: 2 },
+  { id: "complaints",         label: "الشكاوى",             path: "/admin-panel/complaints",         group: "التشغيل",          icon: "MessageSquare",   enabled: true,  order: 3 },
+  { id: "dispatch",           label: "الخريطة والإرسال",   path: "/admin-panel/dispatch",           group: "التشغيل",          icon: "Map",             enabled: true,  order: 4 },
+  { id: "finance-dashboard",  label: "لوحة المالية",       path: "/admin-panel/finance-dashboard",  group: "المالية والموارد", icon: "LayoutDashboard", enabled: true,  order: 5,  permission: "finance" },
+  { id: "revenue",            label: "الإيرادات",           path: "/admin-panel/revenue",            group: "المالية والموارد", icon: "TrendingUp",      enabled: true,  order: 6,  permission: "finance" },
+  { id: "expenses",           label: "المصروفات",           path: "/admin-panel/expenses",           group: "المالية والموارد", icon: "Receipt",         enabled: true,  order: 7,  permission: "finance" },
+  { id: "cashflow",           label: "التدفقات النقدية",   path: "/admin-panel/cashflow",           group: "المالية والموارد", icon: "ArrowRightLeft",  enabled: true,  order: 8,  permission: "finance" },
+  { id: "financial-reports",  label: "التقارير المالية",   path: "/admin-panel/financial-reports",  group: "المالية والموارد", icon: "FileText",        enabled: true,  order: 9,  permission: "finance" },
+  { id: "ai-finance",         label: "تحليل AI المالي",    path: "/admin-panel/ai-finance",         group: "المالية والموارد", icon: "Brain",           enabled: true,  order: 10, permission: "finance" },
+  { id: "finance",            label: "الرواتب والمالية",   path: "/admin-panel/finance",            group: "المالية والموارد", icon: "Wallet",          enabled: true,  order: 11, permission: "finance" },
+  { id: "wallet",             label: "محافظ السائقين",     path: "/admin-panel/wallet",             group: "المالية والموارد", icon: "Landmark",        enabled: true,  order: 12, permission: "finance" },
+  { id: "reconciliation",     label: "مطابقة مالية",       path: "/admin-panel/reconciliation",     group: "المالية والموارد", icon: "GitCompare",      enabled: true,  order: 13, permission: "finance" },
+  { id: "reports",            label: "التقارير",            path: "/admin-panel/reports",            group: "المالية والموارد", icon: "BarChart3",       enabled: true,  order: 14, permission: "reports" },
+  { id: "excel",              label: "استيراد Excel",      path: "/admin-panel/excel",              group: "المالية والموارد", icon: "FileSpreadsheet", enabled: true,  order: 15, permission: "excel" },
+  { id: "vehicles",           label: "المركبات",            path: "/admin-panel/vehicles",           group: "الأصول والموظفون", icon: "Car",             enabled: true,  order: 16 },
+  { id: "staff",              label: "الأقسام والموظفين",  path: "/admin-panel/staff",              group: "الأصول والموظفون", icon: "Building2",       enabled: true,  order: 17 },
+  { id: "settings",           label: "الإعدادات",           path: "/admin-panel/settings",           group: "النظام",           icon: "Settings2",       enabled: true,  order: 18, isCore: true },
+  { id: "pagebuilder",        label: "منشئ الصفحات",        path: "/admin-panel/page-builder",       group: "النظام",           icon: "LayoutDashboard", enabled: true,  order: 19, isCore: true },
 ];
 
 const STORAGE_KEY = "fll_page_config_v1";

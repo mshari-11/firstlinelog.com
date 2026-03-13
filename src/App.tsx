@@ -6,8 +6,8 @@
  *   /admin-panel/*        → Admin panel pages
  *   /courier/register     → Courier registration
  *   /courier/portal       → Courier portal
- *   /login                → Driver login (static JS handles Cognito OTP)
- *   /unified-login        → Staff login  (static JS handles Cognito OTP)
+ *   /unified-login        → Unified portal (Staff & Courier selection)
+ *   /login                → Driver login (static JS handles auth)
  *
  * Public site pages (/about, /contact, etc.) are served by the static
  * root index.html (Skywork bundle) via vercel.json rewrites — NOT this SPA.
@@ -39,10 +39,18 @@ import AdminDriverWallet from "@/pages/admin/DriverWallet";
 import AdminReconciliation from "@/pages/admin/Reconciliation";
 import AdminPageBuilder from "@/pages/admin/PageBuilder";
 import AdminDispatch from "@/pages/admin/Dispatch";
+import FinanceDashboard from "@/pages/admin/FinanceDashboard";
+import Revenue from "@/pages/admin/Revenue";
+import Expenses from "@/pages/admin/Expenses";
+import CashFlow from "@/pages/admin/CashFlow";
+import FinancialReports from "@/pages/admin/FinancialReports";
+import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 
 // ── Guides / Showcase pages ─────────────────────────────────────────────────
 import ReactHooksGuide from "@/pages/guides/ReactHooksGuide";
 import FitnessProfile from "@/pages/guides/FitnessProfile";
+// ── Unified Login Portal ──────────────────────────────────────────────────────
+import UnifiedPortal from "@/pages/UnifiedPortal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +69,25 @@ export default function App() {
         <Routes>
           {/* ── Admin login (Cognito) ── */}
           <Route path="/admin/login" element={<UnifiedLogin />} />
+          {/* ── Unified Login Portal (Staff & Courier selection) ── */}
+          <Route
+            path="/unified-login"
+            element={
+              <AdminAuthProvider>
+                <UnifiedPortal />
+              </AdminAuthProvider>
+            }
+          />
+
+          {/* ── Admin login (direct access) ── */}
+          <Route
+            path="/admin/login"
+            element={
+              <AdminAuthProvider>
+                <AdminLogin />
+              </AdminAuthProvider>
+            }
+          />
 
           {/* ── Admin panel ── */}
           <Route
@@ -75,6 +102,12 @@ export default function App() {
             <Route path="couriers" element={<PermissionGuard permission="couriers"><AdminCouriers /></PermissionGuard>} />
             <Route path="orders" element={<PermissionGuard permission="orders"><AdminPanelOrders /></PermissionGuard>} />
             <Route path="finance" element={<PermissionGuard permission="finance"><AdminFinance /></PermissionGuard>} />
+            <Route path="finance-dashboard" element={<PermissionGuard permission="finance"><FinanceDashboard /></PermissionGuard>} />
+            <Route path="revenue" element={<PermissionGuard permission="finance"><Revenue /></PermissionGuard>} />
+            <Route path="expenses" element={<PermissionGuard permission="finance"><Expenses /></PermissionGuard>} />
+            <Route path="cashflow" element={<PermissionGuard permission="finance"><CashFlow /></PermissionGuard>} />
+            <Route path="financial-reports" element={<PermissionGuard permission="finance"><FinancialReports /></PermissionGuard>} />
+            <Route path="ai-finance" element={<PermissionGuard permission="finance"><AIFinanceAnalysis /></PermissionGuard>} />
             <Route path="reports" element={<PermissionGuard permission="reports"><AdminPanelReports /></PermissionGuard>} />
             <Route path="vehicles" element={<AdminVehicles />} />
             <Route path="staff" element={<AdminStaff />} />
@@ -94,21 +127,23 @@ export default function App() {
           {/* ── Guides / Showcase (public) ── */}
           <Route path="/guides/react-hooks" element={<ReactHooksGuide />} />
           <Route path="/guides/fitness-profile" element={<FitnessProfile />} />
+          {/* ── Login pages — backwards compatibility ── */}
+          <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />
           <Route path="/courier/portal" element={<CourierPortal />} />
           <Route path="/application-status" element={<ApplicationStatus />} />
 
-          {/* ── Fallback: redirect unknown routes to admin login ── */}
-          <Route path="*" element={<Navigate to="/admin/login" replace />} />
+          {/* ── Fallback: redirect unknown routes to unified login ── */}
+          <Route path="*" element={<Navigate to="/unified-login" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
-/** Minimal shell for /login and /unified-login — the static JS scripts take over */
+/** Minimal shell for /login — the static JS scripts take over */
 function LoginShell({ title }: { title: string }) {
   return (
     <div

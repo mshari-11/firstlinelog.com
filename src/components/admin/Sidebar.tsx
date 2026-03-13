@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, LogOut, Bell, Landmark, GitCompare, Map,
+  TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
 } from "lucide-react";
 import { useState } from "react";
 import { loadConfig } from "@/pages/admin/PageBuilder";
@@ -18,6 +19,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, Landmark, GitCompare, Map,
+  TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
 };
 
 function NavIcon({ name, size = 16 }: { name: string; size?: number }) {

@@ -1,6 +1,7 @@
 /**
  * نظام المصادقة للوحة الإدارة
  * يدعم Supabase auth + Cognito localStorage session (fll_token / fll_user)
+ * OTP temporarily disabled — will be re-enabled later
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
@@ -30,8 +31,9 @@ interface AuthContextType {
   user: AdminUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signInWithOtp: (email: string) => Promise<{ error?: string }>;
-  verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
+  // OTP temporarily disabled — will be re-enabled later
+  // signInWithOtp: (email: string) => Promise<{ error?: string }>;
+  // verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   hasPermission: (key: keyof StaffPermissions) => boolean;
 }
@@ -156,22 +158,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   }
 
-  async function signInWithOtp(email: string) {
-    if (!supabase) return { error: "Supabase غير متصل" };
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
-    if (error) return { error: "تعذّر إرسال رمز التحقق. تأكد من أن البريد مسجّل في النظام." };
-    return {};
-  }
+  // OTP temporarily disabled — will be re-enabled later
+  // async function signInWithOtp(email: string) {
+  //   if (!supabase) return { error: "Supabase غير متصل" };
+  //   const { error } = await supabase.auth.signInWithOtp({
+  //     email,
+  //     options: { shouldCreateUser: false },
+  //   });
+  //   if (error) return { error: "تعذّر إرسال رمز التحقق. تأكد من أن البريد مسجّل في النظام." };
+  //   return {};
+  // }
 
-  async function verifyEmailOtp(email: string, token: string) {
-    if (!supabase) return { error: "Supabase غير متصل" };
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-    if (error) return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
-    return {};
-  }
+  // OTP temporarily disabled — will be re-enabled later
+  // async function verifyEmailOtp(email: string, token: string) {
+  //   if (!supabase) return { error: "Supabase غير متصل" };
+  //   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  //   if (error) return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+  //   return {};
+  // }
 
   async function signOut() {
     // Clear Cognito localStorage session
@@ -187,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithOtp, verifyEmailOtp, signOut, hasPermission }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

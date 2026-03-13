@@ -16,15 +16,15 @@ export interface VerifyOTPResponse {
   error?: string;
 }
 
-// Get the Lambda URL from environment
-const OTP_LAMBDA_URL = import.meta.env.VITE_OTP_LAMBDA_URL || 'https://o7voyhz35ketac4igeohlpdrxi0jhplj.lambda-url.me-south-1.on.aws';
+// API Gateway (public) — fll-auth-api handles OTP via SES
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 
 /**
  * Send OTP to email
  */
 export async function sendOtp(email: string, type: OTPType = 'login'): Promise<SendOTPResponse> {
   try {
-    const response = await fetch(`${OTP_LAMBDA_URL}/send-otp`, {
+    const response = await fetch(`${API_BASE}/auth/send-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export async function verifyOtp(email: string, code: string, type: OTPType = 'lo
       };
     }
 
-    const response = await fetch(`${OTP_LAMBDA_URL}/verify-otp`, {
+    const response = await fetch(`${API_BASE}/auth/verify-custom-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

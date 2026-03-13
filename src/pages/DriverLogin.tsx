@@ -1,5 +1,6 @@
 /**
- * صفحة تسجيل دخول الموظفين — /unified-login
+ * صفحة تسجيل دخول السائقين — /login
+ * تبويبان: تسجيل دخول | إنشاء حساب جديد
  * Midnight Operations theme + OTP verification via Lambda
  */
 import { useState } from "react";
@@ -8,13 +9,15 @@ import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
 
-type Screen = "login" | "otp" | "success" | "forgot" | "forgot-otp" | "reset-password";
+type Tab = "login" | "register";
+type Screen = "form" | "otp" | "success" | "forgot" | "forgot-otp" | "reset-password";
 
-export default function UnifiedPortal() {
+export default function DriverLogin() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const [screen, setScreen] = useState<Screen>("login");
+  const [tab, setTab] = useState<Tab>("login");
+  const [screen, setScreen] = useState<Screen>("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -22,21 +25,22 @@ export default function UnifiedPortal() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  function go(s: Screen) { setError(""); setSuccess(""); setScreen(s); }
+  function reset() { setError(""); setSuccess(""); }
+  function go(s: Screen) { reset(); setScreen(s); }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) { setError("أدخل البريد الإلكتروني"); return; }
     if (!password) { setError("أدخل كلمة المرور"); return; }
-    setError(""); setLoading(true);
+    reset(); setLoading(true);
 
     const res = await signIn(email.trim(), password);
     if (res.error) { setError(res.error); setLoading(false); return; }
 
-    setSuccess("تم التحقق من بيانات المرور. جارٍ إرسال رمز التحقق...");
+    setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
     const otpRes = await sendOtp(email.trim(), "login");
     setLoading(false);
     if (otpRes.error) { setError(otpRes.error); return; }
@@ -48,23 +52,24 @@ export default function UnifiedPortal() {
   async function handleOTPVerify(e: React.FormEvent) {
     e.preventDefault();
     if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    setError(""); setLoading(true);
+    reset(); setLoading(true);
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
 
     setSuccess("تم التحقق بنجاح!");
     go("success");
-    setTimeout(() => redirectAfterAuth(), 1200);
+    setTimeout(() => {
+      navigate("/courier/portal");
+    }, 1200);
   }
 
   async function handleResend() {
-    setError(""); setLoading(true);
+    reset(); setLoading(true);
     const res = await sendOtp(email.trim(), "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
-    setOtp("");
+    setSuccess("تم إرسال رمز جديد"); setOtp("");
   }
 
   async function handleForgotSend(e: React.FormEvent) {
@@ -96,25 +101,30 @@ export default function UnifiedPortal() {
     if (supabase) {
       const { error: resetError } = await supabase.auth.updateUser({ password: newPassword });
       setLoading(false);
-      if (resetError) { setError("تعذّر تحديث كلمة المرور. تأكد من تسجيل الدخول أولاً."); return; }
-    } else {
-      setLoading(false);
-    }
+      if (resetError) { setError("تعذّر تحديث كلمة المرور"); return; }
+    } else { setLoading(false); }
     setSuccess("تم تحديث كلمة المرور بنجاح!");
-    setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); }, 1500);
+    setTimeout(() => { go("form"); setNewPassword(""); setOtp(""); setResetEmail(""); }, 1500);
   }
 
-  function reset() { setError(""); setSuccess(""); }
-
-  async function redirectAfterAuth() {
-    if (!supabase) { navigate("/admin-panel/dashboard"); return; }
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      const { data: profile } = await supabase
-        .from("users").select("role").eq("id", authUser.id).single();
-      if (profile?.role === "courier") { navigate("/courier/portal"); return; }
+  function switchTab(t: Tab) {
+    if (t === "register") {
+      navigate("/courier/register");
+      return;
     }
-    navigate("/admin-panel/dashboard");
+    setTab(t); reset(); setScreen("form");
+    setEmail(""); setPassword(""); setOtp("");
+  }
+
+  function handleOtpChange(index: number, val: string) {
+    if (!/^\d*$/.test(val)) return;
+    const arr = otp.padEnd(6, " ").split("");
+    arr[index] = val;
+    setOtp(arr.join("").replace(/ /g, "").slice(0, 6));
+    if (val && index < 5) {
+      const next = document.getElementById(`dotp-${index + 1}`);
+      if (next) (next as HTMLInputElement).focus();
+    }
   }
 
   // ── Styles ──
@@ -133,8 +143,7 @@ export default function UnifiedPortal() {
     logoWrap: { textAlign: "center" as const, marginBottom: "2rem" },
     logo: {
       width: "80px", height: "80px", objectFit: "contain" as const,
-      borderRadius: "16px", margin: "0 auto 1rem",
-      display: "block",
+      borderRadius: "16px", margin: "0 auto 1rem", display: "block",
     },
     title: { fontSize: "20px", fontWeight: 700, color: "#e2e8f0", margin: "0 0 4px" },
     subtitle: { fontSize: "13px", color: "#7e8ca2", margin: 0 },
@@ -145,8 +154,21 @@ export default function UnifiedPortal() {
       padding: "2rem",
       backdropFilter: "blur(12px)",
     },
+    tabs: {
+      display: "flex", marginBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)",
+    },
+    tab: (active: boolean) => ({
+      flex: 1, padding: "10px", textAlign: "center" as const,
+      fontSize: "14px", fontWeight: active ? 600 : 400,
+      color: active ? "#c9a84c" : "#7e8ca2",
+      background: "none", border: "none",
+      borderBottom: active ? "2px solid #c9a84c" : "2px solid transparent",
+      cursor: "pointer",
+      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+      transition: "all 0.2s",
+    }),
     label: { display: "block", fontSize: "13px", fontWeight: 500, color: "#94a3b8", marginBottom: "6px" },
-    inputWrap: { position: "relative" as const, marginBottom: "1rem" },
+    inputWrap: { marginBottom: "1rem" },
     input: {
       width: "100%", padding: "10px 14px", fontSize: "14px",
       background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
@@ -159,7 +181,6 @@ export default function UnifiedPortal() {
       background: "linear-gradient(135deg, #c9a84c, #b8963f)",
       color: "#0b1622", border: "none", borderRadius: "8px", cursor: "pointer",
       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
     },
     btnDisabled: { opacity: 0.5, pointerEvents: "none" as const },
     btnSecondary: {
@@ -179,7 +200,6 @@ export default function UnifiedPortal() {
       border: "1px solid rgba(34,197,94,0.3)", borderRadius: "8px",
       fontSize: "13px", color: "#22c55e", marginBottom: "1rem",
     },
-    footer: { textAlign: "center" as const, marginTop: "1.5rem", fontSize: "11px", color: "#4a5568" },
     eyeBtn: {
       position: "absolute" as const, left: "12px", top: "50%", transform: "translateY(-50%)",
       background: "none", border: "none", cursor: "pointer", color: "#7e8ca2",
@@ -202,22 +222,8 @@ export default function UnifiedPortal() {
       padding: 0, marginBottom: "1.25rem",
       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
     },
-    link: { fontSize: "12px", color: "#7e8ca2", textDecoration: "none" },
-    linkAccent: { color: "#c9a84c" },
+    footer: { textAlign: "center" as const, marginTop: "1.5rem", fontSize: "11px", color: "#4a5568" },
   };
-
-  function handleOtpChange(index: number, val: string) {
-    if (!/^\d*$/.test(val)) return;
-    const arr = otp.padEnd(6, " ").split("");
-    arr[index] = val;
-    const newOtp = arr.join("").replace(/ /g, "").slice(0, 6);
-    setOtp(newOtp);
-    // Auto-focus next input
-    if (val && index < 5) {
-      const next = document.getElementById(`otp-${index + 1}`);
-      if (next) (next as HTMLInputElement).focus();
-    }
-  }
 
   return (
     <div style={S.page}>
@@ -229,34 +235,35 @@ export default function UnifiedPortal() {
             src="/images/first_line_professional_english_1.png"
             alt="First Line Logistics"
             style={S.logo}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/images/logo.webp";
-            }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.webp"; }}
           />
           <h1 style={S.title}>First Line Logistics</h1>
-          <p style={S.subtitle}>بوابة تسجيل دخول الموظفين</p>
+          <p style={S.subtitle}>نظام المناديب</p>
         </div>
 
         {/* Card */}
         <div style={S.card}>
 
-          {/* ══ Login Screen ══ */}
-          {screen === "login" && (
-            <form onSubmit={handleLogin}>
-              <div style={{ marginBottom: "1.25rem" }}>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#e2e8f0", margin: "0 0 4px" }}>
-                  تسجيل الدخول
-                </h2>
-                <p style={{ fontSize: "12px", color: "#7e8ca2", margin: 0 }}>
-                  أدخل بريدك الإلكتروني وكلمة المرور
-                </p>
-              </div>
+          {/* Tabs */}
+          {screen === "form" && (
+            <div style={S.tabs}>
+              <button style={S.tab(tab === "login")} onClick={() => switchTab("login")}>
+                تسجيل الدخول
+              </button>
+              <button style={S.tab(tab === "register")} onClick={() => switchTab("register")}>
+                حساب جديد
+              </button>
+            </div>
+          )}
 
+          {/* ══ Login Form ══ */}
+          {screen === "form" && tab === "login" && (
+            <form onSubmit={handleLogin}>
               <div style={S.inputWrap}>
                 <label style={S.label}>البريد الإلكتروني</label>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="employee@fll.sa" autoComplete="email" autoFocus
+                  placeholder="driver@email.com" autoComplete="email" autoFocus
                   style={S.input}
                 />
               </div>
@@ -294,7 +301,7 @@ export default function UnifiedPortal() {
           {/* ══ OTP Screen ══ */}
           {screen === "otp" && (
             <form onSubmit={handleOTPVerify}>
-              <button type="button" onClick={() => { go("login"); setOtp(""); }} style={S.backBtn}>
+              <button type="button" onClick={() => { go("form"); setOtp(""); }} style={S.backBtn}>
                 → رجوع
               </button>
 
@@ -311,7 +318,7 @@ export default function UnifiedPortal() {
                 {Array.from({ length: 6 }).map((_, i) => (
                   <input
                     key={i}
-                    id={`otp-${i}`}
+                    id={`dotp-${i}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -319,7 +326,7 @@ export default function UnifiedPortal() {
                     onChange={e => handleOtpChange(i, e.target.value)}
                     onKeyDown={e => {
                       if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`otp-${i - 1}`);
+                        const prev = document.getElementById(`dotp-${i - 1}`);
                         if (prev) (prev as HTMLInputElement).focus();
                       }
                     }}
@@ -360,14 +367,14 @@ export default function UnifiedPortal() {
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#e2e8f0", margin: "0 0 4px" }}>
                 تم التحقق بنجاح
               </h2>
-              <p style={{ fontSize: "12px", color: "#7e8ca2" }}>جارٍ تحويلك للوحة التحكم...</p>
+              <p style={{ fontSize: "12px", color: "#7e8ca2" }}>جارٍ تحويلك لبوابة المندوب...</p>
             </div>
           )}
 
           {/* ══ Forgot Password — Enter Email ══ */}
           {screen === "forgot" && (
             <form onSubmit={handleForgotSend}>
-              <button type="button" onClick={() => go("login")} style={S.backBtn}>
+              <button type="button" onClick={() => go("form")} style={S.backBtn}>
                 → رجوع لتسجيل الدخول
               </button>
               <div style={{ marginBottom: "1.25rem" }}>
@@ -382,7 +389,7 @@ export default function UnifiedPortal() {
                 <label style={S.label}>البريد الإلكتروني</label>
                 <input
                   type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)}
-                  placeholder="employee@fll.sa" autoComplete="email" autoFocus
+                  placeholder="driver@email.com" autoComplete="email" autoFocus
                   style={S.input}
                 />
               </div>
@@ -412,7 +419,7 @@ export default function UnifiedPortal() {
                 {Array.from({ length: 6 }).map((_, i) => (
                   <input
                     key={i}
-                    id={`fotp-${i}`}
+                    id={`drfotp-${i}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -423,13 +430,13 @@ export default function UnifiedPortal() {
                       arr[i] = e.target.value;
                       setOtp(arr.join("").replace(/ /g, "").slice(0, 6));
                       if (e.target.value && i < 5) {
-                        const next = document.getElementById(`fotp-${i + 1}`);
+                        const next = document.getElementById(`drfotp-${i + 1}`);
                         if (next) (next as HTMLInputElement).focus();
                       }
                     }}
                     onKeyDown={e => {
                       if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`fotp-${i - 1}`);
+                        const prev = document.getElementById(`drfotp-${i - 1}`);
                         if (prev) (prev as HTMLInputElement).focus();
                       }
                     }}
@@ -476,10 +483,12 @@ export default function UnifiedPortal() {
 
         {/* Footer */}
         <div style={S.footer}>
-          <p style={{ margin: "0 0 4px" }}>© {new Date().getFullYear()} First Line Logistics — جميع الحقوق محفوظة</p>
-          <a href="mailto:support@fll.sa" style={{ color: "#c9a84c", textDecoration: "none", fontSize: "11px" }}>
-            support@fll.sa
-          </a>
+          <p style={{ margin: "0 0 6px" }}>
+            <a href="/unified-login" style={{ color: "#c9a84c", textDecoration: "none", fontSize: "12px" }}>
+              دخول الموظفين
+            </a>
+          </p>
+          <p style={{ margin: 0 }}>© {new Date().getFullYear()} First Line Logistics</p>
         </div>
       </div>
     </div>

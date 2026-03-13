@@ -45,8 +45,9 @@ import FinancialReports from "@/pages/admin/FinancialReports";
 import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 import AdminComplaints from "@/pages/admin/Complaints";
 
-// ── Unified Login Portal ──────────────────────────────────────────────────────
+// ── Login Portals ────────────────────────────────────────────────────────────
 import UnifiedPortal from "@/pages/UnifiedPortal";
+import DriverLogin from "@/pages/DriverLogin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,8 +116,8 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
 
-          {/* ── Login pages — backwards compatibility ── */}
-          <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
+          {/* ── Driver login ── */}
+          <Route path="/login" element={<AdminAuthProvider><DriverLogin /></AdminAuthProvider>} />
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />
@@ -131,21 +132,3 @@ export default function App() {
   );
 }
 
-/** Minimal shell for /login — the static JS scripts take over */
-function LoginShell({ title }: { title: string }) {
-  return (
-    <div
-      id="fll-login-root"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0b1622",
-        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-      }}
-    >
-      <p style={{ color: "#7e8ca2", fontSize: "14px" }}>{title}</p>
-    </div>
-  );
-}

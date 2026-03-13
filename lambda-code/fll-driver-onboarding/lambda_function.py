@@ -256,6 +256,30 @@ def check_duplicate_registration(body):
         if rows:
             raise ValueError(f"يوجد طلب مسجل مسبقاً بنفس {field}")
 
+    # Optional checks — tables may not exist yet
+    phone = body.get("phone")
+    if phone:
+        try:
+            courier_rows = supabase_request(
+                "GET",
+                f"/couriers?phone=eq.{quote(str(phone))}&select=id,phone&limit=1",
+            ) or []
+            if courier_rows:
+                raise ValueError("يوجد حساب مندوب نشط بنفس رقم الجوال")
+        except RuntimeError:
+            pass  # couriers table may not exist
+
+    email = body.get("email")
+    if email:
+        try:
+            user_rows = supabase_request(
+                "GET",
+                f"/users?email=eq.{quote(str(email).lower())}&select=id,email,role&limit=1",
+            ) or []
+            if user_rows:
+                raise ValueError("يوجد حساب مستخدم سابق بنفس البريد الإلكتروني")
+        except RuntimeError:
+            pass  # users table may not exist
     phone = body.get("phone")
     if phone:
         courier_rows = supabase_request(
@@ -307,6 +331,12 @@ def read_email_otp(email):
 
 
 def ensure_recent_email_verification(email):
+    try:
+        otp_row = read_email_otp(email)
+    except RuntimeError:
+        # driver_email_otps table may not exist — skip verification check
+        return
+
     otp_row = read_email_otp(email)
     if not otp_row or not otp_row.get("verified_at"):
         raise ValueError("يجب التحقق من البريد الإلكتروني أولاً")

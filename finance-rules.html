@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
+<title>القواعد المالية — FLL Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fll-design-system.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1)}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:250px;background:var(--navy);border-left:1px solid var(--border);padding:20px 0;position:fixed;top:0;right:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar .logo h2{color:var(--blue);font-size:16px;margin-bottom:4px}
+.sidebar .logo small{color:var(--muted);font-size:11px}
+.nav-group{margin:12px 0}
+.nav-group-label{padding:8px 20px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--text);text-decoration:none;font-size:13px;transition:all .2s;border-right:3px solid transparent}
+.nav-link:hover{background:rgba(56,189,248,0.05);color:var(--blue)}
+.nav-link.active{background:rgba(56,189,248,0.1);color:var(--blue);border-right-color:var(--blue)}
+.main{margin-right:250px;flex:1;padding:24px;min-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:8px}
+.page-header h1 i{color:var(--blue)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(10px);border-top:3px solid var(--blue)}
+.stat-card.green{border-top-color:var(--green)}
+.stat-card.gold{border-top-color:var(--gold)}
+.stat-card.red{border-top-color:var(--red)}
+.stat-card.purple{border-top-color:var(--purple)}
+.stat-label{color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-sub{color:var(--muted);font-size:11px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.card h3{color:var(--text);font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(56,189,248,0.08);color:var(--blue);font-weight:600;padding:10px 12px;text-align:right;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:rgba(56,189,248,0.03)}
+.badge{padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:#86efac}
+.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}
+.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}
+.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--blue-deep);color:white}
+.btn-primary:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.search-input{background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;width:250px}
+.search-input::placeholder{color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--navy);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
+.modal h3{color:var(--text);margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.form-input{width:100%;background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px}
+.form-input:focus{border-color:var(--blue);outline:none}
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab{padding:10px 20px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;border-bottom:3px solid transparent;transition:all .2s}
+.tab:hover{color:var(--blue)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+@media(max-width:768px){.sidebar{display:none}.main{margin-right:0}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <h2>فيرست لاين لوجستيكس</h2>
+    <small>المحرك المالي</small>
+  </div>
+  <div id="sidebar-nav"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:auto">
+    <div style="font-size:12px;color:var(--muted)" id="user-info"></div>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-top:8px;width:100%">تسجيل خروج</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <h1><i data-lucide="settings"></i> القواعد المالية</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="openCreateModal()"><i data-lucide="plus" style="width:14px;height:14px"></i> قاعدة جديدة</button>
+      <button class="btn btn-outline" onclick="loadCurrentTab()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="rate-cards" onclick="switchTab('rate-cards')">بطاقات الأسعار</div>
+    <div class="tab" data-tab="bonuses" onclick="switchTab('bonuses')">المكافآت</div>
+    <div class="tab" data-tab="penalties" onclick="switchTab('penalties')">الجزاءات</div>
+  </div>
+
+  <!-- Rate Cards Tab -->
+  <div class="tab-content active" id="tab-rate-cards">
+    <div class="card">
+      <h3><i data-lucide="credit-card" style="width:16px;height:16px;color:var(--blue)"></i> بطاقات الأسعار</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>المنصة</th><th>السعر الأساسي</th><th>سعر الكيلومتر</th><th>سعر الدقيقة</th><th>الحالة</th>
+          </tr></thead>
+          <tbody id="rate-cards-tbl"><tr><td colspan="6" class="loading">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bonuses Tab -->
+  <div class="tab-content" id="tab-bonuses">
+    <div class="card">
+      <h3><i data-lucide="gift" style="width:16px;height:16px;color:var(--green)"></i> قواعد المكافآت</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>النوع</th><th>الشرط</th><th>المبلغ</th><th>الحالة</th>
+          </tr></thead>
+          <tbody id="bonuses-tbl"><tr><td colspan="5" class="loading">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Penalties Tab -->
+  <div class="tab-content" id="tab-penalties">
+    <div class="card">
+      <h3><i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--red)"></i> قواعد الجزاءات</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>النوع</th><th>الشرط</th><th>المبلغ</th><th>الحالة</th>
+          </tr></thead>
+          <tbody id="penalties-tbl"><tr><td colspan="5" class="loading">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Rule Modal -->
+<div class="modal-overlay" id="rule-modal">
+<div class="modal">
+<h3 id="rule-modal-title">إنشاء قاعدة جديدة</h3>
+
+<!-- Rate Card Fields -->
+<div id="rc-fields">
+<div class="form-group"><label class="form-label">الاسم</label><input class="form-input" id="rc-name" placeholder="اسم بطاقة السعر"></div>
+<div class="form-group"><label class="form-label">المنصة</label><select class="form-input" id="rc-platform"><option value="jahez">جاهز</option><option value="hunger_station">هنقرستيشن</option><option value="marsool">مرسول</option><option value="to_you">تويو</option><option value="all">الكل</option></select></div>
+<div class="form-group"><label class="form-label">السعر الأساسي (ر.س)</label><input class="form-input" id="rc-base" type="number" step="0.01" min="0"></div>
+<div class="form-group"><label class="form-label">سعر الكيلومتر (ر.س)</label><input class="form-input" id="rc-km" type="number" step="0.01" min="0"></div>
+<div class="form-group"><label class="form-label">سعر الدقيقة (ر.س)</label><input class="form-input" id="rc-min" type="number" step="0.01" min="0"></div>
+</div>
+
+<!-- Bonus/Penalty Fields -->
+<div id="bp-fields" style="display:none">
+<div class="form-group"><label class="form-label">الاسم</label><input class="form-input" id="bp-name" placeholder="اسم القاعدة"></div>
+<div class="form-group"><label class="form-label">النوع</label><select class="form-input" id="bp-type"><option value="per_trip">لكل رحلة</option><option value="daily">يومي</option><option value="weekly">أسبوعي</option><option value="threshold">حد أدنى</option></select></div>
+<div class="form-group"><label class="form-label">الشرط</label><input class="form-input" id="bp-condition" placeholder="مثال: اكمال 20 رحلة"></div>
+<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input class="form-input" id="bp-amount" type="number" step="0.01" min="0"></div>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-primary" onclick="createRule()">إنشاء</button>
+<button class="btn btn-outline" onclick="closeModal('rule-modal')">إلغاء</button>
+</div>
+</div>
+</div>
+
+<script src="/fll-shared.js"></script>
+<script src="/fll-rbac.js"></script>
+<script>
+const user=checkAuth();if(!user)throw'no auth';
+if(window.FLL_RBAC)FLL_RBAC.guardPage();
+
+document.getElementById('sidebar-nav').innerHTML=window.FLL_RBAC?FLL_RBAC.renderSidebarNav():'';
+document.getElementById('user-info').textContent=(user.name||user.email||'مستخدم')+' — '+(window.FLL_RBAC?FLL_RBAC.getUserRoleLabel():'');
+
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+function fmt(n){return parseFloat(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2})}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+let currentTab='rate-cards';
+const statusLabels={active:'نشطة',inactive:'غير نشطة',draft:'مسودة'};
+const statusBadge={active:'badge-green',inactive:'badge-red',draft:'badge-yellow'};
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+tab));
+  loadCurrentTab();
+}
+
+function loadCurrentTab(){
+  if(currentTab==='rate-cards')loadRateCards();
+  else if(currentTab==='bonuses')loadBonuses();
+  else loadPenalties();
+}
+
+async function loadRateCards(){
+  document.getElementById('rate-cards-tbl').innerHTML='<tr><td colspan="6" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/rules/rate-cards');
+    const items=data.items||[];
+    if(!items.length){document.getElementById('rate-cards-tbl').innerHTML='<tr><td colspan="6" class="empty">لا توجد بطاقات أسعار</td></tr>';return;}
+    document.getElementById('rate-cards-tbl').innerHTML=items.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td>${esc(r.platform||'الكل')}</td>
+      <td>${fmt(r.base_fare)} ر.س</td>
+      <td>${fmt(r.per_km_rate)} ر.س</td>
+      <td>${fmt(r.per_min_rate)} ر.س</td>
+      <td><span class="badge ${statusBadge[r.status]||'badge-blue'}">${statusLabels[r.status]||r.status}</span></td>
+    </tr>`).join('');
+  }catch(e){
+    document.getElementById('rate-cards-tbl').innerHTML='<tr><td colspan="6" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+async function loadBonuses(){
+  document.getElementById('bonuses-tbl').innerHTML='<tr><td colspan="5" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/rules/bonuses');
+    const items=data.items||[];
+    if(!items.length){document.getElementById('bonuses-tbl').innerHTML='<tr><td colspan="5" class="empty">لا توجد قواعد مكافآت</td></tr>';return;}
+    document.getElementById('bonuses-tbl').innerHTML=items.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td>${esc(r.type||'—')}</td>
+      <td>${esc(r.condition||'—')}</td>
+      <td style="font-weight:700">${fmt(r.amount)} ر.س</td>
+      <td><span class="badge ${statusBadge[r.status]||'badge-blue'}">${statusLabels[r.status]||r.status}</span></td>
+    </tr>`).join('');
+  }catch(e){
+    document.getElementById('bonuses-tbl').innerHTML='<tr><td colspan="5" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+async function loadPenalties(){
+  document.getElementById('penalties-tbl').innerHTML='<tr><td colspan="5" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/rules/penalties');
+    const items=data.items||[];
+    if(!items.length){document.getElementById('penalties-tbl').innerHTML='<tr><td colspan="5" class="empty">لا توجد قواعد جزاءات</td></tr>';return;}
+    document.getElementById('penalties-tbl').innerHTML=items.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td>${esc(r.type||'—')}</td>
+      <td>${esc(r.condition||'—')}</td>
+      <td style="font-weight:700;color:var(--red)">${fmt(r.amount)} ر.س</td>
+      <td><span class="badge ${statusBadge[r.status]||'badge-blue'}">${statusLabels[r.status]||r.status}</span></td>
+    </tr>`).join('');
+  }catch(e){
+    document.getElementById('penalties-tbl').innerHTML='<tr><td colspan="5" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+function openCreateModal(){
+  const isRateCard=currentTab==='rate-cards';
+  document.getElementById('rc-fields').style.display=isRateCard?'block':'none';
+  document.getElementById('bp-fields').style.display=isRateCard?'none':'block';
+  const titles={'rate-cards':'إنشاء بطاقة سعر جديدة','bonuses':'إنشاء قاعدة مكافأة','penalties':'إنشاء قاعدة جزاء'};
+  document.getElementById('rule-modal-title').textContent=titles[currentTab];
+  openModal('rule-modal');
+}
+
+async function createRule(){
+  try{
+    let body;
+    if(currentTab==='rate-cards'){
+      const name=document.getElementById('rc-name').value.trim();
+      const platform=document.getElementById('rc-platform').value;
+      const base=document.getElementById('rc-base').value;
+      const km=document.getElementById('rc-km').value;
+      const min=document.getElementById('rc-min').value;
+      if(!name){showToast('يلزم إدخال الاسم','error');return;}
+      body={name,platform,base_fare:parseFloat(base||0),per_km_rate:parseFloat(km||0),per_min_rate:parseFloat(min||0)};
+    }else{
+      const name=document.getElementById('bp-name').value.trim();
+      const type=document.getElementById('bp-type').value;
+      const condition=document.getElementById('bp-condition').value.trim();
+      const amount=document.getElementById('bp-amount').value;
+      if(!name||!amount){showToast('يلزم إدخال الاسم والمبلغ','error');return;}
+      body={name,type,condition,amount:parseFloat(amount)};
+    }
+    await fllPost('/finance/rules/'+currentTab,body);
+    showToast('تم إنشاء القاعدة بنجاح','success');
+    closeModal('rule-modal');
+    loadCurrentTab();
+  }catch(e){
+    showToast('خطأ: '+e.message,'error');
+  }
+}
+
+loadRateCards();
+try{lucide.createIcons()}catch(e){}
+</script>
+</body>
+</html>

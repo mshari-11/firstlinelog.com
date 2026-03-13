@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src 'self' *.supabase.co https://*.execute-api.*.amazonaws.com; img-src 'self' data:; frame-src 'none'; object-src 'none';">
+<title>المحافظ المالية — FLL Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fll-design-system.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/lucide@0.468.0"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1)}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:250px;background:var(--navy);border-left:1px solid var(--border);padding:20px 0;position:fixed;top:0;right:0;height:100vh;overflow-y:auto;z-index:100}
+.sidebar .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);text-align:center}
+.sidebar .logo h2{color:var(--blue);font-size:16px;margin-bottom:4px}
+.sidebar .logo small{color:var(--muted);font-size:11px}
+.nav-group{margin:12px 0}
+.nav-group-label{padding:8px 20px;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:10px 20px;color:var(--text);text-decoration:none;font-size:13px;transition:all .2s;border-right:3px solid transparent}
+.nav-link:hover{background:rgba(56,189,248,0.05);color:var(--blue)}
+.nav-link.active{background:rgba(56,189,248,0.1);color:var(--blue);border-right-color:var(--blue)}
+.main{margin-right:250px;flex:1;padding:24px;min-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-header h1{font-size:22px;color:var(--text);display:flex;align-items:center;gap:8px}
+.page-header h1 i{color:var(--blue)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(10px);border-top:3px solid var(--blue)}
+.stat-card.green{border-top-color:var(--green)}
+.stat-card.gold{border-top-color:var(--gold)}
+.stat-card.red{border-top-color:var(--red)}
+.stat-card.purple{border-top-color:var(--purple)}
+.stat-label{color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-sub{color:var(--muted);font-size:11px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.card h3{color:var(--text);font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(56,189,248,0.08);color:var(--blue);font-weight:600;padding:10px 12px;text-align:right;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:hover td{background:rgba(56,189,248,0.03)}
+.badge{padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:#86efac}
+.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}
+.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}
+.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--blue-deep);color:white}
+.btn-primary:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.search-input{background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;width:250px}
+.search-input::placeholder{color:var(--muted)}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--navy);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto}
+.modal h3{color:var(--text);margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.form-input{width:100%;background:var(--navy-light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px}
+.form-input:focus{border-color:var(--blue);outline:none}
+@media(max-width:768px){.sidebar{display:none}.main{margin-right:0}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <h2>فيرست لاين لوجستيكس</h2>
+    <small>المحرك المالي</small>
+  </div>
+  <div id="sidebar-nav"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:auto">
+    <div style="font-size:12px;color:var(--muted)" id="user-info"></div>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-top:8px;width:100%">تسجيل خروج</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <h1><i data-lucide="wallet"></i> المحافظ المالية</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" class="search-input" placeholder="بحث بالاسم أو الرقم..." id="wallet-search" oninput="filterWallets()">
+      <button class="btn btn-primary" onclick="openModal('credit-modal')"><i data-lucide="plus" style="width:14px;height:14px"></i> إضافة رصيد</button>
+      <button class="btn btn-outline" onclick="loadWallets()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="wallet-stats">
+    <div class="stat-card"><div class="stat-label">إجمالي المحافظ</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card green"><div class="stat-label">إجمالي الأرصدة</div><div class="stat-value" id="s-balance">—</div><div class="stat-sub">ر.س</div></div>
+    <div class="stat-card gold"><div class="stat-label">إجمالي المدفوع</div><div class="stat-value" id="s-paid">—</div><div class="stat-sub">ر.س</div></div>
+    <div class="stat-card purple"><div class="stat-label">إجمالي المكتسب</div><div class="stat-value" id="s-earned">—</div><div class="stat-sub">ر.س</div></div>
+  </div>
+
+  <div class="card">
+    <h3><i data-lucide="list" style="width:16px;height:16px;color:var(--blue)"></i> جدول المحافظ</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>السائق</th><th>الرصيد</th><th>المعلق</th><th>المكتسب</th><th>المدفوع</th><th>الخصومات</th><th>آخر دفعة</th><th>إجراءات</th>
+        </tr></thead>
+        <tbody id="wallets-tbl"><tr><td colspan="8" class="loading">جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="ledger-section" style="display:none">
+    <h3><i data-lucide="scroll-text" style="width:16px;height:16px;color:var(--blue)"></i> سجل حركات المحفظة — <span id="ledger-driver"></span></h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th><th>الوصف</th><th>بواسطة</th>
+        </tr></thead>
+        <tbody id="ledger-tbl"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Credit/Debit Modal -->
+<div class="modal-overlay" id="credit-modal">
+<div class="modal">
+<h3>إضافة/خصم رصيد</h3>
+<div class="form-group"><label class="form-label">معرف السائق</label><input class="form-input" id="cd-driver" placeholder="driver ID"></div>
+<div class="form-group"><label class="form-label">نوع العملية</label><select class="form-input" id="cd-type"><option value="credit">إضافة (Credit)</option><option value="debit">خصم (Debit)</option></select></div>
+<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input class="form-input" id="cd-amount" type="number" step="0.01" min="0.01"></div>
+<div class="form-group"><label class="form-label">نوع المعاملة</label><select class="form-input" id="cd-txtype"><option value="earning">أرباح</option><option value="bonus">مكافأة</option><option value="penalty">جزاء</option><option value="deduction">خصم</option><option value="adjustment">تعديل</option></select></div>
+<div class="form-group"><label class="form-label">الوصف</label><input class="form-input" id="cd-desc" placeholder="سبب العملية"></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-primary" onclick="submitWalletOp()">تنفيذ</button>
+<button class="btn btn-outline" onclick="closeModal('credit-modal')">إلغاء</button>
+</div>
+</div>
+</div>
+
+<script src="/fll-shared.js"></script>
+<script src="/fll-rbac.js"></script>
+<script>
+const user=checkAuth();if(!user)throw'no auth';
+if(window.FLL_RBAC)FLL_RBAC.guardPage();
+
+// Setup nav
+document.getElementById('sidebar-nav').innerHTML=window.FLL_RBAC?FLL_RBAC.renderSidebarNav():'';
+document.getElementById('user-info').textContent=(user.name||user.email||'مستخدم')+' — '+(window.FLL_RBAC?FLL_RBAC.getUserRoleLabel():'');
+
+let allWallets=[];
+
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+
+function fmt(n){return parseFloat(n||0).toLocaleString('ar-SA',{minimumFractionDigits:2})}
+
+async function loadWallets(){
+  document.getElementById('wallets-tbl').innerHTML='<tr><td colspan="8" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/wallets');
+    allWallets=data.items||[];
+    renderWallets(allWallets);
+
+    // Stats
+    const totalBalance=allWallets.reduce((s,w)=>s+parseFloat(w.balance||0),0);
+    const totalPaid=allWallets.reduce((s,w)=>s+parseFloat(w.total_paid_out||0),0);
+    const totalEarned=allWallets.reduce((s,w)=>s+parseFloat(w.total_earned||0),0);
+    document.getElementById('s-total').textContent=allWallets.length;
+    document.getElementById('s-balance').textContent=fmt(totalBalance);
+    document.getElementById('s-paid').textContent=fmt(totalPaid);
+    document.getElementById('s-earned').textContent=fmt(totalEarned);
+  }catch(e){
+    document.getElementById('wallets-tbl').innerHTML='<tr><td colspan="8" class="empty">خطأ في تحميل البيانات</td></tr>';
+  }
+}
+
+function renderWallets(wallets){
+  if(!wallets.length){document.getElementById('wallets-tbl').innerHTML='<tr><td colspan="8" class="empty">لا توجد محافظ</td></tr>';return;}
+  document.getElementById('wallets-tbl').innerHTML=wallets.map(w=>`<tr>
+    <td><strong>${esc(w.driver_id||w.id)}</strong></td>
+    <td style="font-weight:700;color:${parseFloat(w.balance||0)>=0?'var(--green)':'var(--red)'}">
+      ${fmt(w.balance)} ر.س</td>
+    <td>${fmt(w.pending_balance)} ر.س</td>
+    <td>${fmt(w.total_earned)} ر.س</td>
+    <td>${fmt(w.total_paid_out)} ر.س</td>
+    <td>${fmt(w.total_deductions)} ر.س</td>
+    <td>${w.last_payout_date||'—'}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="showLedger('${esc(w.driver_id||w.id)}')">السجل</button></td>
+  </tr>`).join('');
+}
+
+function filterWallets(){
+  const q=document.getElementById('wallet-search').value.toLowerCase();
+  const filtered=allWallets.filter(w=>(w.driver_id||w.id||'').toLowerCase().includes(q));
+  renderWallets(filtered);
+}
+
+async function showLedger(driverId){
+  document.getElementById('ledger-section').style.display='block';
+  document.getElementById('ledger-driver').textContent=driverId;
+  document.getElementById('ledger-tbl').innerHTML='<tr><td colspan="6" class="loading">جاري التحميل...</td></tr>';
+  try{
+    const data=await fllGet('/finance/wallets/'+driverId+'/ledger');
+    const entries=data.items||[];
+    if(!entries.length){document.getElementById('ledger-tbl').innerHTML='<tr><td colspan="6" class="empty">لا توجد حركات</td></tr>';return;}
+    const typeLabels={earning:'أرباح',bonus:'مكافأة',penalty:'جزاء',deduction:'خصم',payout:'دفعة',adjustment:'تعديل',reversal:'عكس'};
+    document.getElementById('ledger-tbl').innerHTML=entries.map(e=>`<tr>
+      <td>${e.posted_at?new Date(e.posted_at).toLocaleDateString('ar-SA'):'—'}</td>
+      <td><span class="badge ${parseFloat(e.amount)>=0?'badge-green':'badge-red'}">${typeLabels[e.transaction_type]||e.transaction_type}</span></td>
+      <td style="font-weight:700;color:${parseFloat(e.amount)>=0?'var(--green)':'var(--red)'}">${parseFloat(e.amount)>=0?'+':''}${fmt(e.amount)} ر.س</td>
+      <td>${fmt(e.running_balance)} ر.س</td>
+      <td>${esc(e.description_ar||e.description||'—')}</td>
+      <td>${esc(e.posted_by||'—')}</td>
+    </tr>`).join('');
+  }catch(e){
+    document.getElementById('ledger-tbl').innerHTML='<tr><td colspan="6" class="empty">خطأ في تحميل السجل</td></tr>';
+  }
+  document.getElementById('ledger-section').scrollIntoView({behavior:'smooth'});
+}
+
+async function submitWalletOp(){
+  const driverId=document.getElementById('cd-driver').value.trim();
+  const type=document.getElementById('cd-type').value;
+  const amount=document.getElementById('cd-amount').value;
+  const txType=document.getElementById('cd-txtype').value;
+  const desc=document.getElementById('cd-desc').value;
+  if(!driverId||!amount){showToast('يلزم تحديد السائق والمبلغ','error');return;}
+  try{
+    await fllPost('/finance/wallets/'+driverId+'/'+type,{
+      amount:parseFloat(amount),
+      transaction_type:txType,
+      description_ar:desc
+    });
+    showToast('تمت العملية بنجاح','success');
+    closeModal('credit-modal');
+    loadWallets();
+  }catch(e){
+    showToast('خطأ: '+e.message,'error');
+  }
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+loadWallets();
+try{lucide.createIcons()}catch(e){}
+</script>
+</body>
+</html>

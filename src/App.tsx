@@ -16,6 +16,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider as AdminAuthProvider } from "@/lib/admin/auth";
 
+// ── Login (Cognito) ──────────────────────────────────────────────────────────
+import UnifiedLogin from "@/pages/UnifiedLogin";
+
 // ── Courier / public onboarding ───────────────────────────────────────────────
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
@@ -24,7 +27,6 @@ import ApplicationStatus from "@/pages/courier/ApplicationStatus";
 // ── Admin panel (exists) ──────────────────────────────────────────────────────
 import { AdminLayout } from "@/components/admin/Layout";
 import { PermissionGuard } from "@/components/admin/PermissionGuard";
-import AdminLogin from "@/pages/admin/Login";
 import AdminPanelDashboard from "@/pages/admin/Dashboard";
 import AdminFinance from "@/pages/admin/Finance";
 import AdminStaff from "@/pages/admin/Staff";
@@ -44,6 +46,9 @@ import CashFlow from "@/pages/admin/CashFlow";
 import FinancialReports from "@/pages/admin/FinancialReports";
 import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 
+// ── Guides / Showcase pages ─────────────────────────────────────────────────
+import ReactHooksGuide from "@/pages/guides/ReactHooksGuide";
+import FitnessProfile from "@/pages/guides/FitnessProfile";
 // ── Unified Login Portal ──────────────────────────────────────────────────────
 import UnifiedPortal from "@/pages/UnifiedPortal";
 
@@ -62,6 +67,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* ── Admin login (Cognito) ── */}
+          <Route path="/admin/login" element={<UnifiedLogin />} />
           {/* ── Unified Login Portal (Staff & Courier selection) ── */}
           <Route
             path="/unified-login"
@@ -113,6 +120,13 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
 
+          {/* ── Login pages ── */}
+          <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
+          <Route path="/unified-login" element={<UnifiedLogin />} />
+
+          {/* ── Guides / Showcase (public) ── */}
+          <Route path="/guides/react-hooks" element={<ReactHooksGuide />} />
+          <Route path="/guides/fitness-profile" element={<FitnessProfile />} />
           {/* ── Login pages — backwards compatibility ── */}
           <Route path="/login" element={<LoginShell title="تسجيل دخول السائقين" />} />
 

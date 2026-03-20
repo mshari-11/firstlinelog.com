@@ -54,8 +54,8 @@ export function AdminSidebar() {
     ? user.full_name.trim().split(" ").slice(0, 2).map((w: string) => w[0]).join("")
     : "م";
 
-  // Load page config from PageBuilder (localStorage)
-  const pageConfig = loadConfig();
+  // Load page config from PageBuilder (localStorage) — memoized to avoid reading on every render
+  const [pageConfig] = useState(() => loadConfig());
   const enabledPages = pageConfig
     .filter((p) => p.enabled)
     .filter((p) => !p.permission || hasPermission(p.permission as any))

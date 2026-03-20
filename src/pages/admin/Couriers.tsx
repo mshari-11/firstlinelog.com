@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/admin/auth";
 import {
   Users,
   Plus,
@@ -112,7 +113,7 @@ interface VerificationChecks {
   contact: boolean;
 }
 
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 const courierStatusConfig: Record<string, { label: string; variant: "success" | "warning" | "info" | "muted" }> = {
   active: { label: "نشط", variant: "success" },
@@ -188,6 +189,7 @@ function DocBadge({ label, url, icon: Icon }: { label: string; url?: string; ico
 
 export default function AdminCouriers() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"couriers" | "applications">("couriers");
   const [couriers, setCouriers] = useState<Courier[]>(mockCouriers);
   const [courierLoading, setCourierLoading] = useState(true);
@@ -270,7 +272,7 @@ export default function AdminCouriers() {
   async function updateApplicationReview(app: DriverApplication, patch: Partial<DriverApplication>) {
     const payload = {
       ...patch,
-      reviewed_by: "admin@fll.sa",
+      reviewed_by: user?.email || "admin",
       reviewed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -347,7 +349,7 @@ export default function AdminCouriers() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ admin_email: "admin@fll.sa" }),
+        body: JSON.stringify({ admin_email: user?.email || "admin" }),
       });
       if (res.ok) {
         setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "approved" as const } : a)));
@@ -388,7 +390,7 @@ export default function AdminCouriers() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ admin_email: "admin@fll.sa", reason }),
+        body: JSON.stringify({ admin_email: user?.email || "admin", reason }),
       });
       if (res.ok) {
         setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "rejected" as const, admin_notes: reason } : a)));

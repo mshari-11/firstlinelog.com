@@ -4,8 +4,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 
-const AUTH_API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/auth";
-const ADMIN_REDIRECT_URL = "https://fll.sa/admin-panel/dashboard";
+import { AUTH_API_BASE } from "@/lib/api";
+const ADMIN_REDIRECT_URL = window.location.origin + "/admin-panel/dashboard";
 
 export type UserRole = "admin" | "owner" | "staff" | "courier";
 
@@ -64,11 +64,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchUserProfile(userId: string) {
     if (!supabase) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("users")
       .select("id, email, role, full_name, department_id")
       .eq("id", userId)
       .single();
+
+    if (error) {
+      console.error("Failed to fetch user profile:", error.message);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
 
     if (data) {
       const baseUser: AdminUser = {

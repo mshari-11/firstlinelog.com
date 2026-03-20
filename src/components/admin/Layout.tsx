@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/admin/auth";
 import { AdminSidebar } from "./Sidebar";
 import { AdminAiAssistant } from "./AiAssistant";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Clock, ChevronLeft, Zap } from "lucide-react";
+import { Clock, ChevronLeft } from "lucide-react";
 
 const routeNames: Record<string, string> = {
   dashboard: "لوحة التحكم",

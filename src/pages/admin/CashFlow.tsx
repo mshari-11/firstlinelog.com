@@ -133,7 +133,7 @@ export default function CashFlowAnalysis() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="period" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
               <YAxis yAxisId="left" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-              <YAxis yAxisId="right" orientation="left" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
               <Tooltip contentStyle={chartTooltipStyle} />
               <Legend />
               <Bar yAxisId="left" dataKey="operatingExpenses" fill="var(--con-danger)" name="المصاريف" radius={[4, 4, 0, 0]} />

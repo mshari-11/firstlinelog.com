@@ -74,31 +74,32 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchOrders() {
-      try {
-        const { data, error } = await supabase.from("orders").select("*, couriers(full_name)").order("created_at", { ascending: false }).limit(100);
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((o: any) => ({
-            id: `#${o.id}`,
-            courier_name: o.couriers?.full_name || "غير محدد",
-            platform: o.platform,
-            customer_name: o.customer_name || "غير محدد",
-            customer_phone: o.customer_phone || "",
-            address: o.delivery_address || "",
-            status: o.status,
-            amount: o.amount || 0,
-            created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
-          }));
-          setOrders(mapped);
-        }
-      } catch {
-      } finally {
-        setLoading(false);
+  async function fetchOrders() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.from("orders").select("*, couriers(full_name)").order("created_at", { ascending: false }).limit(100);
+      if (!error && data && data.length > 0) {
+        const mapped = data.map((o: any) => ({
+          id: `#${o.id}`,
+          courier_name: o.couriers?.full_name || "غير محدد",
+          platform: o.platform,
+          customer_name: o.customer_name || "غير محدد",
+          customer_phone: o.customer_phone || "",
+          address: o.delivery_address || "",
+          status: o.status,
+          amount: o.amount || 0,
+          created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+        }));
+        setOrders(mapped);
       }
+    } catch {
+      // keep existing data on error
+    } finally {
+      setLoading(false);
     }
-    fetchOrders();
-  }, []);
+  }
+
+  useEffect(() => { fetchOrders(); }, []);
 
   const filtered = orders.filter((o) => {
     const matchSearch = o.id.includes(search) || o.courier_name.includes(search) || o.customer_name.includes(search);
@@ -122,7 +123,7 @@ export default function AdminOrders() {
         icon={Package}
         title="الطلبات"
         subtitle="تتبع ومتابعة جميع طلبات التوصيل"
-        actions={<Button variant="ghost" icon={RefreshCw} onClick={() => window.location.reload()}>تحديث</Button>}
+        actions={<Button variant="ghost" icon={RefreshCw} onClick={() => fetchOrders()}>تحديث</Button>}
       />
 
       <KPIGrid>

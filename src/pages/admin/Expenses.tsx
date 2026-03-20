@@ -45,13 +45,20 @@ const recentExpenses = [
 const colorPalette = ["#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280"];
 
 // ─── Expense Modal ───────────────────────────────────────────────────────────
-function ExpenseModal({ onClose }: { onClose: () => void }) {
+function ExpenseModal({ onClose, onSave }: { onClose: () => void; onSave: (data: { category: string; description: string; amount: number; date: string }) => void }) {
   const [formData, setFormData] = useState({
     category: "الوقود والصيانة",
     description: "",
     amount: "",
     date: new Date().toISOString().split("T")[0],
   });
+
+  function handleSave() {
+    const amount = Number(formData.amount);
+    if (!formData.description || !amount || amount <= 0) return;
+    onSave({ ...formData, amount });
+    onClose();
+  }
 
   const categories = ["رواتب السائقين", "عمولات المنصة", "الوقود والصيانة", "التأمين", "إداري", "أخرى"];
 
@@ -114,7 +121,7 @@ function ExpenseModal({ onClose }: { onClose: () => void }) {
             </div>
           ))}
           <button
-            onClick={onClose}
+            onClick={handleSave}
             style={{
               width: "100%", padding: 12, marginTop: 8,
               background: "var(--con-brand)", border: "none", borderRadius: 8,
@@ -267,7 +274,7 @@ export default function Expenses() {
       {/* Recent Expenses */}
       <DataTable title="آخر المصروفات" columns={expenseColumns} data={recentExpenses} />
 
-      {showModal && <ExpenseModal onClose={() => setShowModal(false)} />}
+      {showModal && <ExpenseModal onClose={() => setShowModal(false)} onSave={(data) => { console.log("Expense saved:", data); /* TODO: save to Supabase */ }} />}
     </div>
   );
 }

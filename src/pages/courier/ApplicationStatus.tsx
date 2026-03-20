@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ApplicationRecord {

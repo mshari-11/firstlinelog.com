@@ -109,7 +109,7 @@ function vehicleLabel(v: string): string {
   return map[v] || v;
 }
 
-const PLATFORM_API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE as PLATFORM_API_BASE } from "@/lib/api";
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function CourierPortal() {

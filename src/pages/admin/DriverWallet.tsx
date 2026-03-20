@@ -190,7 +190,7 @@ export default function DriverWallet() {
         p_description: "صرف يدوي من لوحة الإدارة",
         p_reference_type: "manual_payout",
         p_reference_id: `MAN-${Date.now()}`,
-        p_created_by: null,
+        p_created_by: "admin",
       });
       if (error) {
         const financeInsert = await supabase.from("finance").insert({
@@ -235,7 +235,7 @@ export default function DriverWallet() {
 
   async function editSelectedWallet() {
     if (!selected) return;
-    window.confirm(selected.is_frozen ? "هل تريد فك تجميد المحفظة؟" : "هل تريد تجميد المحفظة؟");
+    if (!window.confirm(selected.is_frozen ? "هل تريد فك تجميد المحفظة؟" : "هل تريد تجميد المحفظة؟")) return;
     const nextFrozen = !selected.is_frozen;
     const reason = nextFrozen ? (window.prompt("سبب التجميد:", selected.freeze_reason || "مراجعة إدارية") || "مراجعة إدارية") : undefined;
     if (supabase) {
@@ -297,7 +297,7 @@ export default function DriverWallet() {
         setBatches(batchesRes.data);
       }
 
-      const dedicatedTablesAvailable = !walletsRes.error || !txnsRes.error || !batchesRes.error;
+      const dedicatedTablesAvailable = !walletsRes.error && !txnsRes.error && !batchesRes.error;
       if (!dedicatedTablesAvailable) {
         const [couriersRes, ordersRes, financeRes] = await Promise.all([
           supabase.from("couriers").select("id, full_name, phone, status"),
@@ -431,7 +431,7 @@ export default function DriverWallet() {
         <KpiCard label="إجمالي الأرصدة" value={fmt(totalBalance)}  sub={`+ ${fmt(totalPending)} معلق`} icon={Wallet}       variant="brand"   />
         <KpiCard label="إجمالي المكتسب" value={fmt(totalEarned)}   icon={TrendingUp}    variant="success" />
         <KpiCard label="عدد المحافظ"    value={String(wallets.length)} sub={frozenCount > 0 ? `${frozenCount} مجمدة` : undefined} icon={Layers} variant="info" />
-        <KpiCard label="آخر دفعة"       value={fmt(MOCK_BATCHES[1]?.total_amount ?? 0)} icon={CheckCircle2} variant="warning" />
+        <KpiCard label="آخر دفعة"       value={fmt(batches[0]?.total_amount ?? 0)} icon={CheckCircle2} variant="warning" />
       </div>
 
       {/* ── Tabs ── */}

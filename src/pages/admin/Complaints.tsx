@@ -58,7 +58,7 @@ interface ComplaintStats {
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 const STATUS_META: Record<ComplaintStatus, { label: string; badgeClass: string; icon: JSX.Element }> = {
   new:          { label: "جديدة",      badgeClass: "con-badge-info",    icon: <Clock size={12} /> },

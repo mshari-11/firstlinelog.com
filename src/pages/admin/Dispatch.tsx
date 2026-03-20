@@ -79,7 +79,7 @@ function normalizeOrder(raw: any): Order {
 }
 
 // ─── API base ─────────────────────────────────────────────────────────────────
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 // ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [

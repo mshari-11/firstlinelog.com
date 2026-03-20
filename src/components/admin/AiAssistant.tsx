@@ -3,7 +3,7 @@ import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 
-const CHAT_API_URL = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/ai/chat";
+import { CHAT_API_URL } from "@/lib/api";
 const ALLOWED_DEPARTMENTS = ["finance", "operations", "supervisors", "fleet", "hr", "المالية", "التشغيل", "المشرفين", "المركبات", "الموارد البشرية"];
 
 interface ChatMessage {

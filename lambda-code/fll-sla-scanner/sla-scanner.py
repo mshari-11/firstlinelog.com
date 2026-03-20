@@ -20,7 +20,7 @@ def handler(event,context):
    nt.put_item(Item={'notificationId':str(__import__('uuid').uuid4()),'recipientSub':'MSHARI_SUB','type':'complaint_escalated','payload':json.dumps({'complaintId':c.get('complaintId',''),'dept':dept,'hours':int(hours)}),  'channel':'in_app','createdAt':now.isoformat()})
    nt.put_item(Item={'notificationId':str(__import__('uuid').uuid4()),'recipientSub':'AHMED_SUB','type':'complaint_escalated','payload':json.dumps({'complaintId':c.get('complaintId',''),'dept':dept,'hours':int(hours)}),'channel':'in_app','createdAt':now.isoformat()})
    ct.update_item(Key={'complaintId':c['complaintId']},UpdateExpression='SET escalated48=:t,escalatedAt=:n',ExpressionAttributeValues={':t':True,':n':now.isoformat()})
-   try:ses.send_email(Source='no-reply@fll.sa',Destination={'ToAddresses':['admin@fll.sa']},Message={'Subject':{'Data':f'تصعيد شكوى - {c.get("complaintId","")[:8]}'},'Body':{'Text':{'Data':f'شكوى تجاوزت {sla48} ساعة بدون حل. القسم: {dept}'}}})
+   try:ses.send_email(Source='no-reply@fll.sa',Destination={'ToAddresses':['m_shaikhi@yahoo.com']},Message={'Subject':{'Data':f'تصعيد شكوى - {c.get("complaintId","")[:8]}'},'Body':{'Text':{'Data':f'شكوى تجاوزت {sla48} ساعة بدون حل. القسم: {dept}'}}})
    except:pass
    results['escalated']+=1
   elif hours>=sla24 and not c.get('reminded24'):

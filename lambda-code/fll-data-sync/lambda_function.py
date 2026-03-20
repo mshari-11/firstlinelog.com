@@ -37,7 +37,7 @@ CHAT_TABLE = os.environ.get("CHAT_TABLE", "fll-chat-history")
 FROM_EMAIL = os.environ.get("FROM_EMAIL", "FLL Platform <no-reply@fll.sa>")
 ADMIN_EMAILS = [
     e.strip()
-    for e in os.environ.get("ADMIN_EMAILS", "M.Z@FLL.SA,A.ALZAMIL@FLL.SA").split(",")
+    for e in os.environ.get("ADMIN_EMAILS", "m_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA").split(",")
     if e.strip()
 ]
 

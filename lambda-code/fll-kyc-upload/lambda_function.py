@@ -4,7 +4,7 @@ from datetime import datetime
 s3 = boto3.client('s3', region_name='me-south-1')
 ses = boto3.client('ses', region_name='me-south-1')
 BUCKET = 'fll-kyc-documents-230811072086'
-ADMIN_EMAILS = ['M.Z@FLL.SA', 'A.ALZAMIL@FLL.SA']
+ADMIN_EMAILS = ['m_shaikhi@yahoo.com', 'A.ALZAMIL@FLL.SA']
 
 
 def fll_email_template(subject_ar, intro_html, body_html, footer_note=None):

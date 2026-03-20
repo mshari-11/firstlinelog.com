@@ -18,7 +18,7 @@ BUCKET = os.environ.get("KYC_BUCKET", "fll-kyc-documents-230811072086")
 FROM_EMAIL = os.environ.get("FROM_EMAIL", "FLL Platform <no-reply@fll.sa>")
 ADMIN_EMAILS = [
     email.strip()
-    for email in os.environ.get("ADMIN_EMAILS", "M.Z@FLL.SA,A.ALZAMIL@FLL.SA").split(",")
+    for email in os.environ.get("ADMIN_EMAILS", "m_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA").split(",")
     if email.strip()
 ]
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")

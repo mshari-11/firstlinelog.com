@@ -23,7 +23,7 @@ class FLLMonitoringStack(Stack):
             topic_name="fll-alarm-notifications",
             display_name="FLL Platform Alerts",
         )
-        alarm_topic.add_subscription(subs.EmailSubscription("M.Z@FLL.SA"))
+        alarm_topic.add_subscription(subs.EmailSubscription("m_shaikhi@yahoo.com"))
         alarm_topic.add_subscription(subs.EmailSubscription("A.ALZAMIL@FLL.SA"))
 
         alarm_action = cw_actions.SnsAction(alarm_topic)

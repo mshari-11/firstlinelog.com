@@ -41,7 +41,7 @@ class FLLSecretsStack(Stack):
             description="FLL Platform — email service config",
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps({
                 "FROM_EMAIL": "FLL Platform <no-reply@fll.sa>",
-                "ADMIN_EMAILS": "M.Z@FLL.SA,A.ALZAMIL@FLL.SA",
+                "ADMIN_EMAILS": "m_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA",
             })),
         )
 

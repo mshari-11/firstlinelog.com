@@ -156,9 +156,8 @@ export default function CourierPortal() {
         .eq("id", user.id)
         .maybeSingle();
 
-      const authRole = (user.user_metadata as any)?.role;
       const inferredFullName = userData?.full_name || (user.user_metadata as any)?.full_name || "";
-      const isCourierAuth = userData?.role === "courier" || authRole === "courier" || authRole === "driver";
+      const isCourierAuth = userData?.role === "courier" || userData?.role === "driver";
 
       let courierData: any = null;
 

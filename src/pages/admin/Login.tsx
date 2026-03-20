@@ -221,8 +221,7 @@ export default function AdminLogin() {
     if (authUser) {
       const { data: profile } = await supabase
         .from("users").select("role").eq("id", authUser.id).maybeSingle();
-      const authRole = (authUser.user_metadata as any)?.role;
-      if (profile?.role === "courier" || authRole === "courier" || authRole === "driver") {
+      if (profile?.role === "courier" || profile?.role === "driver") {
         navigate("/courier/portal");
         return;
       }

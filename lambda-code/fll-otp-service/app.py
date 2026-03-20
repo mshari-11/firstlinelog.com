@@ -31,13 +31,18 @@ MAX_REQUESTS_PER_HOUR = 5
 ses = boto3.client('ses', region_name=SES_REGION)
 
 
+ALLOWED_ORIGINS = [
+    'https://fll.sa', 'https://www.fll.sa',
+    'http://localhost:5173', 'http://localhost:3000',
+]
+
 def cors(status, body):
     """Return response with CORS headers."""
     return {
         'statusCode': status,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': 'https://www.fll.sa',
+            'Access-Control-Allow-Origin': 'https://fll.sa',
             'Access-Control-Allow-Headers': 'content-type,authorization',
             'Access-Control-Allow-Methods': 'POST,OPTIONS'
         },

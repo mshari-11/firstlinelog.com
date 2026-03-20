@@ -38,7 +38,7 @@ def cors(status, body):
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json; charset=utf-8",
-            "Access-Control-Allow-Origin": "https://www.fll.sa",
+            "Access-Control-Allow-Origin": "https://fll.sa",
             "Access-Control-Allow-Headers": "content-type,authorization",
             "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         },

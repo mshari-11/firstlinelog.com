@@ -43,12 +43,22 @@ def get_secret_hash(username):
     dig = hmac.new(client_secret.encode('utf-8'), msg.encode('utf-8'), hashlib.sha256).digest()
     return base64.b64encode(dig).decode()
 
-def cors(status, body):
+ALLOWED_ORIGINS = [
+    'https://fll.sa', 'https://www.fll.sa',
+    'http://localhost:5173', 'http://localhost:3000',
+]
+
+def get_origin(event):
+    headers = event.get('headers', {}) if isinstance(event.get('headers'), dict) else {}
+    origin = headers.get('origin', headers.get('Origin', ''))
+    return origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
+
+def cors(status, body, event=None):
     return {
         'statusCode': status,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': 'https://www.fll.sa',
+            'Access-Control-Allow-Origin': get_origin(event) if event else ALLOWED_ORIGINS[0],
             'Access-Control-Allow-Headers': 'content-type,authorization',
             'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
         },

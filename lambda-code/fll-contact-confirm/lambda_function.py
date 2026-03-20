@@ -78,13 +78,13 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 200,
-            'headers': {'Content-Type':'application/json','Access-Control-Allow-Origin':'https://www.fll.sa'},
+            'headers': {'Content-Type':'application/json','Access-Control-Allow-Origin':'https://fll.sa'},
             'body': json.dumps({'success': True, 'message': 'تم إرسال رسالة التأكيد'}, ensure_ascii=False)
         }
     except Exception as e:
         print(f"Error: {e}")
         return {
             'statusCode': 500,
-            'headers': {'Content-Type':'application/json','Access-Control-Allow-Origin':'https://www.fll.sa'},
+            'headers': {'Content-Type':'application/json','Access-Control-Allow-Origin':'https://fll.sa'},
             'body': json.dumps({'error': 'حدث خطأ في إرسال التأكيد'})
         }

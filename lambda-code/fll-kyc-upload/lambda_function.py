@@ -68,4 +68,4 @@ def lambda_handler(event, context):
         return cors(500, {'error':'حدث خطأ في رفع المستند'})
 
 def cors(status, body):
-    return {'statusCode':status,'headers':{'Content-Type':'application/json','Access-Control-Allow-Origin':'https://www.fll.sa','Access-Control-Allow-Headers':'content-type','Access-Control-Allow-Methods':'POST,OPTIONS'},'body':json.dumps(body,ensure_ascii=False)}
+    return {'statusCode':status,'headers':{'Content-Type':'application/json','Access-Control-Allow-Origin':'https://fll.sa','Access-Control-Allow-Headers':'content-type','Access-Control-Allow-Methods':'POST,OPTIONS'},'body':json.dumps(body,ensure_ascii=False)}

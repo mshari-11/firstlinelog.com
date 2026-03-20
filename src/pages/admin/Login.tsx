@@ -177,7 +177,7 @@ export default function AdminLogin() {
     const res = await signIn(email.trim(), password);
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    
+
     // Password valid, now send OTP
     setSuccess("تم التحقق من بيانات المرور. جارٍ إرسال رمز التحقق...");
     setTimeout(async () => {
@@ -200,7 +200,7 @@ export default function AdminLogin() {
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    
+
     setSuccess("تم التحقق بنجاح!");
     go("success");
     setTimeout(() => redirectAfterAuth(), 1500);
@@ -220,8 +220,12 @@ export default function AdminLogin() {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (authUser) {
       const { data: profile } = await supabase
-        .from("users").select("role").eq("id", authUser.id).single();
-      if (profile?.role === "courier") { navigate("/courier/portal"); return; }
+        .from("users").select("role").eq("id", authUser.id).maybeSingle();
+      const authRole = (authUser.user_metadata as any)?.role;
+      if (profile?.role === "courier" || authRole === "courier" || authRole === "driver") {
+        navigate("/courier/portal");
+        return;
+      }
     }
     navigate("/admin-panel/dashboard");
   }

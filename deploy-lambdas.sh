@@ -294,6 +294,173 @@ deploy_onboarding() {
   echo ""
 }
 
+# ─── Deploy fll-data-sync ──────────────────────────────────────────────────────
+deploy_sync() {
+  echo ""
+  echo "═══ Deploying fll-data-sync ═══"
+  echo ""
+
+  local FUNC_NAME="fll-data-sync"
+  local SRC_DIR="${LAMBDA_DIR}/fll-data-sync"
+  local ZIP_FILE="/tmp/fll-data-sync.zip"
+
+  # Check source
+  [ -f "${SRC_DIR}/lambda_function.py" ] || fail "Source not found: ${SRC_DIR}/lambda_function.py"
+
+  # Create zip
+  log "Packaging ${FUNC_NAME}..."
+  rm -f "${ZIP_FILE}"
+  cd "${SRC_DIR}"
+  zip -j "${ZIP_FILE}" lambda_function.py
+  cd "${SCRIPT_DIR}"
+
+  # Check if function exists
+  local func_exists
+  func_exists=$(aws lambda get-function --function-name "${FUNC_NAME}" --region "${REGION}" 2>/dev/null && echo "yes" || echo "no")
+
+  local SUPABASE_URL_VAL="${SUPABASE_URL:-https://djebhztfewjfyyoortvv.supabase.co}"
+  local SUPABASE_KEY_VAL="${SUPABASE_SERVICE_KEY:-}"
+
+  local ENV_VARS="AWS_REGION_NAME=${REGION}"
+  ENV_VARS+=",SUPABASE_URL=${SUPABASE_URL_VAL}"
+  ENV_VARS+=",USER_POOL_ID=me-south-1_aJtmQ0QrN"
+  ENV_VARS+=",KYC_BUCKET=fll-kyc-documents-230811072086"
+  ENV_VARS+=",CHAT_TABLE=fll-chat-history"
+  ENV_VARS+=",FROM_EMAIL=FLL Platform <no-reply@fll.sa>"
+  ENV_VARS+=",ADMIN_EMAILS=M.Z@FLL.SA\,A.ALZAMIL@FLL.SA"
+  ENV_VARS+=",LOCATION_RETENTION_HOURS=48"
+  ENV_VARS+=",APPLICATION_EXPIRY_DAYS=30"
+  ENV_VARS+=",BATCH_SIZE=100"
+
+  if [ -n "${SUPABASE_KEY_VAL}" ]; then
+    ENV_VARS+=",SUPABASE_SERVICE_KEY=${SUPABASE_KEY_VAL}"
+  fi
+
+  if [ "${func_exists}" = "no" ]; then
+    log "Creating Lambda function: ${FUNC_NAME}..."
+
+    aws lambda create-function \
+      --function-name "${FUNC_NAME}" \
+      --runtime python3.12 \
+      --handler "lambda_function.lambda_handler" \
+      --role "${ROLE_ARN}" \
+      --zip-file "fileb://${ZIP_FILE}" \
+      --timeout 300 \
+      --memory-size 512 \
+      --region "${REGION}" \
+      --environment "Variables={${ENV_VARS}}" \
+      --no-cli-pager
+
+    log "Waiting for function to be active..."
+    aws lambda wait function-active-v2 \
+      --function-name "${FUNC_NAME}" \
+      --region "${REGION}"
+  else
+    log "Updating existing Lambda: ${FUNC_NAME}..."
+    aws lambda update-function-code \
+      --function-name "${FUNC_NAME}" \
+      --zip-file "fileb://${ZIP_FILE}" \
+      --region "${REGION}" \
+      --no-cli-pager
+
+    aws lambda wait function-updated \
+      --function-name "${FUNC_NAME}" \
+      --region "${REGION}"
+
+    log "Updating environment..."
+    aws lambda update-function-configuration \
+      --function-name "${FUNC_NAME}" \
+      --timeout 300 \
+      --memory-size 512 \
+      --region "${REGION}" \
+      --environment "Variables={${ENV_VARS}}" \
+      --no-cli-pager
+
+    aws lambda wait function-updated \
+      --function-name "${FUNC_NAME}" \
+      --region "${REGION}"
+  fi
+
+  # ── Setup EventBridge Scheduled Rules ──
+  local LAMBDA_ARN="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${FUNC_NAME}"
+
+  # Rule 1: Full sync every 6 hours
+  log "Creating EventBridge rule: fll-data-sync-full (every 6 hours)..."
+  aws events put-rule \
+    --name "fll-data-sync-full" \
+    --schedule-expression "rate(6 hours)" \
+    --state ENABLED \
+    --description "FLL full data sync — Supabase <> AWS (every 6 hours)" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  aws events put-targets \
+    --rule "fll-data-sync-full" \
+    --targets "Id=fll-data-sync-full-target,Arn=${LAMBDA_ARN}" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  # Rule 2: Financial pipeline every 1 hour
+  log "Creating EventBridge rule: fll-data-sync-finance (every hour)..."
+  aws events put-rule \
+    --name "fll-data-sync-finance" \
+    --schedule-expression "rate(1 hour)" \
+    --state ENABLED \
+    --description "FLL financial pipeline processing (every hour)" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  aws events put-targets \
+    --rule "fll-data-sync-finance" \
+    --targets "Id=fll-data-sync-finance-target,Arn=${LAMBDA_ARN},Input={\"tasks\":[\"financial_pipeline\",\"wallet_reconciliation\"]}" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  # Rule 3: Location cleanup every 12 hours
+  log "Creating EventBridge rule: fll-data-sync-cleanup (every 12 hours)..."
+  aws events put-rule \
+    --name "fll-data-sync-cleanup" \
+    --schedule-expression "rate(12 hours)" \
+    --state ENABLED \
+    --description "FLL location cleanup and application expiry (every 12 hours)" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  aws events put-targets \
+    --rule "fll-data-sync-cleanup" \
+    --targets "Id=fll-data-sync-cleanup-target,Arn=${LAMBDA_ARN},Input={\"tasks\":[\"location_cleanup\",\"application_expiry\"]}" \
+    --region "${REGION}" \
+    --no-cli-pager
+
+  # Add Lambda permissions for EventBridge
+  for rule_name in "fll-data-sync-full" "fll-data-sync-finance" "fll-data-sync-cleanup"; do
+    aws lambda add-permission \
+      --function-name "${FUNC_NAME}" \
+      --statement-id "eventbridge-${rule_name}" \
+      --action "lambda:InvokeFunction" \
+      --principal "events.amazonaws.com" \
+      --source-arn "arn:aws:events:${REGION}:${ACCOUNT_ID}:rule/${rule_name}" \
+      --region "${REGION}" \
+      --no-cli-pager 2>/dev/null || log "Permission already exists for ${rule_name}"
+  done
+
+  if [ -z "${SUPABASE_KEY_VAL}" ]; then
+    warn "SUPABASE_SERVICE_KEY not set! Sync will fail without it."
+  fi
+
+  log "${FUNC_NAME} deployed successfully!"
+  echo ""
+  echo "EventBridge Schedules:"
+  echo "  Every 6h  → Full sync (all 10 tasks)"
+  echo "  Every 1h  → Financial pipeline + wallet reconciliation"
+  echo "  Every 12h → Location cleanup + application expiry"
+  echo ""
+  echo "Manual invoke:"
+  echo "  aws lambda invoke --function-name ${FUNC_NAME} --region ${REGION} --payload '{}' /dev/stdout"
+  echo "  aws lambda invoke --function-name ${FUNC_NAME} --region ${REGION} --payload '{\"task\":\"financial_pipeline\"}' /dev/stdout"
+  echo ""
+}
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 case "${1:-all}" in
   auth)
@@ -302,12 +469,16 @@ case "${1:-all}" in
   onboarding)
     deploy_onboarding
     ;;
+  sync)
+    deploy_sync
+    ;;
   all)
     deploy_auth
     deploy_onboarding
+    deploy_sync
     ;;
   *)
-    echo "Usage: $0 {auth|onboarding|all}"
+    echo "Usage: $0 {auth|onboarding|sync|all}"
     exit 1
     ;;
 esac

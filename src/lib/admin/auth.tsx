@@ -1,9 +1,11 @@
 /**
  * نظام المصادقة للوحة الإدارة
- * OTP temporarily disabled — will be re-enabled later
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+
+const AUTH_API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/auth";
+const ADMIN_REDIRECT_URL = "https://fll.sa/admin-panel/dashboard";
 
 export type UserRole = "admin" | "owner" | "staff" | "courier";
 
@@ -22,6 +24,7 @@ export interface AdminUser {
   role: UserRole;
   full_name: string;
   department_id?: string;
+  department_name?: string;
   permissions?: StaffPermissions;
   is_active?: boolean;
 }
@@ -30,9 +33,8 @@ interface AuthContextType {
   user: AdminUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  // OTP temporarily disabled — will be re-enabled later
-  // signInWithOtp: (email: string) => Promise<{ error?: string }>;
-  // verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
+  signInWithOtp: (email: string) => Promise<{ error?: string }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string; redirectUrl?: string }>;
   signOut: () => Promise<void>;
   hasPermission: (key: keyof StaffPermissions) => boolean;
 }
@@ -80,13 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.role === "staff") {
         const { data: profile } = await supabase
           .from("staff_profiles")
-          .select("permissions, is_active")
+          .select("permissions, is_active, departments(name, name_ar)")
           .eq("user_id", userId)
           .single();
 
         if (profile) {
           baseUser.permissions = profile.permissions as StaffPermissions;
           baseUser.is_active = profile.is_active;
+          baseUser.department_name = (profile as any).departments?.name || (profile as any).departments?.name_ar;
         }
       }
 
@@ -109,24 +112,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   }
 
-  // OTP temporarily disabled — will be re-enabled later
-  // async function signInWithOtp(email: string) {
-  //   if (!supabase) return { error: "Supabase غير متصل" };
-  //   const { error } = await supabase.auth.signInWithOtp({
-  //     email,
-  //     options: { shouldCreateUser: false },
-  //   });
-  //   if (error) return { error: "تعذّر إرسال رمز التحقق. تأكد من أن البريد مسجّل في النظام." };
-  //   return {};
-  // }
+  async function signInWithOtp(email: string) {
+    try {
+      const res = await fetch(`${AUTH_API_BASE}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: data.message || "تعذّر إرسال رمز التحقق" };
+      return {};
+    } catch {
+      return { error: "تعذّر إرسال رمز التحقق. تأكد من أن البريد مسجّل في النظام." };
+    }
+  }
 
-  // OTP temporarily disabled — will be re-enabled later
-  // async function verifyEmailOtp(email: string, token: string) {
-  //   if (!supabase) return { error: "Supabase غير متصل" };
-  //   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
-  //   if (error) return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
-  //   return {};
-  // }
+  async function verifyEmailOtp(email: string, token: string) {
+    if (!supabase) return { error: "Supabase غير متصل" };
+    try {
+      const verifyRes = await fetch(`${AUTH_API_BASE}/verify-custom-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: token }),
+      });
+      const verifyData = await verifyRes.json().catch(() => ({}));
+      if (!verifyRes.ok) return { error: verifyData.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+
+      const tokenHash = verifyData.token_hash;
+      const type = verifyData.type || "magiclink";
+      if (!tokenHash) return { error: "تم التحقق لكن تعذر إنشاء جلسة الدخول" };
+
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type,
+      });
+      if (error) return { error: "تم التحقق لكن تعذر تسجيل الدخول" };
+      return { redirectUrl: ADMIN_REDIRECT_URL };
+    } catch {
+      return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+    }
+  }
 
   async function signOut() {
     if (!supabase) return;
@@ -135,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, hasPermission }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signInWithOtp, verifyEmailOtp, signOut, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

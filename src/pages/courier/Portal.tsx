@@ -6,7 +6,7 @@
  * Route: /courier/portal
  * Design: .fll-console enterprise tokens (IBM Carbon / Cloudscape)
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
@@ -16,6 +16,7 @@ import {
   ChevronLeft, Truck, CreditCard, BarChart3,
   Bell, Settings, Shield, ArrowUpRight,
   ArrowDownRight, Calendar, Hash, Building2,
+  LocateFixed, Radio,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -108,6 +109,8 @@ function vehicleLabel(v: string): string {
   return map[v] || v;
 }
 
+const PLATFORM_API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function CourierPortal() {
   const navigate = useNavigate();
@@ -119,6 +122,11 @@ export default function CourierPortal() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [userEmail, setUserEmail] = useState("");
+  const [trackingEnabled, setTrackingEnabled] = useState(localStorage.getItem("fll_tracking_enabled") === "1");
+  const [trackingStatus, setTrackingStatus] = useState<"idle" | "sharing" | "error">("idle");
+  const [trackingMessage, setTrackingMessage] = useState("");
+  const [lastLocationAt, setLastLocationAt] = useState("");
+  const watchIdRef = useRef<number | null>(null);
 
   // ── Auth check + data load ──
   useEffect(() => {
@@ -135,7 +143,7 @@ export default function CourierPortal() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/admin/login");
+        navigate("/login");
         return;
       }
 
@@ -146,44 +154,78 @@ export default function CourierPortal() {
         .from("users")
         .select("id, role, full_name")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (!userData || userData.role !== "courier") {
+      const authRole = (user.user_metadata as any)?.role;
+      const inferredFullName = userData?.full_name || (user.user_metadata as any)?.full_name || "";
+      const isCourierAuth = userData?.role === "courier" || authRole === "courier" || authRole === "driver";
+
+      let courierData: any = null;
+
+      if (user.email) {
+        const { data } = await supabase
+          .from("couriers")
+          .select("*")
+          .eq("email", user.email)
+          .limit(1)
+          .maybeSingle();
+        courierData = data;
+      }
+
+      if (!courierData && user.phone) {
+        const { data } = await supabase
+          .from("couriers")
+          .select("*")
+          .eq("phone", user.phone)
+          .limit(1)
+          .maybeSingle();
+        courierData = data;
+      }
+
+      if (!courierData) {
+        const { data } = await supabase
+          .from("couriers")
+          .select("*")
+          .eq("full_name", inferredFullName)
+          .limit(1)
+          .maybeSingle();
+        courierData = data;
+      }
+
+      if (!isCourierAuth && !courierData) {
         setAuthError("ليس لديك صلاحية الوصول لبوابة المناديب");
         setLoading(false);
         return;
       }
 
-      // Load courier profile by matching user name or email
-      const { data: courierData } = await supabase
-        .from("couriers")
-        .select("*")
-        .or(`phone.eq.${user.phone || ""},full_name.eq.${userData.full_name}`)
-        .limit(1)
-        .single();
-
       if (courierData) {
         setProfile(courierData as CourierProfile);
 
-        // Load wallet
-        const { data: walletData } = await supabase
-          .from("driver_wallets")
-          .select("*")
-          .eq("driver_id", courierData.id)
-          .single();
-
-        if (walletData) {
-          setWallet(walletData as WalletData);
-
-          // Load transactions
-          const { data: txns } = await supabase
-            .from("wallet_transactions")
-            .select("id, event_type, amount, balance_after, description, created_at")
+        try {
+          const { data: walletData } = await supabase
+            .from("driver_wallets")
+            .select("*")
             .eq("driver_id", courierData.id)
-            .order("created_at", { ascending: false })
-            .limit(50);
+            .maybeSingle();
 
-          if (txns) setTransactions(txns as WalletTransaction[]);
+          if (walletData) {
+            setWallet(walletData as WalletData);
+
+            const { data: txns } = await supabase
+              .from("wallet_transactions")
+              .select("id, event_type, amount, balance_after, description, created_at")
+              .eq("driver_id", courierData.id)
+              .order("created_at", { ascending: false })
+              .limit(50);
+
+            if (txns) setTransactions(txns as WalletTransaction[]);
+          } else {
+            setWallet(null);
+            setTransactions([]);
+          }
+        } catch {
+          setWallet(null);
+          setTransactions([]);
         }
       }
     } catch (err) {
@@ -195,9 +237,134 @@ export default function CourierPortal() {
   }
 
   async function handleLogout() {
+    await markOffline();
+    stopTracking();
     if (supabase) await supabase.auth.signOut();
-    navigate("/admin/login");
+    navigate("/login");
   }
+
+  async function pushLocation(position: GeolocationPosition, online = true) {
+    if (!profile) return;
+    const coords = position.coords;
+    const payload = {
+      driver_id: profile.id,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      accuracy_meters: coords.accuracy,
+      heading: Number.isFinite(coords.heading) ? coords.heading : null,
+      speed_mps: Number.isFinite(coords.speed) ? coords.speed : null,
+      is_online: online,
+      source: "courier_portal",
+      updated_at: new Date().toISOString(),
+    };
+    let saved = false;
+    if (supabase) {
+      const { error } = await supabase.from("driver_locations").upsert(payload, { onConflict: "driver_id" });
+      saved = !error;
+    }
+    if (!saved) {
+      try {
+        const apiPayload = {
+          id: profile.id,
+          driverId: profile.id,
+          fullName: profile.full_name,
+          full_name: profile.full_name,
+          phone: profile.phone,
+          city: profile.city,
+          vehicleType: profile.vehicle_type,
+          status: online ? "available" : "offline",
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          lat: coords.latitude,
+          lng: coords.longitude,
+          updatedAt: new Date().toISOString(),
+        };
+        const putRes = await fetch(`${PLATFORM_API_BASE}/api/drivers/${profile.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(apiPayload),
+        });
+        if (!putRes.ok) {
+          await fetch(`${PLATFORM_API_BASE}/api/drivers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(apiPayload),
+          });
+        }
+        saved = true;
+      } catch {
+        saved = false;
+      }
+    }
+    if (saved) {
+      setLastLocationAt(new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }));
+      setTrackingStatus("sharing");
+      setTrackingMessage("يتم تحديث موقعك مباشرة للإدارة");
+    }
+  }
+
+  async function markOffline() {
+    if (!profile) return;
+    try {
+      if (supabase) {
+        await supabase
+          .from("driver_locations")
+          .upsert({
+            driver_id: profile.id,
+            latitude: 0,
+            longitude: 0,
+            is_online: false,
+            source: "courier_portal",
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "driver_id" });
+      }
+      await fetch(`${PLATFORM_API_BASE}/api/drivers/${profile.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "offline", updatedAt: new Date().toISOString() }),
+      }).catch(() => {});
+    } catch {
+      // best effort
+    }
+  }
+
+  function stopTracking() {
+    if (watchIdRef.current != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setTrackingEnabled(false);
+    localStorage.setItem("fll_tracking_enabled", "0");
+    setTrackingStatus("idle");
+    setTrackingMessage("تم إيقاف مشاركة الموقع");
+  }
+
+  function startTracking() {
+    if (!navigator.geolocation) {
+      setTrackingStatus("error");
+      setTrackingMessage("المتصفح لا يدعم خدمة الموقع");
+      return;
+    }
+    setTrackingEnabled(true);
+    localStorage.setItem("fll_tracking_enabled", "1");
+    setTrackingMessage("جاري طلب صلاحية الموقع...");
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => { pushLocation(position, true); },
+      () => {
+        setTrackingStatus("error");
+        setTrackingMessage("تعذر الوصول إلى الموقع. فعّل إذن الموقع من المتصفح.");
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
+    );
+  }
+
+  useEffect(() => {
+    if (!profile || !trackingEnabled) return;
+    startTracking();
+    return () => {
+      if (watchIdRef.current != null && navigator.geolocation) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
+  }, [profile]);
 
   // ── Loading ──
   if (loading) {
@@ -365,6 +532,25 @@ export default function CourierPortal() {
 
       {/* ── Content ── */}
       <main style={{ padding: "1.5rem", maxWidth: "1000px", margin: "0 auto" }}>
+        <div className="con-card" style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <Radio size={14} style={{ color: trackingStatus === "sharing" ? "var(--con-success)" : trackingStatus === "error" ? "var(--con-danger)" : "var(--con-warning)" }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--con-text-primary)" }}>التتبع الحي</span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--con-text-muted)" }}>
+              {trackingMessage || "فعّل مشاركة الموقع ليظهر موقعك في خريطة الإرسال"}
+              {lastLocationAt ? ` · آخر تحديث ${lastLocationAt}` : ""}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {!trackingEnabled ? (
+              <button className="con-btn-primary" onClick={startTracking}><LocateFixed size={14} /> تفعيل التتبع</button>
+            ) : (
+              <button className="con-btn-ghost" onClick={stopTracking}><LocateFixed size={14} /> إيقاف التتبع</button>
+            )}
+          </div>
+        </div>
         {tab === "overview" && <OverviewTab profile={profile} wallet={wallet} transactions={transactions} />}
         {tab === "wallet" && <WalletTab wallet={wallet} transactions={transactions} />}
         {tab === "orders" && <OrdersTab />}

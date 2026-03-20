@@ -7,7 +7,7 @@
  *   /courier/register     → Courier registration
  *   /courier/portal       → Courier portal
  *   /unified-login        → Unified portal (Staff & Courier selection)
- *   /login                → Driver login (static JS handles auth)
+ *   /login                → Driver login (password-based)
  *
  * Public site pages (/about, /contact, etc.) are served by the static
  * root index.html (Skywork bundle) via vercel.json rewrites — NOT this SPA.
@@ -20,10 +20,11 @@ import { AuthProvider as AdminAuthProvider } from "@/lib/admin/auth";
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 import ApplicationStatus from "@/pages/courier/ApplicationStatus";
+import PasswordLogin from "@/pages/PasswordLogin";
 
 // ── Admin panel (exists) ──────────────────────────────────────────────────────
 import { AdminLayout } from "@/components/admin/Layout";
-import { PermissionGuard } from "@/components/admin/PermissionGuard";
+import { AccessGuard, PermissionGuard } from "@/components/admin/PermissionGuard";
 import AdminLogin from "@/pages/admin/Login";
 import AdminPanelDashboard from "@/pages/admin/Dashboard";
 import AdminFinance from "@/pages/admin/Finance";
@@ -45,10 +46,6 @@ import FinancialReports from "@/pages/admin/FinancialReports";
 import AIFinanceAnalysis from "@/pages/admin/AIFinanceAnalysis";
 import AdminComplaints from "@/pages/admin/Complaints";
 
-// ── Login Portals ────────────────────────────────────────────────────────────
-import UnifiedPortal from "@/pages/UnifiedPortal";
-import DriverLogin from "@/pages/DriverLogin";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -64,17 +61,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* ── Unified Login Portal (Staff & Courier selection) ── */}
-          <Route
-            path="/unified-login"
-            element={
-              <AdminAuthProvider>
-                <UnifiedPortal />
-              </AdminAuthProvider>
-            }
-          />
-
-          {/* ── Admin login (direct access) ── */}
+          {/* ── Admin login ── */}
           <Route
             path="/admin/login"
             element={
@@ -93,9 +80,10 @@ export default function App() {
               </AdminAuthProvider>
             }
           >
-            <Route path="dashboard" element={<AdminPanelDashboard />} />
+            <Route path="dashboard" element={<AccessGuard roles={["admin", "owner", "staff"]}><AdminPanelDashboard /></AccessGuard>} />
             <Route path="couriers" element={<PermissionGuard permission="couriers"><AdminCouriers /></PermissionGuard>} />
             <Route path="orders" element={<PermissionGuard permission="orders"><AdminPanelOrders /></PermissionGuard>} />
+            <Route path="complaints" element={<PermissionGuard permission="complaints"><AdminComplaints /></PermissionGuard>} />
             <Route path="finance" element={<PermissionGuard permission="finance"><AdminFinance /></PermissionGuard>} />
             <Route path="finance-dashboard" element={<PermissionGuard permission="finance"><FinanceDashboard /></PermissionGuard>} />
             <Route path="revenue" element={<PermissionGuard permission="finance"><Revenue /></PermissionGuard>} />
@@ -104,20 +92,37 @@ export default function App() {
             <Route path="financial-reports" element={<PermissionGuard permission="finance"><FinancialReports /></PermissionGuard>} />
             <Route path="ai-finance" element={<PermissionGuard permission="finance"><AIFinanceAnalysis /></PermissionGuard>} />
             <Route path="reports" element={<PermissionGuard permission="reports"><AdminPanelReports /></PermissionGuard>} />
-            <Route path="vehicles" element={<PermissionGuard permission="couriers"><AdminVehicles /></PermissionGuard>} />
-            <Route path="staff" element={<PermissionGuard permission="couriers"><AdminStaff /></PermissionGuard>} />
-            <Route path="settings" element={<AdminSettings />} />
+            <Route path="vehicles" element={<AccessGuard roles={["admin", "owner", "staff"]} departments={["fleet"]}><AdminVehicles /></AccessGuard>} />
+            <Route path="staff" element={<AccessGuard roles={["admin", "owner", "staff"]} departments={["hr"]}><AdminStaff /></AccessGuard>} />
+            <Route path="settings" element={<AccessGuard roles={["admin", "owner"]}><AdminSettings /></AccessGuard>} />
             <Route path="wallet" element={<PermissionGuard permission="finance"><AdminDriverWallet /></PermissionGuard>} />
             <Route path="reconciliation" element={<PermissionGuard permission="finance"><AdminReconciliation /></PermissionGuard>} />
-            <Route path="page-builder" element={<PermissionGuard permission="reports"><AdminPageBuilder /></PermissionGuard>} />
+            <Route path="excel" element={<PermissionGuard permission="excel"><AdminReconciliation /></PermissionGuard>} />
+            <Route path="page-builder" element={<AccessGuard roles={["admin", "owner"]}><AdminPageBuilder /></AccessGuard>} />
             <Route path="dispatch" element={<PermissionGuard permission="orders"><AdminDispatch /></PermissionGuard>} />
-            <Route path="complaints" element={<PermissionGuard permission="complaints"><AdminComplaints /></PermissionGuard>} />
             {/* Default → dashboard */}
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
 
-          {/* ── Driver login ── */}
-          <Route path="/login" element={<AdminAuthProvider><DriverLogin /></AdminAuthProvider>} />
+          {/* ── Driver login (password-based) ── */}
+          <Route
+            path="/login"
+            element={
+              <AdminAuthProvider>
+                <PasswordLogin title="تسجيل دخول السائقين" subtitle="الدخول المؤقت الآن عبر اسم المستخدم وكلمة المرور" />
+              </AdminAuthProvider>
+            }
+          />
+
+          {/* ── Unified login portal (Staff & Courier selection) ── */}
+          <Route
+            path="/unified-login"
+            element={
+              <AdminAuthProvider>
+                <PasswordLogin title="تسجيل الدخول الموحّد" subtitle="دخول الموظفين والإدارة عبر اسم المستخدم وكلمة المرور" />
+              </AdminAuthProvider>
+            }
+          />
 
           {/* ── Courier onboarding (public) ── */}
           <Route path="/courier/register" element={<CourierRegister />} />
@@ -131,4 +136,3 @@ export default function App() {
     </QueryClientProvider>
   );
 }
-

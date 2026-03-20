@@ -147,12 +147,123 @@ export default function DriverWallet() {
   const [eventFilter, setEventFilter] = useState("all");
   const [selected, setSelected] = useState<DriverWallet | null>(null);
 
+  async function createDraftBatch() {
+    const candidates = wallets.filter((w) => !w.is_frozen && w.balance > 0);
+    const total = candidates.reduce((sum, w) => sum + w.balance, 0);
+    const now = new Date();
+    const batch: PayoutBatch = {
+      id: `draft-${Date.now()}`,
+      batch_ref: `PAY-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
+      status: "draft",
+      total_amount: Number(total.toFixed(2)),
+      driver_count: candidates.length,
+      period_start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      period_end: now.toISOString(),
+      created_at: now.toISOString(),
+    };
+    if (supabase) {
+      const { error } = await supabase.from("payout_batches").insert({
+        batch_ref: batch.batch_ref,
+        status: batch.status,
+        total_amount: batch.total_amount,
+        driver_count: batch.driver_count,
+        period_start: batch.period_start,
+        period_end: batch.period_end,
+      });
+      if (error) {
+        // fallback to local draft when dedicated table is unavailable
+      }
+    }
+    setBatches((prev) => [batch, ...prev]);
+    setTab("batches");
+  }
+
+  async function payoutSelectedWallet() {
+    if (!selected) return;
+    const amount = Number(window.prompt("مبلغ الصرف:", String(selected.balance)) || "0");
+    if (!amount || amount <= 0 || amount > selected.balance) return;
+    if (supabase) {
+      const { error } = await supabase.rpc("record_wallet_event", {
+        p_driver_id: selected.driver_id,
+        p_event_type: "payout",
+        p_amount: -amount,
+        p_description: "صرف يدوي من لوحة الإدارة",
+        p_reference_type: "manual_payout",
+        p_reference_id: `MAN-${Date.now()}`,
+        p_created_by: null,
+      });
+      if (error) {
+        const financeInsert = await supabase.from("finance").insert({
+          courier_id: selected.driver_id,
+          period_start: new Date().toISOString(),
+          period_end: new Date().toISOString(),
+          gross_revenue: amount,
+          platform_fees: 0,
+          vehicle_deductions: 0,
+          absence_deductions: 0,
+          maintenance_deductions: 0,
+          insurance_deductions: 0,
+          other_deductions: 0,
+          net_payout: amount,
+          payment_status: "paid",
+          notes: "صرف من شاشة المحافظ",
+        });
+        if (financeInsert.error) {
+          alert("تعذر تسجيل عملية الصرف");
+          return;
+        }
+      }
+    }
+    const txn: WalletTransaction = {
+      id: `txn-${Date.now()}`,
+      driver_id: selected.driver_id,
+      driver_name: selected.driver_name,
+      transaction_id: `tx-${Date.now()}`,
+      event_type: "payout",
+      amount: -amount,
+      balance_before: selected.balance,
+      balance_after: selected.balance - amount,
+      description: "صرف يدوي من لوحة الإدارة",
+      reference_type: "manual_payout",
+      reference_id: `MAN-${Date.now()}`,
+      created_at: new Date().toISOString(),
+    };
+    setTxns((prev) => [txn, ...prev]);
+    setWallets((prev) => prev.map((w) => w.id === selected.id ? { ...w, balance: Number((w.balance - amount).toFixed(2)), total_paid_out: w.total_paid_out + amount, last_payout_at: new Date().toISOString() } : w));
+    setSelected((prev) => prev ? { ...prev, balance: Number((prev.balance - amount).toFixed(2)), total_paid_out: prev.total_paid_out + amount, last_payout_at: new Date().toISOString() } : prev);
+  }
+
+  async function editSelectedWallet() {
+    if (!selected) return;
+    window.confirm(selected.is_frozen ? "هل تريد فك تجميد المحفظة؟" : "هل تريد تجميد المحفظة؟");
+    const nextFrozen = !selected.is_frozen;
+    const reason = nextFrozen ? (window.prompt("سبب التجميد:", selected.freeze_reason || "مراجعة إدارية") || "مراجعة إدارية") : undefined;
+    if (supabase) {
+      const { error } = await supabase
+        .from("driver_wallets")
+        .update({ is_frozen: nextFrozen, freeze_reason: reason || null, updated_at: new Date().toISOString() })
+        .eq("id", selected.id);
+      if (error) {
+        const statusUpdate = await supabase
+          .from("couriers")
+          .update({ status: nextFrozen ? "inactive" : "active", updated_at: new Date().toISOString() })
+          .eq("id", selected.driver_id);
+        if (statusUpdate.error) {
+          alert("تعذر تحديث حالة المحفظة");
+          return;
+        }
+      }
+    }
+    setWallets((prev) => prev.map((w) => w.id === selected.id ? { ...w, is_frozen: nextFrozen, freeze_reason: reason } : w));
+    setSelected((prev) => prev ? { ...prev, is_frozen: nextFrozen, freeze_reason: reason } : prev);
+  }
+
   useEffect(() => { fetchAll(); }, []);
 
   async function fetchAll() {
     setLoading(true);
     try {
-      // Try to fetch from Supabase; fall back to mock data if tables don't exist yet
+      // Try dedicated wallet tables first
       const [walletsRes, txnsRes, batchesRes] = await Promise.all([
         supabase
           .from("driver_wallets")
@@ -184,6 +295,83 @@ export default function DriverWallet() {
       }
       if (!batchesRes.error && batchesRes.data?.length) {
         setBatches(batchesRes.data);
+      }
+
+      const dedicatedTablesAvailable = !walletsRes.error || !txnsRes.error || !batchesRes.error;
+      if (!dedicatedTablesAvailable) {
+        const [couriersRes, ordersRes, financeRes] = await Promise.all([
+          supabase.from("couriers").select("id, full_name, phone, status"),
+          supabase.from("orders").select("id, courier_id, platform, order_date, net_earnings, status, created_at"),
+          supabase.from("finance").select("id, courier_id, period_start, period_end, net_payout, payment_status, created_at"),
+        ]);
+
+        const couriers = couriersRes.data || [];
+        const orders = (ordersRes.data || []).filter((o: any) => o.courier_id);
+        const finance = financeRes.data || [];
+
+        const derivedWallets: DriverWallet[] = couriers.map((c: any) => {
+          const courierOrders = orders.filter((o: any) => o.courier_id === c.id);
+          const courierFinance = finance.filter((f: any) => f.courier_id === c.id);
+          const totalEarned = courierOrders.reduce((sum: number, o: any) => sum + Number(o.net_earnings || 0), 0);
+          const totalPaid = courierFinance.filter((f: any) => f.payment_status === "paid").reduce((sum: number, f: any) => sum + Number(f.net_payout || 0), 0);
+          const pending = courierFinance.filter((f: any) => ["pending", "approved"].includes(f.payment_status)).reduce((sum: number, f: any) => sum + Number(f.net_payout || 0), 0);
+          const lastPaid = courierFinance.filter((f: any) => f.payment_status === "paid").sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+          return {
+            id: c.id,
+            driver_id: c.id,
+            driver_name: c.full_name,
+            driver_phone: c.phone,
+            balance: Number((totalEarned - totalPaid).toFixed(2)),
+            pending_balance: Number(pending.toFixed(2)),
+            total_earned: Number(totalEarned.toFixed(2)),
+            total_paid_out: Number(totalPaid.toFixed(2)),
+            last_payout_at: lastPaid?.created_at,
+            is_frozen: c.status === "inactive",
+            freeze_reason: c.status === "inactive" ? "الحساب غير نشط" : undefined,
+            updated_at: new Date().toISOString(),
+          };
+        });
+
+        const txByDriver = new Map<string, number>();
+        const derivedTxns: WalletTransaction[] = orders
+          .slice()
+          .sort((a: any, b: any) => new Date(a.order_date || a.created_at).getTime() - new Date(b.order_date || b.created_at).getTime())
+          .map((o: any) => {
+            const before = txByDriver.get(o.courier_id) || 0;
+            const amount = Number(o.net_earnings || 0);
+            const after = before + amount;
+            txByDriver.set(o.courier_id, after);
+            const driver = couriers.find((c: any) => c.id === o.courier_id);
+            return {
+              id: o.id,
+              driver_id: o.courier_id,
+              driver_name: driver?.full_name,
+              transaction_id: o.id,
+              event_type: "order_payment",
+              amount,
+              balance_before: before,
+              balance_after: after,
+              description: `${o.platform || "FLL"} — ${o.order_date || ""}`,
+              reference_type: "order",
+              reference_id: o.id,
+              created_at: o.created_at || new Date().toISOString(),
+            };
+          });
+
+        const derivedBatches: PayoutBatch[] = finance.map((f: any) => ({
+          id: f.id,
+          batch_ref: `FIN-${String(f.id).slice(0, 8)}`,
+          status: f.payment_status === "paid" ? "completed" : f.payment_status === "approved" ? "processing" : f.payment_status === "pending" ? "pending" : "failed",
+          total_amount: Number(f.net_payout || 0),
+          driver_count: 1,
+          period_start: f.period_start || f.created_at,
+          period_end: f.period_end || f.created_at,
+          created_at: f.created_at,
+        }));
+
+        setWallets(derivedWallets);
+        setTxns(derivedTxns.slice().reverse());
+        setBatches(derivedBatches);
       }
     } catch {
       // keep mock data
@@ -231,7 +419,7 @@ export default function DriverWallet() {
             <RefreshCw size={14} />
             تحديث
           </button>
-          <button className="con-btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+          <button className="con-btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.375rem" }} onClick={createDraftBatch}>
             <Plus size={15} />
             دفعة جديدة
           </button>
@@ -418,10 +606,10 @@ export default function DriverWallet() {
 
               {/* Actions */}
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-                <button className="con-btn-primary" style={{ flex: 1, fontSize: "var(--con-text-caption)", padding: "0.5rem", justifyContent: "center", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <button className="con-btn-primary" style={{ flex: 1, fontSize: "var(--con-text-caption)", padding: "0.5rem", justifyContent: "center", display: "flex", alignItems: "center", gap: "0.375rem" }} onClick={payoutSelectedWallet}>
                   <ArrowUpRight size={13} /> صرف رصيد
                 </button>
-                <button className="con-btn-ghost" style={{ fontSize: "var(--con-text-caption)", padding: "0.5rem 0.75rem" }}>
+                <button className="con-btn-ghost" style={{ fontSize: "var(--con-text-caption)", padding: "0.5rem 0.75rem" }} onClick={editSelectedWallet}>
                   تعديل
                 </button>
               </div>
@@ -530,7 +718,7 @@ export default function DriverWallet() {
           <div className="con-card" style={{ padding: 0, overflow: "hidden" }}>
             <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--con-border-default)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 600, color: "var(--con-text-primary)", fontSize: "var(--con-text-card-title)" }}>دفعات الصرف</span>
-              <button className="con-btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "var(--con-text-caption)" }}>
+              <button className="con-btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "var(--con-text-caption)" }} onClick={createDraftBatch}>
                 <Plus size={13} /> دفعة جديدة
               </button>
             </div>

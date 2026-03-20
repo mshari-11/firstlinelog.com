@@ -223,12 +223,13 @@ function StaffCard({ member, selected, onClick }: {
 
 // ─── Permissions Panel ─────────────────────────────────────────────────────────
 
-function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll, onRevokeAll, onClose }: {
+function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll, onRevokeAll, onToggleActive, onClose }: {
   member: StaffMember;
   departments: Department[];
   onTogglePermission: (key: string, current: boolean) => void;
   onGrantAll: () => void;
   onRevokeAll: () => void;
+  onToggleActive: () => void;
   onClose: () => void;
 }) {
   const dept = departments.find(d => d.id === member.department_id);
@@ -311,6 +312,20 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
           }}
         >
           <ShieldOff size={12} /> سحب الكل
+        </button>
+        <button
+          onClick={onToggleActive}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            fontSize: 11, fontWeight: 600,
+            padding: "4px 10px", borderRadius: 5, cursor: "pointer",
+            background: member.is_active ? "rgba(220,38,38,0.08)" : "rgba(22,163,74,0.1)",
+            color: member.is_active ? "var(--con-danger)" : "var(--con-success)",
+            border: `1px solid ${member.is_active ? "rgba(220,38,38,0.2)" : "rgba(22,163,74,0.25)"}`,
+            transition: "all 0.15s",
+          }}
+        >
+          {member.is_active ? <ShieldOff size={12} /> : <ShieldCheck size={12} />} {member.is_active ? "تعطيل" : "تفعيل"}
         </button>
       </div>
 
@@ -907,6 +922,7 @@ export default function AdminStaff() {
                 onTogglePermission={(key, val) => togglePermission(selectedStaff.id, key, val)}
                 onGrantAll={() => grantAllPermissions(selectedStaff.id)}
                 onRevokeAll={() => revokeAllPermissions(selectedStaff.id)}
+                onToggleActive={() => toggleActive(selectedStaff.id, selectedStaff.is_active)}
                 onClose={() => setSelectedStaff(null)}
               />
             ) : (

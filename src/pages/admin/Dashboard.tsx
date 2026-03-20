@@ -14,15 +14,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar,
 } from "recharts";
-
-// ─── Chart tooltip style shared ───────────────────────────────────────────────
-const chartTooltipStyle = {
-  background: "var(--con-bg-elevated)",
-  border: "1px solid var(--con-border-strong)",
-  borderRadius: 8,
-  color: "var(--con-text-primary)",
-  fontSize: 12,
-};
+import { ChartCard, PageHeader, chartTooltipStyle } from "@/components/admin/FinanceUI";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const ordersChartData = [
@@ -66,27 +58,6 @@ interface DashboardStats {
   pendingComplaints: number;
   monthRevenue: number;
   pendingApprovals: number;
-}
-
-// ─── Chart Card wrapper ────────────────────────────────────────────────────────
-function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10, padding: "18px 20px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
-          {title}
-        </h3>
-        {subtitle && (
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{subtitle}</span>
-        )}
-      </div>
-      {children}
-    </div>
-  );
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
@@ -156,37 +127,22 @@ export default function AdminDashboard() {
     <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{
-              background: "rgba(59,130,246,0.12)", borderRadius: 8, padding: "7px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <LayoutDashboard size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1 style={{
-              fontSize: "var(--con-text-page-title)", fontWeight: 700,
-              color: "var(--con-text-primary)", margin: 0,
-              fontFamily: "var(--con-font-primary)",
-            }}>
-              لوحة التحكم
-            </h1>
+      <PageHeader
+        icon={LayoutDashboard}
+        title="لوحة التحكم"
+        subtitle={new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        actions={
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 7,
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-default)",
+          }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--con-success)", animation: "pulse 2s infinite" }} />
+            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>النظام يعمل</span>
           </div>
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>
-            {new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
-        </div>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "6px 12px", borderRadius: 7,
-          background: "var(--con-bg-surface-1)",
-          border: "1px solid var(--con-border-default)",
-        }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--con-success)", animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>النظام يعمل</span>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>

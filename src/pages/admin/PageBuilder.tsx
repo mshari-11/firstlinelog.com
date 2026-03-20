@@ -1,19 +1,36 @@
-/**
- * Admin Page Builder
- * Feature flags, nav reordering, page enable/disable
- * Settings persist to localStorage (Supabase-ready via upsert hook)
- */
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import {
-  LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
-  Wallet, MessageSquare, BarChart3, Car, Building2,
-  Settings2, Landmark, GitCompare, Map, GripVertical,
-  Eye, EyeOff, ToggleLeft, ToggleRight, Save, RotateCcw,
-  Info, CheckCircle2, TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  FileSpreadsheet,
+  Wallet,
+  MessageSquare,
+  BarChart3,
+  Car,
+  Building2,
+  Settings2,
+  Landmark,
+  GitCompare,
+  Map,
+  GripVertical,
+  Eye,
+  EyeOff,
+  ToggleLeft,
+  ToggleRight,
+  Save,
+  RotateCcw,
+  Info,
+  CheckCircle2,
+  TrendingUp,
+  Receipt,
+  ArrowRightLeft,
+  FileText,
+  Brain,
+  WandSparkles,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { PageWrapper, PageHeader, KPIGrid, KPICard, Card, Button, Badge } from "@/components/admin/ui";
 
 export interface PageConfig {
   id: string;
@@ -24,15 +41,28 @@ export interface PageConfig {
   enabled: boolean;
   order: number;
   permission?: string;
-  isCore?: boolean; // core pages can't be disabled
+  isCore?: boolean;
 }
 
-// ─── Icon map ─────────────────────────────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
-  Wallet, MessageSquare, BarChart3, Car, Building2,
-  Settings2, Landmark, GitCompare, Map,
-  TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  FileSpreadsheet,
+  Wallet,
+  MessageSquare,
+  BarChart3,
+  Car,
+  Building2,
+  Settings2,
+  Landmark,
+  GitCompare,
+  Map,
+  TrendingUp,
+  Receipt,
+  ArrowRightLeft,
+  FileText,
+  Brain,
 };
 
 function PageIcon({ name, size = 15 }: { name: string; size?: number }) {
@@ -40,7 +70,6 @@ function PageIcon({ name, size = 15 }: { name: string; size?: number }) {
   return <Ico size={size} />;
 }
 
-// ─── Default page registry ────────────────────────────────────────────────────
 const DEFAULT_PAGES: PageConfig[] = [
   { id: "dashboard",          label: "الرئيسية",           path: "/admin-panel/dashboard",          group: "التشغيل",          icon: "LayoutDashboard", enabled: true,  order: 0,  isCore: true },
   { id: "couriers",           label: "المناديب",            path: "/admin-panel/couriers",           group: "التشغيل",          icon: "Users",           enabled: true,  order: 1 },
@@ -71,12 +100,8 @@ function loadConfig(): PageConfig[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PAGES;
     const saved: PageConfig[] = JSON.parse(raw);
-    // Merge: keep saved overrides, add any new defaults not yet in saved
     const savedIds = new Set(saved.map((p) => p.id));
-    const merged = [
-      ...saved,
-      ...DEFAULT_PAGES.filter((p) => !savedIds.has(p.id)),
-    ];
+    const merged = [...saved, ...DEFAULT_PAGES.filter((p) => !savedIds.has(p.id))];
     return merged.sort((a, b) => a.order - b.order);
   } catch {
     return DEFAULT_PAGES;
@@ -87,25 +112,20 @@ function saveConfig(pages: PageConfig[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
 }
 
-// ─── Drag-and-drop helpers (pure mouse, no external lib) ─────────────────────
 interface DragState {
   dragIndex: number | null;
   overIndex: number | null;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function PageBuilder() {
   const [pages, setPages] = useState<PageConfig[]>(loadConfig);
   const [saved, setSaved] = useState(false);
   const [drag, setDrag] = useState<DragState>({ dragIndex: null, overIndex: null });
 
-  // Group pages
   const groups = Array.from(new Set(pages.map((p) => p.group)));
 
   function toggleEnabled(id: string) {
-    setPages((prev) =>
-      prev.map((p) => (p.id === id && !p.isCore ? { ...p, enabled: !p.enabled } : p))
-    );
+    setPages((prev) => prev.map((p) => (p.id === id && !p.isCore ? { ...p, enabled: !p.enabled } : p)));
     setSaved(false);
   }
 
@@ -144,12 +164,8 @@ export default function PageBuilder() {
     saveConfig(ordered);
     setPages(ordered);
     setSaved(true);
-    // Supabase upsert (non-blocking, best-effort)
     if (supabase) {
-      supabase.from("page_builder_config").upsert(
-        ordered.map((p) => ({ id: p.id, enabled: p.enabled, order: p.order })),
-        { onConflict: "id" }
-      ).then(() => {/* fire and forget */});
+      supabase.from("page_builder_config").upsert(ordered.map((p) => ({ id: p.id, enabled: p.enabled, order: p.order })), { onConflict: "id" }).then(() => {});
     }
     setTimeout(() => setSaved(false), 2500);
   }
@@ -159,92 +175,46 @@ export default function PageBuilder() {
     setSaved(false);
   }
 
-  // Flat index lookup for drag
   const flatIndex = (id: string) => pages.findIndex((p) => p.id === id);
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: "900px" }}>
+    <PageWrapper>
+      <PageHeader
+        icon={WandSparkles}
+        title="منشئ الصفحات"
+        subtitle="تحكّم في ترتيب الصفحات وتفعيلها داخل الشريط الجانبي"
+        actions={
+          <>
+            <Button variant="ghost" icon={RotateCcw} onClick={handleReset}>إعادة تعيين</Button>
+            <Button icon={saved ? CheckCircle2 : Save} onClick={handleSave}>{saved ? "تم الحفظ" : "حفظ التغييرات"}</Button>
+          </>
+        }
+      />
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
-        <div>
-          <h1 style={{ fontSize: "var(--con-text-page-title)", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.25rem" }}>
-            منشئ الصفحات
-          </h1>
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>
-            تحكّم في ترتيب الصفحات وتفعيلها أو إيقافها في القائمة الجانبية
-          </p>
+      <KPIGrid cols="repeat(3, minmax(0, 1fr))">
+        <KPICard label="إجمالي الصفحات" value={pages.length} icon={LayoutDashboard} accent="var(--con-brand)" />
+        <KPICard label="مفعّلة" value={pages.filter((p) => p.enabled).length} icon={Eye} accent="var(--con-success)" />
+        <KPICard label="معطّلة" value={pages.filter((p) => !p.enabled).length} icon={EyeOff} accent="var(--con-danger)" />
+      </KPIGrid>
+
+      <Card>
+        <div style={{ display: "flex", gap: "0.5rem", fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", lineHeight: 1.6 }}>
+          <Info size={14} style={{ color: "var(--con-info)", flexShrink: 0, marginTop: 2 }} />
+          <span>
+            اسحب الصفوف لإعادة الترتيب. الصفحات الأساسية ({pages.filter((p) => p.isCore).length}) لا يمكن إيقافها. التغييرات تُحفظ في المتصفح وتُزامَن مع قاعدة البيانات عند الضغط على حفظ.
+          </span>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            className="con-btn-ghost"
-            onClick={handleReset}
-            style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "13px" }}
-          >
-            <RotateCcw size={14} /> إعادة تعيين
-          </button>
-          <button
-            className="con-btn-primary"
-            onClick={handleSave}
-            style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "13px" }}
-          >
-            {saved ? <><CheckCircle2 size={14} /> تم الحفظ</> : <><Save size={14} /> حفظ التغييرات</>}
-          </button>
-        </div>
-      </div>
+      </Card>
 
-      {/* Info bar */}
-      <div style={{
-        display: "flex", gap: "0.5rem",
-        padding: "0.75rem 1rem",
-        background: "var(--con-info-subtle)",
-        border: "1px solid var(--con-brand-border)",
-        borderRadius: "var(--con-radius)",
-        marginBottom: "1.25rem",
-        fontSize: "var(--con-text-caption)",
-        color: "var(--con-text-secondary)",
-      }}>
-        <Info size={14} style={{ color: "var(--con-info)", flexShrink: 0, marginTop: "1px" }} />
-        <span>
-          اسحب الصفوف لإعادة الترتيب. الصفحات الأساسية ({pages.filter((p) => p.isCore).length}) لا يمكن إيقافها.
-          التغييرات تُحفظ في المتصفح وتُزامَن مع قاعدة البيانات عند الضغط على «حفظ».
-        </span>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", marginBottom: "1.25rem" }}>
-        {[
-          { label: "إجمالي الصفحات", value: pages.length, color: "var(--con-brand)" },
-          { label: "مفعّلة",           value: pages.filter((p) => p.enabled).length, color: "var(--con-success)" },
-          { label: "معطّلة",           value: pages.filter((p) => !p.enabled).length, color: "var(--con-danger)" },
-        ].map((k) => (
-          <div key={k.label} className="con-kpi-card" style={{ borderTop: `2px solid ${k.color}`, padding: "0.875rem 1rem" }}>
-            <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: "0.375rem" }}>{k.label}</p>
-            <p style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "var(--con-font-mono)", color: k.color }}>{k.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Page list by group */}
       {groups.map((group) => {
         const groupPages = pages.filter((p) => p.group === group);
         return (
-          <div key={group} style={{ marginBottom: "1rem" }}>
-            <p style={{
-              fontSize: "var(--con-text-caption)", fontWeight: 600,
-              color: "var(--con-text-muted)",
-              textTransform: "uppercase", letterSpacing: "0.06em",
-              padding: "0 0.25rem", marginBottom: "0.375rem",
-            }}>
-              {group}
-            </p>
-
-            <div className="con-card" style={{ padding: 0, overflow: "hidden" }}>
-              {groupPages.map((page, localIdx) => {
+          <Card key={group} title={group}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {groupPages.map((page) => {
                 const idx = flatIndex(page.id);
                 const isDraggingThis = drag.dragIndex === idx;
                 const isOver = drag.overIndex === idx && drag.dragIndex !== idx;
-
                 return (
                   <div
                     key={page.id}
@@ -254,96 +224,43 @@ export default function PageBuilder() {
                     onDrop={(e) => handleDrop(e, idx)}
                     onDragEnd={handleDragEnd}
                     style={{
-                      display: "flex", alignItems: "center", gap: "0.75rem",
-                      padding: "0.75rem 1rem",
-                      borderBottom: localIdx < groupPages.length - 1 ? "1px solid var(--con-border-default)" : "none",
-                      background: isDraggingThis
-                        ? "var(--con-bg-elevated)"
-                        : isOver
-                        ? "var(--con-brand-subtle)"
-                        : "transparent",
-                      opacity: isDraggingThis ? 0.5 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      padding: "0.9rem 1rem",
+                      borderRadius: "var(--con-radius)",
+                      background: isDraggingThis ? "var(--con-bg-elevated)" : isOver ? "var(--con-brand-subtle)" : "var(--con-bg-surface-2)",
+                      border: `1px solid ${isOver ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
+                      opacity: isDraggingThis ? 0.55 : 1,
+                      transition: "all 0.15s",
                       cursor: "grab",
-                      transition: "background 0.1s",
-                      borderLeft: isOver ? "2px solid var(--con-brand)" : "2px solid transparent",
                     }}
                   >
-                    {/* Drag handle */}
-                    <GripVertical size={15} style={{ color: "var(--con-text-muted)", flexShrink: 0, cursor: "grab" }} />
-
-                    {/* Icon */}
-                    <div style={{
-                      width: "30px", height: "30px",
-                      borderRadius: "var(--con-radius-sm)",
-                      background: page.enabled ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)",
-                      border: `1px solid ${page.enabled ? "var(--con-brand-border)" : "var(--con-border-default)"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      color: page.enabled ? "var(--con-brand)" : "var(--con-text-muted)",
-                      transition: "all 0.15s",
-                    }}>
+                    <GripVertical size={15} style={{ color: "var(--con-text-muted)", flexShrink: 0 }} />
+                    <div style={{ width: 34, height: 34, borderRadius: "var(--con-radius-sm)", background: page.enabled ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", border: `1px solid ${page.enabled ? "var(--con-border-brand)" : "var(--con-border-default)"}`, display: "flex", alignItems: "center", justifyContent: "center", color: page.enabled ? "var(--con-brand)" : "var(--con-text-muted)", flexShrink: 0 }}>
                       <PageIcon name={page.icon} size={14} />
                     </div>
-
-                    {/* Label + meta */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span style={{
-                          fontSize: "13px", fontWeight: 600,
-                          color: page.enabled ? "var(--con-text-primary)" : "var(--con-text-muted)",
-                          transition: "color 0.15s",
-                        }}>
-                          {page.label}
-                        </span>
-                        {page.isCore && (
-                          <span className="con-badge-sm con-badge-muted">أساسي</span>
-                        )}
-                        {page.permission && (
-                          <span className="con-badge-sm con-badge-brand">{page.permission}</span>
-                        )}
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: page.enabled ? "var(--con-text-primary)" : "var(--con-text-muted)" }}>{page.label}</span>
+                        {page.isCore && <Badge variant="muted">أساسي</Badge>}
+                        {page.permission && <Badge variant="brand">{page.permission}</Badge>}
                       </div>
-                      <p style={{ fontSize: "11px", color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)", marginTop: "1px" }}>
-                        {page.path}
-                      </p>
+                      <p style={{ fontSize: 11, color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)", margin: "4px 0 0" }}>{page.path}</p>
                     </div>
-
-                    {/* Order badge */}
-                    <span style={{
-                      fontSize: "11px", fontWeight: 700, fontFamily: "var(--con-font-mono)",
-                      color: "var(--con-text-muted)",
-                      background: "var(--con-bg-elevated)",
-                      border: "1px solid var(--con-border-default)",
-                      borderRadius: "4px",
-                      padding: "1px 6px",
-                      flexShrink: 0,
-                    }}>
-                      #{page.order + 1}
-                    </span>
-
-                    {/* Toggle */}
+                    <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--con-font-mono)", color: "var(--con-text-muted)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", borderRadius: 4, padding: "1px 6px", flexShrink: 0 }}>#{page.order + 1}</span>
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); toggleEnabled(page.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleEnabled(page.id);
+                      }}
                       disabled={page.isCore}
                       title={page.isCore ? "صفحة أساسية لا يمكن إيقافها" : page.enabled ? "إيقاف الصفحة" : "تفعيل الصفحة"}
-                      style={{
-                        background: "none", border: "none", cursor: page.isCore ? "not-allowed" : "pointer",
-                        display: "flex", alignItems: "center", padding: "2px",
-                        color: page.isCore
-                          ? "var(--con-text-muted)"
-                          : page.enabled
-                          ? "var(--con-success)"
-                          : "var(--con-border-strong)",
-                        transition: "color 0.15s",
-                        opacity: page.isCore ? 0.4 : 1,
-                      }}
+                      style={{ background: "none", border: "none", cursor: page.isCore ? "not-allowed" : "pointer", display: "flex", alignItems: "center", padding: 2, color: page.isCore ? "var(--con-text-muted)" : page.enabled ? "var(--con-success)" : "var(--con-border-strong)", opacity: page.isCore ? 0.45 : 1 }}
                     >
-                      {page.enabled
-                        ? <ToggleRight size={22} />
-                        : <ToggleLeft size={22} />}
+                      {page.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
                     </button>
-
-                    {/* Visible/hidden icon */}
                     <div style={{ color: page.enabled ? "var(--con-text-muted)" : "var(--con-border-strong)", flexShrink: 0 }}>
                       {page.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
                     </div>
@@ -351,34 +268,11 @@ export default function PageBuilder() {
                 );
               })}
             </div>
-          </div>
+          </Card>
         );
       })}
-
-      {/* Legend */}
-      <div style={{
-        display: "flex", gap: "1.5rem", flexWrap: "wrap",
-        padding: "0.875rem 1rem",
-        background: "var(--con-bg-surface-1)",
-        border: "1px solid var(--con-border-default)",
-        borderRadius: "var(--con-radius)",
-        marginTop: "0.75rem",
-        fontSize: "var(--con-text-caption)",
-        color: "var(--con-text-muted)",
-      }}>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <GripVertical size={13} /> اسحب لإعادة الترتيب
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <ToggleRight size={13} style={{ color: "var(--con-success)" }} /> مفعّل في القائمة الجانبية
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <ToggleLeft size={13} /> مخفي من القائمة الجانبية
-        </span>
-      </div>
-    </div>
+    </PageWrapper>
   );
 }
 
-// ─── Export config loader for Sidebar ─────────────────────────────────────────
 export { loadConfig, DEFAULT_PAGES };

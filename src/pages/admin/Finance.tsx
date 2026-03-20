@@ -381,6 +381,60 @@ export default function Finance() {
   const [sendingAlert, setSendingAlert] = useState<string | null>(null);
   const [alertSent, setAlertSent] = useState<Set<string>>(new Set());
 
+  function exportFinanceCsv() {
+    const headers = ["courier", "period_start", "period_end", "gross_revenue", "net_payout", "payment_status"];
+    const rows = filtered.map((r) => [r.courier_name || "", r.period_start, r.period_end, r.gross_revenue, r.net_payout, r.payment_status].join(","));
+    const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "finance-records.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function createFinanceRecord() {
+    if (!supabase) {
+      alert("قاعدة البيانات غير متصلة");
+      return;
+    }
+    const courier_name = window.prompt("اسم المندوب:");
+    if (!courier_name) return;
+    const net = Number(window.prompt("صافي المستحق:", "1000") || "1000");
+    const gross = Number(window.prompt("الإيراد الإجمالي:", String(net)) || String(net));
+    const now = new Date().toISOString();
+    const { data: courier } = await supabase
+      .from("couriers")
+      .select("id, full_name")
+      .eq("full_name", courier_name)
+      .limit(1)
+      .maybeSingle();
+    if (!courier) {
+      alert("لم يتم العثور على المندوب. استخدم الاسم كما هو مسجل بالنظام.");
+      return;
+    }
+    const { error } = await supabase.from("finance").insert({
+      courier_id: courier.id,
+      period_start: now,
+      period_end: now,
+      gross_revenue: gross,
+      platform_fees: 0,
+      vehicle_deductions: 0,
+      absence_deductions: 0,
+      maintenance_deductions: 0,
+      insurance_deductions: 0,
+      other_deductions: 0,
+      net_payout: net,
+      payment_status: "pending",
+      notes: "تمت الإضافة من لوحة الإدارة",
+    });
+    if (error) {
+      alert("تعذر إنشاء السجل المالي في قاعدة البيانات");
+      return;
+    }
+    await fetchFinanceData();
+  }
+
   useEffect(() => { fetchFinanceData(); }, []);
 
   async function fetchFinanceData() {
@@ -388,13 +442,13 @@ export default function Finance() {
     try {
       const { data: finance } = await supabase
         .from("finance")
-        .select(`*, couriers ( users ( full_name ) )`)
+        .select(`*, couriers ( full_name )`)
         .order("created_at", { ascending: false });
 
       if (finance) {
         const mapped: FinanceRecord[] = finance.map((r: any) => ({
           ...r,
-          courier_name: r.couriers?.users?.full_name || "غير معروف",
+          courier_name: r.couriers?.full_name || "غير معروف",
         }));
         setRecords(mapped);
 
@@ -499,7 +553,7 @@ export default function Finance() {
             <RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
             تحديث
           </button>
-          <button className="con-btn-primary">
+          <button className="con-btn-primary" onClick={createFinanceRecord}>
             <Plus size={14} />
             سجل جديد
           </button>
@@ -589,7 +643,7 @@ export default function Finance() {
         </div>
 
         {/* Export */}
-        <button className="con-btn-ghost" style={{ marginInlineStart: "auto" }}>
+        <button className="con-btn-ghost" style={{ marginInlineStart: "auto" }} onClick={exportFinanceCsv}>
           <Download size={14} />
           تصدير
         </button>

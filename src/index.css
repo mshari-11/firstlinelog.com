@@ -1,73 +1,80 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 /* ==========================================================================
-   ENTERPRISE DESIGN TOKENS — FLL ADMIN CONSOLE
+   OBSIDIAN COMMAND — FLL ADMIN CONSOLE DESIGN SYSTEM
    These tokens apply ONLY to elements inside .fll-console
-   (admin-panel, driver-dashboard, courier-portal).
-   The public site (fll.sa Home/About/etc.) is NOT affected.
-   Based on: AWS Cloudscape + IBM Carbon for data-dense UIs.
+   Direction: Deep charcoal command center with sharp teal accents.
+   Typography: Readex Pro (Arabic display) + JetBrains Mono (data).
    ========================================================================== */
 
 :root {
-  /* ── Console Backgrounds ── */
-  --con-bg-app:       #0B1220;
-  --con-bg-surface-1: #111A2B;
-  --con-bg-surface-2: #162235;
-  --con-bg-elevated:  #1B2940;
-  --con-bg-overlay:   #1E2F47;
+  /* ── Console Backgrounds — Obsidian Charcoal Stack ── */
+  --con-bg-app:       #0C0E14;
+  --con-bg-surface-1: #12151E;
+  --con-bg-surface-2: #181C28;
+  --con-bg-elevated:  #1E2333;
+  --con-bg-overlay:   #252A3A;
+  --con-bg-glass:     rgba(18,21,30,0.82);
 
-  /* ── Console Text ── */
-  --con-text-primary:   #F3F6FB;
-  --con-text-secondary: #B6C2D2;
-  --con-text-muted:     #7E8CA2;
-  --con-text-disabled:  #4A5568;
+  /* ── Console Text — High contrast with warmth ── */
+  --con-text-primary:   #F0F2F5;
+  --con-text-secondary: #A3ABBE;
+  --con-text-muted:     #636D83;
+  --con-text-disabled:  #3D4455;
 
-  /* ── Brand / Accent (one accent only) ── */
-  --con-brand:        #3B82F6;
-  --con-brand-hover:  #2563EB;
-  --con-brand-subtle: rgba(59,130,246,0.12);
-  --con-brand-border: rgba(59,130,246,0.30);
+  /* ── Brand / Primary Accent — Teal Signal ── */
+  --con-brand:        #0ED4C5;
+  --con-brand-hover:  #0BBFB2;
+  --con-brand-subtle: rgba(14,212,197,0.10);
+  --con-brand-border: rgba(14,212,197,0.28);
+  --con-brand-glow:   rgba(14,212,197,0.15);
 
-  /* ── Semantic ── */
-  --con-success:        #16A34A;
-  --con-success-subtle: rgba(22,163,74,0.12);
-  --con-warning:        #D97706;
-  --con-warning-subtle: rgba(217,119,6,0.12);
-  --con-danger:         #DC2626;
-  --con-danger-subtle:  rgba(220,38,38,0.12);
-  --con-info:           #0EA5E9;
-  --con-info-subtle:    rgba(14,165,233,0.12);
+  /* ── Semantic — Punchy & distinct ── */
+  --con-success:        #22C55E;
+  --con-success-subtle: rgba(34,197,94,0.10);
+  --con-warning:        #F59E0B;
+  --con-warning-subtle: rgba(245,158,11,0.10);
+  --con-danger:         #EF4444;
+  --con-danger-subtle:  rgba(239,68,68,0.10);
+  --con-info:           #38BDF8;
+  --con-info-subtle:    rgba(56,189,248,0.10);
 
-  /* ── Borders ── */
-  --con-border-default: rgba(255,255,255,0.07);
-  --con-border-strong:  rgba(255,255,255,0.13);
-  --con-border-brand:   rgba(59,130,246,0.35);
+  /* ── Borders — Crisp & refined ── */
+  --con-border-default: rgba(255,255,255,0.06);
+  --con-border-strong:  rgba(255,255,255,0.11);
+  --con-border-brand:   rgba(14,212,197,0.30);
 
-  /* ── Typography Scale ── */
-  --con-font-primary: "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  /* ── Typography ── */
+  --con-font-primary: "Readex Pro", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
   --con-font-mono:    "JetBrains Mono", ui-monospace, monospace;
 
-  --con-text-page-title:    2rem;      /* 32px / 700 */
-  --con-text-section-title: 1.375rem;  /* 22px / 600 */
-  --con-text-card-title:    1rem;      /* 16px / 600 */
-  --con-text-body:          0.875rem;  /* 14px / 400 */
-  --con-text-table:         0.8125rem; /* 13px / 400 */
-  --con-text-caption:       0.75rem;   /* 12px / 400 */
+  --con-text-page-title:    1.75rem;    /* 28px / 700 */
+  --con-text-section-title: 1.25rem;    /* 20px / 600 */
+  --con-text-card-title:    0.9375rem;  /* 15px / 600 */
+  --con-text-body:          0.8125rem;  /* 13px / 400 */
+  --con-text-table:         0.8125rem;  /* 13px / 400 */
+  --con-text-caption:       0.6875rem;  /* 11px / 500 */
 
-  /* ── Spacing ── */
-  --con-radius-sm:  6px;
+  /* ── Spacing & Radius ── */
+  --con-radius-sm:  5px;
   --con-radius:     8px;
   --con-radius-md:  10px;
-  --con-radius-lg:  12px;
+  --con-radius-lg:  14px;
+  --con-radius-xl:  18px;
 
-  /* ── Shadows ── */
-  --con-shadow-card:    0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --con-shadow-panel:   0 4px 16px rgba(0,0,0,0.5);
-  --con-shadow-overlay: 0 8px 32px rgba(0,0,0,0.6);
+  /* ── Shadows — Layered depth ── */
+  --con-shadow-card:    0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.03);
+  --con-shadow-panel:   0 4px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+  --con-shadow-overlay: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  --con-shadow-glow:    0 0 20px rgba(14,212,197,0.08);
+
+  /* ── Transitions ── */
+  --con-ease: cubic-bezier(0.22, 0.68, 0, 1);
+  --con-duration: 0.25s;
 }
 
 /* ==========================================================================
@@ -79,6 +86,20 @@
   background: var(--con-bg-app);
   color: var(--con-text-primary);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Animated background texture ── */
+.fll-console::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 70% 10%, rgba(14,212,197,0.03), transparent),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(56,189,248,0.02), transparent);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Typography ── */
@@ -86,15 +107,15 @@
   font-size: var(--con-text-page-title);
   font-weight: 700;
   color: var(--con-text-primary);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 
 .fll-console .con-section-title {
   font-size: var(--con-text-section-title);
   font-weight: 600;
   color: var(--con-text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 .fll-console .con-card-title {
@@ -106,7 +127,7 @@
 .fll-console .con-body {
   font-size: var(--con-text-body);
   color: var(--con-text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .fll-console .con-caption {
@@ -122,9 +143,9 @@
 
 /* ── Eyebrow / Label ── */
 .fll-console .con-eyebrow {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--con-text-muted);
 }
@@ -136,11 +157,13 @@
   border-radius: var(--con-radius-lg);
   padding: 1.25rem;
   box-shadow: var(--con-shadow-card);
-  transition: border-color 0.2s ease;
+  transition: border-color var(--con-duration) var(--con-ease),
+              box-shadow var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-card:hover {
   border-color: var(--con-border-strong);
+  box-shadow: var(--con-shadow-panel);
 }
 
 .fll-console .con-card-elevated {
@@ -149,46 +172,49 @@
   border-radius: var(--con-radius-lg);
   padding: 1.25rem;
   box-shadow: var(--con-shadow-panel);
+  backdrop-filter: blur(12px);
 }
 
-/* ── KPI Card ── */
+/* ── KPI Card — with accent top stripe ── */
 .fll-console .con-kpi-card {
   background: var(--con-bg-surface-1);
   border: 1px solid var(--con-border-default);
   border-radius: var(--con-radius-lg);
-  padding: 1.25rem 1.5rem;
+  padding: 1.125rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
+  gap: 0.375rem;
+  transition: all var(--con-duration) var(--con-ease);
   position: relative;
   overflow: hidden;
 }
 
-.fll-console .con-kpi-card::after {
+.fll-console .con-kpi-card::before {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   left: 0;
   height: 2px;
-  background: var(--con-brand);
+  background: linear-gradient(90deg, var(--con-brand) 0%, transparent 100%);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-kpi-card:hover {
   border-color: var(--con-border-brand);
   background: var(--con-bg-surface-2);
+  box-shadow: var(--con-shadow-glow);
+  transform: translateY(-1px);
 }
 
-.fll-console .con-kpi-card:hover::after {
+.fll-console .con-kpi-card:hover::before {
   opacity: 1;
 }
 
 .fll-console .con-kpi-value {
   font-family: var(--con-font-mono);
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   font-weight: 700;
   color: var(--con-text-primary);
   letter-spacing: -0.03em;
@@ -207,18 +233,20 @@
   font-size: var(--con-text-caption);
   color: var(--con-success);
   font-weight: 600;
+  font-family: var(--con-font-mono);
 }
 
 .fll-console .con-kpi-delta-down {
   font-size: var(--con-text-caption);
   color: var(--con-danger);
   font-weight: 600;
+  font-family: var(--con-font-mono);
 }
 
 /* ── Icon Container ── */
 .fll-console .con-icon-wrap {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--con-radius);
   display: flex;
   align-items: center;
@@ -226,24 +254,30 @@
   background: var(--con-brand-subtle);
   color: var(--con-brand);
   flex-shrink: 0;
+  transition: transform 0.2s var(--con-ease);
+}
+
+.fll-console .con-icon-wrap:hover {
+  transform: scale(1.05);
 }
 
 .fll-console .con-icon-wrap.success { background: var(--con-success-subtle); color: var(--con-success); }
 .fll-console .con-icon-wrap.warning { background: var(--con-warning-subtle); color: var(--con-warning); }
 .fll-console .con-icon-wrap.danger  { background: var(--con-danger-subtle);  color: var(--con-danger);  }
 .fll-console .con-icon-wrap.info    { background: var(--con-info-subtle);    color: var(--con-info);    }
-.fll-console .con-icon-wrap.muted   { background: rgba(255,255,255,0.05);    color: var(--con-text-muted); }
+.fll-console .con-icon-wrap.muted   { background: rgba(255,255,255,0.04);   color: var(--con-text-muted); }
 
 /* ── Status Chips / Badges ── */
 .fll-console .con-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 2px 8px;
-  border-radius: var(--con-radius-sm);
+  border-radius: 100px;
   font-size: var(--con-text-caption);
   font-weight: 600;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .fll-console .con-badge-success { background: var(--con-success-subtle); color: var(--con-success); }
@@ -251,7 +285,7 @@
 .fll-console .con-badge-danger  { background: var(--con-danger-subtle);  color: var(--con-danger);  }
 .fll-console .con-badge-info    { background: var(--con-info-subtle);    color: var(--con-info);    }
 .fll-console .con-badge-brand   { background: var(--con-brand-subtle);   color: var(--con-brand);   }
-.fll-console .con-badge-muted   { background: rgba(255,255,255,0.06);    color: var(--con-text-muted); }
+.fll-console .con-badge-muted   { background: rgba(255,255,255,0.05);    color: var(--con-text-muted); }
 
 /* ── Dot indicator ── */
 .fll-console .con-dot {
@@ -267,7 +301,7 @@
 .fll-console .con-dot-info    { background: var(--con-info);    }
 .fll-console .con-dot-muted   { background: var(--con-text-muted); }
 
-/* ── Tables ── */
+/* ── Tables — Refined data grid ── */
 .fll-console .con-table {
   width: 100%;
   border-collapse: collapse;
@@ -280,10 +314,10 @@
 }
 
 .fll-console .con-table thead th {
-  padding: 0.625rem 0.75rem;
-  font-size: 0.6875rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--con-text-muted);
   white-space: nowrap;
@@ -292,7 +326,7 @@
 
 .fll-console .con-table tbody tr {
   border-bottom: 1px solid var(--con-border-default);
-  transition: background 0.15s ease;
+  transition: background var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-table tbody tr:last-child {
@@ -300,11 +334,11 @@
 }
 
 .fll-console .con-table tbody tr:hover {
-  background: rgba(255,255,255,0.025);
+  background: rgba(14,212,197,0.03);
 }
 
 .fll-console .con-table td {
-  padding: 0.625rem 0.75rem;
+  padding: 0.6875rem 0.875rem;
   color: var(--con-text-secondary);
   text-align: right;
 }
@@ -324,9 +358,9 @@
 .fll-console .con-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
-  background: var(--con-bg-surface-2);
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: var(--con-bg-surface-1);
   border: 1px solid var(--con-border-default);
   border-radius: var(--con-radius-lg);
 }
@@ -336,51 +370,57 @@
   background: var(--con-bg-app);
   border: 1px solid var(--con-border-strong);
   border-radius: var(--con-radius);
-  padding: 0.4375rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   font-size: var(--con-text-body);
   color: var(--con-text-primary);
   font-family: var(--con-font-primary);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--con-duration) var(--con-ease),
+              box-shadow var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-input:focus {
   border-color: var(--con-brand);
-  box-shadow: 0 0 0 2px var(--con-brand-subtle);
+  box-shadow: 0 0 0 3px var(--con-brand-subtle);
 }
 
 .fll-console .con-input::placeholder {
   color: var(--con-text-disabled);
 }
 
-/* ── Buttons ── */
+/* ── Buttons — Teal accent system ── */
 .fll-console .con-btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.4375rem 0.875rem;
+  padding: 0.5rem 1rem;
   background: var(--con-brand);
-  color: #fff;
+  color: #0C0E14;
   border: none;
   border-radius: var(--con-radius);
   font-size: var(--con-text-body);
   font-weight: 600;
   font-family: var(--con-font-primary);
   cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: all var(--con-duration) var(--con-ease);
   white-space: nowrap;
 }
 
 .fll-console .con-btn-primary:hover {
   background: var(--con-brand-hover);
-  box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+  box-shadow: 0 4px 16px rgba(14,212,197,0.25);
+  transform: translateY(-1px);
+}
+
+.fll-console .con-btn-primary:active {
+  transform: translateY(0);
 }
 
 .fll-console .con-btn-ghost {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   background: transparent;
   color: var(--con-text-secondary);
   border: 1px solid var(--con-border-default);
@@ -389,11 +429,11 @@
   font-weight: 500;
   font-family: var(--con-font-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-btn-ghost:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
   border-color: var(--con-border-strong);
   color: var(--con-text-primary);
 }
@@ -402,26 +442,27 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.4375rem 0.875rem;
+  padding: 0.5rem 1rem;
   background: var(--con-danger-subtle);
   color: var(--con-danger);
-  border: 1px solid rgba(220,38,38,0.25);
+  border: 1px solid rgba(239,68,68,0.20);
   border-radius: var(--con-radius);
   font-size: var(--con-text-body);
   font-weight: 600;
   font-family: var(--con-font-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--con-duration) var(--con-ease);
 }
 
 .fll-console .con-btn-danger:hover {
-  background: rgba(220,38,38,0.2);
+  background: rgba(239,68,68,0.18);
+  border-color: rgba(239,68,68,0.35);
 }
 
-/* ── Tabs ── */
+/* ── Tabs — Floating pill style ── */
 .fll-console .con-tabs {
   display: flex;
-  gap: 0;
+  gap: 2px;
   border-bottom: 1px solid var(--con-border-default);
 }
 
@@ -429,7 +470,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.625rem 1rem;
+  padding: 0.5rem 0.875rem;
   font-size: var(--con-text-body);
   font-weight: 500;
   color: var(--con-text-muted);
@@ -438,19 +479,23 @@
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: all var(--con-duration) var(--con-ease);
   white-space: nowrap;
   font-family: var(--con-font-primary);
+  border-radius: var(--con-radius) var(--con-radius) 0 0;
 }
 
 .fll-console .con-tab:hover {
   color: var(--con-text-secondary);
+  background: rgba(255,255,255,0.02);
 }
 
-.fll-console .con-tab.active {
+.fll-console .con-tab.active,
+.fll-console .con-tab.con-tab-active {
   color: var(--con-brand);
   border-bottom-color: var(--con-brand);
   font-weight: 600;
+  background: var(--con-brand-subtle);
 }
 
 /* ── Page Header ── */
@@ -483,30 +528,37 @@
 }
 
 .fll-console .con-empty svg {
-  opacity: 0.35;
+  opacity: 0.25;
+  color: var(--con-brand);
 }
 
-/* ── Loading Skeleton ── */
+/* ── Loading Skeleton — smoother shimmer ── */
 .fll-console .con-skeleton {
   background: linear-gradient(
     90deg,
     var(--con-bg-surface-2) 0%,
-    var(--con-bg-elevated) 50%,
+    var(--con-bg-elevated) 40%,
     var(--con-bg-surface-2) 100%
   );
-  background-size: 200% 100%;
-  animation: con-shimmer 1.5s ease-in-out infinite;
+  background-size: 250% 100%;
+  animation: con-shimmer 1.8s ease-in-out infinite;
   border-radius: var(--con-radius);
 }
 
 @keyframes con-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% { background-position: 250% 0; }
+  100% { background-position: -250% 0; }
 }
 
-/* ── Sidebar ── */
+/* ── Pulse animation ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Sidebar — Obsidian panel with glass edge ── */
 .fll-console .con-sidebar {
-  width: 240px;
+  width: 260px;
   background: var(--con-bg-surface-1);
   border-left: 1px solid var(--con-border-default);
   display: flex;
@@ -516,10 +568,11 @@
   right: 0;
   height: 100vh;
   z-index: 50;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.2);
 }
 
 .fll-console .con-sidebar-logo {
-  padding: 1rem 1.25rem;
+  padding: 1.125rem 1.25rem;
   border-bottom: 1px solid var(--con-border-default);
   display: flex;
   align-items: center;
@@ -527,12 +580,12 @@
 }
 
 .fll-console .con-nav-group-label {
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--con-text-disabled);
-  padding: 0.875rem 0.875rem 0.375rem;
+  padding: 1rem 1rem 0.375rem;
 }
 
 .fll-console .con-nav-item {
@@ -545,13 +598,14 @@
   font-weight: 500;
   color: var(--con-text-secondary);
   text-decoration: none;
-  transition: all 0.15s ease;
-  margin: 1px 0.5rem;
+  transition: all var(--con-duration) var(--con-ease);
+  margin: 1px 0.625rem;
   cursor: pointer;
+  position: relative;
 }
 
 .fll-console .con-nav-item:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
   color: var(--con-text-primary);
 }
 
@@ -559,25 +613,29 @@
   background: var(--con-brand-subtle);
   color: var(--con-brand);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--con-brand);
 }
 
 .fll-console .con-nav-badge {
   margin-right: auto;
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 100px;
   background: var(--con-danger-subtle);
   color: var(--con-danger);
+  font-family: var(--con-font-mono);
 }
 
 /* ── Main content area ── */
 .fll-console .con-main {
   flex: 1;
-  margin-right: 240px;
+  margin-right: 260px;
   min-height: 100vh;
   background: var(--con-bg-app);
   overflow-x: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .fll-console .con-content {
@@ -589,8 +647,8 @@
 
 /* ── Scrollbar (inside console) ── */
 .fll-console ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 .fll-console ::-webkit-scrollbar-track {
   background: transparent;
@@ -600,7 +658,7 @@
   border-radius: 4px;
 }
 .fll-console ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(14,212,197,0.25);
 }
 
 /*

@@ -58,6 +58,28 @@ export default function Vehicles() {
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
   const [vehicles, setVehicles]         = useState<Vehicle[]>(mockVehicles);
 
+  function addVehicle() {
+    const plate = window.prompt("رقم اللوحة:");
+    if (!plate) return;
+    const type = window.prompt("نوع المركبة:", "سيارة") || "سيارة";
+    const brand = window.prompt("الماركة:", "تويوتا") || "تويوتا";
+    const courier = window.prompt("اسم المندوب:", "غير محدد") || "غير محدد";
+    const city = window.prompt("المدينة:", "الرياض") || "الرياض";
+    const year = Number(window.prompt("السنة:", "2024") || "2024");
+    const next: Vehicle = {
+      id: `local-${Date.now()}`,
+      plate,
+      type,
+      brand,
+      year,
+      courier,
+      city,
+      status: "active",
+      lastService: new Date().toISOString(),
+    };
+    setVehicles((prev) => [next, ...prev]);
+  }
+
   useEffect(() => {
     async function fetchVehicles() {
       const { data, error } = await supabase
@@ -121,7 +143,7 @@ export default function Vehicles() {
             إدارة مركبات المناديب وتاريخ الصيانة
           </p>
         </div>
-        <button className="con-btn-primary">
+        <button className="con-btn-primary" onClick={addVehicle}>
           <Plus size={14} />
           إضافة مركبة
         </button>

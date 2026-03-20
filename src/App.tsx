@@ -97,6 +97,23 @@ const AdminExcel = lazy(() => import("@/pages/admin/Excel"));
 const AdminDashboardLegacy = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminDriversLegacy = lazy(() => import("@/pages/admin/AdminDrivers"));
 
+// ── New pages (connected to AWS APIs) ──────────────────────────────────────
+const Approvals = lazy(() => import("@/pages/admin/Approvals"));
+const AuditLog = lazy(() => import("@/pages/admin/AuditLog"));
+const Tasks = lazy(() => import("@/pages/admin/Tasks"));
+const AdminNotifications = lazy(() => import("@/pages/admin/Notifications"));
+const Attendance = lazy(() => import("@/pages/admin/Attendance"));
+const FleetManagement = lazy(() => import("@/pages/admin/FleetManagement"));
+const FleetAssignments = lazy(() => import("@/pages/admin/FleetAssignments"));
+const Shipments = lazy(() => import("@/pages/admin/Shipments"));
+const Invoices = lazy(() => import("@/pages/admin/Invoices"));
+const PayoutManagement = lazy(() => import("@/pages/admin/PayoutManagement"));
+const EmailLogs = lazy(() => import("@/pages/admin/EmailLogs"));
+const RiskManagement = lazy(() => import("@/pages/admin/RiskManagement"));
+const AccountReactivation = lazy(() => import("@/pages/admin/AccountReactivation"));
+const AIReports = lazy(() => import("@/pages/admin/AIReports"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -149,6 +166,7 @@ export default function App() {
                 AUTHENTICATION
             ══════════════════════════════════════════════════════════════ */}
             <Route path="/admin/login" element={<AdminAuthProvider><AdminLogin /></AdminAuthProvider>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<AdminAuthProvider><PasswordLogin title="تسجيل دخول السائقين" subtitle="الدخول عبر اسم المستخدم وكلمة المرور" /></AdminAuthProvider>} />
             <Route path="/unified-login" element={<AdminAuthProvider><PasswordLogin title="تسجيل الدخول الموحّد" subtitle="دخول الموظفين والإدارة عبر اسم المستخدم وكلمة المرور" /></AdminAuthProvider>} />
 
@@ -176,6 +194,23 @@ export default function App() {
               <Route path="excel" element={<PermissionGuard permission="excel"><AdminExcel /></PermissionGuard>} />
               <Route path="page-builder" element={<AccessGuard roles={["admin", "owner"]}><AdminPageBuilder /></AccessGuard>} />
               <Route path="dispatch" element={<PermissionGuard permission="orders"><AdminDispatch /></PermissionGuard>} />
+
+              {/* ── New AWS-connected pages ── */}
+              <Route path="approvals" element={<AccessGuard roles={["admin", "owner"]}><Approvals /></AccessGuard>} />
+              <Route path="audit-log" element={<AccessGuard roles={["admin", "owner"]}><AuditLog /></AccessGuard>} />
+              <Route path="tasks" element={<AccessGuard roles={["admin", "owner", "staff"]}><Tasks /></AccessGuard>} />
+              <Route path="notifications" element={<AccessGuard roles={["admin", "owner", "staff"]}><AdminNotifications /></AccessGuard>} />
+              <Route path="attendance" element={<AccessGuard roles={["admin", "owner", "staff"]} departments={["hr"]}><Attendance /></AccessGuard>} />
+              <Route path="fleet" element={<AccessGuard roles={["admin", "owner", "staff"]} departments={["fleet"]}><FleetManagement /></AccessGuard>} />
+              <Route path="fleet-assignments" element={<AccessGuard roles={["admin", "owner", "staff"]} departments={["fleet"]}><FleetAssignments /></AccessGuard>} />
+              <Route path="shipments" element={<PermissionGuard permission="orders"><Shipments /></PermissionGuard>} />
+              <Route path="invoices" element={<PermissionGuard permission="finance"><Invoices /></PermissionGuard>} />
+              <Route path="payouts" element={<PermissionGuard permission="finance"><PayoutManagement /></PermissionGuard>} />
+              <Route path="email-logs" element={<AccessGuard roles={["admin", "owner"]}><EmailLogs /></AccessGuard>} />
+              <Route path="risk" element={<AccessGuard roles={["admin", "owner"]}><RiskManagement /></AccessGuard>} />
+              <Route path="reactivation" element={<AccessGuard roles={["admin", "owner"]}><AccountReactivation /></AccessGuard>} />
+              <Route path="ai-reports" element={<PermissionGuard permission="reports"><AIReports /></PermissionGuard>} />
+
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
 

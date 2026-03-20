@@ -22,13 +22,9 @@ export default function PasswordLogin({ title, subtitle }: { title: string; subt
       setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       return;
     }
-    const authRole = (data.user?.user_metadata as any)?.role;
-    if (authRole === "courier" || authRole === "driver") {
-      navigate("/courier/portal");
-      return;
-    }
+    // Always check role from database, not user_metadata (which can be tampered with)
     const { data: profile } = await supabase.from("users").select("role").eq("id", data.user.id).maybeSingle();
-    if (profile?.role === "courier") {
+    if (profile?.role === "courier" || profile?.role === "driver") {
       navigate("/courier/portal");
       return;
     }

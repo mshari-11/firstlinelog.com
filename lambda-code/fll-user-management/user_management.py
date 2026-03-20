@@ -1,4 +1,5 @@
 import json
+import os
 import boto3
 import logging
 from datetime import datetime
@@ -9,7 +10,9 @@ logger.setLevel(logging.INFO)
 cognito = boto3.client('cognito-idp', region_name='me-south-1')
 ses = boto3.client('ses', region_name='me-south-1')
 
-USER_POOL_ID = 'None'
+USER_POOL_ID = os.environ.get('USER_POOL_ID')
+if not USER_POOL_ID:
+    logger.error("USER_POOL_ID environment variable is not set")
 
 def lambda_handler(event, context):
     """معالج إدارة المستخدمين"""
@@ -33,7 +36,7 @@ def lambda_handler(event, context):
         logger.error(f"خطأ في معالج المستخدمين: {str(e)}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'حدث خطأ داخلي'})
         }
 
 def add_user_to_group(event):
@@ -69,7 +72,7 @@ def add_user_to_group(event):
         logger.error(f"خطأ في إضافة المستخدم للمجموعة: {str(e)}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'حدث خطأ داخلي'})
         }
 
 def approve_staff_user(event):
@@ -120,7 +123,7 @@ def approve_staff_user(event):
         logger.error(f"خطأ في الموافقة على الموظف: {str(e)}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'حدث خطأ داخلي'})
         }
 
 def get_pending_users():
@@ -158,7 +161,7 @@ def get_pending_users():
         logger.error(f"خطأ في الحصول على المستخدمين المعلقين: {str(e)}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'حدث خطأ داخلي'})
         }
 
 def send_approval_email(email, username, department):

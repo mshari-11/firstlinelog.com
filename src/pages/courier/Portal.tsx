@@ -182,16 +182,6 @@ export default function CourierPortal() {
         courierData = data;
       }
 
-      if (!courierData) {
-        const { data } = await supabase
-          .from("couriers")
-          .select("*")
-          .eq("full_name", inferredFullName)
-          .limit(1)
-          .maybeSingle();
-        courierData = data;
-      }
-
       if (!isCourierAuth && !courierData) {
         setAuthError("ليس لديك صلاحية الوصول لبوابة المناديب");
         setLoading(false);

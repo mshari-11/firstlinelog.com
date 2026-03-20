@@ -22,14 +22,14 @@ import urllib.parse
 ADMIN_REDIRECT_URL = 'https://fll.sa/admin-panel/dashboard'
 
 region = os.environ.get('REGION', 'me-south-1')
-user_pool_id = os.environ.get('USER_POOL_ID', 'me-south-1_aJtmQ0QrN')
-client_id = os.environ.get('COGNITO_CLIENT_ID', '6n49ej8fl92i9rtotbk5o9o0d1')
+user_pool_id = os.environ.get('USER_POOL_ID', '')
+client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
 ses = boto3.client('ses', region_name=region)
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://djebhztfewjfyyoortvv.supabase.co')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 OTP_EXPIRY_SECONDS = 300  # 5 minutes
 OTP_MAX_ATTEMPTS = 5
@@ -48,7 +48,7 @@ def cors(status, body):
         'statusCode': status,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': 'https://www.fll.sa',
             'Access-Control-Allow-Headers': 'content-type,authorization',
             'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
         },
@@ -230,7 +230,7 @@ def login(body):
         return cors(403, {'message': 'الحساب غير مؤكد. يرجى تأكيد البريد الإلكتروني أولاً', 'needsConfirmation': True})
     except Exception as e:
         print(f"Login error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def respond_mfa(body):
     """Handle MFA code verification after login"""
@@ -287,7 +287,7 @@ def respond_mfa(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق'})
     except Exception as e:
         print(f"MFA error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def register(body):
     email = body.get('email', '')
@@ -319,7 +319,7 @@ def register(body):
         return cors(400, {'message': 'كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل مع أرقام وحروف كبيرة وصغيرة'})
     except Exception as e:
         print(f"Register error: {e}")
-        return cors(500, {'message': 'خطأ في التسجيل', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التسجيل'})
 
 def verify_code(body):
     email = body.get('email', body.get('username', ''))
@@ -346,7 +346,7 @@ def verify_code(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق. اطلب رمز جديد'})
     except Exception as e:
         print(f"Verify error: {e}")
-        return cors(500, {'message': 'خطأ في التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التحقق'})
 
 def forgot_password(body):
     email = body.get('email', body.get('username', ''))
@@ -398,7 +398,7 @@ def reset_password(body):
         return cors(400, {'message': 'كلمة المرور الجديدة ضعيفة'})
     except Exception as e:
         print(f"Reset error: {e}")
-        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور'})
 
 def resend_code(body):
     email = body.get('email', body.get('username', ''))
@@ -538,7 +538,7 @@ def send_custom_otp(body):
         
     except Exception as e:
         print(f"send_custom_otp error: {e}")
-        return cors(500, {'message': 'خطأ في إرسال رمز التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في إرسال رمز التحقق'})
 
 
 def verify_custom_otp(body):
@@ -605,7 +605,7 @@ def verify_custom_otp(body):
         
     except Exception as e:
         print(f"verify_custom_otp error: {e}")
-        return cors(500, {'message': 'خطأ في التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التحقق'})
 
 
 def _build_otp_email_html(code, email):

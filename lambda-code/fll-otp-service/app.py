@@ -8,8 +8,9 @@ Endpoints:
 """
 import json
 import boto3
-import random
-import string
+import secrets
+import hashlib
+import hmac
 from datetime import datetime, timedelta, timezone
 import os
 import urllib.request
@@ -17,7 +18,7 @@ import urllib.parse
 import time
 
 # Configuration
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://djebhztfewjfyyoortvv.supabase.co")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 SES_REGION = "me-south-1"
 FROM_EMAIL = "no-reply@fll.sa"
@@ -36,7 +37,7 @@ def cors(status, body):
         'statusCode': status,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': 'https://www.fll.sa',
             'Access-Control-Allow-Headers': 'content-type,authorization',
             'Access-Control-Allow-Methods': 'POST,OPTIONS'
         },
@@ -72,9 +73,15 @@ def supabase_request(method, table, params=None, body_data=None, filters=None):
         return None
 
 
+OTP_HASH_SECRET = os.environ.get('OTP_HASH_SECRET', 'fll-otp-default-secret')
+
 def generate_otp():
-    """Generate a 6-digit OTP."""
-    return ''.join(random.choices(string.digits, k=6))
+    """Generate a cryptographically secure 6-digit OTP."""
+    return str(secrets.randbelow(900000) + 100000)
+
+def hash_otp(code):
+    """Hash OTP code using HMAC-SHA256."""
+    return hmac.new(OTP_HASH_SECRET.encode(), code.encode(), hashlib.sha256).hexdigest()
 
 
 def get_otp_message(otp_type):
@@ -283,11 +290,11 @@ def send_otp(email, otp_type):
     otp_code = generate_otp()
     expires_at = (datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRY_MINUTES)).isoformat()
     
-    # Save to Supabase
+    # Save hashed OTP to Supabase (never store plain text)
     otp_record = {
         'email': email,
         'otp_type': otp_type,
-        'otp_code': otp_code,
+        'otp_code': hash_otp(otp_code),
         'attempts': 0,
         'expires_at': expires_at,
         'verified_at': None
@@ -321,7 +328,7 @@ def send_otp(email, otp_type):
         return {'success': True, 'message': 'OTP sent to email', 'code': 200}
     except Exception as e:
         print(f"SES error: {str(e)}")
-        return {'error': f'Failed to send email: {str(e)}', 'code': 500}
+        return {'error': 'Failed to send verification email', 'code': 500}
 
 
 def verify_otp(email, code, otp_type):
@@ -356,8 +363,8 @@ def verify_otp(email, code, otp_type):
     if attempts >= MAX_ATTEMPTS:
         return {'error': 'Maximum verification attempts exceeded', 'code': 400}
     
-    # Verify code
-    if otp_record.get('otp_code') != code:
+    # Verify code (compare hashes using constant-time comparison)
+    if not hmac.compare_digest(otp_record.get('otp_code', ''), hash_otp(code)):
         # Increment attempts
         new_attempts = attempts + 1
         supabase_request('PATCH', 'otp_requests', 
@@ -387,7 +394,7 @@ def handler(event, context):
     
     try:
         body = json.loads(event.get('body', '{}')) if event.get('body') else {}
-    except:
+    except (json.JSONDecodeError, TypeError):
         body = {}
     
     # Route handling

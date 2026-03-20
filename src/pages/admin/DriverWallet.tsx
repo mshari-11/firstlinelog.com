@@ -146,6 +146,8 @@ export default function DriverWallet() {
   const [search, setSearch]     = useState("");
   const [eventFilter, setEventFilter] = useState("all");
   const [selected, setSelected] = useState<DriverWallet | null>(null);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState("");
 
   async function createDraftBatch() {
     const candidates = wallets.filter((w) => !w.is_frozen && w.balance > 0);
@@ -178,10 +180,17 @@ export default function DriverWallet() {
     setTab("batches");
   }
 
+  function openPayoutModal() {
+    if (!selected) return;
+    setPayoutAmount(String(selected.balance));
+    setShowPayoutModal(true);
+  }
+
   async function payoutSelectedWallet() {
     if (!selected) return;
-    const amount = Number(window.prompt("مبلغ الصرف:", String(selected.balance)) || "0");
+    const amount = Number(payoutAmount);
     if (!amount || amount <= 0 || amount > selected.balance) return;
+    setShowPayoutModal(false);
     if (supabase) {
       const { error } = await supabase.rpc("record_wallet_event", {
         p_driver_id: selected.driver_id,
@@ -606,7 +615,7 @@ export default function DriverWallet() {
 
               {/* Actions */}
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-                <button className="con-btn-primary" style={{ flex: 1, fontSize: "var(--con-text-caption)", padding: "0.5rem", justifyContent: "center", display: "flex", alignItems: "center", gap: "0.375rem" }} onClick={payoutSelectedWallet}>
+                <button className="con-btn-primary" style={{ flex: 1, fontSize: "var(--con-text-caption)", padding: "0.5rem", justifyContent: "center", display: "flex", alignItems: "center", gap: "0.375rem" }} onClick={openPayoutModal}>
                   <ArrowUpRight size={13} /> صرف رصيد
                 </button>
                 <button className="con-btn-ghost" style={{ fontSize: "var(--con-text-caption)", padding: "0.5rem 0.75rem" }} onClick={editSelectedWallet}>
@@ -775,6 +784,31 @@ export default function DriverWallet() {
             <Layers size={14} style={{ color: "var(--con-info)", flexShrink: 0, marginTop: "0.1rem" }} />
             <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", lineHeight: 1.6 }}>
               <strong style={{ color: "var(--con-info)" }}>نظام محاسبة مزدوجة</strong> — كل دفعة تُسجَّل كـ Debit على حساب التسوية وCredit على محفظة السائق. يمكن التدقيق في كل ريال عبر تبويب سجل الحركات.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payout Modal */}
+      {showPayoutModal && selected && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowPayoutModal(false); }}>
+          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 380, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>صرف رصيد</h2>
+              <button onClick={() => setShowPayoutModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ fontSize: 13, color: "var(--con-text-secondary)" }}>
+                المندوب: <strong>{selected.driver_name}</strong><br />
+                الرصيد المتاح: <strong style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-success)" }}>{selected.balance.toFixed(2)} ر.س</strong>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>مبلغ الصرف (ر.س)</label>
+                <input className="con-input" type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} max={selected.balance} style={{ width: "100%", fontFamily: "var(--con-font-mono)" }} />
+              </div>
+              <button className="con-btn-primary" onClick={payoutSelectedWallet} disabled={!Number(payoutAmount) || Number(payoutAmount) <= 0 || Number(payoutAmount) > selected.balance} style={{ width: "100%", justifyContent: "center" }}>
+                <ArrowUpRight size={14} /> تأكيد الصرف
+              </button>
             </div>
           </div>
         </div>

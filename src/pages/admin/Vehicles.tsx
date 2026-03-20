@@ -3,7 +3,7 @@
  * Enterprise Fleet Panel — vehicle registry, status tracking, service history
  */
 import { useState, useEffect } from "react";
-import { Truck, Plus, Search, Car, Bike, Package, Wrench, MapPin, AlertCircle } from "lucide-react";
+import { Truck, Plus, Search, Car, Bike, Package, Wrench, MapPin, AlertCircle, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -57,27 +57,25 @@ export default function Vehicles() {
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
   const [vehicles, setVehicles]         = useState<Vehicle[]>(mockVehicles);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newVehicle, setNewVehicle]     = useState({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
 
   function addVehicle() {
-    const plate = window.prompt("رقم اللوحة:");
-    if (!plate) return;
-    const type = window.prompt("نوع المركبة:", "سيارة") || "سيارة";
-    const brand = window.prompt("الماركة:", "تويوتا") || "تويوتا";
-    const courier = window.prompt("اسم المندوب:", "غير محدد") || "غير محدد";
-    const city = window.prompt("المدينة:", "الرياض") || "الرياض";
-    const year = Number(window.prompt("السنة:", "2024") || "2024");
+    if (!newVehicle.plate) return;
     const next: Vehicle = {
       id: `local-${Date.now()}`,
-      plate,
-      type,
-      brand,
-      year,
-      courier,
-      city,
+      plate: newVehicle.plate,
+      type: newVehicle.type,
+      brand: newVehicle.brand || "غير محدد",
+      year: Number(newVehicle.year) || 2024,
+      courier: newVehicle.courier || "غير محدد",
+      city: newVehicle.city || "الرياض",
       status: "active",
       lastService: new Date().toISOString(),
     };
     setVehicles((prev) => [next, ...prev]);
+    setShowAddModal(false);
+    setNewVehicle({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
   }
 
   useEffect(() => {
@@ -143,7 +141,7 @@ export default function Vehicles() {
             إدارة مركبات المناديب وتاريخ الصيانة
           </p>
         </div>
-        <button className="con-btn-primary" onClick={addVehicle}>
+        <button className="con-btn-primary" onClick={() => setShowAddModal(true)}>
           <Plus size={14} />
           إضافة مركبة
         </button>
@@ -331,6 +329,36 @@ export default function Vehicles() {
           </div>
         )}
       </div>
+
+      {/* Add Vehicle Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
+          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>إضافة مركبة جديدة</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              {[
+                { label: "رقم اللوحة *", value: newVehicle.plate, key: "plate", placeholder: "ABC-1234" },
+                { label: "نوع المركبة", value: newVehicle.type, key: "type", placeholder: "سيارة" },
+                { label: "الماركة", value: newVehicle.brand, key: "brand", placeholder: "تويوتا" },
+                { label: "اسم المندوب", value: newVehicle.courier, key: "courier", placeholder: "غير محدد" },
+                { label: "المدينة", value: newVehicle.city, key: "city", placeholder: "الرياض" },
+                { label: "السنة", value: newVehicle.year, key: "year", placeholder: "2024" },
+              ].map((f) => (
+                <div key={f.key}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>{f.label}</label>
+                  <input className="con-input" value={f.value} placeholder={f.placeholder} onChange={(e) => setNewVehicle((prev) => ({ ...prev, [f.key]: e.target.value }))} style={{ width: "100%" }} />
+                </div>
+              ))}
+              <button className="con-btn-primary" onClick={addVehicle} disabled={!newVehicle.plate} style={{ width: "100%", justifyContent: "center", marginTop: 4 }}>
+                <Plus size={14} /> إضافة المركبة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

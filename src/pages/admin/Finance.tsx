@@ -393,45 +393,45 @@ export default function Finance() {
     URL.revokeObjectURL(url);
   }
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newRecord, setNewRecord] = useState({ courier_name: "", net: "1000", gross: "1000" });
+  const [createError, setCreateError] = useState("");
+
   async function createFinanceRecord() {
-    if (!supabase) {
-      alert("قاعدة البيانات غير متصلة");
-      return;
-    }
-    const courier_name = window.prompt("اسم المندوب:");
-    if (!courier_name) return;
-    const net = Number(window.prompt("صافي المستحق:", "1000") || "1000");
-    const gross = Number(window.prompt("الإيراد الإجمالي:", String(net)) || String(net));
-    const now = new Date().toISOString();
+    if (!supabase) return;
+    setCreateError("");
     const { data: courier } = await supabase
       .from("couriers")
       .select("id, full_name")
-      .eq("full_name", courier_name)
+      .eq("full_name", newRecord.courier_name.trim())
       .limit(1)
       .maybeSingle();
     if (!courier) {
-      alert("لم يتم العثور على المندوب. استخدم الاسم كما هو مسجل بالنظام.");
+      setCreateError("لم يتم العثور على المندوب. استخدم الاسم كما هو مسجل بالنظام.");
       return;
     }
+    const now = new Date().toISOString();
     const { error } = await supabase.from("finance").insert({
       courier_id: courier.id,
       period_start: now,
       period_end: now,
-      gross_revenue: gross,
+      gross_revenue: Number(newRecord.gross) || 0,
       platform_fees: 0,
       vehicle_deductions: 0,
       absence_deductions: 0,
       maintenance_deductions: 0,
       insurance_deductions: 0,
       other_deductions: 0,
-      net_payout: net,
+      net_payout: Number(newRecord.net) || 0,
       payment_status: "pending",
       notes: "تمت الإضافة من لوحة الإدارة",
     });
     if (error) {
-      alert("تعذر إنشاء السجل المالي في قاعدة البيانات");
+      setCreateError("تعذر إنشاء السجل المالي");
       return;
     }
+    setShowCreateModal(false);
+    setNewRecord({ courier_name: "", net: "1000", gross: "1000" });
     await fetchFinanceData();
   }
 
@@ -553,7 +553,7 @@ export default function Finance() {
             <RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
             تحديث
           </button>
-          <button className="con-btn-primary" onClick={createFinanceRecord}>
+          <button className="con-btn-primary" onClick={() => setShowCreateModal(true)}>
             <Plus size={14} />
             سجل جديد
           </button>
@@ -870,6 +870,40 @@ export default function Finance() {
           onUpdateStatus={updateStatus}
           onSendAlert={sendBankAlert}
         />
+      )}
+
+      {/* Create Finance Record Modal */}
+      {showCreateModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreateModal(false); }}>
+          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>إنشاء سجل مالي</h2>
+              <button onClick={() => setShowCreateModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>اسم المندوب *</label>
+                <input className="con-input" value={newRecord.courier_name} onChange={(e) => setNewRecord((p) => ({ ...p, courier_name: e.target.value }))} placeholder="الاسم كما هو مسجل بالنظام" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>صافي المستحق (ر.س)</label>
+                <input className="con-input" type="number" value={newRecord.net} onChange={(e) => setNewRecord((p) => ({ ...p, net: e.target.value }))} style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>الإيراد الإجمالي (ر.س)</label>
+                <input className="con-input" type="number" value={newRecord.gross} onChange={(e) => setNewRecord((p) => ({ ...p, gross: e.target.value }))} style={{ width: "100%" }} />
+              </div>
+              {createError && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "var(--con-danger-subtle)", border: "1px solid var(--con-danger)", borderRadius: 8, color: "var(--con-danger)", fontSize: 13 }}>
+                  <AlertCircle size={14} /> {createError}
+                </div>
+              )}
+              <button className="con-btn-primary" onClick={createFinanceRecord} disabled={!newRecord.courier_name.trim()} style={{ width: "100%", justifyContent: "center", marginTop: 4 }}>
+                <Plus size={14} /> إنشاء السجل
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

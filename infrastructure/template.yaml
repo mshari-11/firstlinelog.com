@@ -1,0 +1,595 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  FLL Platform — First Line Logistics
+  Complete serverless infrastructure for Saudi logistics platform
+  Open this file in AWS Infrastructure Composer for visual editing
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        SUPABASE_URL: !Sub '{{resolve:secretsmanager:fll/supabase:SecretString:url}}'
+        SUPABASE_SERVICE_KEY: !Sub '{{resolve:secretsmanager:fll/supabase:SecretString:service_key}}'
+        ADMIN_EMAILS: 'm_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA'
+        FROM_EMAIL: 'FLL Platform <no-reply@fll.sa>'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging]
+  CognitoUserPoolId:
+    Type: String
+    Default: me-south-1_aJtmQ0QrN
+  CognitoClientId:
+    Type: String
+    Default: 6n49ej8fl92i9rtotbk5o9o0d1
+
+# ============================================================================
+# RESOURCES
+# ============================================================================
+Resources:
+
+  # ─── API Gateway ──────────────────────────────────────────────────────────
+  FLLPlatformApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - https://fll.sa
+          - https://www.fll.sa
+          - http://localhost:5173
+          - http://localhost:3000
+        AllowHeaders:
+          - content-type
+          - authorization
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        MaxAge: 86400
+
+  # ─── Auth Lambda ──────────────────────────────────────────────────────────
+  AuthApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-auth-api
+      Handler: app.handler
+      CodeUri: ../lambda-code/fll-auth-api/
+      MemorySize: 256
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          COGNITO_CLIENT_ID: !Ref CognitoClientId
+          REGION: me-south-1
+          SES_FROM_EMAIL: 'FLL <no-reply@fll.sa>'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [cognito-idp:*, ses:SendEmail, ses:SendRawEmail]
+              Resource: '*'
+      Events:
+        Login:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/login
+            Method: POST
+        Register:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/register
+            Method: POST
+        Verify:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/verify
+            Method: POST
+        SendOtp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/send-otp
+            Method: POST
+        VerifyOtp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/verify-custom-otp
+            Method: POST
+        ForgotPassword:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/forgot-password
+            Method: POST
+        ResetPassword:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/reset-password
+            Method: POST
+        GetMe:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /auth/me
+            Method: GET
+
+  # ─── Driver Onboarding Lambda ─────────────────────────────────────────────
+  DriverOnboardingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-driver-onboarding
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-driver-onboarding/
+      Environment:
+        Variables:
+          KYC_BUCKET: !Ref KYCDocumentsBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref KYCDocumentsBucket
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail, ses:SendRawEmail, cognito-idp:*]
+              Resource: '*'
+      Events:
+        OtpSend:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/otp/send
+            Method: POST
+        OtpVerify:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/otp/verify
+            Method: POST
+        Apply:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/apply
+            Method: POST
+        ApproveApp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/applications/{id}/approve
+            Method: POST
+        RejectApp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/applications/{id}/reject
+            Method: POST
+        Status:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /driver/application-status
+            Method: GET
+
+  # ─── KYC Upload Lambda ────────────────────────────────────────────────────
+  KYCUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-kyc-upload
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-kyc-upload/
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref KYCDocumentsBucket
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: '*'
+      Events:
+        Upload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /api/kyc-upload
+            Method: POST
+
+  # ─── AI Chatbot Lambda ────────────────────────────────────────────────────
+  AIChatbotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-ai-chatbot
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-chatbot/
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          CHAT_TABLE: !Ref ChatHistoryTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatHistoryTable
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource: '*'
+      Events:
+        Chat:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /ai/chat
+            Method: POST
+
+  # ─── Contact Confirm Lambda ───────────────────────────────────────────────
+  ContactConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-contact-confirm
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-contact-confirm/
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: '*'
+      Events:
+        Confirm:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /api/contact-confirm
+            Method: POST
+
+  # ─── AI Finance API Lambda ────────────────────────────────────────────────
+  AIFinanceApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-ai-finance-api
+      Handler: api_handler.lambda_handler
+      CodeUri: ../lambda-code/fll-ai-finance-api/
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource: '*'
+
+  # ─── AI Dashboard API Lambda ──────────────────────────────────────────────
+  AIDashboardApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-ai-dashboard-api
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-ai-dashboard-api/
+      Timeout: 15
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource: '*'
+
+  # ─── AI Finance Review Lambda ─────────────────────────────────────────────
+  AIFinanceReviewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-ai-finance-review
+      Handler: lambda_function.handler
+      CodeUri: ../lambda-code/fll-ai-finance-review/
+      Timeout: 300
+      MemorySize: 512
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource: '*'
+
+  # ─── Platform API (Node.js) ───────────────────────────────────────────────
+  PlatformApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-platform-api-prod
+      Runtime: nodejs18.x
+      Handler: index.handler
+      CodeUri: ../lambda-code/fll-platform-api-prod/
+      Events:
+        DefaultRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /$default
+            Method: ANY
+
+  # ─── Complaints Classifier (Node.js) ──────────────────────────────────────
+  ComplaintsClassifierFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-complaints-classifier-prod
+      Runtime: nodejs18.x
+      Handler: index.handler
+      CodeUri: ../lambda-code/fll-complaints-classifier-prod/
+      Timeout: 60
+      MemorySize: 512
+
+  # ─── User Management Lambda ───────────────────────────────────────────────
+  UserManagementFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-user-management
+      Handler: user_management.lambda_handler
+      CodeUri: ../lambda-code/fll-user-management/
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPoolId
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [cognito-idp:*, ses:SendEmail]
+              Resource: '*'
+
+  # ─── Generate STC Excel Lambda ────────────────────────────────────────────
+  GenerateSTCExcelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-generate-stc-excel
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-generate-stc-excel/
+      Timeout: 60
+      MemorySize: 512
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref FinanceExportsBucket
+      Events:
+        Generate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref FLLPlatformApi
+            Path: /finance/generate-stc-excel
+            Method: POST
+
+  # ─── DB Migration Lambda ──────────────────────────────────────────────────
+  DBMigrationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-db-migration
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-db-migration/
+      Timeout: 900
+      MemorySize: 512
+      Environment:
+        Variables:
+          MIGRATION_SECRET: !Sub '{{resolve:secretsmanager:fll/migration:SecretString:secret}}'
+
+  # ─── OTP Service Lambda ───────────────────────────────────────────────────
+  OTPServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-otp-service
+      Handler: app.handler
+      CodeUri: ../lambda-code/fll-otp-service/
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: '*'
+
+  # ─── SLA Scanner Lambda (Scheduled) ───────────────────────────────────────
+  SLAScannerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-sla-scanner
+      Handler: sla-scanner.handler
+      CodeUri: ../lambda-code/fll-sla-scanner/
+      Timeout: 60
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ComplaintsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotificationsTable
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: '*'
+      Events:
+        HourlySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+            Description: Scan complaints for SLA violations every hour
+            Enabled: true
+
+  # ─── Data Sync Lambda (Scheduled) ─────────────────────────────────────────
+  DataSyncFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: fll-data-sync
+      Handler: lambda_function.lambda_handler
+      CodeUri: ../lambda-code/fll-data-sync/
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          KYC_BUCKET: !Ref KYCDocumentsBucket
+          CHAT_TABLE: !Ref ChatHistoryTable
+          BATCH_SIZE: '100'
+          LOCATION_RETENTION_HOURS: '48'
+          APPLICATION_EXPIRY_DAYS: '30'
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatHistoryTable
+        - S3ReadPolicy:
+            BucketName: !Ref KYCDocumentsBucket
+        - Statement:
+            - Effect: Allow
+              Action: [cognito-idp:*, ses:SendEmail, ses:SendRawEmail]
+              Resource: '*'
+      Events:
+        FullSync:
+          Type: Schedule
+          Properties:
+            Schedule: rate(6 hours)
+            Description: Full data sync (Cognito, S3, wallets, applications)
+            Enabled: true
+        FinanceSync:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+            Description: Finance pipeline sync
+            Enabled: true
+        CleanupSync:
+          Type: Schedule
+          Properties:
+            Schedule: rate(12 hours)
+            Description: Location cleanup and expired applications
+            Enabled: true
+
+  # ─── S3 Buckets ───────────────────────────────────────────────────────────
+  KYCDocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'fll-kyc-documents-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  FinanceExportsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'fll-finance-exports-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ─── DynamoDB Tables ──────────────────────────────────────────────────────
+  ChatHistoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: fll-chat-history
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: session_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: session_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  ComplaintsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: fll-complaints
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: complaintId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: complaintId
+          KeyType: HASH
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: fll-notifications
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: notificationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: notificationId
+          KeyType: HASH
+
+  # ─── CloudWatch Alarms ────────────────────────────────────────────────────
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: fll-platform-alerts
+      Subscription:
+        - Protocol: email
+          Endpoint: m_shaikhi@yahoo.com
+
+  AuthApiErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: fll-auth-api-errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AuthApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  SLAScannerErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: fll-sla-scanner-errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SLAScannerFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  DataSyncErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: fll-data-sync-errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DataSyncFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref AlertsTopic
+
+# ============================================================================
+# OUTPUTS
+# ============================================================================
+Outputs:
+  ApiEndpoint:
+    Description: FLL Platform API endpoint
+    Value: !Sub 'https://${FLLPlatformApi}.execute-api.${AWS::Region}.amazonaws.com'
+
+  KYCBucketName:
+    Description: KYC Documents S3 bucket
+    Value: !Ref KYCDocumentsBucket
+
+  ChatTableName:
+    Description: Chat history DynamoDB table
+    Value: !Ref ChatHistoryTable

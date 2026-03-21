@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 const CITIES = [
   "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر",

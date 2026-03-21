@@ -10,6 +10,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { supabase } from "@/lib/supabase";
 import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
@@ -47,8 +48,38 @@ interface Order {
   estimatedTime?: number;
 }
 
+function normalizeDriver(raw: any): Driver {
+  return {
+    id: raw.id || raw.driverId || raw.driver_id,
+    name: raw.name || raw.fullName || raw.full_name || "سائق",
+    phone: raw.phone || raw.mobile || "",
+    rating: Number(raw.rating || 4.5),
+    status: raw.status === "offline" ? "offline" : raw.status === "busy" || raw.status === "on_delivery" ? "busy" : "available",
+    lat: Number(raw.lat ?? raw.latitude ?? 24.7136),
+    lng: Number(raw.lng ?? raw.longitude ?? 46.6753),
+    vehicle: raw.vehicle || raw.vehicleType || raw.vehicle_type || "دراجة نارية",
+    activeOrderId: raw.activeOrderId || raw.active_order_id,
+  };
+}
+
+function normalizeOrder(raw: any): Order {
+  return {
+    id: raw.id || raw.orderId || raw.order_id,
+    customer: raw.customer || raw.customer_name || "عميل",
+    address: raw.address || raw.delivery_address || "",
+    platform: raw.platform || raw.platform_name || "FLL",
+    amount: Number(raw.amount || 0),
+    status: raw.status || "pending",
+    lat: Number(raw.lat ?? raw.latitude ?? 24.7136),
+    lng: Number(raw.lng ?? raw.longitude ?? 46.6753),
+    assignedDriverId: raw.assignedDriverId || raw.assigned_driver_id,
+    createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+    estimatedTime: raw.estimatedTime || raw.estimated_time,
+  };
+}
+
 // ─── API base ─────────────────────────────────────────────────────────────────
-const API_BASE = "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+import { API_BASE } from "@/lib/api";
 
 // ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [
@@ -131,6 +162,7 @@ export default function Dispatch() {
   const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [loadingData, setLoadingData] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -159,11 +191,34 @@ export default function Dispatch() {
 
         if (cancelled) return;
 
-        const rawDrivers: Driver[] = Array.isArray(driversData) ? driversData : (driversData.items ?? driversData.data ?? []);
-        const rawOrders: Order[] = Array.isArray(ordersData) ? ordersData : (ordersData.items ?? ordersData.data ?? []);
+        // Normalise — API may return { drivers: [...] } or [...]
+        const rawDrivers = Array.isArray(driversData) ? driversData : (driversData.items ?? driversData.drivers ?? driversData.data ?? []);
+        const rawOrders = Array.isArray(ordersData) ? ordersData : (ordersData.items ?? ordersData.orders ?? ordersData.data ?? []);
 
-        if (rawDrivers.length > 0) setDrivers(rawDrivers);
-        if (rawOrders.length > 0) setOrders(rawOrders);
+        // Merge with Supabase live driver locations if available
+        let liveLocations: any[] = [];
+        if (supabase) {
+          const { data: live } = await supabase
+            .from("driver_locations")
+            .select("driver_id, latitude, longitude, is_online, updated_at")
+            .eq("is_online", true);
+          liveLocations = live || [];
+        }
+
+        const liveMap = new globalThis.Map(liveLocations.map((loc) => [String(loc.driver_id), loc]));
+        const mergedDrivers = rawDrivers.map((raw: any) => {
+          const driver = normalizeDriver(raw);
+          const live = liveMap.get(String(driver.id));
+          return live ? {
+            ...driver,
+            lat: Number(live.latitude),
+            lng: Number(live.longitude),
+            status: driver.status === "offline" ? "available" : driver.status,
+          } : driver;
+        });
+
+        if (mergedDrivers.length > 0) setDrivers(mergedDrivers);
+        if (rawOrders.length > 0) setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
         if (!cancelled) setApiError(null);
       } catch {
         if (!cancelled) setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
@@ -176,7 +231,7 @@ export default function Dispatch() {
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [refreshTick]);
 
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;
@@ -290,6 +345,18 @@ export default function Dispatch() {
 
         {/* Layer toggles */}
         <div style={{ display: "flex", gap: "0.375rem" }}>
+          <button
+            onClick={() => setRefreshTick((v) => v + 1)}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.375rem",
+              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px", fontWeight: 500, border: "1px solid var(--con-border-default)",
+              cursor: "pointer", transition: "all 0.15s",
+              background: "transparent", color: "var(--con-text-muted)",
+            }}
+          >
+            <RefreshCw size={12} /> تحديث
+          </button>
           <button
             onClick={() => setShowDrivers(!showDrivers)}
             style={{

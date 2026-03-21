@@ -19,15 +19,17 @@ import time
 import urllib.request
 import urllib.parse
 
+ADMIN_REDIRECT_URL = 'https://fll.sa/admin-panel/dashboard'
+
 region = os.environ.get('REGION', 'me-south-1')
-user_pool_id = os.environ.get('USER_POOL_ID', 'me-south-1_aJtmQ0QrN')
-client_id = os.environ.get('COGNITO_CLIENT_ID', '6n49ej8fl92i9rtotbk5o9o0d1')
+user_pool_id = os.environ.get('USER_POOL_ID', '')
+client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
 ses = boto3.client('ses', region_name=region)
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://djebhztfewjfyyoortvv.supabase.co')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 OTP_EXPIRY_SECONDS = 300  # 5 minutes
 OTP_MAX_ATTEMPTS = 5
@@ -41,12 +43,22 @@ def get_secret_hash(username):
     dig = hmac.new(client_secret.encode('utf-8'), msg.encode('utf-8'), hashlib.sha256).digest()
     return base64.b64encode(dig).decode()
 
-def cors(status, body):
+ALLOWED_ORIGINS = [
+    'https://fll.sa', 'https://www.fll.sa',
+    'http://localhost:5173', 'http://localhost:3000',
+]
+
+def get_origin(event):
+    headers = event.get('headers', {}) if isinstance(event.get('headers'), dict) else {}
+    origin = headers.get('origin', headers.get('Origin', ''))
+    return origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
+
+def cors(status, body, event=None):
     return {
         'statusCode': status,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': get_origin(event) if event else ALLOWED_ORIGINS[0],
             'Access-Control-Allow-Headers': 'content-type,authorization',
             'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
         },
@@ -80,6 +92,36 @@ def supabase_request(method, table, params=None, body_data=None, filters=None):
         err_body = e.read().decode('utf-8') if e.fp else ''
         print(f"Supabase error {e.code}: {err_body}")
         return None
+
+
+def supabase_auth_admin_request(path, body_data=None, method='POST'):
+    url = f"{SUPABASE_URL}/auth/v1{path}"
+    headers = {
+        'apikey': SUPABASE_SERVICE_KEY,
+        'Authorization': f'Bearer {SUPABASE_SERVICE_KEY}',
+        'Content-Type': 'application/json',
+    }
+    data = json.dumps(body_data).encode('utf-8') if body_data else None
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            resp_body = resp.read().decode('utf-8')
+            return json.loads(resp_body) if resp_body else {}
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode('utf-8') if e.fp else ''
+        print(f"Supabase auth error {e.code}: {err_body}")
+        return None
+
+
+def generate_magic_link_token(email):
+    payload = {
+        'type': 'magiclink',
+        'email': email,
+        'options': {
+            'redirect_to': 'https://fll.sa/admin-panel/dashboard'
+        }
+    }
+    return supabase_auth_admin_request('/admin/generate_link', payload)
 
 def handler(event, context):
     method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
@@ -198,7 +240,7 @@ def login(body):
         return cors(403, {'message': 'الحساب غير مؤكد. يرجى تأكيد البريد الإلكتروني أولاً', 'needsConfirmation': True})
     except Exception as e:
         print(f"Login error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def respond_mfa(body):
     """Handle MFA code verification after login"""
@@ -255,7 +297,7 @@ def respond_mfa(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق'})
     except Exception as e:
         print(f"MFA error: {e}")
-        return cors(500, {'message': 'خطأ في النظام', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في النظام'})
 
 def register(body):
     email = body.get('email', '')
@@ -287,7 +329,7 @@ def register(body):
         return cors(400, {'message': 'كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل مع أرقام وحروف كبيرة وصغيرة'})
     except Exception as e:
         print(f"Register error: {e}")
-        return cors(500, {'message': 'خطأ في التسجيل', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التسجيل'})
 
 def verify_code(body):
     email = body.get('email', body.get('username', ''))
@@ -314,7 +356,7 @@ def verify_code(body):
         return cors(400, {'message': 'انتهت صلاحية رمز التحقق. اطلب رمز جديد'})
     except Exception as e:
         print(f"Verify error: {e}")
-        return cors(500, {'message': 'خطأ في التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التحقق'})
 
 def forgot_password(body):
     email = body.get('email', body.get('username', ''))
@@ -366,7 +408,7 @@ def reset_password(body):
         return cors(400, {'message': 'كلمة المرور الجديدة ضعيفة'})
     except Exception as e:
         print(f"Reset error: {e}")
-        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور'})
 
 def resend_code(body):
     email = body.get('email', body.get('username', ''))
@@ -506,7 +548,7 @@ def send_custom_otp(body):
         
     except Exception as e:
         print(f"send_custom_otp error: {e}")
-        return cors(500, {'message': 'خطأ في إرسال رمز التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في إرسال رمز التحقق'})
 
 
 def verify_custom_otp(body):
@@ -547,74 +589,61 @@ def verify_custom_otp(body):
             body_data={'used': True}
         )
         
+        link_data = generate_magic_link_token(email)
+        if not link_data:
+            return cors(500, {'message': 'تم التحقق لكن تعذر إنشاء جلسة الدخول'})
+
+        props = link_data.get('properties', {}) if isinstance(link_data, dict) else {}
+        hashed_token = props.get('hashed_token') or link_data.get('hashed_token')
+        action_link = props.get('action_link') or link_data.get('action_link')
+        if hashed_token:
+            action_link = (
+                f"{SUPABASE_URL}/auth/v1/verify?token={urllib.parse.quote(hashed_token)}"
+                f"&type=magiclink&redirect_to={urllib.parse.quote(ADMIN_REDIRECT_URL, safe=':/')}"
+            )
+        if not hashed_token and not action_link:
+            return cors(500, {'message': 'تم التحقق لكن تعذر تجهيز رابط الدخول'})
+
         return cors(200, {
             'verified': True,
             'email': email,
-            'message': 'تم التحقق بنجاح'
+            'message': 'تم التحقق بنجاح',
+            'token_hash': hashed_token,
+            'type': 'magiclink',
+            'action_link': action_link,
         })
         
     except Exception as e:
         print(f"verify_custom_otp error: {e}")
-        return cors(500, {'message': 'خطأ في التحقق', 'error': str(e)})
+        return cors(500, {'message': 'خطأ في التحقق'})
 
 
 def _build_otp_email_html(code, email):
-    """Build a professional OTP email in Arabic."""
-    digits = ''.join([
-        f'<td style="width:44px;height:52px;background:#f4f4f5;border:2px solid #e4e4e7;'
-        f'border-radius:8px;text-align:center;font-size:24px;font-weight:700;'
-        f'font-family:\'JetBrains Mono\',monospace;color:#18181b;letter-spacing:2px">{d}</td>'
-        for d in code
-    ])
-    
     return f'''<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif">
-<div style="max-width:480px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-  
-  <!-- Header -->
-  <div style="background:#0f172a;padding:24px 32px;text-align:center">
-    <h1 style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px">
-      First Line Logistics
-    </h1>
-    <p style="margin:4px 0 0;color:#94a3b8;font-size:12px">لوحة الإدارة التشغيلية</p>
+<body style="margin:0;padding:24px 0;background:#07111d;font-family:Tahoma,Arial,sans-serif;color:#e5e7eb;">
+<div style="max-width:640px;margin:0 auto;background:#08111b;border-radius:18px;overflow:hidden;border:1px solid #16263d;box-shadow:0 12px 40px rgba(0,0,0,0.35);">
+  <div style="background:#12315f;padding:28px 24px;text-align:center;">
+    <div style="font-size:18px;font-weight:700;letter-spacing:2px;color:#e5e7eb;">FIRST LINE LOGISTICS</div>
+    <div style="margin-top:8px;font-size:13px;color:#d1d5db;">شركة الخط الأول للخدمات اللوجستية</div>
   </div>
-  
-  <!-- Body -->
-  <div style="padding:32px">
-    <h2 style="margin:0 0 8px;color:#18181b;font-size:16px;font-weight:700;text-align:center">
-      رمز التحقق
-    </h2>
-    <p style="margin:0 0 24px;color:#71717a;font-size:13px;text-align:center;line-height:1.6">
-      استخدم الرمز التالي لتسجيل الدخول إلى لوحة الإدارة
-    </p>
-    
-    <!-- OTP Code -->
-    <table cellpadding="0" cellspacing="8" style="margin:0 auto 24px">
-      <tr>{digits}</tr>
-    </table>
-    
-    <div style="background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:12px 16px;margin-bottom:24px">
-      <p style="margin:0;color:#854d0e;font-size:12px;text-align:center">
-        ⏱ هذا الرمز صالح لمدة <strong>5 دقائق</strong> فقط
-      </p>
+  <div style="padding:28px 24px;background:#08111b;">
+    <div style="font-size:28px;line-height:1.7;color:#f3f4f6;font-weight:700;margin-bottom:14px;">رمز التحقق - لوحة الإدارة</div>
+    <div style="font-size:16px;line-height:1.9;color:#e5e7eb;margin-bottom:14px;">تم طلب رمز دخول إداري لهذا البريد: <strong>{email}</strong></div>
+    <div style="font-size:15px;line-height:1.9;color:#cbd5e1;">استخدم الرمز التالي لتسجيل الدخول إلى لوحة الإدارة:</div>
+    <div style="text-align:center;margin:24px 0;">
+      <span style="display:inline-block;background:#020817;border:1px solid #12315f;border-radius:14px;padding:16px 22px;font-size:36px;font-weight:700;letter-spacing:0.45rem;color:#2563eb;font-family:monospace;">{code}</span>
     </div>
-    
-    <p style="margin:0;color:#a1a1aa;font-size:11px;text-align:center;line-height:1.6">
-      إذا لم تطلب هذا الرمز، تجاهل هذا البريد.<br>
-      لا تشارك هذا الرمز مع أي شخص.
-    </p>
+    <div style="margin-top:22px;background:#020817;border:1px solid #0f2744;border-radius:12px;padding:18px 16px;">
+      <div style="font-size:15px;line-height:1.9;color:#e5e7eb;"><strong>التواصل المباشر:</strong> <a href="tel:920014948" style="color:#2563eb;text-decoration:none;font-weight:700;">920014948</a></div>
+      <div style="font-size:15px;line-height:1.9;color:#e5e7eb;"><strong>البريد:</strong> <a href="mailto:support@fll.sa" style="color:#2563eb;text-decoration:none;font-weight:700;">support@fll.sa</a></div>
+    </div>
+    <div style="margin-top:18px;font-size:12px;line-height:1.8;color:#94a3b8;text-align:center;">هذا الرمز صالح لمدة 5 دقائق فقط — لا تشارك الرمز مع أي شخص.</div>
   </div>
-  
-  <!-- Footer -->
-  <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e4e4e7;text-align:center">
-    <p style="margin:0;color:#a1a1aa;font-size:10px">
-      © {int(time.strftime('%Y'))} First Line Logistics — جميع الحقوق محفوظة
-    </p>
-    <p style="margin:4px 0 0;color:#a1a1aa;font-size:10px">
-      المملكة العربية السعودية | fll.sa
-    </p>
+  <div style="background:#12315f;padding:22px 20px;text-align:center;">
+    <div style="width:54px;height:54px;margin:0 auto 12px;background:#062b45;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;letter-spacing:1px;">FLL</div>
+    <div style="font-size:13px;color:#d1d5db;">fll.sa — First Line Logistics {int(time.strftime('%Y'))} &copy;</div>
   </div>
 </div>
 </body>

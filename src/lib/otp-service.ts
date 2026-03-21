@@ -16,8 +16,7 @@ export interface VerifyOTPResponse {
   error?: string;
 }
 
-// API Gateway (public) — fll-auth-api handles OTP via SES
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+import { API_BASE } from "@/lib/api";
 
 /**
  * Send OTP to email

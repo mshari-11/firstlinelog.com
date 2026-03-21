@@ -168,6 +168,22 @@ export default function Reports() {
 
   const totalOrders = platformChartData.reduce((s, p) => s + p.orders, 0);
 
+  function exportPlatformSummary() {
+    const rows = platformChartData.map((platform) => {
+      const percentage = ((platform.orders / totalOrders) * 100).toFixed(1);
+      const avgOrder = platform.orders > 0 ? platform.revenue / platform.orders : 0;
+      return [platform.name, platform.orders, platform.revenue, avgOrder.toFixed(2), `${percentage}%`].join(",");
+    });
+    const csv = [["platform", "orders", "revenue", "avg_order", "share"].join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fll-platform-summary-${period}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }} dir="rtl">
 
@@ -378,6 +394,7 @@ export default function Reports() {
           <button
             className="con-btn-ghost"
             style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "var(--con-text-caption)" }}
+            onClick={exportPlatformSummary}
           >
             <Download size={13} />
             تصدير

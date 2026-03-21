@@ -1,12 +1,12 @@
-/**
- * صفحة تسجيل الدخول — لوحة إدارة فيرست لاين
+﻿/**
+ * طµظپط­ط© طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„ â€” ظ„ظˆط­ط© ط¥ط¯ط§ط±ط© ظپظٹط±ط³طھ ظ„ط§ظٹظ†
  * Password login + OTP verification
- * Styled with .fll-console tokens — clean, professional
+ * Styled with .fll-console tokens â€” clean, professional
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
-import { supabase } from "@/lib/supabase";
+// Cognito auth - supabase removed
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
 import {
   Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ArrowLeft, Smartphone,
@@ -14,7 +14,7 @@ import {
 
 type Screen = "login" | "otp" | "success";
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// â”€â”€â”€ Shared sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ErrorBanner({ msg }: { msg: string }) {
   if (!msg) return null;
@@ -96,7 +96,7 @@ function PrimaryBtn({ children, loading, disabled, onClick, type = "submit" }: {
       style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", opacity: (loading || disabled) ? 0.55 : 1 }}
     >
       {loading
-        ? <><div style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span>جارٍ التحميل...</span></>
+        ? <><div style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span>ط¬ط§ط±ظچ ط§ظ„طھط­ظ…ظٹظ„...</span></>
         : children}
     </button>
   );
@@ -116,7 +116,7 @@ function SecondaryBtn({ children, onClick, disabled }: {
   );
 }
 
-// ─── OTP Input Component ───────────────────────────────────────────────────────
+// â”€â”€â”€ OTP Input Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OTPInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const handleChange = (index: number, val: string) => {
@@ -150,7 +150,7 @@ function OTPInput({ value, onChange }: { value: string; onChange: (v: string) =>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AdminLogin() {
   const { signIn } = useAuth();
@@ -168,40 +168,40 @@ export default function AdminLogin() {
 
   function go(s: Screen) { setError(""); setSuccess(""); setScreen(s); }
 
-  // ── Password login ──
+  // â”€â”€ Password login â”€â”€
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) { setError("أدخل البريد الإلكتروني"); return; }
-    if (!password) { setError("أدخل كلمة المرور"); return; }
+    if (!email.trim()) { setError("ط£ط¯ط®ظ„ ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ"); return; }
+    if (!password) { setError("ط£ط¯ط®ظ„ ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±"); return; }
     setError(""); setLoading(true);
     const res = await signIn(email.trim(), password);
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    
+
     // Password valid, now send OTP
-    setSuccess("تم التحقق من بيانات المرور. جارٍ إرسال رمز التحقق...");
+    setSuccess("طھظ… ط§ظ„طھط­ظ‚ظ‚ ظ…ظ† ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط±ظˆط±. ط¬ط§ط±ظچ ط¥ط±ط³ط§ظ„ ط±ظ…ط² ط§ظ„طھط­ظ‚ظ‚...");
     setTimeout(async () => {
       const otpRes = await sendOtp(email.trim(), "login");
       if (otpRes.error) {
         setError(otpRes.error);
         return;
       }
-      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+      setSuccess("طھظ… ط¥ط±ط³ط§ظ„ ط±ظ…ط² ط§ظ„طھط­ظ‚ظ‚ ط¥ظ„ظ‰ ط¨ط±ظٹط¯ظƒ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ");
       setOtpSent(true);
       go("otp");
     }, 500);
   }
 
-  // ── OTP verification ──
+  // â”€â”€ OTP verification â”€â”€
   async function handleOTPVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
+    if (otp.length !== 6) { setError("ط£ط¯ط®ظ„ ط±ظ…ط² ط§ظ„طھط­ظ‚ظ‚ ط§ظ„ظƒط§ظ…ظ„ (6 ط£ط±ظ‚ط§ظ…)"); return; }
     setError(""); setLoading(true);
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    
-    setSuccess("تم التحقق بنجاح!");
+
+    setSuccess("طھظ… ط§ظ„طھط­ظ‚ظ‚ ط¨ظ†ط¬ط§ط­!");
     go("success");
     setTimeout(() => redirectAfterAuth(), 1500);
   }
@@ -211,22 +211,15 @@ export default function AdminLogin() {
     const res = await sendOtp(email.trim(), "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-    setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
+    setSuccess("طھظ… ط¥ط±ط³ط§ظ„ ط±ظ…ط² ط¬ط¯ظٹط¯ ط¥ظ„ظ‰ ط¨ط±ظٹط¯ظƒ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ");
     setOtp("");
   }
 
   async function redirectAfterAuth() {
-    if (!supabase) { navigate("/admin-panel/dashboard"); return; }
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      const { data: profile } = await supabase
-        .from("users").select("role").eq("id", authUser.id).single();
-      if (profile?.role === "courier") { navigate("/courier/portal"); return; }
-    }
     navigate("/admin-panel/dashboard");
   }
 
-  // ─────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="fll-console" style={{
       minHeight: "100vh",
@@ -266,27 +259,27 @@ export default function AdminLogin() {
           <h1 style={{ fontSize: "16px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.25rem" }}>
             First Line Logistics
           </h1>
-          <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>لوحة الإدارة التشغيلية</p>
+          <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>ظ„ظˆط­ط© ط§ظ„ط¥ط¯ط§ط±ط© ط§ظ„طھط´ط؛ظٹظ„ظٹط©</p>
         </div>
 
         {/* Card */}
         <div className="con-card" style={{ padding: "1.75rem" }}>
 
-          {/* ══ Screen: login ══ */}
+          {/* â•گâ•گ Screen: login â•گâ•گ */}
           {screen === "login" && (
             <>
               <div style={{ marginBottom: "1.25rem" }}>
                 <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.25rem" }}>
-                  تسجيل الدخول
+                  طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„
                 </h2>
                 <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>
-                  أدخل بريدك الإلكتروني وكلمة المرور
+                  ط£ط¯ط®ظ„ ط¨ط±ظٹط¯ظƒ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±
                 </p>
               </div>
 
               <form onSubmit={handlePasswordLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <InputField
-                  label="البريد الإلكتروني"
+                  label="ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ"
                   id="email" type="email"
                   value={email} onChange={setEmail}
                   placeholder="admin@fll.sa"
@@ -294,10 +287,10 @@ export default function AdminLogin() {
                   autoFocus
                 />
                 <InputField
-                  label="كلمة المرور" id="password"
+                  label="ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±" id="password"
                   type={showPass ? "text" : "password"}
                   value={password} onChange={setPassword}
-                  placeholder="••••••••" autoComplete="current-password"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete="current-password"
                   rightSlot={
                     <button
                       type="button" onClick={() => setShowPass(!showPass)}
@@ -312,19 +305,19 @@ export default function AdminLogin() {
                 {success && <SuccessBanner msg={success} />}
 
                 <PrimaryBtn loading={loading}>
-                  <LogIn size={15} /> دخول
+                  <LogIn size={15} /> ط¯ط®ظˆظ„
                 </PrimaryBtn>
               </form>
 
               <div style={{ marginTop: "1rem", textAlign: "center" }}>
                 <Link to="/courier/register" style={{ fontSize: "12px", color: "var(--con-text-muted)", textDecoration: "none" }}>
-                  مندوب جديد؟ <span style={{ color: "var(--con-success)" }}>سجّل هنا</span>
+                  ظ…ظ†ط¯ظˆط¨ ط¬ط¯ظٹط¯طں <span style={{ color: "var(--con-success)" }}>ط³ط¬ظ‘ظ„ ظ‡ظ†ط§</span>
                 </Link>
               </div>
             </>
           )}
 
-          {/* ══ Screen: OTP ══ */}
+          {/* â•گâ•گ Screen: OTP â•گâ•گ */}
           {screen === "otp" && (
             <>
               <div style={{ marginBottom: "1.5rem" }}>
@@ -337,20 +330,20 @@ export default function AdminLogin() {
                     color: "var(--con-text-muted)", fontSize: "13px", marginBottom: "1rem",
                   }}
                 >
-                  <ArrowLeft size={15} /> رجوع
+                  <ArrowLeft size={15} /> ط±ط¬ظˆط¹
                 </button>
                 <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.375rem" }}>
-                  التحقق الثنائي
+                  ط§ظ„طھط­ظ‚ظ‚ ط§ظ„ط«ظ†ط§ط¦ظٹ
                 </h2>
                 <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>
-                  أدخل رمز التحقق المُرسل إلى {email}
+                  ط£ط¯ط®ظ„ ط±ظ…ط² ط§ظ„طھط­ظ‚ظ‚ ط§ظ„ظ…ظڈط±ط³ظ„ ط¥ظ„ظ‰ {email}
                 </p>
               </div>
 
               <form onSubmit={handleOTPVerify} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
                   <Smartphone size={16} style={{ color: "var(--con-text-muted)" }} />
-                  <span style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>رمز من 6 أرقام</span>
+                  <span style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>ط±ظ…ط² ظ…ظ† 6 ط£ط±ظ‚ط§ظ…</span>
                 </div>
 
                 <OTPInput value={otp} onChange={setOtp} />
@@ -359,17 +352,17 @@ export default function AdminLogin() {
                 {success && <SuccessBanner msg={success} />}
 
                 <PrimaryBtn loading={loading} disabled={otp.length !== 6}>
-                  تحقق
+                  طھط­ظ‚ظ‚
                 </PrimaryBtn>
 
                 <SecondaryBtn onClick={handleOTPResend} disabled={loading}>
-                  إرسال رمز جديد
+                  ط¥ط±ط³ط§ظ„ ط±ظ…ط² ط¬ط¯ظٹط¯
                 </SecondaryBtn>
               </form>
             </>
           )}
 
-          {/* ══ Screen: success ══ */}
+          {/* â•گâ•گ Screen: success â•گâ•گ */}
           {screen === "success" && (
             <div style={{ textAlign: "center", padding: "1rem 0" }}>
               <div style={{
@@ -380,20 +373,21 @@ export default function AdminLogin() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 1rem",
               }}>
-                <span style={{ fontSize: "24px" }}>✓</span>
+                <span style={{ fontSize: "24px" }}>âœ“</span>
               </div>
               <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.375rem" }}>
-                تم التحقق بنجاح
+                طھظ… ط§ظ„طھط­ظ‚ظ‚ ط¨ظ†ط¬ط§ط­
               </h2>
-              <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>جارٍ تحويلك...</p>
+              <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>ط¬ط§ط±ظچ طھط­ظˆظٹظ„ظƒ...</p>
             </div>
           )}
         </div>
 
         <p style={{ textAlign: "center", fontSize: "11px", color: "var(--con-text-muted)", marginTop: "1.25rem" }}>
-          © {new Date().getFullYear()} First Line Logistics — جميع الحقوق محفوظة
+          آ© {new Date().getFullYear()} First Line Logistics â€” ط¬ظ…ظٹط¹ ط§ظ„ط­ظ‚ظˆظ‚ ظ…ط­ظپظˆط¸ط©
         </p>
       </div>
     </div>
   );
 }
+

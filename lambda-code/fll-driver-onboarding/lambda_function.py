@@ -18,7 +18,7 @@ BUCKET = os.environ.get("KYC_BUCKET", "fll-kyc-documents-230811072086")
 FROM_EMAIL = os.environ.get("FROM_EMAIL", "FLL Platform <no-reply@fll.sa>")
 ADMIN_EMAILS = [
     email.strip()
-    for email in os.environ.get("ADMIN_EMAILS", "M.Z@FLL.SA,A.ALZAMIL@FLL.SA").split(",")
+    for email in os.environ.get("ADMIN_EMAILS", "m_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA").split(",")
     if email.strip()
 ]
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -38,7 +38,7 @@ def cors(status, body):
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json; charset=utf-8",
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "https://fll.sa",
             "Access-Control-Allow-Headers": "content-type,authorization",
             "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         },
@@ -396,45 +396,63 @@ def send_email(to_addresses, subject, html):
     )
 
 
-def otp_email_html(full_name, code):
+def fll_email_template(subject_ar, intro_html, body_html, footer_note=None):
+    footer_note = footer_note or "هذه رسالة تلقائية من نظام FLL — الرجاء عدم الرد عليها."
     return f"""
-<div dir=\"rtl\" style=\"font-family:Tahoma,Arial;max-width:520px;margin:auto\">
-  <div style=\"background:#0f2744;padding:24px;text-align:center;border-radius:12px 12px 0 0\">
-    <h2 style=\"color:#fff;margin:0;font-size:18px\">FIRST LINE LOGISTICS</h2>
-    <p style=\"color:#93c5fd;margin:4px 0 0;font-size:13px\">نظام تسجيل المناديب</p>
-  </div>
-  <div style=\"background:#fff;padding:28px;border:1px solid #e2e8f0;border-radius:0 0 12px 12px\">
-    <p style=\"color:#1e293b;font-size:15px\">مرحباً <strong>{full_name}</strong>،</p>
-    <p style=\"color:#475569;font-size:14px\">رمز التحقق الخاص بك لإتمام عملية التسجيل:</p>
-    <div style=\"text-align:center;margin:24px 0\">
-      <span style=\"font-size:36px;font-weight:700;letter-spacing:0.5rem;color:#1d4ed8;font-family:monospace\">{code}</span>
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:24px 0;background:#07111d;font-family:Tahoma,Arial,sans-serif;color:#e5e7eb;">
+  <div style="max-width:640px;margin:0 auto;background:#08111b;border-radius:18px;overflow:hidden;border:1px solid #16263d;box-shadow:0 12px 40px rgba(0,0,0,0.35);">
+    <div style="background:#12315f;padding:28px 24px;text-align:center;">
+      <div style="font-size:18px;font-weight:700;letter-spacing:2px;color:#e5e7eb;">FIRST LINE LOGISTICS</div>
+      <div style="margin-top:8px;font-size:13px;color:#d1d5db;">شركة الخط الأول للخدمات اللوجستية</div>
     </div>
-    <p style=\"color:#94a3b8;font-size:12px;text-align:center\">صالح لمدة {OTP_TTL_MINUTES} دقائق</p>
+    <div style="padding:28px 24px;background:#08111b;">
+      <div style="font-size:28px;line-height:1.7;color:#f3f4f6;font-weight:700;margin-bottom:14px;">{subject_ar}</div>
+      <div style="font-size:16px;line-height:1.9;color:#e5e7eb;margin-bottom:14px;">{intro_html}</div>
+      <div style="font-size:15px;line-height:1.9;color:#cbd5e1;">{body_html}</div>
+      <div style="margin-top:22px;background:#020817;border:1px solid #0f2744;border-radius:12px;padding:18px 16px;">
+        <div style="font-size:15px;line-height:1.9;color:#e5e7eb;"><strong>التواصل المباشر:</strong> <a href="tel:920014948" style="color:#2563eb;text-decoration:none;font-weight:700;">920014948</a></div>
+        <div style="font-size:15px;line-height:1.9;color:#e5e7eb;"><strong>البريد:</strong> <a href="mailto:support@fll.sa" style="color:#2563eb;text-decoration:none;font-weight:700;">support@fll.sa</a></div>
+      </div>
+      <div style="margin-top:18px;font-size:12px;line-height:1.8;color:#94a3b8;text-align:center;">{footer_note}</div>
+    </div>
+    <div style="background:#12315f;padding:22px 20px;text-align:center;">
+      <div style="width:54px;height:54px;margin:0 auto 12px;background:#062b45;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;letter-spacing:1px;">FLL</div>
+      <div style="font-size:13px;color:#d1d5db;">fll.sa — First Line Logistics 2026 &copy;</div>
+    </div>
   </div>
-</div>
+</body>
+</html>
 """
+
+
+def otp_email_html(full_name, code):
+    return fll_email_template(
+        "رمز التحقق - فيرست لاين لوجستكس",
+        f"مرحباً {full_name}،",
+        f"<p style=\"margin:0 0 14px;\">رمز التحقق الخاص بك لإتمام عملية التسجيل:</p><div style=\"text-align:center;margin:24px 0\"><span style=\"display:inline-block;background:#020817;border:1px solid #12315f;border-radius:14px;padding:16px 22px;font-size:36px;font-weight:700;letter-spacing:0.45rem;color:#2563eb;font-family:monospace\">{code}</span></div><p style=\"margin:0;text-align:center;color:#94a3b8;font-size:13px;\">صالح لمدة {OTP_TTL_MINUTES} دقائق</p>",
+        "هذه رسالة تحقق تلقائية — الرجاء عدم مشاركة الرمز مع أي شخص."
+    )
 
 
 def admin_application_email_html(record):
-    return f"""
-<div dir=\"rtl\" style=\"font-family:Tahoma;max-width:540px;margin:auto\">
-  <div style=\"background:#0f2744;padding:20px;text-align:center;border-radius:12px 12px 0 0\">
-    <h2 style=\"color:#fff;margin:0\">FIRST LINE LOGISTICS</h2>
-    <p style=\"color:#93c5fd;margin:4px 0 0\">طلب تسجيل مندوب جديد</p>
-  </div>
-  <div style=\"background:#fff;padding:24px;border:1px solid #e2e8f0;border-radius:0 0 12px 12px\">
-    <table style=\"width:100%;border-collapse:collapse;font-size:14px\">
-      <tr><td style=\"padding:6px 0;color:#64748b\">رقم الطلب</td><td style=\"font-weight:700;color:#1d4ed8\">{record['app_ref']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">الاسم</td><td>{record['full_name']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">رقم الهوية</td><td style=\"font-family:monospace\">{record['national_id']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">الجوال</td><td>{record['phone']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">البريد</td><td>{record['email']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">المدينة</td><td>{record['city']}</td></tr>
-      <tr><td style=\"padding:6px 0;color:#64748b\">التعاقد</td><td>{record['contract_type']}</td></tr>
-    </table>
-  </div>
-</div>
+    body = f"""
+<table style=\"width:100%;border-collapse:collapse;font-size:14px\">
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">رقم الطلب</td><td style=\"font-weight:700;color:#2563eb\">{record['app_ref']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">الاسم</td><td>{record['full_name']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">رقم الهوية</td><td style=\"font-family:monospace\">{record['national_id']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">الجوال</td><td>{record['phone']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">البريد</td><td>{record['email']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">المدينة</td><td>{record['city']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">التعاقد</td><td>{record['contract_type']}</td></tr>
+</table>
 """
+    return fll_email_template("طلب تسجيل مندوب جديد", "تم استلام طلب تسجيل جديد ويحتاج مراجعة.", body)
 
 
 def decision_email_html(full_name, app_ref, approved, reason=""):
@@ -454,34 +472,17 @@ def decision_email_html(full_name, app_ref, approved, reason=""):
 <p>يمكنك التقديم مجدداً بعد معالجة الملاحظات المذكورة.</p>
 """
 
-    return f"""
-<div dir=\"rtl\" style=\"font-family:Tahoma;max-width:520px;margin:auto\">
-  <div style=\"background:#0f2744;padding:20px;text-align:center;border-radius:12px 12px 0 0\">
-    <h2 style=\"color:#fff;margin:0\">FIRST LINE LOGISTICS</h2>
-  </div>
-  <div style=\"background:#fff;padding:28px;border:1px solid #e2e8f0;border-radius:0 0 12px 12px\">
-    <p>مرحباً <strong>{full_name}</strong>،</p>
-    {body}
-  </div>
-</div>
-"""
+    return fll_email_template("بخصوص طلب التسجيل", f"مرحباً {full_name}،", body)
 
 
 def decision_approved_with_account_html(full_name, app_ref, temp_password):
-    return f"""
-<div dir=\"rtl\" style=\"font-family:Tahoma;max-width:520px;margin:auto\">
-  <div style=\"background:#0f2744;padding:20px;text-align:center;border-radius:12px 12px 0 0\">
-    <h2 style=\"color:#fff;margin:0\">FIRST LINE LOGISTICS</h2>
-  </div>
-  <div style=\"background:#fff;padding:28px;border:1px solid #e2e8f0;border-radius:0 0 12px 12px\">
-    <p>مرحباً <strong>{full_name}</strong>،</p>
-    <p style=\"color:#15803d;font-size:16px;font-weight:700\">تمت الموافقة على طلبك ({app_ref}) وإنشاء حساب السائق.</p>
-    <p>يمكنك تسجيل الدخول عبر بوابة السائق باستخدام البريد الذي سجلت به وكلمة المرور المؤقتة التالية:</p>
-    <div style=\"background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-family:monospace;font-size:16px;font-weight:700;color:#1d4ed8;text-align:center\">{temp_password}</div>
-    <p style=\"margin-top:12px\">لأمان حسابك، قم بتغيير كلمة المرور بعد أول تسجيل دخول.</p>
-  </div>
-</div>
+    body = f"""
+<p style=\"color:#22c55e;font-size:16px;font-weight:700\">تمت الموافقة على طلبك ({app_ref}) وإنشاء حساب السائق.</p>
+<p>يمكنك تسجيل الدخول عبر بوابة السائق باستخدام البريد الذي سجلت به وكلمة المرور المؤقتة التالية:</p>
+<div style=\"background:#020817;border:1px solid #12315f;border-radius:12px;padding:14px;font-family:monospace;font-size:18px;font-weight:700;color:#2563eb;text-align:center\">{temp_password}</div>
+<p style=\"margin-top:12px\">لأمان حسابك، قم بتغيير كلمة المرور بعد أول تسجيل دخول.</p>
 """
+    return fll_email_template("تمت الموافقة على طلبك", f"مرحباً {full_name}،", body)
 
 
 def handle_otp_send(body, ip_address):
@@ -745,13 +746,28 @@ def handle_approve(app_id, _body, actor):
     if application.get("status") not in ("pending", "under_review", "requires_correction"):
         return cors(400, {"message": "لا يمكن اعتماد هذا الطلب في حالته الحالية"})
 
-    supabase_rpc(
+    courier_id = supabase_rpc(
         "approve_driver_application",
         {"p_application_id": app_id, "p_reviewed_by": actor.get("id")},
-        prefer_representation=False,
+        prefer_representation=True,
     )
 
     temp_password = ensure_driver_account(application)
+
+    try:
+        if courier_id:
+            supabase_request(
+                "PATCH",
+                f"/couriers?id=eq.{quote(str(courier_id))}",
+                {
+                    "email": application["email"],
+                    "username": application["email"],
+                    "updated_at": now_utc().isoformat(),
+                },
+                prefer_representation=False,
+            )
+    except Exception:
+        pass
 
     try:
         approved_html = decision_email_html(application["full_name"], application["app_ref"], True)

@@ -2,28 +2,18 @@
  * تحليل الإيرادات التفصيلي - Revenue Analysis
  * Detailed revenue breakdown and trends
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/admin/auth";
-import { supabase } from "@/lib/supabase";
 import {
-  BarChart, Bar, LineChart, Line, PieChart as RechartsPie, 
-  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  BarChart, Bar, LineChart, Line, PieChart as RechartsPie,
+  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ComposedChart,
 } from "recharts";
+import { DollarSign, TrendingUp, Calendar } from "lucide-react";
 import {
-  DollarSign, TrendingUp, PieChart, BarChart3, 
-  ArrowUpRight, ArrowDownLeft, Calendar, Filter,
-} from "lucide-react";
-
-// ─── Chart Tooltip ────────────────────────────────────────────────────────────
-const chartTooltipStyle = {
-  background: "var(--con-bg-elevated)",
-  border: "1px solid var(--con-border-strong)",
-  borderRadius: 8,
-  color: "var(--con-text-primary)",
-  fontSize: 12,
-  padding: "8px 12px",
-};
+  KPICard, ChartCard, PageHeader, DataTable,
+  chartTooltipStyle, formatSAR,
+} from "@/components/admin/FinanceUI";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const platformRevenueData = [
@@ -76,241 +66,75 @@ const monthlyTrendData = [
 
 const colorPalette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-interface RevenueStats {
-  totalRevenue: number;
-  monthRevenue: number;
-  dailyAverage: number;
-  topPlatform: string;
-  topCity: string;
-  topCourier: string;
-}
-
-// ─── Chart Card ───────────────────────────────────────────────────────────────
-function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10,
-      padding: "20px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
-          {title}
-        </h3>
-        {subtitle && (
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{subtitle}</span>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// ─── KPI Card ──────────────────────────────────────────────────────────────────
-interface KPICardProps {
-  label: string;
-  value: string;
-  change?: number;
-  icon: React.ElementType;
-  accent: string;
-}
-
-function KPICard({ label, value, change, icon: Icon, accent }: KPICardProps) {
-  return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: `1px solid ${accent}33`,
-      borderRadius: 10,
-      padding: "16px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 500 }}>
-          {label}
-        </span>
-        <div style={{
-          background: `${accent}14`,
-          borderRadius: 8,
-          padding: "6px",
-        }}>
-          <Icon size={16} style={{ color: accent }} />
-        </div>
-      </div>
-      <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 6 }}>
-        {value}
-      </div>
-      {change !== undefined && (
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "var(--con-text-caption)", color: change >= 0 ? "var(--con-success)" : "var(--con-danger)" }}>
-          {change >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
-          <span>{Math.abs(change)}%</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Performance Table ──────────────────────────────────────────────────────────
-function PerformanceTable({ title, data, columns }: { title: string; data: any[]; columns: any[] }) {
-  return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10,
-      overflow: "hidden",
-    }}>
-      <div style={{ padding: "20px", borderBottom: "1px solid var(--con-border-default)" }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
-          {title}
-        </h3>
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)" }}>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  style={{
-                    padding: "12px 16px",
-                    textAlign: col.align || "right",
-                    color: "var(--con-text-muted)",
-                    fontSize: "var(--con-text-caption)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, idx) => (
-              <tr
-                key={idx}
-                style={{
-                  borderBottom: "1px solid var(--con-border-default)",
-                  height: 52,
-                }}
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    style={{
-                      padding: "12px 16px",
-                      textAlign: col.align || "right",
-                      color: "var(--con-text-primary)",
-                      fontSize: "var(--con-text-body)",
-                    }}
-                  >
-                    {col.render ? col.render(row[col.key], row) : row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function RevenueAnalysis() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<RevenueStats>({
+  const [stats] = useState({
     totalRevenue: 835000,
     monthRevenue: 218000,
     dailyAverage: 22550,
-    topPlatform: "جاهز",
-    topCity: "الرياض",
-    topCourier: "أحمد محمد",
   });
 
   return (
-    <div dir="rtl" style={{ padding: "20px 24px", background: "var(--con-bg-default)", minHeight: "100vh" }}>
-      {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: "32px", fontWeight: 700, color: "var(--con-text-primary)", margin: 0, marginBottom: 4 }}>
-          تحليل الإيرادات
-        </h1>
-        <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
-          تفصيل شامل للإيرادات حسب المنصات والمدن والمناديب
-        </p>
-      </div>
+    <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PageHeader
+        icon={DollarSign}
+        title="تحليل الإيرادات"
+        subtitle="تفصيل شامل للإيرادات حسب المنصات والمدن والمناديب"
+      />
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
-        <KPICard
-          label="إجمالي الإيرادات"
-          value={`${(stats.totalRevenue / 1000).toFixed(0)}ك ر.س`}
-          change={8}
-          icon={DollarSign}
-          accent="var(--con-success)"
-        />
-        <KPICard
-          label="إيرادات الشهر"
-          value={`${(stats.monthRevenue / 1000).toFixed(0)}ك ر.س`}
-          change={10}
-          icon={TrendingUp}
-          accent="var(--con-brand)"
-        />
-        <KPICard
-          label="المتوسط اليومي"
-          value={`${(stats.dailyAverage / 1000).toFixed(1)}ك ر.س`}
-          icon={Calendar}
-          accent="var(--con-info)"
-        />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+        <KPICard label="إجمالي الإيرادات" value={formatSAR(stats.totalRevenue, true)} change={8} icon={DollarSign} accent="var(--con-success)" />
+        <KPICard label="إيرادات الشهر" value={formatSAR(stats.monthRevenue, true)} change={10} icon={TrendingUp} accent="var(--con-brand)" />
+        <KPICard label="المتوسط اليومي" value={`${(stats.dailyAverage / 1000).toFixed(1)}ك ر.س`} icon={Calendar} accent="var(--con-info)" />
       </div>
 
       {/* Charts Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 16, marginBottom: 28 }}>
-        {/* Platform Revenue */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 16 }}>
         <ChartCard title="الإيرادات حسب المنصة" subtitle="توزيع الإيرادات">
           <ResponsiveContainer width="100%" height={300}>
             <RechartsPie data={platformRevenueData} cx="50%" cy="50%" innerRadius={60} outerRadius={100}>
-              {platformRevenueData.map((entry, index) => (
+              {platformRevenueData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={colorPalette[index % colorPalette.length]} />
               ))}
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => `${(value / 1000).toFixed(0)}ك ر.س`} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => formatSAR(value, true)} />
             </RechartsPie>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* City Revenue */}
         <ChartCard title="الإيرادات حسب المدينة" subtitle="مقارنة الأداء">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={cityRevenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="city" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => `${(value / 1000).toFixed(0)}ك ر.س`} />
+              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => formatSAR(value, true)} />
               <Bar dataKey="revenue" fill="var(--con-brand)" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Daily Trend */}
         <ChartCard title="الاتجاه اليومي" subtitle="آخر 12 يوم">
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={dailyTrendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="date" stroke="var(--con-text-muted)" style={{ fontSize: 11 }} />
-              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <Tooltip contentStyle={chartTooltipStyle} />
+              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => formatSAR(v)} />
               <Bar dataKey="revenue" fill="rgba(34,197,94,0.3)" />
               <Line type="monotone" dataKey="revenue" stroke="var(--con-success)" strokeWidth={2} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Monthly Trend */}
         <ChartCard title="النمو الشهري" subtitle="آخر 6 أشهر">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyTrendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="month" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => `${(value / 1000).toFixed(0)}ك ر.س`} />
+              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => formatSAR(value, true)} />
               <Line type="monotone" dataKey="revenue" stroke="var(--con-brand)" strokeWidth={3} dot={{ fill: "var(--con-brand)", r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -319,49 +143,33 @@ export default function RevenueAnalysis() {
 
       {/* Performance Tables */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))", gap: 16 }}>
-        <PerformanceTable
+        <DataTable
           title="أفضل المناديب"
           data={courierPerformanceData}
           columns={[
-            { key: "courier", label: "اسم الناديب", align: "right" },
-            {
-              key: "revenue",
-              label: "الإيرادات",
-              align: "right",
-              render: (v: number) => `${(v / 1000).toFixed(0)}ك ر.س`,
-            },
+            { key: "courier", label: "اسم المندوب" },
+            { key: "revenue", label: "الإيرادات", render: (v: number) => formatSAR(v, true) },
             { key: "orders", label: "الطلبات", align: "center" },
             {
-              key: "rating",
-              label: "التقييم",
-              align: "center",
+              key: "rating", label: "التقييم", align: "center",
               render: (v: number) => (
-                <div style={{ color: "var(--con-warning)", fontWeight: 600 }}>
-                  ⭐ {v.toFixed(1)}
-                </div>
+                <span style={{ color: "var(--con-warning)", fontWeight: 600 }}>
+                  <TrendingUp size={12} style={{ display: "inline", marginLeft: 4 }} />
+                  {v.toFixed(1)}
+                </span>
               ),
             },
           ]}
         />
 
-        <PerformanceTable
+        <DataTable
           title="المنصات"
           data={platformRevenueData}
           columns={[
-            { key: "platform", label: "المنصة", align: "right" },
-            {
-              key: "revenue",
-              label: "الإيرادات",
-              align: "right",
-              render: (v: number) => `${(v / 1000).toFixed(0)}ك ر.س`,
-            },
+            { key: "platform", label: "المنصة" },
+            { key: "revenue", label: "الإيرادات", render: (v: number) => formatSAR(v, true) },
             { key: "orders", label: "الطلبات", align: "center" },
-            {
-              key: "percentage",
-              label: "النسبة",
-              align: "center",
-              render: (v: number) => `${v}%`,
-            },
+            { key: "percentage", label: "النسبة", align: "center", render: (v: number) => `${v}%` },
           ]}
         />
       </div>

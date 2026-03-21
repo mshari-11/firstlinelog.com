@@ -3,6 +3,7 @@
  * Enterprise Operations Overview
  */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
@@ -14,15 +15,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar,
 } from "recharts";
-
-// ─── Chart tooltip style shared ───────────────────────────────────────────────
-const chartTooltipStyle = {
-  background: "var(--con-bg-elevated)",
-  border: "1px solid var(--con-border-strong)",
-  borderRadius: 8,
-  color: "var(--con-text-primary)",
-  fontSize: 12,
-};
+import { ChartCard, PageHeader, chartTooltipStyle } from "@/components/admin/FinanceUI";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const ordersChartData = [
@@ -68,30 +61,10 @@ interface DashboardStats {
   pendingApprovals: number;
 }
 
-// ─── Chart Card wrapper ────────────────────────────────────────────────────────
-function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10, padding: "18px 20px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
-          {title}
-        </h3>
-        {subtitle && (
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{subtitle}</span>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}
-
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalCouriers: 0, activeCouriers: 0, todayOrders: 0,
     pendingComplaints: 0, monthRevenue: 128000, pendingApprovals: 0,
@@ -129,26 +102,32 @@ export default function AdminDashboard() {
     {
       key: "totalCouriers",   label: "إجمالي المناديب",     icon: Users,        accent: "var(--con-brand)",
       change: 8,  val: stats.totalCouriers   || 47,   format: (v: number) => String(v),
+      link: "/admin-panel/couriers",
     },
     {
       key: "todayOrders",     label: "طلبات اليوم",          icon: Package,      accent: "var(--con-success)",
       change: 12, val: stats.todayOrders     || 245,  format: (v: number) => String(v),
+      link: "/admin-panel/orders",
     },
     {
       key: "monthRevenue",    label: "إيرادات الشهر",        icon: DollarSign,   accent: "var(--con-info)",
       change: 24, val: stats.monthRevenue    || 128000, format: (v: number) => `${v.toLocaleString("ar-SA")} ر.س`,
+      link: "/admin-panel/finance-dashboard",
     },
     {
       key: "pendingComplaints",label: "شكاوى معلقة",         icon: AlertCircle,  accent: "var(--con-danger)",
       change: -3, val: stats.pendingComplaints|| 7,    format: (v: number) => String(v),
+      link: "/admin-panel/complaints",
     },
     {
       key: "activeCouriers",  label: "مناديب نشطون الآن",   icon: Bike,         accent: "var(--con-warning)",
       val: stats.activeCouriers || 38, format: (v: number) => String(v),
+      link: "/admin-panel/dispatch",
     },
     {
       key: "pendingApprovals",label: "اعتمادات بانتظار",    icon: Clock,        accent: "var(--con-warning)",
       val: stats.pendingApprovals || 4, format: (v: number) => String(v),
+      link: "/admin-panel/approvals",
     },
   ];
 
@@ -156,42 +135,27 @@ export default function AdminDashboard() {
     <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{
-              background: "rgba(59,130,246,0.12)", borderRadius: 8, padding: "7px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <LayoutDashboard size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1 style={{
-              fontSize: "var(--con-text-page-title)", fontWeight: 700,
-              color: "var(--con-text-primary)", margin: 0,
-              fontFamily: "var(--con-font-primary)",
-            }}>
-              لوحة التحكم
-            </h1>
+      <PageHeader
+        icon={LayoutDashboard}
+        title="لوحة التحكم"
+        subtitle={new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        actions={
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 7,
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-default)",
+          }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--con-success)", animation: "pulse 2s infinite" }} />
+            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>النظام يعمل</span>
           </div>
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>
-            {new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
-        </div>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "6px 12px", borderRadius: 7,
-          background: "var(--con-bg-surface-1)",
-          border: "1px solid var(--con-border-default)",
-        }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--con-success)", animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>النظام يعمل</span>
-        </div>
-      </div>
+        }
+      />
 
       {/* KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {kpis.map(kpi => (
-          <div key={kpi.key} className="con-kpi-card">
+          <div key={kpi.key} className="con-kpi-card" onClick={() => (kpi as any).link && navigate((kpi as any).link)} style={{ cursor: "pointer" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <kpi.icon size={15} style={{ color: kpi.accent }} />
               {(kpi as any).change !== undefined && (

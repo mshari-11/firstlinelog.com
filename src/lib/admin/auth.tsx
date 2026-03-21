@@ -1,10 +1,17 @@
-/**
- * نظام المصادقة للوحة الإدارة
+﻿/**
+ * نظام التوثيق المركزي - AWS Cognito
+ * Authentication via AWS Cognito User Pool
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+import {
+  cognitoSignIn,
+  getCognitoSession,
+  getCognitoGroups,
+  cognitoSignOut,
+  getAccessToken,
+} from "@/lib/cognito";
+import { AUTH_API_BASE, API_BASE } from "@/lib/api";
 
-import { AUTH_API_BASE } from "@/lib/api";
 const ADMIN_REDIRECT_URL = window.location.origin + "/admin-panel/dashboard";
 
 export type UserRole = "admin" | "owner" | "staff" | "courier";
@@ -27,6 +34,7 @@ export interface AdminUser {
   department_name?: string;
   permissions?: StaffPermissions;
   is_active?: boolean;
+  cognito_groups?: string[];
 }
 
 interface AuthContextType {
@@ -37,72 +45,71 @@ interface AuthContextType {
   verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string; redirectUrl?: string }>;
   signOut: () => Promise<void>;
   hasPermission: (key: keyof StaffPermissions) => boolean;
+  getToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+/**
+ * Determine user role from Cognito groups
+ */
+function roleFromGroups(groups: string[]): UserRole {
+  if (groups.includes("SystemAdmin") || groups.includes("admin")) return "admin";
+  if (groups.includes("owner")) return "owner";
+  if (groups.includes("courier") || groups.includes("driver")) return "courier";
+  return "staff";
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check existing Cognito session on mount
   useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) fetchUserProfile(session.user.id);
-      else setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) fetchUserProfile(session.user.id);
-      else { setUser(null); setLoading(false); }
-    });
-
-    return () => subscription.unsubscribe();
+    checkSession();
   }, []);
 
-  async function fetchUserProfile(userId: string) {
-    if (!supabase) return;
+  async function checkSession() {
+    try {
+      const session = await getCognitoSession();
+      if (session && session.isValid()) {
+        const groups = getCognitoGroups(session);
+        const payload = session.getIdToken().decodePayload();
+        const email = (payload.email as string) || "";
+        const name = (payload.name as string) || email.split("@")[0];
+        const sub = (payload.sub as string) || "";
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, email, role, full_name, department_id")
-      .eq("id", userId)
-      .single();
+        const adminUser: AdminUser = {
+          id: sub,
+          email: email,
+          role: roleFromGroups(groups),
+          full_name: name,
+          cognito_groups: groups,
+        };
 
-    if (error) {
-      console.error("Failed to fetch user profile:", error.message);
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    if (data) {
-      const baseUser: AdminUser = {
-        id: data.id,
-        email: data.email,
-        role: data.role as UserRole,
-        full_name: data.full_name,
-        department_id: data.department_id,
-      };
-
-      if (data.role === "staff") {
-        const { data: profile } = await supabase
-          .from("staff_profiles")
-          .select("permissions, is_active, departments(name, name_ar)")
-          .eq("user_id", userId)
-          .single();
-
-        if (profile) {
-          baseUser.permissions = profile.permissions as StaffPermissions;
-          baseUser.is_active = profile.is_active;
-          baseUser.department_name = (profile as any).departments?.name || (profile as any).departments?.name_ar;
+        // Try to fetch extended profile from API
+        try {
+          const token = getAccessToken(session);
+          const res = await fetch(API_BASE + "/auth/profile", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (res.ok) {
+            const profile = await res.json();
+            if (profile.full_name) adminUser.full_name = profile.full_name;
+            if (profile.department_id) adminUser.department_id = profile.department_id;
+            if (profile.department_name) adminUser.department_name = profile.department_name;
+            if (profile.permissions) adminUser.permissions = profile.permissions;
+            if (profile.is_active !== undefined) adminUser.is_active = profile.is_active;
+          }
+        } catch {
+          // Profile API not available, use Cognito data only
         }
+
+        setUser(adminUser);
       }
-
-      setUser(baseUser);
+    } catch {
+      setUser(null);
     }
-
     setLoading(false);
   }
 
@@ -112,16 +119,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user.permissions?.[key] === true;
   }
 
+  async function getToken(): Promise<string | null> {
+    try {
+      const session = await getCognitoSession();
+      if (session && session.isValid()) {
+        return getAccessToken(session);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   async function signIn(email: string, password: string) {
-    if (!supabase) return { error: "Supabase غير متصل" };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
+    const result = await cognitoSignIn(email, password);
+    if (result.error) {
+      return { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
+    }
+    // Session established, refresh user state
+    await checkSession();
     return {};
   }
 
   async function signInWithOtp(email: string) {
     try {
-      const res = await fetch(`${AUTH_API_BASE}/send-otp`, {
+      const res = await fetch(AUTH_API_BASE + "/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -130,44 +152,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return { error: data.message || "تعذّر إرسال رمز التحقق" };
       return {};
     } catch {
-      return { error: "تعذّر إرسال رمز التحقق. تأكد من أن البريد مسجّل في النظام." };
+      return { error: "تعذّر إرسال رمز التحقق. تأكد من أن الاتصال يعمل بشكل صحيح." };
     }
   }
 
   async function verifyEmailOtp(email: string, token: string) {
-    if (!supabase) return { error: "Supabase غير متصل" };
     try {
-      const verifyRes = await fetch(`${AUTH_API_BASE}/verify-custom-otp`, {
+      const verifyRes = await fetch(AUTH_API_BASE + "/verify-custom-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: token }),
       });
       const verifyData = await verifyRes.json().catch(() => ({}));
-      if (!verifyRes.ok) return { error: verifyData.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+      if (!verifyRes.ok) {
+        return { error: verifyData.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+      }
 
-      const tokenHash = verifyData.token_hash;
-      const type = verifyData.type || "magiclink";
-      if (!tokenHash) return { error: "تم التحقق لكن تعذر إنشاء جلسة الدخول" };
-
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type,
-      });
-      if (error) return { error: "تم التحقق لكن تعذر تسجيل الدخول" };
+      // OTP verified - refresh session
+      await checkSession();
       return { redirectUrl: ADMIN_REDIRECT_URL };
     } catch {
       return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
     }
   }
 
-  async function signOut() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+  async function handleSignOut() {
+    cognitoSignOut();
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithOtp, verifyEmailOtp, signOut, hasPermission }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signInWithOtp,
+        verifyEmailOtp,
+        signOut: handleSignOut,
+        hasPermission,
+        getToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

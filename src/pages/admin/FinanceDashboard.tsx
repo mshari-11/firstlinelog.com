@@ -3,6 +3,7 @@
  * Enterprise Financial Overview Hub
  */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
@@ -110,6 +111,7 @@ function QuickActionButton({ icon: Icon, label, onClick }: { icon: React.Element
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function FinanceDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<FinanceStats>({
     totalRevenue: 1218000,
     totalExpenses: 420000,
@@ -264,10 +266,10 @@ export default function FinanceDashboard() {
             إجراءات سريعة
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <QuickActionButton icon={Plus} label="إنشاء دفعة جديدة" onClick={() => {}} />
-            <QuickActionButton icon={Download} label="تحميل تقرير المنصة" onClick={() => {}} />
-            <QuickActionButton icon={FileText} label="تصدير التقرير المالي" onClick={() => {}} />
-            <QuickActionButton icon={Zap} label="تحليل AI" onClick={() => {}} />
+            <QuickActionButton icon={Plus} label="إنشاء دفعة جديدة" onClick={() => navigate("/admin-panel/payouts")} />
+            <QuickActionButton icon={Download} label="تحميل تقرير المنصة" onClick={() => navigate("/admin-panel/reports")} />
+            <QuickActionButton icon={FileText} label="تصدير التقرير المالي" onClick={() => navigate("/admin-panel/financial-reports")} />
+            <QuickActionButton icon={Zap} label="تحليل AI" onClick={() => navigate("/admin-panel/ai-finance")} />
           </div>
         </div>
 

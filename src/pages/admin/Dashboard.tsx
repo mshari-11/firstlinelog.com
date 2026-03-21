@@ -3,6 +3,7 @@
  * Enterprise Operations Overview
  */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
@@ -63,6 +64,7 @@ interface DashboardStats {
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalCouriers: 0, activeCouriers: 0, todayOrders: 0,
     pendingComplaints: 0, monthRevenue: 128000, pendingApprovals: 0,
@@ -100,26 +102,32 @@ export default function AdminDashboard() {
     {
       key: "totalCouriers",   label: "إجمالي المناديب",     icon: Users,        accent: "var(--con-brand)",
       change: 8,  val: stats.totalCouriers   || 47,   format: (v: number) => String(v),
+      link: "/admin-panel/couriers",
     },
     {
       key: "todayOrders",     label: "طلبات اليوم",          icon: Package,      accent: "var(--con-success)",
       change: 12, val: stats.todayOrders     || 245,  format: (v: number) => String(v),
+      link: "/admin-panel/orders",
     },
     {
       key: "monthRevenue",    label: "إيرادات الشهر",        icon: DollarSign,   accent: "var(--con-info)",
       change: 24, val: stats.monthRevenue    || 128000, format: (v: number) => `${v.toLocaleString("ar-SA")} ر.س`,
+      link: "/admin-panel/finance-dashboard",
     },
     {
       key: "pendingComplaints",label: "شكاوى معلقة",         icon: AlertCircle,  accent: "var(--con-danger)",
       change: -3, val: stats.pendingComplaints|| 7,    format: (v: number) => String(v),
+      link: "/admin-panel/complaints",
     },
     {
       key: "activeCouriers",  label: "مناديب نشطون الآن",   icon: Bike,         accent: "var(--con-warning)",
       val: stats.activeCouriers || 38, format: (v: number) => String(v),
+      link: "/admin-panel/dispatch",
     },
     {
       key: "pendingApprovals",label: "اعتمادات بانتظار",    icon: Clock,        accent: "var(--con-warning)",
       val: stats.pendingApprovals || 4, format: (v: number) => String(v),
+      link: "/admin-panel/approvals",
     },
   ];
 
@@ -147,7 +155,7 @@ export default function AdminDashboard() {
       {/* KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         {kpis.map(kpi => (
-          <div key={kpi.key} className="con-kpi-card">
+          <div key={kpi.key} className="con-kpi-card" onClick={() => (kpi as any).link && navigate((kpi as any).link)} style={{ cursor: "pointer" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <kpi.icon size={15} style={{ color: kpi.accent }} />
               {(kpi as any).change !== undefined && (

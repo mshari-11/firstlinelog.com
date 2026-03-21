@@ -78,7 +78,9 @@ def supabase_request(method, table, params=None, body_data=None, filters=None):
         return None
 
 
-OTP_HASH_SECRET = os.environ.get('OTP_HASH_SECRET', 'fll-otp-default-secret')
+OTP_HASH_SECRET = os.environ.get('OTP_HASH_SECRET')
+if not OTP_HASH_SECRET:
+    raise RuntimeError("OTP_HASH_SECRET environment variable is required but not set")
 
 def generate_otp():
     """Generate a cryptographically secure 6-digit OTP."""

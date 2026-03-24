@@ -1,6 +1,9 @@
 const{DynamoDBClient}=require("@aws-sdk/client-dynamodb");
 const{DynamoDBDocumentClient,GetCommand,PutCommand,DeleteCommand,ScanCommand,QueryCommand}=require("@aws-sdk/lib-dynamodb");
 const{CognitoIdentityProviderClient,AdminCreateUserCommand,AdminAddUserToGroupCommand,AdminSetUserPasswordCommand}=require("@aws-sdk/client-cognito-identity-provider");
+const{SESClient,SendEmailCommand}=require("@aws-sdk/client-ses");
+const sesClient=new SESClient({region:"me-south-1"});
+const SES_FROM=process.env.SES_FROM||"FLL Platform <no-reply@fll.sa>";
 const c=new DynamoDBClient({region:"me-south-1"});
 const d=DynamoDBDocumentClient.from(c);
 const cognitoClient=new CognitoIdentityProviderClient({region:"me-south-1"});
@@ -46,6 +49,13 @@ const tables=["drivers","orders","complaints","vehicles","staff-users","payout-r
 for(const t of tables){const tn=T[t];if(tn){const r=await d.send(new ScanCommand({TableName:tn,Select:"COUNT"}));stats[t]={count:r.Count||0}}}
 return R(200,{stats,timestamp:new Date().toISOString()},origin);
 }catch(err){return R(500,{error:err.message},origin)}
+}
+
+// === AUTH ROUTES (public — no token required) ===
+if(res==="auth"){
+  if(pid==="send-otp"&&m==="POST")return handleSendOtp(body,origin);
+  if(pid==="verify-custom-otp"&&m==="POST")return handleVerifyOtp(body,origin);
+  return R(404,{error:"Unknown auth route"},origin);
 }
 
 // === ADMIN ROUTES ===
@@ -131,6 +141,50 @@ if(sub&&action==="escalate"&&m==="POST"){try{const x=await d.send(new GetCommand
 if(sub&&action==="transfer"&&m==="POST"){try{const x=await d.send(new GetCommand({TableName:"fll-complaints",Key:{id:sub}}));if(!x.Item)return R(404,{error:"Not found"});const xfer={id:"xfer-"+Date.now(),complaint_id:sub,from_dept:x.Item.department_id||"",to_dept:body.to_dept||"",reason:body.reason||"",transferredAt:new Date().toISOString()};await d.send(new PutCommand({TableName:"fll-complaint-transfers",Item:xfer}));const u={...x.Item,department_id:body.to_dept||x.Item.department_id,status:"transferred",updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:"fll-complaints",Item:u}));return R(200,{complaint:u,transfer:xfer})}catch(err){return R(500,{error:err.message})}}
 
 return R(404,{error:"Unknown complaints route",path:p});
+}
+
+// ============ AUTH: SEND OTP ============
+async function handleSendOtp(body,origin){
+  const{email,type}=body;
+  if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"},origin);
+  const code=String(Math.floor(100000+Math.random()*900000));
+  const expiresAt=Math.floor(Date.now()/1000)+600; // 10 minutes TTL
+  const id="otp-"+email.toLowerCase()+"-"+(type||"login");
+  try{
+    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{id,email:email.toLowerCase(),code,type:type||"login",expiresAt,createdAt:new Date().toISOString()}}));
+    await sesClient.send(new SendEmailCommand({
+      Source:SES_FROM,
+      Destination:{ToAddresses:[email]},
+      Message:{
+        Subject:{Data:"رمز التحقق - FLL Platform",Charset:"UTF-8"},
+        Body:{Html:{Data:`<div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f8f9fb;border-radius:12px"><h2 style="color:#1e3a5f;margin-bottom:8px">رمز التحقق الخاص بك</h2><p style="color:#64748b;margin-bottom:24px">استخدم هذا الرمز لإتمام تسجيل الدخول إلى منصة FLL</p><div style="background:#fff;border:2px solid #1e3a5f;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px"><span style="font-size:40px;font-weight:700;letter-spacing:12px;color:#1e3a5f">${code}</span></div><p style="color:#94a3b8;font-size:12px">صالح لمدة 10 دقائق. لا تشارك هذا الرمز مع أي شخص.</p></div>`,Charset:"UTF-8"}},
+      },
+    }));
+    return R(200,{success:true,message:"تم إرسال رمز التحقق إلى بريدك الإلكتروني"},origin);
+  }catch(err){
+    console.error("OTP send error:",err.message);
+    return R(500,{error:"تعذّر إرسال رمز التحقق: "+err.message},origin);
+  }
+}
+
+// ============ AUTH: VERIFY OTP ============
+async function handleVerifyOtp(body,origin){
+  const{email,code,type}=body;
+  if(!email||!code)return R(400,{error:"البريد والرمز مطلوبان"},origin);
+  const id="otp-"+email.toLowerCase()+"-"+(type||"login");
+  try{
+    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{id}}));
+    if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"},origin);
+    if(r.Item.expiresAt<Math.floor(Date.now()/1000)){
+      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+      return R(400,{error:"انتهت صلاحية رمز التحقق. أرسل رمزاً جديداً"},origin);
+    }
+    if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"},origin);
+    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+    return R(200,{success:true,message:"تم التحقق بنجاح"},origin);
+  }catch(err){
+    return R(500,{error:"خطأ في التحقق: "+err.message},origin);
+  }
 }
 
 // ============ ADMIN: CREATE USER ============

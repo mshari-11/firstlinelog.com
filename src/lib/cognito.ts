@@ -11,8 +11,12 @@ import {
 } from "amazon-cognito-identity-js";
 import { API_BASE } from "@/lib/api";
 
-const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN";
-const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || "6n49ej8fl92i9rtotbk5o9o0d1";
+const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID;
+const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
+
+if (!USER_POOL_ID || !CLIENT_ID) {
+  throw new Error("VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID must be set in environment variables");
+}
 
 const poolData = {
   UserPoolId: USER_POOL_ID,

@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/admin/auth";
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
 import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
 
-type Screen = "login" | "otp" | "success" | "forgot" | "forgot-otp" | "reset-password";
+type Screen = "login" | "otp" | "forgot" | "forgot-otp" | "reset-password";
 
 const NAV_LINKS = [
   { label: "الرئيسية", href: "/" },
@@ -61,10 +61,7 @@ export default function UnifiedPortal() {
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
-
-    setSuccess("تم التحقق بنجاح!");
-    go("success");
-    setTimeout(() => navigate("/admin-panel/dashboard"), 1200);
+    navigate("/admin-panel/dashboard");
   }
 
   async function handleResend() {
@@ -386,24 +383,6 @@ export default function UnifiedPortal() {
                 إرسال رمز جديد
               </button>
             </form>
-          )}
-
-          {/* ══ Success Screen ══ */}
-          {screen === "success" && (
-            <div style={{ textAlign: "center", padding: "1rem 0" }}>
-              <div style={{
-                width: "56px", height: "56px", borderRadius: "50%",
-                background: "#f0fdf4", border: "2px solid #22c55e",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 1rem", fontSize: "28px", color: "#22c55e",
-              }}>
-                &#10003;
-              </div>
-              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
-                تم التحقق بنجاح
-              </h2>
-              <p style={{ fontSize: "12px", color: "#94a3b8" }}>جارٍ تحويلك للوحة التحكم...</p>
-            </div>
           )}
 
           {/* ══ Forgot Password — Enter Email ══ */}

@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api";
 import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
@@ -502,13 +503,13 @@ function AddStaffModal({ departments, onClose, onSaved }: {
 }) {
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "",
-    job_title_ar: "", department_id: "", can_approve: false, approval_limit: 0,
+    job_title_ar: "", department_id: "", role: "staff",
+    can_approve: false, approval_limit: 0,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSave() {
-    if (!supabase) return;
     if (!form.name || !form.email || !form.password) {
       setError("يرجى تعبئة الاسم والبريد الإلكتروني وكلمة المرور");
       return;
@@ -516,39 +517,33 @@ function AddStaffModal({ departments, onClose, onSaved }: {
     setSaving(true);
     setError("");
 
-    const { data: authData, error: authErr } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { full_name: form.name, role: "staff" } },
-    });
-
-    if (authErr || !authData.user) {
-      setError("خطأ في إنشاء الحساب: " + authErr?.message);
+    try {
+      const res = await fetch(`${API_BASE}/admin/create-user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          password: form.password,
+          role: form.role,
+          job_title_ar: form.job_title_ar || "موظف",
+          department_id: form.department_id || null,
+          can_approve: form.can_approve,
+          approval_limit: form.approval_limit,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "حدث خطأ أثناء إنشاء الحساب");
+        setSaving(false);
+        return;
+      }
+    } catch {
+      setError("تعذّر الاتصال بالخادم");
       setSaving(false);
       return;
     }
-
-    await supabase.from("users").insert({
-      id: authData.user.id,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      role: "staff",
-      status: "active",
-    });
-
-    const defaultPerms: Record<string, boolean> = {};
-    ALL_PERMISSIONS.forEach(p => (defaultPerms[p.key] = false));
-
-    await supabase.from("staff_profiles").insert({
-      user_id: authData.user.id,
-      department_id: form.department_id || null,
-      job_title_ar: form.job_title_ar || "موظف",
-      permissions: defaultPerms,
-      can_approve: form.can_approve,
-      approval_limit: form.approval_limit,
-      is_active: true,
-    });
 
     setSaving(false);
     onSaved();
@@ -586,6 +581,21 @@ function AddStaffModal({ departments, onClose, onSaved }: {
           >
             <option value="">— بدون قسم —</option>
             {departments.map(d => <option key={d.id} value={d.id}>{d.name_ar}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{
+            fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)",
+            display: "block", marginBottom: 5, fontWeight: 500,
+          }}>الدور</label>
+          <select
+            value={form.role}
+            onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
+            className="con-input"
+            style={{ width: "100%" }}
+          >
+            <option value="staff">موظف</option>
+            <option value="admin">أدمن</option>
           </select>
         </div>
         <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center", gap: 10 }}>

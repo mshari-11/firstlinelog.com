@@ -1,7 +1,10 @@
 const{DynamoDBClient}=require("@aws-sdk/client-dynamodb");
 const{DynamoDBDocumentClient,GetCommand,PutCommand,DeleteCommand,ScanCommand,QueryCommand}=require("@aws-sdk/lib-dynamodb");
+const{CognitoIdentityProviderClient,AdminCreateUserCommand,AdminAddUserToGroupCommand,AdminSetUserPasswordCommand}=require("@aws-sdk/client-cognito-identity-provider");
 const c=new DynamoDBClient({region:"me-south-1"});
 const d=DynamoDBDocumentClient.from(c);
+const cognitoClient=new CognitoIdentityProviderClient({region:"me-south-1"});
+const USER_POOL_ID=process.env.USER_POOL_ID||"me-south-1_aJtmQ0QrN";
 const T={drivers:"fll-drivers","staff-users":"fll-staff-users",complaints:"fll-complaints",vehicles:"fll-vehicles",departments:"fll-departments",roles:"fll-roles",permissions:"fll-permissions",notifications:"fll-notifications","audit-log":"fll-audit-log",approvals:"fll-approvals",tasks:"fll-tasks","payout-runs":"fll-payout-runs","payout-lines":"fll-payout-lines","accounting-rules":"fll-accounting-rules","driver-stats-daily":"fll-driver-stats-daily","vehicle-assignments":"fll-vehicle-assignments","email-logs":"fll-email-logs","rate-limits":"fll-rate-limits",counters:"fll-counters","system-settings":"fll-system-settings","user-profiles":"fll-user-profiles",orders:"fll-orders",users:"fll-users",invoices:"fll-invoices",shipments:"fll-shipments","fleet-requests":"fll-fleet-requests","dept-settings":"fll-dept-settings","driver-baseline":"fll-driver-baseline","risk-thresholds":"fll-risk-thresholds","complaint-messages":"fll-complaint-messages","complaint-transfers":"fll-complaint-transfers","users-auth":"fll-users-auth","account-reactivation-requests":"fll-account-reactivation-requests","email-change-requests":"fll-email-change-requests","verification-codes":"fll-verification-codes",attendance:"fll-attendance"};
 const ALLOWED_ORIGINS=["https://fll.sa","https://www.fll.sa","https://firstlinelog.com","https://www.firstlinelog.com"];
 const getAllowedOrigin=(origin)=>ALLOWED_ORIGINS.includes(origin)?origin:ALLOWED_ORIGINS[0];
@@ -43,6 +46,12 @@ const tables=["drivers","orders","complaints","vehicles","staff-users","payout-r
 for(const t of tables){const tn=T[t];if(tn){const r=await d.send(new ScanCommand({TableName:tn,Select:"COUNT"}));stats[t]={count:r.Count||0}}}
 return R(200,{stats,timestamp:new Date().toISOString()},origin);
 }catch(err){return R(500,{error:err.message},origin)}
+}
+
+// === ADMIN ROUTES ===
+if(res==="admin"){
+  if(pid==="create-user"&&m==="POST")return handleAdminCreateUser(body,origin);
+  return R(404,{error:"Unknown admin route"},origin);
 }
 
 const tn=T[res];
@@ -122,4 +131,61 @@ if(sub&&action==="escalate"&&m==="POST"){try{const x=await d.send(new GetCommand
 if(sub&&action==="transfer"&&m==="POST"){try{const x=await d.send(new GetCommand({TableName:"fll-complaints",Key:{id:sub}}));if(!x.Item)return R(404,{error:"Not found"});const xfer={id:"xfer-"+Date.now(),complaint_id:sub,from_dept:x.Item.department_id||"",to_dept:body.to_dept||"",reason:body.reason||"",transferredAt:new Date().toISOString()};await d.send(new PutCommand({TableName:"fll-complaint-transfers",Item:xfer}));const u={...x.Item,department_id:body.to_dept||x.Item.department_id,status:"transferred",updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:"fll-complaints",Item:u}));return R(200,{complaint:u,transfer:xfer})}catch(err){return R(500,{error:err.message})}}
 
 return R(404,{error:"Unknown complaints route",path:p});
+}
+
+// ============ ADMIN: CREATE USER ============
+async function handleAdminCreateUser(body,origin){
+const{email,name,phone,password,role,job_title_ar,department_id,can_approve,approval_limit}=body;
+if(!email||!name||!password)return R(400,{error:"email و name و password مطلوبة"},origin);
+try{
+// 1. Create Cognito user
+const createCmd=new AdminCreateUserCommand({
+  UserPoolId:USER_POOL_ID,
+  Username:email,
+  TemporaryPassword:password,
+  UserAttributes:[
+    {Name:"email",Value:email},
+    {Name:"email_verified",Value:"true"},
+    {Name:"name",Value:name},
+  ],
+  MessageAction:"SUPPRESS",
+});
+const cognitoUser=await cognitoClient.send(createCmd);
+const sub=cognitoUser.User.Attributes.find(a=>a.Name==="sub")?.Value||cognitoUser.User.Username;
+
+// 2. Set permanent password (avoid FORCE_CHANGE_PASSWORD)
+await cognitoClient.send(new AdminSetUserPasswordCommand({
+  UserPoolId:USER_POOL_ID,
+  Username:email,
+  Password:password,
+  Permanent:true,
+}));
+
+// 3. Add to Cognito group
+const groupName=role==="admin"?"admin":"staff";
+try{await cognitoClient.send(new AdminAddUserToGroupCommand({UserPoolId:USER_POOL_ID,Username:email,GroupName:groupName}));}catch(ge){console.log("Group add warning:",ge.message);}
+
+// 4. Save to DynamoDB fll-staff-users
+const defaultPerms={couriers:false,orders:false,finance:false,complaints:false,excel:false,reports:false};
+const staffRecord={
+  id:sub,
+  name,
+  email,
+  phone:phone||"",
+  role:role||"staff",
+  job_title_ar:job_title_ar||"موظف",
+  department_id:department_id||null,
+  permissions:defaultPerms,
+  can_approve:can_approve||false,
+  approval_limit:approval_limit||0,
+  is_active:true,
+  createdAt:new Date().toISOString(),
+  updatedAt:new Date().toISOString(),
+};
+await d.send(new PutCommand({TableName:T["staff-users"],Item:staffRecord}));
+return R(201,staffRecord,origin);
+}catch(err){
+if(err.name==="UsernameExistsException")return R(409,{error:"البريد الإلكتروني مستخدم مسبقاً"},origin);
+return R(500,{error:err.message},origin);
+}
 }

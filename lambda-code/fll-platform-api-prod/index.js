@@ -3,10 +3,14 @@ const{DynamoDBDocumentClient,GetCommand,PutCommand,DeleteCommand,ScanCommand,Que
 const c=new DynamoDBClient({region:"me-south-1"});
 const d=DynamoDBDocumentClient.from(c);
 const T={drivers:"fll-drivers","staff-users":"fll-staff-users",complaints:"fll-complaints",vehicles:"fll-vehicles",departments:"fll-departments",roles:"fll-roles",permissions:"fll-permissions",notifications:"fll-notifications","audit-log":"fll-audit-log",approvals:"fll-approvals",tasks:"fll-tasks","payout-runs":"fll-payout-runs","payout-lines":"fll-payout-lines","accounting-rules":"fll-accounting-rules","driver-stats-daily":"fll-driver-stats-daily","vehicle-assignments":"fll-vehicle-assignments","email-logs":"fll-email-logs","rate-limits":"fll-rate-limits",counters:"fll-counters","system-settings":"fll-system-settings","user-profiles":"fll-user-profiles",orders:"fll-orders",users:"fll-users",invoices:"fll-invoices",shipments:"fll-shipments","fleet-requests":"fll-fleet-requests","dept-settings":"fll-dept-settings","driver-baseline":"fll-driver-baseline","risk-thresholds":"fll-risk-thresholds","complaint-messages":"fll-complaint-messages","complaint-transfers":"fll-complaint-transfers","users-auth":"fll-users-auth","account-reactivation-requests":"fll-account-reactivation-requests","email-change-requests":"fll-email-change-requests","verification-codes":"fll-verification-codes",attendance:"fll-attendance"};
-const H={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Amz-Date,X-Api-Key","Access-Control-Allow-Methods":"GET,POST,PUT,DELETE,OPTIONS","Content-Type":"application/json"};
-const R=(s,b)=>({statusCode:s,headers:H,body:JSON.stringify(b)});
+const ALLOWED_ORIGINS=(process.env.ALLOWED_ORIGINS||"https://fll.sa,https://www.fll.sa").split(",").map(s=>s.trim());
+function getCorsOrigin(e){const o=e?.headers?.origin||e?.headers?.Origin||"";if(ALLOWED_ORIGINS.includes(o))return o;return ALLOWED_ORIGINS[0]}
+const getHeaders=(e)=>({"Access-Control-Allow-Origin":getCorsOrigin(e),"Access-Control-Allow-Headers":"Content-Type,Authorization,X-Amz-Date,X-Api-Key","Access-Control-Allow-Methods":"GET,POST,PUT,DELETE,OPTIONS","Content-Type":"application/json"});
+let _evt;
+const R=(s,b)=>({statusCode:s,headers:getHeaders(_evt),body:JSON.stringify(b)});
 
 exports.handler=async(e)=>{
+_evt=e;
 const m=e.httpMethod||e.requestContext?.http?.method||"GET";
 if(m==="OPTIONS")return R(200,{});
 const rawPath=e.path||e.rawPath||"/";

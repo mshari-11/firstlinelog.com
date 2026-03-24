@@ -36,7 +36,7 @@ def get_runs(event):
 
 def get_run_detail(event, run_id):
     table = dynamodb.Table(PAYOUT_TABLE)
-    response = table.get_item(Key={'payout_run_id': run_id})
+    response = table.get_item(Key={'runId': run_id})
     item = response.get('Item')
     if not item:
         return cors_response(404, {'error': 'Run not found'})

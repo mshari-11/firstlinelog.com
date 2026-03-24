@@ -63,7 +63,7 @@ def handle_create_review(event, payout_run_id):
             FunctionName='fll-ai-finance-review',
             InvocationType='RequestResponse',
             Payload=json.dumps({
-                'payout_run_id': payout_run_id,
+                'runId': payout_run_id,
                 'review_type': review_type
             })
         )

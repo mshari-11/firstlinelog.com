@@ -131,8 +131,18 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "risk",                label: "إدارة المخاطر",       path: "/admin-panel/risk",               group: "النظام",           icon: "ShieldAlert",     enabled: true,  order: 29 },
   { id: "reactivation",        label: "إعادة التفعيل",       path: "/admin-panel/reactivation",       group: "النظام",           icon: "UserCheck",       enabled: true,  order: 30 },
   { id: "ai-reports",          label: "تقارير AI",           path: "/admin-panel/ai-reports",         group: "النظام",           icon: "Sparkles",        enabled: true,  order: 31, permission: "reports" },
-  { id: "settings",            label: "الإعدادات",           path: "/admin-panel/settings",           group: "النظام",           icon: "Settings2",       enabled: true,  order: 32, isCore: true },
-  { id: "pagebuilder",         label: "منشئ الصفحات",        path: "/admin-panel/page-builder",       group: "النظام",           icon: "LayoutDashboard", enabled: true,  order: 33, isCore: true },
+  { id: "settings",              label: "الإعدادات",           path: "/admin-panel/settings",               group: "النظام",            icon: "Settings2",       enabled: true,  order: 32, isCore: true },
+  { id: "pagebuilder",           label: "منشئ الصفحات",        path: "/admin-panel/page-builder",           group: "النظام",            icon: "LayoutDashboard", enabled: true,  order: 33, isCore: true },
+  // ── New feature pages ──
+  { id: "driver-applications",   label: "طلبات السائقين",      path: "/admin-panel/driver-applications",    group: "السائقون",          icon: "Users",           enabled: true,  order: 34 },
+  { id: "kyc",                   label: "وثائق KYC",           path: "/admin-panel/kyc",                    group: "السائقون",          icon: "Shield",          enabled: true,  order: 35 },
+  { id: "driver-training",       label: "تدريب السائقين",      path: "/admin-panel/driver-training",        group: "السائقون",          icon: "GraduationCap",   enabled: true,  order: 36 },
+  { id: "bank-alerts",           label: "تنبيهات بنكية",       path: "/admin-panel/bank-alerts",            group: "المالية والموارد", icon: "Landmark",        enabled: true,  order: 37, permission: "finance" },
+  { id: "finance-close",         label: "الإغلاق اليومي",      path: "/admin-panel/finance-close",          group: "المالية والموارد", icon: "Lock",            enabled: true,  order: 38, permission: "finance" },
+  { id: "monthly-report",        label: "التقرير الشهري",      path: "/admin-panel/monthly-report",         group: "المالية والموارد", icon: "FileText",        enabled: true,  order: 39, permission: "finance" },
+  { id: "sla",                   label: "مراقبة SLA",          path: "/admin-panel/sla",                    group: "التشغيل",           icon: "Target",          enabled: true,  order: 40 },
+  { id: "marketplace",           label: "تكاملات المنصات",     path: "/admin-panel/marketplace",            group: "التشغيل",           icon: "Plug",            enabled: true,  order: 41 },
+  { id: "n8n-workflows",         label: "سير العمل (n8n)",    path: "/admin-panel/n8n-workflows",          group: "النظام",            icon: "Zap",             enabled: true,  order: 42 },
 ];
 
 const STORAGE_KEY = "fll_page_config_v1";

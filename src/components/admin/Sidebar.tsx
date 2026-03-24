@@ -10,7 +10,7 @@ import {
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, LogOut, Bell, Landmark, GitCompare, Map,
   TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
-  ChevronLeft, Zap,
+  ChevronLeft, Zap, Shield, GraduationCap, Lock, Target, Plug,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Wallet, MessageSquare, BarChart3, Car, Building2,
   Settings2, Landmark, GitCompare, Map,
   TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
+  Shield, GraduationCap, Lock, Target, Plug,
 };
 
 function NavIcon({ name, size = 16 }: { name: string; size?: number }) {

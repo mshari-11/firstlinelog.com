@@ -24,6 +24,15 @@ const routeNames: Record<string, string> = {
   reconciliation: "مطابقة مالية",
   "page-builder": "منشئ الصفحات",
   dispatch: "الخريطة والإرسال",
+  "driver-applications": "طلبات السائقين",
+  kyc: "وثائق KYC",
+  "driver-training": "تدريب السائقين",
+  "bank-alerts": "التنبيهات البنكية",
+  "finance-close": "الإغلاق المالي اليومي",
+  "monthly-report": "التقرير المالي الشهري",
+  sla: "مراقبة مستويات الخدمة",
+  marketplace: "تكاملات المنصات",
+  "n8n-workflows": "سير العمل (n8n)",
 };
 
 function LiveClock() {

@@ -115,6 +115,17 @@ const AccountReactivation = lazy(() => import("@/pages/admin/AccountReactivation
 const AIReports = lazy(() => import("@/pages/admin/AIReports"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 
+// ── New feature pages ─────────────────────────────────────────────────────
+const DriverApplications = lazy(() => import("@/pages/admin/DriverApplications"));
+const KYCManagement = lazy(() => import("@/pages/admin/KYCManagement"));
+const DriverTraining = lazy(() => import("@/pages/admin/DriverTraining"));
+const N8nWorkflows = lazy(() => import("@/pages/admin/N8nWorkflows"));
+const BankAlerts = lazy(() => import("@/pages/admin/BankAlerts"));
+const SLAScanner = lazy(() => import("@/pages/admin/SLAScanner"));
+const MarketplaceIntegrations = lazy(() => import("@/pages/admin/MarketplaceIntegrations"));
+const FinanceClose = lazy(() => import("@/pages/admin/FinanceClose"));
+const MonthlyReport = lazy(() => import("@/pages/admin/MonthlyReport"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -211,6 +222,17 @@ export default function App() {
               <Route path="risk" element={<AccessGuard roles={["admin", "owner"]}><RiskManagement /></AccessGuard>} />
               <Route path="reactivation" element={<AccessGuard roles={["admin", "owner"]}><AccountReactivation /></AccessGuard>} />
               <Route path="ai-reports" element={<PermissionGuard permission="reports"><AIReports /></PermissionGuard>} />
+
+              {/* ── New feature pages ── */}
+              <Route path="driver-applications" element={<AccessGuard roles={["admin", "owner"]}><DriverApplications /></AccessGuard>} />
+              <Route path="kyc" element={<AccessGuard roles={["admin", "owner"]}><KYCManagement /></AccessGuard>} />
+              <Route path="driver-training" element={<AccessGuard roles={["admin", "owner", "staff"]}><DriverTraining /></AccessGuard>} />
+              <Route path="n8n-workflows" element={<AccessGuard roles={["admin", "owner"]}><N8nWorkflows /></AccessGuard>} />
+              <Route path="bank-alerts" element={<PermissionGuard permission="finance"><BankAlerts /></PermissionGuard>} />
+              <Route path="sla" element={<AccessGuard roles={["admin", "owner", "staff"]}><SLAScanner /></AccessGuard>} />
+              <Route path="marketplace" element={<AccessGuard roles={["admin", "owner"]}><MarketplaceIntegrations /></AccessGuard>} />
+              <Route path="finance-close" element={<PermissionGuard permission="finance"><FinanceClose /></PermissionGuard>} />
+              <Route path="monthly-report" element={<PermissionGuard permission="finance"><MonthlyReport /></PermissionGuard>} />
 
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>

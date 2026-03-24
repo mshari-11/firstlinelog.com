@@ -1,0 +1,257 @@
+# FLL — First Line Logistics Platform Context
+
+## Quick Summary
+Saudi delivery logistics company (فيرست لاين لوجستيكس). Multi-portal web platform managing couriers, orders, complaints, finance, fleet, and HR across 7 delivery platforms (HungerStation, Keeta, Ninja, Mrsool, ToYou, Jahez, Careem).
+
+---
+
+## Hosting & Deployment
+
+| Layer | Service | Details |
+|-------|---------|---------|
+| **Frontend** | Vercel | Static files, auto-deploy from GitHub on push to `main` |
+| **Domain** | fll.sa + www.fll.sa | Managed by Vercel |
+| **Git** | github.com/mshari-11/firstlinelog.com | Public repo |
+| **Backend API** | AWS API Gateway | `https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com` |
+| **Auth** | AWS Cognito | Pool: `me-south-1_aJtmQ0QrN`, Client: `3mva1s8p68h8djl04n6vs41gkb` |
+| **Database 1** | Supabase PostgreSQL | URL: `djebhztfewjfyyoortvv.supabase.co`, 98 tables |
+| **Database 2** | AWS DynamoDB | 38+ tables (complaints, tasks, audit, payouts, etc.) |
+| **Lambda** | AWS Lambda | `fll-platform-api-prod` (Node.js 20) |
+| **Region** | me-south-1 (Bahrain) | All AWS resources |
+| **Email** | AWS SES | Domain: fll.sa, verified |
+| **Storage** | AWS S3 | 8 buckets (KYC, finance, exports, ops-raw, etc.) |
+| **AI** | AWS Bedrock | Claude Haiku, me-south-1 |
+| **Events** | AWS EventBridge | SLA scanner (hourly), daily backup (2AM) |
+
+---
+
+## Repository Structure
+
+```
+firstlinelog.com/
+├── index.html                    # Landing page (Skywork bundle — DO NOT MODIFY)
+├── assets/                       # Skywork bundle assets — DO NOT MODIFY
+│   ├── index-CBJBCuQQ.js
+│   └── index-DOu-HVeh.css
+├── admin-dashboard.html          # Admin portal (888 lines, 18 sections, dark theme)
+├── staff-finance.html            # Finance portal (736 lines, 12 tabs)
+├── staff-hr.html                 # HR portal (159 lines, 6 tabs)
+├── staff-ops.html                # Operations portal (181 lines, 6 tabs)
+├── staff-fleet.html              # Fleet portal (171 lines, 4 tabs)
+├── staff-dashboard.html          # Staff home dashboard (192 lines, 5 tabs)
+├── courier-dashboard.html        # Courier portal (396 lines, 5 tabs)
+├── unauthorized.html             # Unauthorized access page
+├── marketplace-integrations.html # Marketplace dashboard
+├── fll-shared.js                 # Shared utilities (auth, toast, badge, formatMoney)
+├── fll-auth-connector.js         # Cognito auth bridge
+├── fll-login-fixer.js            # Login page interceptor + MFA OTP handler
+├── fll-chat-widget.js            # AI chat widget
+├── fll-content-fixer.js          # Skywork content patches
+├── fll-image-fixer.js            # Image path fixes
+├── api-bridge.js                 # AWS API bridge
+├── sw.js                         # Service Worker (PWA)
+├── manifest.json                 # PWA manifest
+├── vercel.json                   # Vercel config (rewrites, clean URLs, cache headers)
+├── public/
+│   ├── favicon.ico
+│   └── images/                   # Logos, partner images
+│       └── partners/             # Platform logos (keeta, hungerstation, etc.)
+└── lambda-code/                  # Reference copies (deployed via AWS Console)
+    ├── platform-api-prod.js      # Main Lambda handler
+    ├── marketplace-integrations.js
+    ├── fll-contact-confirm/
+    ├── fll-auth-api/
+    ├── fll-kyc-upload/
+    └── fll-chatbot/
+```
+
+---
+
+## Design System (v6)
+
+| Element | Value |
+|---------|-------|
+| **Theme** | Dark glassmorphism |
+| **Font** | IBM Plex Sans Arabic (300-700) |
+| **Icons** | Lucide (CDN: unpkg.com/lucide@latest) |
+| **Charts** | Chart.js 4.x (dark defaults) |
+| **Background** | `#0e1a2e` with radial gradient overlays |
+| **Cards** | `rgba(21,34,56,0.7)` + `backdrop-filter:blur(10px)` |
+| **Border** | `rgba(56,189,248,0.1)` |
+| **Text** | `#e2e8f0` (primary), `#94a3b8` (muted) |
+| **Accent** | `#38bdf8` (blue), `#fbbf24` (gold), `#22c55e` (green) |
+| **Buttons** | `linear-gradient(135deg, #0284c7, #7c3aed)` |
+| **Badges** | Semi-transparent: `rgba(color, 0.15)` with light text |
+| **Stat Cards** | Gradient top border (3px), hover lift effect |
+
+### Color Tokens (CSS Variables)
+```css
+:root {
+  --navy: #0a1628;
+  --navy-light: #152238;
+  --navy-mid: #1c2d47;
+  --blue: #38bdf8;
+  --blue-deep: #0284c7;
+  --green: #22c55e;
+  --red: #ef4444;
+  --gold: #fbbf24;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+  --cyan: #22d3ee;
+  --bg: #0e1a2e;
+  --card: rgba(21,34,56,0.7);
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: rgba(56,189,248,0.1);
+  --glass: rgba(255,255,255,0.04);
+  --radius: 14px;
+}
+```
+
+---
+
+## Auth Flow
+
+1. User visits `/unified-login` (rewrites to `/` → Skywork bundle)
+2. `fll-login-fixer.js` intercepts login form
+3. POST `/auth/login` → Cognito
+4. If MFA → shows OTP page → POST `/auth/respond-mfa`
+5. On success → saves `fll_user` + `fll_token` to localStorage
+6. Redirects based on Cognito group:
+   - `admin` → `/admin-dashboard`
+   - `finance` → `/staff-finance`
+   - `hr` → `/staff-hr`
+   - `ops` → `/staff-ops`
+   - `fleet` → `/staff-fleet`
+   - `driver` → `/courier-dashboard`
+
+### Cognito Groups
+`admin`, `finance`, `hr`, `ops`, `fleet`, `driver`, `manager`, `supervisor`, `viewer`
+
+---
+
+## AWS API Endpoints (all 200 OK)
+
+Base: `https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/POST | `/complaints` | Complaints CRUD |
+| POST | `/complaints/{id}/resolve` | Resolve complaint |
+| POST | `/complaints/{id}/assign` | Assign complaint |
+| POST | `/complaints/{id}/escalate` | Escalate complaint |
+| GET/POST | `/api/tasks` | Internal tasks |
+| GET/POST | `/api/notifications` | System notifications |
+| GET/POST | `/api/audit-log` | Audit trail |
+| GET/POST | `/api/payout-runs` | Payout runs |
+| GET/POST | `/api/approvals` | Approval workflows |
+| GET/POST | `/api/vehicles` | Fleet vehicles |
+| GET/POST | `/api/drivers` | Driver records (DynamoDB) |
+| GET/POST | `/api/system-settings` | System config |
+| GET/POST | `/api/departments` | Departments |
+| GET/POST | `/api/orders` | Orders |
+| POST | `/auth/login` | Cognito login |
+| POST | `/auth/respond-mfa` | MFA verification |
+| POST | `/auth/register` | User registration |
+| POST | `/finance/generate-stc-excel` | STC Bank export |
+
+---
+
+## Supabase Tables (Key Tables)
+
+### Core
+- `couriers` — Driver profiles (name, NID, phone, STC bank, city, contract_type, status)
+- `orders` — Delivery orders (courier_id, platform, order_date, gross_earnings, deductions, net_earnings)
+- `staff_users` — Staff profiles
+- `departments` — Company departments
+- `complaints` — Supabase-side complaints
+
+### Finance (schema: finance)
+- `fin_platforms` — 7 platforms config
+- `fin_cities` — 16 Saudi cities
+- `fin_platform_rate_cards` — Commission rates
+- `fin_platform_bonus_rules` — Bonus rules
+- `fin_platform_penalty_rules` — Penalty rules
+- `driver_wallets` — Wallet balances
+- `driver_wallet_ledger` — Immutable transaction log
+- `payout_batches` — Batch payouts
+- `reconciliation_batches` — Reconciliation runs
+- `manual_adjustments` — Manual corrections
+- `fraud_rules` — Fraud detection rules
+- `fraud_flags` — Fraud alerts
+
+### Fleet
+- `fll_vehicles` — Vehicle records
+- `fll_fuel_log` — Fuel tracking
+- `fll_accidents` — Accident records
+
+### HR
+- `driver_training_records` — Training
+- `driver_ratings` — Performance ratings
+- `benefits` — Employee benefits
+
+### System
+- `audit_log` — Audit trail
+- `chat_history` — AI chat logs
+- `email_templates` — Email templates
+- `kyc_files` — KYC documents
+
+---
+
+## Current Portal Features
+
+### Admin Dashboard (18 sections)
+Overview, Couriers, Orders, Complaints, Platforms, Finance, Staff, Departments, Tasks, Notifications, Audit Log, Approvals, Integrations, AI, Settings, Fraud Detection, Upload Center, Daily Finance Close
+
+### Staff Finance (12 tabs)
+Payouts, Earnings, Invoices, Platform Statements, Bank Transfers, Monthly Reports, Charts, Upload Center, Wallets, Reconciliation, AI Insights, Profitability
+
+### Staff HR (6 tabs)
+Staff, Attendance, Leave, Recruitment, Training, Performance
+
+### Staff Ops (6 tabs)
+Overview, Assignments, Schedule, Complaints, Performance, Reports
+
+### Staff Fleet (4 tabs)
+Vehicles, Fuel, Maintenance, Accidents
+
+### Staff Dashboard (5 tabs)
+Overview, Tasks, Requests, Notifications, Profile
+
+### Courier Dashboard (5 tabs)
+Overview, Earnings, Deliveries, Profile/KYC, Support
+
+---
+
+## Critical Rules for Development
+
+1. **NEVER modify** `index.html` or `assets/` — Skywork static bundle
+2. **ALL changes are ADDITIVE** — never delete working code
+3. **Dark theme mandatory** — use CSS variables above
+4. **Arabic RTL** — all pages are `dir="rtl"` `lang="ar"`
+5. **IBM Plex Sans Arabic** — only font allowed
+6. **Lucide Icons** — CDN, use `data-lucide` attributes, call `lucide.createIcons()` after DOM updates
+7. **Supabase** for structured data (couriers, orders, finance)
+8. **DynamoDB** for operational data (complaints, tasks, audit, approvals)
+9. **Push to `main`** → auto-deploys to fll.sa via Vercel
+10. **Region: me-south-1** (Bahrain) for all AWS resources
+
+---
+
+## AWS Account Details
+- Account ID: `230811072086`
+- Region: `me-south-1`
+- Lambda: `fll-platform-api-prod`
+- Cognito Pool: `me-south-1_aJtmQ0QrN`
+- API Gateway: `xr7wsfym5k`
+- SES Domain: `fll.sa`
+- S3 Buckets: `fll-kyc-documents`, `fll-ops-raw`, `fll-ops-quarantine`, `fll-ops-curated`, `fll-ops-exports`, `fll-finance-exports`, `fll-backups`, `fll-static-assets`
+
+---
+
+## Development Priorities
+1. Driver onboarding system
+2. Dispatch system
+3. Finance dashboard enhancements
+4. Complaints system improvements
+5. Fleet management expansion

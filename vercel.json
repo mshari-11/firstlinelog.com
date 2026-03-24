@@ -1,33 +1,36 @@
 {
-    "installCommand": "npm install",
-    "buildCommand": "npm run build",
-    "framework": null,
-    "outputDirectory": ".",
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "rewrites": [
-          { "source": "/admin-panel/(.*)", "destination": "/dist/index" },
-          { "source": "/admin-panel", "destination": "/dist/index" },
-          { "source": "/admin/login", "destination": "/dist/index" },
-          { "source": "/login", "destination": "/dist/index" },
-          { "source": "/unified-login", "destination": "/dist/index" },
-          { "source": "/courier/register", "destination": "/dist/index" },
-          { "source": "/courier/(.*)", "destination": "/dist/index" },
-          { "source": "/application-status", "destination": "/dist/index" },
-          { "source": "/about", "destination": "/" },
-          { "source": "/contact", "destination": "/" },
-          { "source": "/services", "destination": "/" },
-          { "source": "/news", "destination": "/" },
-          { "source": "/investors", "destination": "/" },
-          { "source": "/terms", "destination": "/" },
-          { "source": "/privacy", "destination": "/" },
-          { "source": "/compliance", "destination": "/" },
-          { "source": "/operational-model", "destination": "/" },
-          { "source": "/employee-services", "destination": "/" },
-          { "source": "/github-management", "destination": "/" }
-    ],
-    "headers": [
-          { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
-          { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
-    ]
+        "installCommand": "npm install",
+        "buildCommand": "npm run build",
+        "framework": null,
+        "outputDirectory": ".",
+        "cleanUrls": true,
+        "trailingSlash": false,
+        "rewrites": [
+                    { "source": "/admin-panel/(.*)", "destination": "/dist/index" },
+                    { "source": "/admin-panel", "destination": "/dist/index" },
+                    { "source": "/admin/(.*)", "destination": "/dist/index" },
+                    { "source": "/admin/login", "destination": "/dist/index" },
+                    { "source": "/login", "destination": "/dist/index" },
+                    { "source": "/unified-login", "destination": "/dist/index" },
+                    { "source": "/forgot-password", "destination": "/dist/index" },
+                    { "source": "/reset-password", "destination": "/dist/index" },
+                    { "source": "/courier/register", "destination": "/dist/index" },
+                    { "source": "/courier/(.*)", "destination": "/dist/index" },
+                    { "source": "/application-status", "destination": "/dist/index" },
+                    { "source": "/about", "destination": "/" },
+                    { "source": "/contact", "destination": "/" },
+                    { "source": "/services", "destination": "/" },
+                    { "source": "/news", "destination": "/" },
+                    { "source": "/investors", "destination": "/" },
+                    { "source": "/terms", "destination": "/" },
+                    { "source": "/privacy", "destination": "/" },
+                    { "source": "/compliance", "destination": "/" },
+                    { "source": "/operational-model", "destination": "/" },
+                    { "source": "/employee-services", "destination": "/" },
+                    { "source": "/github-management", "destination": "/" }
+        ],
+        "headers": [
+                    { "source": "/(.*).html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+                    { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] }
+        ]
 }

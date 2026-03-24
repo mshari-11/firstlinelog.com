@@ -69,6 +69,7 @@ import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 import ApplicationStatus from "@/pages/courier/ApplicationStatus";
 import PasswordLogin from "@/pages/PasswordLogin";
+import UnifiedPortal from "@/pages/UnifiedPortal";
 
 // ── Admin panel ──────────────────────────────────────────────────────────────
 import { AdminLayout } from "@/components/admin/Layout";
@@ -165,10 +166,10 @@ export default function App() {
             {/* ══════════════════════════════════════════════════════════════
                 AUTHENTICATION
             ══════════════════════════════════════════════════════════════ */}
-            <Route path="/admin/login" element={<AdminAuthProvider><AdminLogin /></AdminAuthProvider>} />
+            <Route path="/admin/login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/login" element={<AdminAuthProvider><PasswordLogin title="تسجيل دخول السائقين" subtitle="الدخول عبر اسم المستخدم وكلمة المرور" /></AdminAuthProvider>} />
-            <Route path="/unified-login" element={<AdminAuthProvider><PasswordLogin title="تسجيل الدخول الموحّد" subtitle="دخول الموظفين والإدارة عبر اسم المستخدم وكلمة المرور" /></AdminAuthProvider>} />
+            <Route path="/login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
+            <Route path="/unified-login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
 
             {/* ══════════════════════════════════════════════════════════════
                 ADMIN PANEL (/admin-panel/*)

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { Spinner } from "@/components/ui/spinner";
 
 type Screen = "login" | "otp" | "success";
 
@@ -96,7 +97,7 @@ function PrimaryBtn({ children, loading, disabled, onClick, type = "submit" }: {
       style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", opacity: (loading || disabled) ? 0.55 : 1 }}
     >
       {loading
-        ? <><div style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /><span>ط¬ط§ط±ظچ ط§ظ„طھط­ظ…ظٹظ„...</span></>
+        ? <><Spinner className="w-3.5 h-3.5" /><span>جارٍ التحميل...</span></>
         : children}
     </button>
   );

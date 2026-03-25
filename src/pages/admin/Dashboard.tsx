@@ -17,7 +17,8 @@ import {
 } from "recharts";
 import { ChartCard, PageHeader, chartTooltipStyle } from "@/components/admin/FinanceUI";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const ordersChartData = [
@@ -153,6 +154,18 @@ export default function AdminDashboard() {
           </div>
         }
       />
+
+      {/* Alerts */}
+      {(stats.pendingComplaints > 5 || stats.pendingApprovals > 3) && (
+        <Alert variant="destructive" style={{ borderColor: "var(--con-danger)", background: "var(--con-danger-subtle)" }}>
+          <AlertTriangleIcon size={16} />
+          <AlertTitle>تنبيهات تحتاج انتباهك</AlertTitle>
+          <AlertDescription>
+            {stats.pendingComplaints > 5 && `${stats.pendingComplaints || 7} شكاوى معلقة تنتظر المعالجة. `}
+            {stats.pendingApprovals > 3 && `${stats.pendingApprovals || 4} اعتمادات مالية بانتظار الموافقة.`}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>

@@ -9,8 +9,9 @@ import {
   AlertCircle, Search, RefreshCw, Clock, CheckCircle2,
   XCircle, ArrowUpRight, MessageSquare, User, Send,
   Filter, ChevronDown, ChevronUp, Building2, Tag,
-  AlertTriangle, Phone, Mail,
+  AlertTriangle, Phone, Mail, PanelRightOpen,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 

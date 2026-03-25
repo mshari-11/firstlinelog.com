@@ -14,6 +14,7 @@ import {
   User, ChevronUp, KeyRound,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -189,7 +190,8 @@ export function AdminSidebar() {
       </button>
 
       {/* ── Navigation ── */}
-      <nav style={{ flex: 1, overflowY: "auto", paddingBottom: "0.5rem", paddingTop: 4 }}>
+      <ScrollArea className="flex-1" style={{ paddingBottom: "0.5rem", paddingTop: 4 }}>
+      <nav>
         {Object.entries(groups).map(([groupLabel, items]) => (
           <div key={groupLabel}>
             {!collapsed && (
@@ -232,6 +234,7 @@ export function AdminSidebar() {
           </div>
         ))}
       </nav>
+      </ScrollArea>
 
       {/* ── Bottom ── */}
       <div style={{ borderTop: "1px solid var(--con-border-default)", padding: "0.625rem 0.5rem 0.75rem" }}>

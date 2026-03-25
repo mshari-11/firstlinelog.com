@@ -46,6 +46,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Pagination, PaginationContent, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
@@ -81,12 +82,16 @@ const PAGE_SIZE = 5;
 export default function AdminDrivers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("");
   const [page, setPage] = useState(1);
+
+  const cityOptions = [...new Set(driversData.map(d => d.city))].map(c => ({ value: c, label: c }));
 
   const allFiltered = driversData.filter((d) => {
     const matchSearch = d.name.includes(search) || d.id.includes(search) || d.city.includes(search);
     const matchStatus = statusFilter === "all" || d.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchCity = !cityFilter || d.city === cityFilter;
+    return matchSearch && matchStatus && matchCity;
   });
   const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
   const filteredDrivers = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -150,6 +155,9 @@ export default function AdminDrivers() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pr-10"
               />
+            </div>
+            <div className="w-40">
+              <Combobox options={cityOptions} value={cityFilter} onValueChange={setCityFilter} placeholder="كل المدن" searchPlaceholder="ابحث..." emptyMessage="لا توجد" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

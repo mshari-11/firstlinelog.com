@@ -48,6 +48,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Combobox } from "@/components/ui/combobox";
+import {
+  Pagination, PaginationContent, PaginationItem,
+  PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Empty, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Inbox } from "lucide-react";
 
 const ordersData = [
   { id: "FLL-10847", platform: "هنقرستيشن", customer: "عميل #4821", driver: "أحمد محمد", city: "جدة", status: "delivered", amount: 45, date: "2026-02-20", time: "14:35" },
@@ -80,15 +90,19 @@ export default function AdminOrders() {
   const [tab, setTab] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<typeof ordersData[0] | null>(null);
   const [cityFilter, setCityFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   const cityOptions = [...new Set(ordersData.map(o => o.city))].map(c => ({ value: c, label: c }));
 
-  const filteredOrders = ordersData.filter((o) => {
+  const allFiltered = ordersData.filter((o) => {
     const matchSearch = o.id.includes(search) || o.platform.includes(search) || o.driver.includes(search) || o.city.includes(search);
     const matchTab = tab === "all" || o.status === tab;
     const matchCity = !cityFilter || o.city === cityFilter;
     return matchSearch && matchTab && matchCity;
   });
+  const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
+  const filteredOrders = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -218,7 +232,21 @@ export default function AdminOrders() {
                           <DropdownMenuContent align="start">
                             <DropdownMenuItem onClick={() => setSelectedOrder(order)}><Eye className="w-3.5 h-3.5 ml-2" />عرض التفاصيل</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toast.info(`تتبع الطلب ${order.id}`)}>تتبع الطلب</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500" onClick={() => toast.error(`تم إلغاء الطلب ${order.id}`)}>إلغاء الطلب</DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-red-500" onSelect={(e) => e.preventDefault()}>إلغاء الطلب</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent dir="rtl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>إلغاء الطلب {order.id}؟</AlertDialogTitle>
+                                  <AlertDialogDescription>هل أنت متأكد من إلغاء هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="gap-2">
+                                  <AlertDialogCancel>تراجع</AlertDialogCancel>
+                                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => toast.success(`تم إلغاء الطلب ${order.id}`)}>إلغاء الطلب</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -228,6 +256,26 @@ export default function AdminOrders() {
               </TableBody>
             </Table>
           </div>
+          {filteredOrders.length === 0 && (
+            <Empty className="py-12">
+              <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+              <EmptyTitle>لا توجد طلبات</EmptyTitle>
+            </Empty>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <span className="text-xs text-muted-foreground">عرض {(page-1)*PAGE_SIZE+1}-{Math.min(page*PAGE_SIZE,allFiltered.length)} من {allFiltered.length}</span>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem><PaginationPrevious onClick={() => setPage(p => Math.max(1, p-1))} className={page<=1?"pointer-events-none opacity-50":"cursor-pointer"} /></PaginationItem>
+                  {Array.from({length: totalPages}, (_, i) => (
+                    <PaginationItem key={i}><PaginationLink onClick={() => setPage(i+1)} isActive={page===i+1} className="cursor-pointer">{i+1}</PaginationLink></PaginationItem>
+                  ))}
+                  <PaginationItem><PaginationNext onClick={() => setPage(p => Math.min(totalPages, p+1))} className={page>=totalPages?"pointer-events-none opacity-50":"cursor-pointer"} /></PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
       {/* Order Detail Drawer */}

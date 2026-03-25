@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/admin/auth";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Users,
   Plus,
@@ -720,14 +721,12 @@ export default function AdminCouriers() {
                   const checked = verificationChecks[item.key as keyof VerificationChecks];
                   return (
                     <label key={item.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: checked ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", border: `1px solid ${checked ? "var(--con-border-brand)" : "var(--con-border-default)"}`, borderRadius: "var(--con-radius)", padding: "0.55rem 0.75rem", fontSize: "var(--con-text-caption)", color: checked ? "var(--con-text-primary)" : "var(--con-text-secondary)", cursor: "pointer" }}>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={checked}
-                        onChange={(e) => {
+                        onCheckedChange={(val) => {
                           setVerificationError("");
-                          setVerificationChecks((prev) => ({ ...prev, [item.key]: e.target.checked }));
+                          setVerificationChecks((prev) => ({ ...prev, [item.key]: !!val }));
                         }}
-                        style={{ accentColor: "var(--con-brand)" }}
                       />
                       <item.icon size={13} />
                       {item.label}

@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
@@ -599,12 +600,10 @@ function AddStaffModal({ departments, onClose, onSaved }: {
           </select>
         </div>
         <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center", gap: 10 }}>
-          <input
-            type="checkbox"
+          <Checkbox
             id="can_approve"
             checked={form.can_approve}
-            onChange={e => setForm(f => ({ ...f, can_approve: e.target.checked }))}
-            style={{ width: 15, height: 15, accentColor: "var(--con-brand)" }}
+            onCheckedChange={(val) => setForm(f => ({ ...f, can_approve: !!val }))}
           />
           <label htmlFor="can_approve" style={{
             fontSize: "var(--con-text-table)", color: "var(--con-text-secondary)", cursor: "pointer",

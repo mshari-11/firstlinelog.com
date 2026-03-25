@@ -3,11 +3,14 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DirectionProvider } from "@/components/ui/direction";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <TooltipProvider>
-      <App />
-    </TooltipProvider>
+    <DirectionProvider direction="rtl">
+      <TooltipProvider>
+        <App />
+      </TooltipProvider>
+    </DirectionProvider>
   </StrictMode>
 );

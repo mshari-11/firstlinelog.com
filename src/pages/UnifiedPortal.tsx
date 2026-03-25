@@ -8,7 +8,7 @@ import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 
-import { API_BASE } from "@/lib/api";
+import { cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
 
 type Screen = "login" | "forgot" | "forgot-otp" | "reset-password";
 
@@ -56,54 +56,30 @@ export default function UnifiedPortal() {
     e.preventDefault();
     if (!resetEmail.trim()) { setError("أدخل البريد الإلكتروني"); return; }
     setError(""); setSuccess(""); setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail.trim() }),
-      });
-      const data = await res.json();
-      setLoading(false);
-      if (!res.ok || data.error) { setError(data.error || "تعذّر إرسال رمز التحقق"); return; }
-      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-      go("forgot-otp");
-    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
+    const result = await cognitoForgotPassword(resetEmail.trim());
+    setLoading(false);
+    if (result.error) { setError(result.error); return; }
+    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+    go("forgot-otp");
   }
 
   async function handleForgotOTPVerify(e: React.FormEvent) {
     e.preventDefault();
     if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    setError(""); setSuccess(""); setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/verify-custom-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail.trim(), code: otp }),
-      });
-      const data = await res.json();
-      setLoading(false);
-      if (!res.ok || !data.verified) { setError(data.message || "رمز التحقق غير صحيح"); return; }
-      setResetUserId(data.email);
-      go("reset-password");
-    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
+    // OTP verified together with password reset in next step
+    setError("");
+    go("reset-password");
   }
 
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
     setError(""); setSuccess(""); setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetUserId, code: otp, new_password: newPassword }),
-      });
-      const data = await res.json();
-      setLoading(false);
-      if (!res.ok) { setError(data.message || "فشل تحديث كلمة المرور"); return; }
-      setSuccess("تم تحديث كلمة المرور بنجاح!");
-      setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); setResetUserId(""); }, 1500);
-    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
+    const result = await cognitoConfirmPassword(resetEmail.trim(), otp, newPassword);
+    setLoading(false);
+    if (result.error) { setError(result.error); return; }
+    setSuccess("تم تحديث كلمة المرور بنجاح!");
+    setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); setResetUserId(""); }, 1500);
   }
 
   function handleOtpChange(index: number, val: string) {

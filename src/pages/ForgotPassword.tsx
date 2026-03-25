@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { KeyRound, Mail, ShieldCheck, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { API_BASE } from "@/lib/api";
+import { cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
 
 type Step = "email" | "reset";
 
@@ -22,20 +22,11 @@ export default function ForgotPassword() {
     e.preventDefault();
     if (!email.trim()) return setError("يرجى إدخال البريد الإلكتروني");
     setError(""); setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "حدث خطأ");
-      setStep("reset");
-      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "حدث خطأ أثناء إرسال رمز التحقق");
-    }
+    const result = await cognitoForgotPassword(email.trim());
     setLoading(false);
+    if (result.error) { setError(result.error); return; }
+    setStep("reset");
+    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
   }
 
   async function handleResetPassword(e: React.FormEvent) {
@@ -45,20 +36,11 @@ export default function ForgotPassword() {
     if (password.length < 6) return setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     if (password !== confirmPassword) return setError("كلمتا المرور غير متطابقتين");
     setError(""); setSuccess(""); setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), code: otp.trim(), new_password: password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "حدث خطأ");
-      setSuccess("تم تغيير كلمة المرور بنجاح! جارٍ التحويل...");
-      setTimeout(() => navigate("/unified-login"), 2000);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "حدث خطأ أثناء تغيير كلمة المرور");
-    }
+    const result = await cognitoConfirmPassword(email.trim(), otp.trim(), password);
     setLoading(false);
+    if (result.error) { setError(result.error); return; }
+    setSuccess("تم تغيير كلمة المرور بنجاح! جارٍ التحويل...");
+    setTimeout(() => navigate("/unified-login"), 2000);
   }
 
   return (

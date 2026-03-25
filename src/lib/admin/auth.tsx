@@ -3,7 +3,7 @@
  * Authentication via Supabase login-password edge function
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { cognitoSignOut } from "@/lib/cognito";
+import { cognitoSignIn, cognitoSignOut, getCognitoGroups, cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
@@ -106,23 +106,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/login-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: "admin" }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { error: data.error || "البريد الإلكتروني أو كلمة المرور غير صحيحة" };
+      const result = await cognitoSignIn(email, password);
+      if (result.error) {
+        return { error: result.error.includes("Incorrect") ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : result.error };
       }
-      localStorage.setItem(SESSION_KEY, JSON.stringify(data.session));
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      setUser({
-        id: data.user.id,
-        email: data.user.email,
-        full_name: data.user.name || data.user.email,
-        role: mapRole(data.user.role),
-      });
+      if (!result.session) {
+        return { error: "تعذّر إنشاء جلسة" };
+      }
+      const groups = getCognitoGroups(result.session);
+      const payload = result.session.getIdToken().decodePayload();
+      const userEmail = (payload["email"] as string) || email;
+      const userName = (payload["name"] as string) || userEmail;
+      const userSub = (payload["sub"] as string) || "";
+      const role = groups.includes("admin") || groups.includes("SystemAdmin") ? "admin" : groups.includes("staff") ? "staff" : "staff";
+
+      const sessionData = {
+        token: result.session.getAccessToken().getJwtToken(),
+        expires_at: new Date(result.session.getAccessToken().getExpiration() * 1000).toISOString(),
+      };
+      const userData = { id: userSub, email: userEmail, name: userName, role };
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      setUser({ id: userSub, email: userEmail, full_name: userName, role: mapRole(role), cognito_groups: groups });
       return {};
     } catch {
       return { error: "تعذّر الاتصال بالخادم. تأكد من اتصالك بالإنترنت." };
@@ -131,34 +137,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signInWithOtp(email: string) {
     try {
-      const res = await fetch(`${API_BASE}/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) return { error: data.message || "تعذّر إرسال رمز التحقق" };
+      const result = await cognitoForgotPassword(email);
+      if (result.error) return { error: result.error };
       return {};
     } catch {
-      return { error: "تعذّر إرسال رمز التحقق. تأكد من أن الاتصال يعمل بشكل صحيح." };
+      return { error: "تعذّر إرسال رمز التحقق." };
     }
   }
 
   async function verifyEmailOtp(email: string, token: string) {
-    try {
-      const res = await fetch(`${API_BASE}/auth/verify-custom-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: token }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.verified) {
-        return { error: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
-      }
-      return { redirectUrl: window.location.origin + "/admin-panel/dashboard" };
-    } catch {
-      return { error: "رمز التحقق غير صحيح أو منتهي الصلاحية" };
-    }
+    // OTP login not directly supported — use forgot password flow instead
+    return { error: "استخدم كلمة المرور لتسجيل الدخول، أو أعد تعيينها من 'نسيت كلمة المرور'" };
   }
 
   async function handleSignOut() {

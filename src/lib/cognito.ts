@@ -130,6 +130,37 @@ export function getIdToken(session: CognitoUserSession): string {
 }
 
 /**
+ * Forgot password — sends OTP code via Cognito (SES email)
+ */
+export function cognitoForgotPassword(email: string): Promise<{ error?: string }> {
+  return new Promise((resolve) => {
+    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    cognitoUser.forgotPassword({
+      onSuccess: () => resolve({}),
+      onFailure: (err) => resolve({ error: err.message || "تعذّر إرسال رمز التحقق" }),
+      inputVerificationCode: () => resolve({}),
+    });
+  });
+}
+
+/**
+ * Confirm new password with OTP code
+ */
+export function cognitoConfirmPassword(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<{ error?: string }> {
+  return new Promise((resolve) => {
+    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    cognitoUser.confirmPassword(code, newPassword, {
+      onSuccess: () => resolve({}),
+      onFailure: (err) => resolve({ error: err.message || "فشل تغيير كلمة المرور" }),
+    });
+  });
+}
+
+/**
  * Sign out current user
  */
 export function cognitoSignOut(): void {

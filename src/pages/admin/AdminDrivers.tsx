@@ -41,6 +41,11 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const driversData = [
   { id: "DRV-001", name: "أحمد محمد الغامدي", phone: "05XXXXXXX1", city: "جدة", platform: "هنقرستيشن", status: "active", rating: 4.8, orders: 1247, joinDate: "2024-03" },
@@ -247,7 +252,25 @@ export default function AdminDrivers() {
                           <DropdownMenuContent align="start">
                             <DropdownMenuItem>عرض الملف</DropdownMenuItem>
                             <DropdownMenuItem>تعديل البيانات</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500">إيقاف السائق</DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-red-500" onSelect={(e) => e.preventDefault()}>إيقاف السائق</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent dir="rtl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>إيقاف السائق {driver.name}؟</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    سيتم إيقاف السائق عن استقبال الطلبات. يمكنك إعادة تفعيله لاحقاً.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="gap-2">
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => toast.success(`تم إيقاف ${driver.name}`)}>
+                                    إيقاف
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

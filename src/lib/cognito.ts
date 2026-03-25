@@ -26,6 +26,7 @@ export function cognitoSignIn(
   email: string,
   password: string
 ): Promise<{ session?: CognitoUserSession; error?: string }> {
+  console.log("cognitoSignIn: pool=", USER_POOL_ID, "client=", CLIENT_ID);
   return new Promise((resolve) => {
     const authDetails = new AuthenticationDetails({
       Username: email,
@@ -39,9 +40,11 @@ export function cognitoSignIn(
 
     cognitoUser.authenticateUser(authDetails, {
       onSuccess: (session) => {
+        console.log("cognitoSignIn success");
         resolve({ session });
       },
       onFailure: (err) => {
+        console.error("cognitoSignIn error:", err);
         resolve({ error: err.message || "فشل تسجيل الدخول" });
       },
     });
@@ -134,12 +137,27 @@ export function getIdToken(session: CognitoUserSession): string {
  */
 export function cognitoForgotPassword(email: string): Promise<{ error?: string }> {
   return new Promise((resolve) => {
-    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
-    cognitoUser.forgotPassword({
-      onSuccess: () => resolve({}),
-      onFailure: (err) => resolve({ error: err.message || "تعذّر إرسال رمز التحقق" }),
-      inputVerificationCode: () => resolve({}),
-    });
+    try {
+      const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+      cognitoUser.forgotPassword({
+        onSuccess: (data) => {
+          console.log("forgotPassword onSuccess:", data);
+          resolve({});
+        },
+        onFailure: (err) => {
+          console.error("forgotPassword onFailure:", err);
+          const msg = err.message || "تعذّر إرسال رمز التحقق";
+          resolve({ error: msg.includes("User does not exist") ? "البريد الإلكتروني غير مسجّل" : msg });
+        },
+        inputVerificationCode: (data) => {
+          console.log("forgotPassword inputVerificationCode:", data);
+          resolve({});
+        },
+      });
+    } catch (e) {
+      console.error("forgotPassword exception:", e);
+      resolve({ error: "تعذّر الاتصال بخدمة المصادقة" });
+    }
   });
 }
 

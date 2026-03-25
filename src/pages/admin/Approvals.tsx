@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Clock, Search, RefreshCw, DollarSign, Users, FileText, Eye, ThumbsUp, ThumbsDown, AlertCircle } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type ApprovalStatus = "pending" | "approved" | "rejected";
 interface Approval { id: string; type: string; requester: string; description: string; amount?: number; status: ApprovalStatus; createdAt: string; }
@@ -37,7 +38,12 @@ export default function Approvals() {
   }
 
   async function handleAction(id: string, action: "approved" | "rejected") {
-    try { await fetch(`${API_BASE}/api/approvals`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: action }) }); } catch {}
+    try {
+      await fetch(`${API_BASE}/api/approvals`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: action }) });
+      toast.success(action === "approved" ? "تمت الموافقة بنجاح" : "تم الرفض");
+    } catch {
+      toast.error("فشل تحديث الاعتماد");
+    }
     setData(prev => prev.map(a => a.id === id ? { ...a, status: action } : a));
   }
 

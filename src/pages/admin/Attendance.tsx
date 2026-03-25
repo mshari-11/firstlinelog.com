@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, RefreshCw, AlertCircle, ClockIcon, UserCheck, UserX, Users, Clock, Building2 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type AttendanceStatus = "present" | "late" | "absent";
 interface AttendanceEntry { id: string; name: string; department: string; checkIn: string; checkOut: string; status: AttendanceStatus; }
@@ -36,7 +37,7 @@ export default function Attendance() {
     try {
       const res = await fetch(`${API_BASE}/api/attendance`);
       if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) setData(d); }
-    } catch { /* keep mock */ }
+    } catch { toast.error("فشل تحميل بيانات الحضور"); }
     setLoading(false);
   }
 

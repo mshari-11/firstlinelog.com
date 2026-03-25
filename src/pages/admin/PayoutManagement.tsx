@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wallet, Search, RefreshCw, Clock, CheckCircle2, FileText, AlertCircle, DollarSign, Users, Eye, ArrowRightLeft } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type PayoutStatus = "draft" | "approved" | "paid";
 interface PayoutRun { id: string; period: string; driverCount: number; amount: number; status: PayoutStatus; }
@@ -32,7 +33,7 @@ export default function PayoutManagement() {
     try {
       const res = await fetch(`${API_BASE}/api/payout-runs`);
       if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) setData(d); }
-    } catch { /* keep mock */ }
+    } catch { toast.error("فشل تحميل بيانات الرواتب"); }
     setLoading(false);
   }
 

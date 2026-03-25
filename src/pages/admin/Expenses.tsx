@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { DollarSign, TrendingDown, Plus, AlertCircle, CheckCircle2, X } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { toast } from "sonner";
 import {
   KPICard, ChartCard, PageHeader, DataTable, StatusBadge,
   chartTooltipStyle, formatSAR,
@@ -56,8 +57,12 @@ function ExpenseModal({ onClose, onSave }: { onClose: () => void; onSave: (data:
 
   function handleSave() {
     const amount = Number(formData.amount);
-    if (!formData.description || !amount || amount <= 0) return;
+    if (!formData.description || !amount || amount <= 0) {
+      toast.error("يرجى تعبئة جميع الحقول بشكل صحيح");
+      return;
+    }
     onSave({ ...formData, amount });
+    toast.success("تم إضافة المصروف بنجاح");
     onClose();
   }
 

@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { cognitoSignOut } from "@/lib/cognito";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
 const SESSION_KEY = "fll_session";
 const USER_KEY = "fll_user";
 
@@ -130,13 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signInWithOtp(email: string) {
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email-otp`, {
+      const res = await fetch(`${API_BASE}/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, purpose: "login" }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) return { error: data.error || "تعذّر إرسال رمز التحقق" };
+      if (!res.ok) return { error: data.message || "تعذّر إرسال رمز التحقق" };
       return {};
     } catch {
       return { error: "تعذّر إرسال رمز التحقق. تأكد من أن الاتصال يعمل بشكل صحيح." };
@@ -145,14 +146,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function verifyEmailOtp(email: string, token: string) {
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-email-otp`, {
+      const res = await fetch(`${API_BASE}/auth/verify-custom-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp_code: token, purpose: "login" }),
+        body: JSON.stringify({ email, code: token }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { error: data.error || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
+      if (!res.ok || !data.verified) {
+        return { error: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" };
       }
       return { redirectUrl: window.location.origin + "/admin-panel/dashboard" };
     } catch {

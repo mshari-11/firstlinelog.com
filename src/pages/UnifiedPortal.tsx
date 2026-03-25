@@ -8,7 +8,7 @@ import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+import { API_BASE } from "@/lib/api";
 
 type Screen = "login" | "forgot" | "forgot-otp" | "reset-password";
 
@@ -57,10 +57,10 @@ export default function UnifiedPortal() {
     if (!resetEmail.trim()) { setError("أدخل البريد الإلكتروني"); return; }
     setError(""); setSuccess(""); setLoading(true);
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email-otp`, {
+      const res = await fetch(`${API_BASE}/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail.trim(), purpose: "password_reset" }),
+        body: JSON.stringify({ email: resetEmail.trim() }),
       });
       const data = await res.json();
       setLoading(false);
@@ -75,15 +75,15 @@ export default function UnifiedPortal() {
     if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
     setError(""); setSuccess(""); setLoading(true);
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-email-otp`, {
+      const res = await fetch(`${API_BASE}/auth/verify-custom-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail.trim(), otp_code: otp, purpose: "password_reset" }),
+        body: JSON.stringify({ email: resetEmail.trim(), code: otp }),
       });
       const data = await res.json();
       setLoading(false);
-      if (!res.ok || !data.success) { setError(data.error || "رمز التحقق غير صحيح"); return; }
-      setResetUserId(data.user_id);
+      if (!res.ok || !data.verified) { setError(data.message || "رمز التحقق غير صحيح"); return; }
+      setResetUserId(data.email);
       go("reset-password");
     } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
   }
@@ -93,14 +93,14 @@ export default function UnifiedPortal() {
     if (newPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
     setError(""); setSuccess(""); setLoading(true);
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-set-password`, {
+      const res = await fetch(`${API_BASE}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: resetUserId, password: newPassword }),
+        body: JSON.stringify({ email: resetUserId, code: otp, new_password: newPassword }),
       });
       const data = await res.json();
       setLoading(false);
-      if (!res.ok || !data.success) { setError(data.error || "فشل تحديث كلمة المرور"); return; }
+      if (!res.ok) { setError(data.message || "فشل تحديث كلمة المرور"); return; }
       setSuccess("تم تحديث كلمة المرور بنجاح!");
       setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); setResetUserId(""); }, 1500);
     } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }

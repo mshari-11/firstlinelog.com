@@ -4,6 +4,7 @@
  * Backend: platform-api-prod.js /complaints/ endpoints
  */
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import {
   AlertCircle, Search, RefreshCw, Clock, CheckCircle2,
   XCircle, ArrowUpRight, MessageSquare, User, Send,
@@ -168,8 +169,11 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
+        toast.success("تم تعيين الشكوى بنجاح");
+      } else {
+        toast.error("فشل تعيين الشكوى");
       }
-    } catch { /* ignore */ }
+    } catch { toast.error("حدث خطأ أثناء التعيين"); }
     setActionLoading(false);
   }
 
@@ -186,8 +190,11 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
+        toast.success("تم حل الشكوى بنجاح");
+      } else {
+        toast.error("فشل حل الشكوى");
       }
-    } catch { /* ignore */ }
+    } catch { toast.error("حدث خطأ"); }
     setActionLoading(false);
   }
 
@@ -203,8 +210,11 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
+        toast.warning("تم تصعيد الشكوى");
+      } else {
+        toast.error("فشل تصعيد الشكوى");
       }
-    } catch { /* ignore */ }
+    } catch { toast.error("حدث خطأ أثناء التصعيد"); }
     setActionLoading(false);
   }
 
@@ -224,7 +234,8 @@ export default function Complaints() {
       });
       setNewMessage("");
       await fetchMessages(complaintId);
-    } catch { /* ignore */ }
+      toast.success("تم إرسال الرسالة");
+    } catch { toast.error("فشل إرسال الرسالة"); }
     setActionLoading(false);
   }
 

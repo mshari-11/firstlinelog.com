@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/admin/auth";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
   Users,
   Plus,
@@ -333,7 +334,7 @@ export default function AdminCouriers() {
     setActionLoading(app.id);
     try {
       if (!supabase) {
-        alert("خدمة المصادقة غير متاحة حالياً.");
+        toast.error("خدمة المصادقة غير متاحة حالياً.");
         return;
       }
       const {
@@ -341,7 +342,7 @@ export default function AdminCouriers() {
       } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        alert("انتهت جلسة الإدارة. الرجاء تسجيل الدخول مجدداً.");
+        toast.error("انتهت جلسة الإدارة. الرجاء تسجيل الدخول مجدداً.");
         return;
       }
       const res = await fetch(`${API_BASE}/driver/applications/${app.id}/approve`, {
@@ -355,14 +356,16 @@ export default function AdminCouriers() {
       if (res.ok) {
         setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "approved" as const } : a)));
         setSelectedApp(null);
+        toast.success(`تم قبول طلب ${app.full_name} بنجاح`);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`فشل القبول: ${(err as Record<string, string>).message ?? res.statusText}`);
+        toast.error(`فشل القبول: ${(err as Record<string, string>).message ?? res.statusText}`);
       }
     } catch (e) {
       console.error(e);
       setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "approved" as const } : a)));
       setSelectedApp(null);
+      toast.success(`تم قبول طلب ${app.full_name}`);
     } finally {
       setActionLoading(null);
     }
@@ -374,7 +377,7 @@ export default function AdminCouriers() {
     setActionLoading(app.id);
     try {
       if (!supabase) {
-        alert("خدمة المصادقة غير متاحة حالياً.");
+        toast.error("خدمة المصادقة غير متاحة حالياً.");
         return;
       }
       const {
@@ -382,7 +385,7 @@ export default function AdminCouriers() {
       } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        alert("انتهت جلسة الإدارة. الرجاء تسجيل الدخول مجدداً.");
+        toast.error("انتهت جلسة الإدارة. الرجاء تسجيل الدخول مجدداً.");
         return;
       }
       const res = await fetch(`${API_BASE}/driver/applications/${app.id}/reject`, {
@@ -396,14 +399,16 @@ export default function AdminCouriers() {
       if (res.ok) {
         setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "rejected" as const, admin_notes: reason } : a)));
         setSelectedApp(null);
+        toast.success(`تم رفض طلب ${app.full_name}`);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`فشل الرفض: ${(err as Record<string, string>).message ?? res.statusText}`);
+        toast.error(`فشل الرفض: ${(err as Record<string, string>).message ?? res.statusText}`);
       }
     } catch (e) {
       console.error(e);
       setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "rejected" as const, admin_notes: reason } : a)));
       setSelectedApp(null);
+      toast.success(`تم رفض طلب ${app.full_name}`);
     } finally {
       setActionLoading(null);
     }

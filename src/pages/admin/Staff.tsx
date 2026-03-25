@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
@@ -757,6 +758,9 @@ export default function AdminStaff() {
     if (!error) {
       setStaff(prev => prev.map(s => s.id === staffId ? { ...s, permissions: updated } : s));
       if (selectedStaff?.id === staffId) setSelectedStaff(s => s ? { ...s, permissions: updated } : s);
+      toast.success(`تم تحديث الصلاحية`);
+    } else {
+      toast.error("فشل تحديث الصلاحية");
     }
   }
 
@@ -766,6 +770,9 @@ export default function AdminStaff() {
     if (!error) {
       setStaff(prev => prev.map(s => s.id === staffId ? { ...s, is_active: !current } : s));
       if (selectedStaff?.id === staffId) setSelectedStaff(s => s ? { ...s, is_active: !current } : s);
+      toast.success(!current ? "تم تفعيل الموظف" : "تم تعطيل الموظف");
+    } else {
+      toast.error("فشل تحديث الحالة");
     }
   }
 
@@ -777,6 +784,9 @@ export default function AdminStaff() {
     if (!error) {
       setStaff(prev => prev.map(s => s.id === staffId ? { ...s, permissions: all } : s));
       if (selectedStaff?.id === staffId) setSelectedStaff(s => s ? { ...s, permissions: all } : s);
+      toast.success("تم منح جميع الصلاحيات");
+    } else {
+      toast.error("فشل منح الصلاحيات");
     }
   }
 
@@ -788,6 +798,9 @@ export default function AdminStaff() {
     if (!error) {
       setStaff(prev => prev.map(s => s.id === staffId ? { ...s, permissions: none } : s));
       if (selectedStaff?.id === staffId) setSelectedStaff(s => s ? { ...s, permissions: none } : s);
+      toast.success("تم سحب جميع الصلاحيات");
+    } else {
+      toast.error("فشل سحب الصلاحيات");
     }
   }
 

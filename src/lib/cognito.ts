@@ -1,7 +1,6 @@
 ﻿/**
  * Cognito Authentication Module
  * Replaces Supabase auth with AWS Cognito
- * Supports EMAIL_OTP MFA via Lambda API
  */
 import {
   CognitoUserPool,
@@ -9,14 +8,9 @@ import {
   AuthenticationDetails,
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
-import { API_BASE } from "@/lib/api";
 
-const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID;
-const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
-
-if (!USER_POOL_ID || !CLIENT_ID) {
-  throw new Error("VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID must be set in environment variables");
-}
+const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "ap-south-1_placeholder";
+const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || "placeholder";
 
 const poolData = {
   UserPoolId: USER_POOL_ID,
@@ -143,107 +137,4 @@ export function cognitoSignOut(): void {
   if (currentUser) {
     currentUser.signOut();
   }
-}
-
-// ─── Cognito MFA via Lambda API ─────────────────────────────────────────────
-
-export interface MfaChallengeResult {
-  challenge: string;
-  session: string;
-  message?: string;
-}
-
-export interface AuthTokens {
-  accessToken: string;
-  idToken: string;
-  refreshToken: string;
-  user: { email: string; name: string; groups: string[]; sub: string };
-}
-
-/**
- * Login via Lambda API (supports EMAIL_OTP MFA challenge)
- */
-export async function loginViaApi(
-  email: string,
-  password: string
-): Promise<{ tokens?: AuthTokens; mfaChallenge?: MfaChallengeResult; error?: string }> {
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      return { error: data.message || "فشل تسجيل الدخول" };
-    }
-
-    if (data.challenge) {
-      return {
-        mfaChallenge: {
-          challenge: data.challenge,
-          session: data.session,
-          message: data.message,
-        },
-      };
-    }
-
-    return {
-      tokens: {
-        accessToken: data.token,
-        idToken: data.idToken,
-        refreshToken: data.refreshToken,
-        user: data.user,
-      },
-    };
-  } catch {
-    return { error: "تعذر الاتصال بالخادم" };
-  }
-}
-
-/**
- * Respond to MFA challenge via Lambda API
- */
-export async function respondMfaViaApi(
-  email: string,
-  session: string,
-  code: string,
-  challenge = "EMAIL_OTP"
-): Promise<{ tokens?: AuthTokens; error?: string }> {
-  try {
-    const res = await fetch(`${API_BASE}/auth/respond-mfa`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, session, code, challenge }),
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok || !data.token) {
-      return { error: data.message || "رمز التحقق غير صحيح" };
-    }
-
-    return {
-      tokens: {
-        accessToken: data.token,
-        idToken: data.idToken,
-        refreshToken: data.refreshToken,
-        user: data.user,
-      },
-    };
-  } catch {
-    return { error: "تعذر الاتصال بالخادم" };
-  }
-}
-
-/**
- * Store tokens in localStorage so getCognitoSession() picks them up
- */
-export function setSessionFromTokens(username: string, tokens: AuthTokens): void {
-  const prefix = `CognitoIdentityServiceProvider.${CLIENT_ID}`;
-  localStorage.setItem(`${prefix}.${username}.idToken`, tokens.idToken);
-  localStorage.setItem(`${prefix}.${username}.accessToken`, tokens.accessToken);
-  localStorage.setItem(`${prefix}.${username}.refreshToken`, tokens.refreshToken);
-  localStorage.setItem(`${prefix}.${username}.clockDrift`, "0");
-  localStorage.setItem(`${prefix}.LastAuthUser`, username);
 }

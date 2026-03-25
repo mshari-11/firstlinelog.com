@@ -1,14 +1,14 @@
 /**
  * صفحة تسجيل الدخول الموحدة — /unified-login
- * Light theme + Cognito auth + OTP verification via AWS Lambda/SES
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
-import { sendOtp, verifyOtp } from "@/lib/otp-service";
 import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
 
-type Screen = "login" | "otp" | "forgot" | "forgot-otp" | "reset-password";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+
+type Screen = "login" | "forgot" | "forgot-otp" | "reset-password";
 
 const NAV_LINKS = [
   { label: "الرئيسية", href: "/" },
@@ -33,6 +33,7 @@ export default function UnifiedPortal() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [resetUserId, setResetUserId] = useState("");
 
   function go(s: Screen) { setError(""); setSuccess(""); setScreen(s); }
 
@@ -43,66 +44,64 @@ export default function UnifiedPortal() {
     setError(""); setLoading(true);
 
     const res = await signIn(email.trim(), password);
-    if (res.error) { setError(res.error); setLoading(false); return; }
-
-    setSuccess("تم التحقق من بيانات المرور. جارٍ إرسال رمز التحقق...");
-    const otpRes = await sendOtp(email.trim(), "login");
-    setLoading(false);
-    if (otpRes.error) { setError(otpRes.error); return; }
-
-    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-    go("otp");
-  }
-
-  async function handleOTPVerify(e: React.FormEvent) {
-    e.preventDefault();
-    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    setError(""); setLoading(true);
-    const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
+
     navigate("/admin-panel/dashboard");
-  }
-
-  async function handleResend() {
-    setError(""); setLoading(true);
-    const res = await sendOtp(email.trim(), "login");
-    setLoading(false);
-    if (res.error) { setError(res.error); return; }
-    setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
-    setOtp("");
   }
 
   async function handleForgotSend(e: React.FormEvent) {
     e.preventDefault();
     if (!resetEmail.trim()) { setError("أدخل البريد الإلكتروني"); return; }
     setError(""); setSuccess(""); setLoading(true);
-    const otpRes = await sendOtp(resetEmail.trim(), "reset_password");
-    setLoading(false);
-    if (otpRes.error) { setError(otpRes.error); return; }
-    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-    go("forgot-otp");
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail.trim(), purpose: "password_reset" }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok || data.error) { setError(data.error || "تعذّر إرسال رمز التحقق"); return; }
+      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+      go("forgot-otp");
+    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
   }
 
   async function handleForgotOTPVerify(e: React.FormEvent) {
     e.preventDefault();
     if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
     setError(""); setSuccess(""); setLoading(true);
-    const res = await verifyOtp(resetEmail.trim(), otp, "reset_password");
-    setLoading(false);
-    if (res.error) { setError(res.error); return; }
-    setSuccess("تم التحقق. أدخل كلمة المرور الجديدة");
-    go("reset-password");
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-email-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail.trim(), otp_code: otp, purpose: "password_reset" }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok || !data.success) { setError(data.error || "رمز التحقق غير صحيح"); return; }
+      setResetUserId(data.user_id);
+      go("reset-password");
+    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
   }
 
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
     setError(""); setSuccess(""); setLoading(true);
-    // TODO: implement Cognito change password when needed
-    setLoading(false);
-    setSuccess("تم تحديث كلمة المرور بنجاح!");
-    setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); }, 1500);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-set-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: resetUserId, password: newPassword }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok || !data.success) { setError(data.error || "فشل تحديث كلمة المرور"); return; }
+      setSuccess("تم تحديث كلمة المرور بنجاح!");
+      setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); setResetUserId(""); }, 1500);
+    } catch { setLoading(false); setError("تعذّر الاتصال بالخادم"); }
   }
 
   function handleOtpChange(index: number, val: string) {
@@ -298,90 +297,6 @@ export default function UnifiedPortal() {
                   <Lock size={12} /> نسيت كلمة المرور؟
                 </button>
               </div>
-            </form>
-          )}
-
-          {/* ══ OTP Screen ══ */}
-          {screen === "otp" && (
-            <form onSubmit={handleOTPVerify}>
-              <button type="button" onClick={() => { go("login"); setOtp(""); }} style={{
-                background: "none", border: "none", cursor: "pointer", color: "#64748b",
-                fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
-                padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
-                &larr; رجوع
-              </button>
-
-              <div style={{ marginBottom: "1.25rem", textAlign: "center" }}>
-                <div style={{
-                  width: "48px", height: "48px", borderRadius: "50%", margin: "0 auto 0.75rem",
-                  background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <Mail size={22} color="#2563eb" />
-                </div>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
-                  التحقق الثنائي
-                </h2>
-                <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
-                  أدخل رمز التحقق المُرسل إلى {email}
-                </p>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "1.5rem", direction: "ltr" }}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <input
-                    key={i}
-                    id={`otp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otp[i] || ""}
-                    onChange={e => handleOtpChange(i, e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`otp-${i - 1}`);
-                        if (prev) (prev as HTMLInputElement).focus();
-                      }
-                    }}
-                    autoFocus={i === 0}
-                    style={{
-                      width: "48px", height: "56px", textAlign: "center", fontSize: "24px",
-                      fontWeight: 700, background: "#fff", border: "1px solid #d1d5db",
-                      borderRadius: "8px", color: "#1e293b", outline: "none",
-                      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {error && (
-                <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem" }}>
-                  {success}
-                </div>
-              )}
-
-              <button type="submit" disabled={loading || otp.length !== 6} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: (loading || otp.length !== 6) ? "not-allowed" : "pointer",
-                opacity: (loading || otp.length !== 6) ? 0.5 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
-                {loading ? "جارٍ التحقق..." : "تحقق"}
-              </button>
-
-              <button type="button" onClick={handleResend} disabled={loading} style={{
-                width: "100%", padding: "10px", fontSize: "13px", fontWeight: 500,
-                background: "#fff", color: "#64748b", border: "1px solid #d1d5db", borderRadius: "8px",
-                cursor: "pointer", fontFamily: "'IBM Plex Sans Arabic', sans-serif", marginTop: "10px",
-              }}>
-                إرسال رمز جديد
-              </button>
             </form>
           )}
 

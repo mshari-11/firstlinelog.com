@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 type Tab = "login" | "register";
 type Screen = "form" | "otp" | "success" | "forgot" | "forgot-otp" | "reset-password";
@@ -314,26 +316,20 @@ export default function DriverLogin() {
                 </p>
               </div>
 
-              <div style={S.otpBox}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <input
-                    key={i}
-                    id={`dotp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otp[i] || ""}
-                    onChange={e => handleOtpChange(i, e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`dotp-${i - 1}`);
-                        if (prev) (prev as HTMLInputElement).focus();
-                      }
-                    }}
-                    autoFocus={i === 0}
-                    style={S.otpDigit}
-                  />
-                ))}
+              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
 
               {error && <div style={S.error}>{error}</div>}
@@ -415,35 +411,20 @@ export default function DriverLogin() {
                   أدخل رمز التحقق المُرسل إلى {resetEmail}
                 </p>
               </div>
-              <div style={S.otpBox}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <input
-                    key={i}
-                    id={`drfotp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otp[i] || ""}
-                    onChange={e => {
-                      if (!/^\d*$/.test(e.target.value)) return;
-                      const arr = otp.padEnd(6, " ").split("");
-                      arr[i] = e.target.value;
-                      setOtp(arr.join("").replace(/ /g, "").slice(0, 6));
-                      if (e.target.value && i < 5) {
-                        const next = document.getElementById(`drfotp-${i + 1}`);
-                        if (next) (next as HTMLInputElement).focus();
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`drfotp-${i - 1}`);
-                        if (prev) (prev as HTMLInputElement).focus();
-                      }
-                    }}
-                    autoFocus={i === 0}
-                    style={S.otpDigit}
-                  />
-                ))}
+              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
               {error && <div style={S.error}>{error}</div>}
               {success && <div style={S.success}>{success}</div>}

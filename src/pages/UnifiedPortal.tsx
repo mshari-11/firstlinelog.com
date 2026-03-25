@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 
@@ -372,40 +374,20 @@ export default function UnifiedPortal() {
                   أدخل رمز التحقق المُرسل إلى {resetEmail}
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "1.5rem", direction: "ltr" }}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <input
-                    key={i}
-                    id={`fotp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otp[i] || ""}
-                    onChange={e => {
-                      if (!/^\d*$/.test(e.target.value)) return;
-                      const arr = otp.padEnd(6, " ").split("");
-                      arr[i] = e.target.value;
-                      setOtp(arr.join("").replace(/ /g, "").slice(0, 6));
-                      if (e.target.value && i < 5) {
-                        const next = document.getElementById(`fotp-${i + 1}`);
-                        if (next) (next as HTMLInputElement).focus();
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === "Backspace" && !otp[i] && i > 0) {
-                        const prev = document.getElementById(`fotp-${i - 1}`);
-                        if (prev) (prev as HTMLInputElement).focus();
-                      }
-                    }}
-                    autoFocus={i === 0}
-                    style={{
-                      width: "48px", height: "56px", textAlign: "center", fontSize: "24px",
-                      fontWeight: 700, background: "#fff", border: "1px solid #d1d5db",
-                      borderRadius: "8px", color: "#1e293b", outline: "none",
-                      fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                    }}
-                  />
-                ))}
+              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
               {error && (
                 <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>

@@ -9,6 +9,8 @@ import { useAuth } from "@/lib/admin/auth";
 import {
   Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ArrowLeft, Smartphone,
 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 type Screen = "login" | "otp" | "success";
 
@@ -116,34 +118,22 @@ function SecondaryBtn({ children, onClick, disabled }: {
 
 // â”€â”€â”€ OTP Input Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-function OTPInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const handleChange = (index: number, val: string) => {
-    if (!/^\d*$/.test(val)) return; // Only digits
-    const newValue = value.split("");
-    newValue[index] = val;
-    onChange(newValue.join("").slice(0, 6));
-  };
-
-  const digits = value.padEnd(6, "").split("");
-
+function OTPInputField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", marginBottom: "1.5rem" }}>
-      {digits.map((digit, i) => (
-        <input
-          key={i}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit}
-          onChange={(e) => handleChange(i, e.target.value)}
-          autoFocus={i === 0}
-          className="con-input"
-          style={{
-            width: "50px", height: "50px", textAlign: "center", fontSize: "24px", fontWeight: "bold",
-            borderRadius: "var(--con-radius)",
-          }}
-        />
-      ))}
+    <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+      <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={value} onChange={onChange}>
+        <InputOTPGroup>
+          <InputOTPSlot index={0} />
+          <InputOTPSlot index={1} />
+          <InputOTPSlot index={2} />
+        </InputOTPGroup>
+        <InputOTPSeparator />
+        <InputOTPGroup>
+          <InputOTPSlot index={3} />
+          <InputOTPSlot index={4} />
+          <InputOTPSlot index={5} />
+        </InputOTPGroup>
+      </InputOTP>
     </div>
   );
 }
@@ -336,7 +326,7 @@ export default function AdminLogin() {
                   <span style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>ط±ظ…ط² ظ…ظ† 6 ط£ط±ظ‚ط§ظ…</span>
                 </div>
 
-                <OTPInput value={otp} onChange={setOtp} />
+                <OTPInputField value={otp} onChange={setOtp} />
 
                 {error && <ErrorBanner msg={error} />}
                 {success && <SuccessBanner msg={success} />}

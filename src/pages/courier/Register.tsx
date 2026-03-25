@@ -16,6 +16,8 @@
  *   - Liveness: يطلب من المستخدم 3 حركات (تحريك رأس يمين/يسار + رمشة)
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import {
   User, Mail, Phone, CreditCard, Building2, MapPin, ChevronRight, ChevronLeft,
   Camera, Upload, CheckCircle2, Clock, AlertTriangle, Eye, EyeOff,
@@ -859,14 +861,21 @@ export default function CourierRegister() {
                 </div>
 
                 <Field label="رمز التحقق (6 أرقام)" icon={Shield} error={errors.otpCode as string}>
-                  <input
-                    style={{ ...inputStyle, fontSize: "22px", letterSpacing: "0.5rem", textAlign: "center" }}
-                    placeholder="000000"
-                    maxLength={6}
-                    value={form.otpCode}
-                    onChange={(e) => set("otpCode", e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    dir="ltr"
-                  />
+                  <div dir="ltr" style={{ display: "flex", justifyContent: "center" }}>
+                    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={form.otpCode} onChange={(val) => set("otpCode", val)}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
                 </Field>
 
                 <div style={navRow}>

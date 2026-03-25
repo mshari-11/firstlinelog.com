@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, Mail, ShieldCheck, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { API_BASE } from "@/lib/api";
 
 type Step = "email" | "reset";
@@ -99,7 +101,21 @@ export default function ForgotPassword() {
             <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 13, color: "var(--con-text-secondary)" }}>رمز التحقق</label>
-                <input className="con-input" value={otp} onChange={e => setOtp(e.target.value)} placeholder="أدخل الرمز المكون من 6 أرقام" maxLength={6} style={{ textAlign: "center", letterSpacing: 8, fontSize: 20, fontFamily: "var(--con-font-mono)" }} autoFocus />
+                <div dir="ltr" style={{ display: "flex", justifyContent: "center" }}>
+                  <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 13, color: "var(--con-text-secondary)" }}>كلمة المرور الجديدة</label>

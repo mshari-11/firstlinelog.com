@@ -1,159 +1,176 @@
-﻿/**
+/**
  * Cognito Authentication Module
  * Replaces Supabase auth with AWS Cognito
+ * 
+ * PATCH: amazon-cognito-identity-js does not recognise me-south-1 region.
+ * We bypass the SDK validation by constructing the pool manually.
  */
+
 import {
-  CognitoUserPool,
-  CognitoUser,
-  AuthenticationDetails,
-  CognitoUserSession,
+    CognitoUserPool,
+    CognitoUser,
+    AuthenticationDetails,
+    CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
 const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN";
-const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || "6n49ej8fl92i9rtotbk5o9o0d1";
+const CLIENT_ID    = import.meta.env.VITE_COGNITO_CLIENT_ID    || "6n49ej8fl92i9rtotbk5o9o0d1";
 
-const poolData = {
-  UserPoolId: USER_POOL_ID,
-  ClientId: CLIENT_ID,
-};
+/**
+ * Build a CognitoUserPool that works even when the SDK regex
+ * does not recognise the AWS region (e.g. me-south-1).
+ */
+function createPool(): CognitoUserPool {
+    try {
+          return new CognitoUserPool({ UserPoolId: USER_POOL_ID, ClientId: CLIENT_ID });
+    } catch (e: any) {
+          // Fallback: build the object manually, bypassing validation
+      const pool = Object.create(CognitoUserPool.prototype);
+          pool.userPoolId = USER_POOL_ID;
+          pool.clientId   = CLIENT_ID;
+          pool.client     = (CognitoUserPool as any).prototype.client
+            ? undefined
+                  : undefined;
+          // Extract region from pool id  (me-south-1_xxx -> me-south-1)
+      const region = USER_POOL_ID.split("_")[0];
+          pool.advancedSecurityDataCollectionFlag = false;
+          pool.storage = typeof window !== "undefined" ? window.localStorage : {};
+          // Build internal client manually
+      try {
+              const Client = require("amazon-cognito-identity-js/lib/Client").default
+                ?? require("amazon-cognito-identity-js/lib/Client");
+              pool.client = new Client(region, "https://cognito-idp." + region + ".amazonaws.com/");
+      } catch {
+              pool.client = {
+                        request: () => Promise.reject(new Error("Cognito client unavailable")),
+                        promisifyRequest: undefined,
+                        endpoint: "https://cognito-idp." + region + ".amazonaws.com/",
+              };
+      }
+          console.warn("[cognito] Used fallback pool construction for region", region);
+          return pool;
+    }
+}
 
-export const userPool = new CognitoUserPool(poolData);
+export const userPool = createPool();
 
 /**
  * Sign in with email and password via Cognito
  */
 export function cognitoSignIn(
-  email: string,
-  password: string
-): Promise<{ session?: CognitoUserSession; error?: string }> {
-  console.log("cognitoSignIn: pool=", USER_POOL_ID, "client=", CLIENT_ID);
-  return new Promise((resolve) => {
-    const authDetails = new AuthenticationDetails({
-      Username: email,
-      Password: password,
+    email: string,
+    password: string
+  ): Promise<{ session?: CognitoUserSession; error?: string }> {
+    console.log("cognitoSignIn: pool=", USER_POOL_ID, "client=", CLIENT_ID);
+    return new Promise((resolve) => {
+          const authDetails = new AuthenticationDetails({
+                  Username: email,
+                  Password: password,
+          });
+          const cognitoUser = new CognitoUser({
+                  Username: email,
+                  Pool: userPool,
+          });
+          cognitoUser.authenticateUser(authDetails, {
+                  onSuccess: (session) => {
+                            console.log("cognitoSignIn success");
+                            resolve({ session });
+                  },
+                  onFailure: (err) => {
+                            console.error("cognitoSignIn error:", err);
+                            const translated = translateCognitoError(err, "اسم المستخدم أو كلمة المرور غير صحيحة");
+                            resolve({ error: translated });
+                  },
+          });
     });
-
-    const cognitoUser = new CognitoUser({
-      Username: email,
-      Pool: userPool,
-    });
-
-    cognitoUser.authenticateUser(authDetails, {
-      onSuccess: (session) => {
-        console.log("cognitoSignIn success");
-        resolve({ session });
-      },
-      onFailure: (err) => {
-        console.error("cognitoSignIn error:", err);
-        resolve({ error: err.message || "فشل تسجيل الدخول" });
-      },
-    });
-  });
 }
 
 /**
  * Get current authenticated session
  */
 export function getCognitoSession(): Promise<CognitoUserSession | null> {
-  return new Promise((resolve) => {
-    const currentUser = userPool.getCurrentUser();
-    if (!currentUser) {
-      resolve(null);
-      return;
-    }
-
-    currentUser.getSession(
-      (err: Error | null, session: CognitoUserSession | null) => {
-        if (err || !session || !session.isValid()) {
-          resolve(null);
-          return;
-        }
-        resolve(session);
-      }
-    );
-  });
+    return new Promise((resolve) => {
+          const currentUser = userPool.getCurrentUser();
+          if (!currentUser) { resolve(null); return; }
+          currentUser.getSession(
+                  (err: Error | null, session: CognitoUserSession | null) => {
+                            if (err || !session || !session.isValid()) { resolve(null); return; }
+                            resolve(session);
+                  }
+                );
+    });
 }
 
 /**
  * Get current Cognito user attributes
  */
 export function getCognitoUserAttributes(): Promise<Record<string, string> | null> {
-  return new Promise((resolve) => {
-    const currentUser = userPool.getCurrentUser();
-    if (!currentUser) {
-      resolve(null);
-      return;
-    }
-
-    currentUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
-      if (err || !session || !session.isValid()) {
-        resolve(null);
-        return;
-      }
-
-      currentUser.getUserAttributes((err2, attributes) => {
-        if (err2 || !attributes) {
-          resolve(null);
-          return;
-        }
-        const attrs: Record<string, string> = {};
-        attributes.forEach((attr) => {
-          attrs[attr.getName()] = attr.getValue();
-        });
-        resolve(attrs);
-      });
+    return new Promise((resolve) => {
+          const currentUser = userPool.getCurrentUser();
+          if (!currentUser) { resolve(null); return; }
+          currentUser.getSession((err: Error | null, session: CognitoUserSession | null) => {
+                  if (err || !session || !session.isValid()) { resolve(null); return; }
+                  currentUser.getUserAttributes((err2, attributes) => {
+                            if (err2 || !attributes) { resolve(null); return; }
+                            const attrs: Record<string, string> = {};
+                            attributes.forEach((attr) => { attrs[attr.getName()] = attr.getValue(); });
+                            resolve(attrs);
+                  });
+          });
     });
-  });
 }
 
 /**
  * Get Cognito user groups from token
  */
 export function getCognitoGroups(session: CognitoUserSession): string[] {
-  try {
-    const payload = session.getAccessToken().decodePayload();
-    return (payload["cognito:groups"] as string[]) || [];
-  } catch {
-    return [];
-  }
+    try {
+          const payload = session.getAccessToken().decodePayload();
+          return (payload["cognito:groups"] as string[]) || [];
+    } catch { return []; }
 }
 
-/**
- * Get access token string
- */
+/** Get access token string */
 export function getAccessToken(session: CognitoUserSession): string {
-  return session.getAccessToken().getJwtToken();
+    return session.getAccessToken().getJwtToken();
 }
 
-/**
- * Get ID token string
- */
+/** Get ID token string */
 export function getIdToken(session: CognitoUserSession): string {
-  return session.getIdToken().getJwtToken();
+    return session.getIdToken().getJwtToken();
 }
 
 /**
  * Translate Cognito error codes/messages to Arabic
  */
 function translateCognitoError(err: { code?: string; message?: string }, fallback: string): string {
-  const code = err.code || "";
-  const msg  = err.message || "";
+    const code = err.code || "";
+    const msg  = err.message || "";
+
   if (code === "UserNotFoundException" || msg.includes("User does not exist") || msg.includes("Username/client id combination not found"))
-    return "البريد الإلكتروني غير مسجّل في النظام";
-  if (code === "NotAuthorizedException")
-    return "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+        return "البريد الإلكتروني غير مسجّل في النظام";
+
+  if (code === "NotAuthorizedException" || msg.includes("Incorrect"))
+        return "اسم المستخدم أو كلمة المرور غير صحيحة";
+
   if (code === "LimitExceededException" || msg.includes("Attempt limit exceeded"))
-    return "تجاوزت الحد المسموح به من المحاولات. انتظر قليلاً وحاول مجدداً";
+        return "تجاوزت الحد المسموح به من المحاولات. انتظر قليلاً وحاول مجدداً";
+
   if (code === "InvalidParameterException" || msg.includes("Invalid parameter"))
-    return "البريد الإلكتروني غير صالح";
+        return "البريد الإلكتروني غير صالح";
+
   if (code === "CodeMismatchException" || msg.includes("Invalid verification code"))
-    return "رمز التحقق غير صحيح";
+        return "رمز التحقق غير صحيح";
+
   if (code === "ExpiredCodeException" || msg.includes("Invalid code provided") || msg.includes("expired"))
-    return "انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً";
+        return "انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً";
+
   if (code === "InvalidPasswordException" || msg.includes("Password did not conform"))
-    return "كلمة المرور لا تستوفي متطلبات الأمان (8 أحرف على الأقل، حرف كبير، رقم)";
+        return "كلمة المرور لا تستوفي متطلبات الأمان (8 أحرف على الأقل، حرف كبير، رقم)";
+
   if (code === "TooManyRequestsException")
-    return "طلبات كثيرة. انتظر دقيقة وحاول مجدداً";
+        return "طلبات كثيرة. انتظر دقيقة وحاول مجدداً";
+
   return msg || fallback;
 }
 
@@ -161,56 +178,48 @@ function translateCognitoError(err: { code?: string; message?: string }, fallbac
  * Forgot password — sends OTP code via Cognito (SES email)
  */
 export function cognitoForgotPassword(email: string): Promise<{ error?: string }> {
-  return new Promise((resolve) => {
-    try {
-      const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
-      cognitoUser.forgotPassword({
-        onSuccess: (data) => {
-          console.log("forgotPassword onSuccess:", data);
-          resolve({});
-        },
-        onFailure: (err) => {
-          console.error("forgotPassword onFailure — code:", err.code, "msg:", err.message);
-          resolve({ error: translateCognitoError(err, "تعذّر إرسال رمز التحقق") });
-        },
-        inputVerificationCode: (data) => {
-          console.log("forgotPassword inputVerificationCode:", data);
-          resolve({});
-        },
-      });
-    } catch (e) {
-      console.error("forgotPassword exception:", e);
-      resolve({ error: "تعذّر الاتصال بخدمة المصادقة" });
-    }
-  });
+    return new Promise((resolve) => {
+          try {
+                  const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+                  cognitoUser.forgotPassword({
+                            onSuccess: (data) => { console.log("forgotPassword onSuccess:", data); resolve({}); },
+                            onFailure: (err) => {
+                                        console.error("forgotPassword onFailure — code:", err.code, "msg:", err.message);
+                                        resolve({ error: translateCognitoError(err, "تعذّر إرسال رمز التحقق") });
+                            },
+                            inputVerificationCode: (data) => { console.log("forgotPassword inputVerificationCode:", data); resolve({}); },
+                  });
+          } catch (e) {
+                  console.error("forgotPassword exception:", e);
+                  resolve({ error: "تعذّر الاتصال بخدمة المصادقة" });
+          }
+    });
 }
 
 /**
  * Confirm new password with OTP code
  */
 export function cognitoConfirmPassword(
-  email: string,
-  code: string,
-  newPassword: string
-): Promise<{ error?: string }> {
-  return new Promise((resolve) => {
-    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
-    cognitoUser.confirmPassword(code, newPassword, {
-      onSuccess: () => resolve({}),
-      onFailure: (err) => {
-        console.error("confirmPassword onFailure — code:", err.code, "msg:", err.message);
-        resolve({ error: translateCognitoError(err, "فشل تغيير كلمة المرور") });
-      },
+    email: string,
+    code: string,
+    newPassword: string
+  ): Promise<{ error?: string }> {
+    return new Promise((resolve) => {
+          const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+          cognitoUser.confirmPassword(code, newPassword, {
+                  onSuccess: () => resolve({}),
+                  onFailure: (err) => {
+                            console.error("confirmPassword onFailure — code:", err.code, "msg:", err.message);
+                            resolve({ error: translateCognitoError(err, "فشل تغيير كلمة المرور") });
+                  },
+          });
     });
-  });
 }
 
 /**
  * Sign out current user
  */
 export function cognitoSignOut(): void {
-  const currentUser = userPool.getCurrentUser();
-  if (currentUser) {
-    currentUser.signOut();
-  }
+    const currentUser = userPool.getCurrentUser();
+    if (currentUser) { currentUser.signOut(); }
 }

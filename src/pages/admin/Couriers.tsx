@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/admin/auth";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -215,6 +216,7 @@ export default function AdminCouriers() {
   const [selectedApp, setSelectedApp] = useState<DriverApplication | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectDialogApp, setRejectDialogApp] = useState<DriverApplication | null>(null);
+  const [approveDialogApp, setApproveDialogApp] = useState<DriverApplication | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [verificationError, setVerificationError] = useState("");
@@ -343,7 +345,11 @@ export default function AdminCouriers() {
         return;
       }
     }
-    if (!confirm(`هل تريد قبول طلب ${app.full_name}؟`)) return;
+    setApproveDialogApp(app);
+  }
+
+  async function executeApprove(app: DriverApplication) {
+    setApproveDialogApp(null);
     setActionLoading(app.id);
     try {
       if (!supabase) {
@@ -689,16 +695,20 @@ export default function AdminCouriers() {
               </div>
             </div>
 
-            <Section title="بيانات مقدم الطلب">
-              <DetailGrid>
-                <DetailField icon={CreditCard} label="الهوية الوطنية" value={selectedApp.national_id} mono />
-                <DetailField icon={Mail} label="البريد الإلكتروني" value={selectedApp.email} mono />
-                <DetailField icon={Phone} label="رقم الجوال" value={selectedApp.phone} mono />
-                <DetailField icon={MapPin} label="المدينة" value={selectedApp.city} />
-                <DetailField icon={Calendar} label="تاريخ الميلاد" value={selectedApp.date_of_birth ?? "—"} />
-                <DetailField icon={Calendar} label="تاريخ التقديم" value={formatDate(selectedApp.created_at)} mono />
-              </DetailGrid>
-            </Section>
+            <Collapsible defaultOpen>
+              <Section title={<CollapsibleTrigger className="flex items-center gap-2 cursor-pointer w-full hover:opacity-80">بيانات مقدم الطلب</CollapsibleTrigger>}>
+                <CollapsibleContent>
+                  <DetailGrid>
+                    <DetailField icon={CreditCard} label="الهوية الوطنية" value={selectedApp.national_id} mono />
+                    <DetailField icon={Mail} label="البريد الإلكتروني" value={selectedApp.email} mono />
+                    <DetailField icon={Phone} label="رقم الجوال" value={selectedApp.phone} mono />
+                    <DetailField icon={MapPin} label="المدينة" value={selectedApp.city} />
+                    <DetailField icon={Calendar} label="تاريخ الميلاد" value={selectedApp.date_of_birth ?? "—"} />
+                    <DetailField icon={Calendar} label="تاريخ التقديم" value={formatDate(selectedApp.created_at)} mono />
+                  </DetailGrid>
+                </CollapsibleContent>
+              </Section>
+            </Collapsible>
 
             {selectedApp.has_vehicle && (
               <Section title="بيانات المركبة">
@@ -772,6 +782,27 @@ export default function AdminCouriers() {
           </div>
         )}
       </Modal>
+
+      {/* Approve Confirmation Dialog */}
+      <AlertDialog open={!!approveDialogApp} onOpenChange={(open) => { if (!open) setApproveDialogApp(null); }}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد القبول</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل تريد قبول طلب <strong>{approveDialogApp?.full_name}</strong>؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => approveDialogApp && executeApprove(approveDialogApp)}
+              style={{ background: "var(--con-success)" }}
+            >
+              تأكيد القبول
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reject Confirmation Dialog */}
       <AlertDialog open={!!rejectDialogApp} onOpenChange={(open) => { if (!open) { setRejectDialogApp(null); setRejectReason(""); } }}>

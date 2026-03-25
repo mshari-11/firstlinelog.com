@@ -47,6 +47,8 @@ import {
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
 import {
   Pagination, PaginationContent, PaginationItem,
@@ -207,7 +209,27 @@ export default function AdminOrders() {
                     <TableRow key={order.id} className="hover:bg-muted/30">
                       <TableCell className="font-mono text-sm font-bold">{order.id}</TableCell>
                       <TableCell className="text-sm">{order.platform}</TableCell>
-                      <TableCell className="text-sm">{order.driver}</TableCell>
+                      <TableCell className="text-sm">
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <span className="cursor-pointer hover:underline">{order.driver}</span>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-56" side="left">
+                            <div className="flex gap-3">
+                              <Avatar className="w-9 h-9">
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                  {order.driver.split(" ")[0]?.[0] || "?"}{order.driver.split(" ")[1]?.[0] || ""}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold">{order.driver}</p>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{order.city}</p>
+                                <p className="text-xs text-muted-foreground">{order.platform}</p>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
                           <MapPin className="w-3.5 h-3.5 text-muted-foreground" />

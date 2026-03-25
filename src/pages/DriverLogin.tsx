@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { toast } from "sonner";
 
 type Tab = "login" | "register";
 type Screen = "form" | "otp" | "success" | "forgot" | "forgot-otp" | "reset-password";
@@ -60,6 +61,7 @@ export default function DriverLogin() {
     if (res.error) { setError(res.error); return; }
 
     setSuccess("تم التحقق بنجاح!");
+    toast.success("تم تسجيل الدخول بنجاح");
     go("success");
     setTimeout(() => {
       navigate("/courier/portal");
@@ -106,6 +108,7 @@ export default function DriverLogin() {
       if (resetError) { setError("تعذّر تحديث كلمة المرور"); return; }
     } else { setLoading(false); }
     setSuccess("تم تحديث كلمة المرور بنجاح!");
+    toast.success("تم تغيير كلمة المرور");
     setTimeout(() => { go("form"); setNewPassword(""); setOtp(""); setResetEmail(""); }, 1500);
   }
 

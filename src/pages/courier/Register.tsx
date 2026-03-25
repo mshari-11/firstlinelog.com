@@ -16,6 +16,7 @@
  *   - Liveness: يطلب من المستخدم 3 حركات (تحريك رأس يمين/يسار + رمشة)
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -236,7 +237,7 @@ function FileZone({
 
   async function handle(file: File | undefined) {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("الحد الأقصى للملف 5 ميجابايت"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("الحد الأقصى للملف 5 ميجابايت"); return; }
     const data = await fileToBase64(file);
     onChange({ data, name: file.name });
   }
@@ -616,6 +617,7 @@ export default function CourierRegister() {
         setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
       } else {
         setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
+        toast.success("تم إرسال طلب التسجيل بنجاح");
       }
     } catch {
       setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });

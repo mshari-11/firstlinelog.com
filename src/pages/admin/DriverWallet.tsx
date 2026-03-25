@@ -3,6 +3,7 @@
  * Double-entry ledger view, wallet balances, payout batches.
  */
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import {
   Wallet, TrendingUp, TrendingDown, Clock, CheckCircle2,
@@ -218,7 +219,7 @@ export default function DriverWallet() {
           notes: "صرف من شاشة المحافظ",
         });
         if (financeInsert.error) {
-          alert("تعذر تسجيل عملية الصرف");
+          toast.error("تعذر تسجيل عملية الصرف");
           return;
         }
       }
@@ -258,7 +259,7 @@ export default function DriverWallet() {
           .update({ status: nextFrozen ? "inactive" : "active", updated_at: new Date().toISOString() })
           .eq("id", selected.driver_id);
         if (statusUpdate.error) {
-          alert("تعذر تحديث حالة المحفظة");
+          toast.error("تعذر تحديث حالة المحفظة");
           return;
         }
       }

@@ -18,6 +18,7 @@ import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Empty, EmptyMedia as EmptyIcon, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
@@ -894,7 +895,7 @@ export default function AdminStaff() {
               <k.icon size={14} style={{ color: k.accent }} />
             </div>
             {loading
-              ? <div className="con-skeleton" style={{ height: 22, width: "50%", borderRadius: 5 }} />
+              ? <Skeleton className="h-6 w-1/2 rounded-md" />
               : <div className="con-kpi-value" style={{ fontSize: 24, color: k.accent }}>{k.value}</div>
             }
           </div>
@@ -940,7 +941,7 @@ export default function AdminStaff() {
             {loading ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {[1,2,3,4].map(i => (
-                  <div key={i} className="con-skeleton" style={{ height: 58, borderRadius: 8 }} />
+                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (

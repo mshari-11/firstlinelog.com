@@ -3,6 +3,7 @@
  * يعرض طلبات التسجيل من driver_applications مع إمكانية القبول / الرفض
  */
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, User, Phone, Mail, MapPin, Car } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -87,7 +88,7 @@ export default function DriverApplications() {
       setSelected(prev => prev ? { ...prev, ...update } : null);
       setNotes("");
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setActionLoading(false);
     }

@@ -3,6 +3,7 @@
  * سجلات التدريب من جدول driver_training_records
  */
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Search, RefreshCw, AlertCircle, CheckCircle2, Clock, GraduationCap, Plus, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -77,7 +78,7 @@ export default function DriverTraining() {
       if (inserted) setData(prev => [inserted[0], ...prev]);
       setShowModal(false);
       setForm({ driver_id: "", training_type: "onboarding", training_name: "", status: "assigned" });
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { toast.error(e.message); }
     finally { setSaving(false); }
   }
 

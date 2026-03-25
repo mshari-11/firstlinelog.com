@@ -3,6 +3,7 @@
  * مراجعة وثائق الهوية المرفوعة عبر Lambda fll-kyc-upload
  */
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, FileText, Shield } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -82,7 +83,7 @@ export default function KYCManagement() {
       setData(prev => prev.map(f => f.id === selected.id ? { ...f, ...update } : f));
       setSelected(prev => prev ? { ...prev, ...update } : null);
       setNotes("");
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { toast.error(e.message); }
     finally { setActionLoading(false); }
   }
 

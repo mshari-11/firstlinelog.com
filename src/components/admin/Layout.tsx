@@ -9,7 +9,11 @@ import { useAuth } from "@/lib/admin/auth";
 import { AdminSidebar } from "./Sidebar";
 import { AdminAiAssistant } from "./AiAssistant";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronLeft } from "lucide-react";
+import { Clock } from "lucide-react";
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const routeNames: Record<string, string> = {
   dashboard: "لوحة التحكم",
@@ -151,19 +155,21 @@ export function AdminLayout() {
           }}
         >
           {/* Breadcrumbs */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "var(--con-text-disabled)" }}>لوحة الإدارة</span>
-            <ChevronLeft size={12} style={{ color: "var(--con-text-disabled)" }} />
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: "var(--con-text-primary)",
-              }}
-            >
-              {currentPage}
-            </span>
-          </div>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/admin-panel/dashboard" style={{ fontSize: 11 }}>
+                  لوحة الإدارة
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage style={{ fontSize: 12, fontWeight: 600 }}>
+                  {currentPage}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
           {/* Right side: Status + Clock */}
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

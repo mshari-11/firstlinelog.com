@@ -46,6 +46,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import {
+  Pagination, PaginationContent, PaginationItem,
+  PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const driversData = [
   { id: "DRV-001", name: "أحمد محمد الغامدي", phone: "05XXXXXXX1", city: "جدة", platform: "هنقرستيشن", status: "active", rating: 4.8, orders: 1247, joinDate: "2024-03" },
@@ -72,15 +76,20 @@ const summaryStats = [
   { label: "موقوف", value: "45", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
 ];
 
+const PAGE_SIZE = 5;
+
 export default function AdminDrivers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
 
-  const filteredDrivers = driversData.filter((d) => {
+  const allFiltered = driversData.filter((d) => {
     const matchSearch = d.name.includes(search) || d.id.includes(search) || d.city.includes(search);
     const matchStatus = statusFilter === "all" || d.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
+  const filteredDrivers = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -280,6 +289,30 @@ export default function AdminDrivers() {
               </TableBody>
             </Table>
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <span className="text-xs text-muted-foreground">
+                عرض {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, allFiltered.length)} من {allFiltered.length}
+              </span>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink onClick={() => setPage(i + 1)} isActive={page === i + 1} className="cursor-pointer">
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

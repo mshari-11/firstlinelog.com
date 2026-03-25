@@ -14,8 +14,9 @@ import { supabase } from "@/lib/supabase";
 import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
-  Navigation, Phone, Star, Layers, Filter, Zap,
+  Navigation, Phone, Star, Layers, Filter, Zap, Inbox,
 } from "lucide-react";
+import { Empty, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -522,9 +523,11 @@ export default function Dispatch() {
           {/* Order list */}
           <div style={{ flex: 1, overflowY: "auto" }}>
             {filteredOrders.length === 0 ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "var(--con-text-muted)", fontSize: "13px" }}>
-                لا توجد طلبات
-              </div>
+              <Empty className="py-8">
+                <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+                <EmptyTitle>لا توجد طلبات</EmptyTitle>
+                <EmptyDescription>لا توجد طلبات تطابق معايير البحث</EmptyDescription>
+              </Empty>
             ) : (
               filteredOrders.map((order) => {
                 const statusCfg = ORDER_STATUS_CONFIG[order.status];

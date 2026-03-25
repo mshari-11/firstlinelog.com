@@ -2,6 +2,7 @@
  * لوحة التحكم الرئيسية للإدارة - Admin Dashboard
  * FirstLine Logistics
  */
+import * as React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const stats = [
   {
@@ -103,8 +105,29 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+function OrderSkeleton() {
+  return (
+    <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30">
+      <Skeleton className="w-10 h-10 rounded-lg" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <Skeleton className="h-3 w-16 hidden sm:block" />
+      <Skeleton className="h-3 w-20" />
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [ordersLoading, setOrdersLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setOrdersLoading(false), 800);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
       {/* العنوان */}
@@ -182,7 +205,14 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentOrders.map((order) => (
+                {ordersLoading ? (
+                  <>
+                    <OrderSkeleton />
+                    <OrderSkeleton />
+                    <OrderSkeleton />
+                    <OrderSkeleton />
+                  </>
+                ) : recentOrders.map((order) => (
                   <div key={order.id} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Truck className="w-5 h-5 text-primary" />

@@ -41,7 +41,7 @@ export default function DriverLogin() {
     reset(); setLoading(true);
 
     const res = await signIn(email.trim(), password);
-    if (res.error) { setError(res.error); setLoading(false); return; }
+    if (res.error) { setError(res.error); toast.error(res.error); setLoading(false); return; }
 
     setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
     const otpRes = await sendOtp(email.trim(), "login");
@@ -58,7 +58,7 @@ export default function DriverLogin() {
     reset(); setLoading(true);
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
-    if (res.error) { setError(res.error); return; }
+    if (res.error) { setError(res.error); toast.error(res.error); return; }
 
     setSuccess("تم التحقق بنجاح!");
     toast.success("تم تسجيل الدخول بنجاح");
@@ -105,7 +105,7 @@ export default function DriverLogin() {
     if (supabase) {
       const { error: resetError } = await supabase.auth.updateUser({ password: newPassword });
       setLoading(false);
-      if (resetError) { setError("تعذّر تحديث كلمة المرور"); return; }
+      if (resetError) { setError("تعذّر تحديث كلمة المرور"); toast.error("تعذّر تحديث كلمة المرور"); return; }
     } else { setLoading(false); }
     setSuccess("تم تحديث كلمة المرور بنجاح!");
     toast.success("تم تغيير كلمة المرور");

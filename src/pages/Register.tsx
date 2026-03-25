@@ -38,7 +38,7 @@ export default function RegisterPage() {
     setLoading(true); setError('');
     try {
       const { data: existing } = await supabase.from('users').select('id').eq('username', username).maybeSingle();
-      if (existing) { setError('اسم المستخدم مستخدم بالفعل'); setLoading(false); return; }
+      if (existing) { setError('اسم المستخدم مستخدم بالفعل'); toast.error('اسم المستخدم مستخدم بالفعل'); setLoading(false); return; }
       setStep(2);
     } catch (err) { setError('حدث خطأ، حاول مرة أخرى'); } finally { setLoading(false); }
   }
@@ -56,8 +56,8 @@ export default function RegisterPage() {
       if (signUpError) throw signUpError;
       if (data?.user) { toast.success('تم التسجيل بنجاح!'); setStep(3); }
     } catch (err: any) {
-      if (err.message?.includes('already registered')) { setError('البريد الإلكتروني مسجل بالفعل'); }
-      else { setError('حدث خطأ أثناء التسجيل، حاول مرة أخرى'); }
+      if (err.message?.includes('already registered')) { setError('البريد الإلكتروني مسجل بالفعل'); toast.error('البريد الإلكتروني مسجل بالفعل'); }
+      else { setError('حدث خطأ أثناء التسجيل، حاول مرة أخرى'); toast.error('حدث خطأ أثناء التسجيل'); }
     } finally { setLoading(false); }
   }
 

@@ -9,8 +9,8 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
-const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "ap-south-1_placeholder";
-const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || "placeholder";
+const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN";
+const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || "6n49ej8fl92i9rtotbk5o9o0d1";
 
 const poolData = {
   UserPoolId: USER_POOL_ID,

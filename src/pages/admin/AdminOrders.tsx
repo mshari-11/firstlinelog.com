@@ -19,6 +19,8 @@ import {
   Download,
   Eye,
   RefreshCw,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,10 +87,20 @@ export default function AdminOrders() {
           <p className="text-muted-foreground text-sm mt-1">تتبع وإدارة جميع طلبات التوصيل</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 ml-2" />
-            تصدير
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 ml-2" />
+                تصدير
+                <ChevronDown className="w-3 h-3 mr-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem><FileSpreadsheet className="w-3.5 h-3.5 ml-2" />تصدير Excel</DropdownMenuItem>
+              <DropdownMenuItem><FileText className="w-3.5 h-3.5 ml-2" />تصدير PDF</DropdownMenuItem>
+              <DropdownMenuItem><Download className="w-3.5 h-3.5 ml-2" />تصدير CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 ml-2" />
             تحديث

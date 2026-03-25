@@ -12,11 +12,20 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Printer,
+  Download,
+  ChevronDown,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const monthlyRevenue = [
   { month: "سبتمبر", value: 820000, orders: 9200 },
@@ -64,14 +73,21 @@ export default function AdminReports() {
           <p className="text-muted-foreground text-sm mt-1">نظرة تحليلية شاملة على أداء العمليات</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Printer className="w-4 h-4 ml-2" />
-            طباعة
-          </Button>
-          <Button variant="outline" size="sm">
-            <FileSpreadsheet className="w-4 h-4 ml-2" />
-            تصدير Excel
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 ml-2" />
+                تصدير
+                <ChevronDown className="w-3 h-3 mr-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem><FileSpreadsheet className="w-3.5 h-3.5 ml-2" />تصدير Excel</DropdownMenuItem>
+              <DropdownMenuItem><FileText className="w-3.5 h-3.5 ml-2" />تصدير PDF</DropdownMenuItem>
+              <DropdownMenuItem><Download className="w-3.5 h-3.5 ml-2" />تصدير CSV</DropdownMenuItem>
+              <DropdownMenuItem><Printer className="w-3.5 h-3.5 ml-2" />طباعة</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.div>
 

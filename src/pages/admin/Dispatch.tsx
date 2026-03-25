@@ -508,17 +508,10 @@ export default function Dispatch() {
                 style={{ width: "100%", paddingRight: "2rem", fontSize: "12px" }}
               />
             </div>
-            <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }} role="group">
               {(["all", "pending", "assigned", "delivering", "delivered"] as const).map((s) => (
                 <button key={s} onClick={() => setStatusFilter(s)}
-                  style={{
-                    padding: "0.2rem 0.5rem", borderRadius: "100px",
-                    fontSize: "11px", border: "1px solid",
-                    cursor: "pointer", transition: "all 0.15s",
-                    borderColor: statusFilter === s ? "var(--con-brand)" : "var(--con-border-default)",
-                    background: statusFilter === s ? "var(--con-brand-subtle)" : "transparent",
-                    color: statusFilter === s ? "var(--con-brand)" : "var(--con-text-muted)",
-                  }}
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${statusFilter === s ? "border-[var(--con-brand)] bg-[var(--con-brand-subtle)] text-[var(--con-brand)]" : "border-[var(--con-border-default)] bg-transparent text-[var(--con-text-muted)] hover:border-[var(--con-brand)] hover:text-[var(--con-brand)]"}`}
                 >
                   {s === "all" ? "الكل" : ORDER_STATUS_CONFIG[s].label}
                 </button>

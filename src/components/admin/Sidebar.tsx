@@ -11,7 +11,16 @@ import {
   Settings2, LogOut, Bell, Landmark, GitCompare, Map,
   TrendingUp, Receipt, ArrowRightLeft, FileText, Brain,
   ChevronLeft, Zap, Shield, GraduationCap, Lock, Target, Plug,
+  User, ChevronUp, KeyRound,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { loadConfig } from "@/pages/admin/PageBuilder";
@@ -271,81 +280,87 @@ export function AdminSidebar() {
           )}
         </button>
 
-        {/* User card */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: collapsed ? 0 : "0.625rem",
-            padding: collapsed ? "0.5rem" : "0.5rem 0.875rem",
-            background: "var(--con-bg-elevated)",
-            borderRadius: "var(--con-radius)",
-            margin: collapsed ? "0.25rem auto" : "0.25rem 0.25rem 0",
-            justifyContent: collapsed ? "center" : undefined,
-          }}
-        >
-          <motion.div
-            whileHover={{ scale: 1.08 }}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: "var(--con-radius-sm)",
-              background: "var(--con-brand)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#0C0E14",
-            }}
-          >
-            {initials}
-          </motion.div>
-
-          {!collapsed && (
-            <>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--con-text-primary)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    margin: 0,
-                  }}
-                >
-                  {user?.full_name || "المدير"}
-                </p>
-                <p style={{ fontSize: 11, color: "var(--con-text-muted)", lineHeight: 1.3, margin: 0 }}>
-                  {roleLabel[user?.role || "admin"]}
-                </p>
-              </div>
-
-              <button
-                onClick={handleSignOut}
-                title="تسجيل الخروج"
+        {/* User card with dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: collapsed ? 0 : "0.625rem",
+                padding: collapsed ? "0.5rem" : "0.5rem 0.875rem",
+                background: "var(--con-bg-elevated)",
+                borderRadius: "var(--con-radius)",
+                margin: collapsed ? "0.25rem auto" : "0.25rem 0.25rem 0",
+                justifyContent: collapsed ? "center" : undefined,
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--con-bg-surface-1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--con-bg-elevated)"; }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.08 }}
                 style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 4,
-                  borderRadius: 4,
-                  color: "var(--con-text-muted)",
+                  width: 28,
+                  height: 28,
+                  borderRadius: "var(--con-radius-sm)",
+                  background: "var(--con-brand)",
                   display: "flex",
                   alignItems: "center",
-                  transition: "color 0.15s",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#0C0E14",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--con-danger)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--con-text-muted)"; }}
               >
-                <LogOut size={14} />
-              </button>
-            </>
-          )}
-        </div>
+                {initials}
+              </motion.div>
+
+              {!collapsed && (
+                <>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--con-text-primary)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        margin: 0,
+                      }}
+                    >
+                      {user?.full_name || "المدير"}
+                    </p>
+                    <p style={{ fontSize: 11, color: "var(--con-text-muted)", lineHeight: 1.3, margin: 0 }}>
+                      {roleLabel[user?.role || "admin"]}
+                    </p>
+                  </div>
+                  <ChevronUp size={14} style={{ color: "var(--con-text-muted)" }} />
+                </>
+              )}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-48">
+            <DropdownMenuLabel style={{ fontSize: 12 }}>{user?.full_name || "المدير"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/admin-panel/settings")}>
+              <User className="w-3.5 h-3.5 ml-2" />الملف الشخصي
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/admin-panel/settings")}>
+              <Settings2 className="w-3.5 h-3.5 ml-2" />الإعدادات
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/forgot-password")}>
+              <KeyRound className="w-3.5 h-3.5 ml-2" />تغيير كلمة المرور
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500">
+              <LogOut className="w-3.5 h-3.5 ml-2" />تسجيل الخروج
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.aside>
   );

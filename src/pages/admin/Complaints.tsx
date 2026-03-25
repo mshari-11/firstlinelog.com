@@ -330,19 +330,12 @@ export default function Complaints() {
             style={{ width: "100%", paddingRight: 32, fontSize: 12 }}
           />
         </div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }} className="button-group-filter" role="group">
           {(["all", "new", "assigned", "in_progress", "escalated", "resolved"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              style={{
-                padding: "4px 10px", borderRadius: 100, fontSize: 11, fontWeight: 500,
-                border: "1px solid",
-                cursor: "pointer", transition: "all 0.15s",
-                borderColor: statusFilter === s ? "var(--con-brand)" : "var(--con-border-default)",
-                background: statusFilter === s ? "var(--con-brand-subtle, rgba(59,130,246,0.1))" : "transparent",
-                color: statusFilter === s ? "var(--con-brand)" : "var(--con-text-muted)",
-              }}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${statusFilter === s ? "border-[var(--con-brand)] bg-[var(--con-brand-subtle,rgba(59,130,246,0.1))] text-[var(--con-brand)]" : "border-[var(--con-border-default)] bg-transparent text-[var(--con-text-muted)] hover:border-[var(--con-brand)] hover:text-[var(--con-brand)]"}`}
             >
               {s === "all" ? "الكل" : STATUS_META[s].label}
             </button>

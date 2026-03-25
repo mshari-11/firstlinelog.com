@@ -9,16 +9,15 @@ const d=DynamoDBDocumentClient.from(c);
 const cognitoClient=new CognitoIdentityProviderClient({region:"me-south-1"});
 const USER_POOL_ID=process.env.USER_POOL_ID||"me-south-1_aJtmQ0QrN";
 const T={drivers:"fll-drivers","staff-users":"fll-staff-users",complaints:"fll-complaints",vehicles:"fll-vehicles",departments:"fll-departments",roles:"fll-roles",permissions:"fll-permissions",notifications:"fll-notifications","audit-log":"fll-audit-log",approvals:"fll-approvals",tasks:"fll-tasks","payout-runs":"fll-payout-runs","payout-lines":"fll-payout-lines","accounting-rules":"fll-accounting-rules","driver-stats-daily":"fll-driver-stats-daily","vehicle-assignments":"fll-vehicle-assignments","email-logs":"fll-email-logs","rate-limits":"fll-rate-limits",counters:"fll-counters","system-settings":"fll-system-settings","user-profiles":"fll-user-profiles",orders:"fll-orders",users:"fll-users",invoices:"fll-invoices",shipments:"fll-shipments","fleet-requests":"fll-fleet-requests","dept-settings":"fll-dept-settings","driver-baseline":"fll-driver-baseline","risk-thresholds":"fll-risk-thresholds","complaint-messages":"fll-complaint-messages","complaint-transfers":"fll-complaint-transfers","users-auth":"fll-users-auth","account-reactivation-requests":"fll-account-reactivation-requests","email-change-requests":"fll-email-change-requests","verification-codes":"fll-verification-codes",attendance:"fll-attendance"};
-const ALLOWED_ORIGINS=(process.env.ALLOWED_ORIGINS||"https://fll.sa,https://www.fll.sa,https://firstlinelog.com,https://www.firstlinelog.com").split(",").map(s=>s.trim());
-function getCorsOrigin(e){const o=e?.headers?.origin||e?.headers?.Origin||"";if(ALLOWED_ORIGINS.includes(o))return o;return ALLOWED_ORIGINS[0]}
-const getHeaders=(e)=>({"Access-Control-Allow-Origin":getCorsOrigin(e),"Access-Control-Allow-Headers":"Content-Type,Authorization,X-Amz-Date,X-Api-Key","Access-Control-Allow-Methods":"GET,POST,PUT,DELETE,OPTIONS","Content-Type":"application/json"});
-let _evt;
-const R=(s,b)=>({statusCode:s,headers:getHeaders(_evt),body:JSON.stringify(b)});
+const ALLOWED_ORIGINS=["https://fll.sa","https://www.fll.sa","https://firstlinelog.com","https://www.firstlinelog.com"];
+const getAllowedOrigin=(origin)=>ALLOWED_ORIGINS.includes(origin)?origin:ALLOWED_ORIGINS[0];
+const getHeaders=(origin)=>({"Access-Control-Allow-Origin":getAllowedOrigin(origin),"Access-Control-Allow-Headers":"Content-Type,Authorization,X-Amz-Date,X-Api-Key","Access-Control-Allow-Methods":"GET,POST,PUT,DELETE,OPTIONS","Content-Type":"application/json","Vary":"Origin"});
+const R=(s,b,origin)=>({statusCode:s,headers:getHeaders(origin),body:JSON.stringify(b)});
 
 exports.handler=async(e)=>{
-_evt=e;
+const origin=(e.headers&&(e.headers["origin"]||e.headers["Origin"]))||"";
 const m=e.httpMethod||e.requestContext?.http?.method||"GET";
-if(m==="OPTIONS")return R(200,{});
+if(m==="OPTIONS")return R(200,{},origin);
 const rawPath=e.path||e.rawPath||"/";
 const p=rawPath.split("/").filter(x=>x);
 
@@ -40,47 +39,49 @@ if(p[0]==="complaints"){
 const res=p[0],pid=p[1]||null;
 let body={};try{body=e.body?JSON.parse(e.body):{}}catch(x){}
 
-if(!res)return R(200,{message:"FLL Platform API v2.2",status:"healthy",tables:Object.keys(T),timestamp:new Date().toISOString()});
-if(res==="health")return R(200,{status:"healthy",region:"me-south-1",version:"2.2",tables:Object.keys(T).length});
+if(!res)return R(200,{message:"FLL Platform API v2.2",status:"healthy",tables:Object.keys(T),timestamp:new Date().toISOString()},origin);
+if(res==="health")return R(200,{status:"healthy",region:"me-south-1",version:"2.2",tables:Object.keys(T).length},origin);
 
 if(res==="stats"){
 try{
 const stats={};
 const tables=["drivers","orders","complaints","vehicles","staff-users","payout-runs","notifications","tasks"];
 for(const t of tables){const tn=T[t];if(tn){const r=await d.send(new ScanCommand({TableName:tn,Select:"COUNT"}));stats[t]={count:r.Count||0}}}
-return R(200,{stats,timestamp:new Date().toISOString()});
-}catch(err){return R(500,{error:err.message})}
+return R(200,{stats,timestamp:new Date().toISOString()},origin);
+}catch(err){return R(500,{error:err.message},origin)}
 }
 
 // === AUTH ROUTES (public — no token required) ===
 if(res==="auth"){
-  if(pid==="send-otp"&&m==="POST")return handleSendOtp(body);
-  if(pid==="verify-custom-otp"&&m==="POST")return handleVerifyOtp(body);
-  return R(404,{error:"Unknown auth route"});
+  if(pid==="send-otp"&&m==="POST")return handleSendOtp(body,origin);
+  if(pid==="verify-custom-otp"&&m==="POST")return handleVerifyOtp(body,origin);
+  if(pid==="forgot-password"&&m==="POST")return handleForgotPassword(body,origin);
+  if(pid==="reset-password"&&m==="POST")return handleResetPassword(body,origin);
+  return R(404,{error:"Unknown auth route"},origin);
 }
 
 // === ADMIN ROUTES ===
 if(res==="admin"){
-  if(pid==="create-user"&&m==="POST")return handleAdminCreateUser(body);
-  return R(404,{error:"Unknown admin route"});
+  if(pid==="create-user"&&m==="POST")return handleAdminCreateUser(body,origin);
+  return R(404,{error:"Unknown admin route"},origin);
 }
 
 const tn=T[res];
-if(!tn)return R(404,{error:"Unknown resource: "+res,available:Object.keys(T)});
+if(!tn)return R(404,{error:"Unknown resource: "+res,available:Object.keys(T)},origin);
 try{
 if(m==="GET"){
-if(pid){const r=await d.send(new GetCommand({TableName:tn,Key:{id:pid}}));return r.Item?R(200,r.Item):R(404,{error:"Not found"})}
+if(pid){const r=await d.send(new GetCommand({TableName:tn,Key:{id:pid}}));return r.Item?R(200,r.Item,origin):R(404,{error:"Not found"},origin)}
 const params={TableName:tn,Limit:100};const qs=e.queryStringParameters||{};
 if(qs.limit)params.Limit=Math.min(parseInt(qs.limit)||100,500);
 if(qs.startKey)params.ExclusiveStartKey={id:qs.startKey};
 const r=await d.send(new ScanCommand(params));
-return R(200,{items:r.Items,count:r.Count,lastKey:r.LastEvaluatedKey?.id||null})
+return R(200,{items:r.Items,count:r.Count,lastKey:r.LastEvaluatedKey?.id||null},origin)
 }
-if(m==="POST"){const i={...body,id:body.id||res+"-"+Date.now()+"-"+Math.random().toString(36).substr(2,6),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:tn,Item:i}));return R(201,i)}
-if(m==="PUT"){if(!pid)return R(400,{error:"ID required"});const x=await d.send(new GetCommand({TableName:tn,Key:{id:pid}}));if(!x.Item)return R(404,{error:"Not found"});const u={...x.Item,...body,id:pid,updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:tn,Item:u}));return R(200,u)}
-if(m==="DELETE"){if(!pid)return R(400,{error:"ID required"});await d.send(new DeleteCommand({TableName:tn,Key:{id:pid}}));return R(200,{deleted:pid})}
-return R(405,{error:"Method not allowed"});
-}catch(err){return R(500,{error:err.message})}
+if(m==="POST"){const i={...body,id:body.id||res+"-"+Date.now()+"-"+Math.random().toString(36).substr(2,6),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:tn,Item:i}));return R(201,i,origin)}
+if(m==="PUT"){if(!pid)return R(400,{error:"ID required"},origin);const x=await d.send(new GetCommand({TableName:tn,Key:{id:pid}}));if(!x.Item)return R(404,{error:"Not found"},origin);const u={...x.Item,...body,id:pid,updatedAt:new Date().toISOString()};await d.send(new PutCommand({TableName:tn,Item:u}));return R(200,u,origin)}
+if(m==="DELETE"){if(!pid)return R(400,{error:"ID required"},origin);await d.send(new DeleteCommand({TableName:tn,Key:{id:pid}}));return R(200,{deleted:pid},origin)}
+return R(405,{error:"Method not allowed"},origin);
+}catch(err){return R(500,{error:err.message},origin)}
 };
 
 // ============ FLEET ============
@@ -145,9 +146,9 @@ return R(404,{error:"Unknown complaints route",path:p});
 }
 
 // ============ AUTH: SEND OTP ============
-async function handleSendOtp(body){
+async function handleSendOtp(body,origin){
   const{email,type}=body;
-  if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"});
+  if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"},origin);
   const code=String(Math.floor(100000+Math.random()*900000));
   const expiresAt=Math.floor(Date.now()/1000)+600; // 10 minutes TTL
   const id="otp-"+email.toLowerCase()+"-"+(type||"login");
@@ -161,37 +162,92 @@ async function handleSendOtp(body){
         Body:{Html:{Data:`<div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f8f9fb;border-radius:12px"><h2 style="color:#1e3a5f;margin-bottom:8px">رمز التحقق الخاص بك</h2><p style="color:#64748b;margin-bottom:24px">استخدم هذا الرمز لإتمام تسجيل الدخول إلى منصة FLL</p><div style="background:#fff;border:2px solid #1e3a5f;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px"><span style="font-size:40px;font-weight:700;letter-spacing:12px;color:#1e3a5f">${code}</span></div><p style="color:#94a3b8;font-size:12px">صالح لمدة 10 دقائق. لا تشارك هذا الرمز مع أي شخص.</p></div>`,Charset:"UTF-8"}},
       },
     }));
-    return R(200,{success:true,message:"تم إرسال رمز التحقق إلى بريدك الإلكتروني"});
+    return R(200,{success:true,message:"تم إرسال رمز التحقق إلى بريدك الإلكتروني"},origin);
   }catch(err){
     console.error("OTP send error:",err.message);
-    return R(500,{error:"تعذّر إرسال رمز التحقق: "+err.message});
+    return R(500,{error:"تعذّر إرسال رمز التحقق: "+err.message},origin);
   }
 }
 
 // ============ AUTH: VERIFY OTP ============
-async function handleVerifyOtp(body){
+async function handleVerifyOtp(body,origin){
   const{email,code,type}=body;
-  if(!email||!code)return R(400,{error:"البريد والرمز مطلوبان"});
+  if(!email||!code)return R(400,{error:"البريد والرمز مطلوبان"},origin);
   const id="otp-"+email.toLowerCase()+"-"+(type||"login");
   try{
     const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{id}}));
-    if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"});
+    if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"},origin);
     if(r.Item.expiresAt<Math.floor(Date.now()/1000)){
       await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
-      return R(400,{error:"انتهت صلاحية رمز التحقق. أرسل رمزاً جديداً"});
+      return R(400,{error:"انتهت صلاحية رمز التحقق. أرسل رمزاً جديداً"},origin);
     }
-    if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"});
+    if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"},origin);
     await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
-    return R(200,{success:true,message:"تم التحقق بنجاح"});
+    return R(200,{success:true,message:"تم التحقق بنجاح"},origin);
   }catch(err){
-    return R(500,{error:"خطأ في التحقق: "+err.message});
+    return R(500,{error:"خطأ في التحقق: "+err.message},origin);
+  }
+}
+
+// ============ AUTH: FORGOT PASSWORD ============
+async function handleForgotPassword(body,origin){
+  const{email}=body;
+  if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"},origin);
+  const code=String(Math.floor(100000+Math.random()*900000));
+  const expiresAt=Math.floor(Date.now()/1000)+600;
+  const id="otp-"+email.toLowerCase()+"-password_reset";
+  try{
+    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{id,email:email.toLowerCase(),code,type:"password_reset",expiresAt,createdAt:new Date().toISOString()}}));
+    await sesClient.send(new SendEmailCommand({
+      Source:SES_FROM,
+      Destination:{ToAddresses:[email]},
+      Message:{
+        Subject:{Data:"استعادة كلمة المرور - FLL Platform",Charset:"UTF-8"},
+        Body:{Html:{Data:`<div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f8f9fb;border-radius:12px"><h2 style="color:#1e3a5f;margin-bottom:8px">استعادة كلمة المرور</h2><p style="color:#64748b;margin-bottom:24px">استخدم هذا الرمز لإعادة تعيين كلمة مرورك في منصة FLL</p><div style="background:#fff;border:2px solid #1e3a5f;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px"><span style="font-size:40px;font-weight:700;letter-spacing:12px;color:#1e3a5f">${code}</span></div><p style="color:#94a3b8;font-size:12px">صالح لمدة 10 دقائق. إذا لم تطلب ذلك، تجاهل هذا البريد.</p></div>`,Charset:"UTF-8"}},
+      },
+    }));
+    return R(200,{success:true,message:"تم إرسال رمز التحقق إلى بريدك الإلكتروني"},origin);
+  }catch(err){
+    console.error("Forgot password send error:",err.message);
+    return R(500,{error:"تعذّر إرسال رمز التحقق: "+err.message},origin);
+  }
+}
+
+// ============ AUTH: RESET PASSWORD ============
+const SUPABASE_URL="https://djebhztfewjfyyoortvv.supabase.co";
+async function handleResetPassword(body,origin){
+  const{email,code,newPassword}=body;
+  if(!email||!code||!newPassword)return R(400,{error:"جميع الحقول مطلوبة"},origin);
+  if(newPassword.length<6)return R(400,{error:"كلمة المرور يجب أن تكون 6 أحرف على الأقل"},origin);
+  const id="otp-"+email.toLowerCase()+"-password_reset";
+  try{
+    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{id}}));
+    if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"},origin);
+    if(r.Item.expiresAt<Math.floor(Date.now()/1000)){
+      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+      return R(400,{error:"انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً"},origin);
+    }
+    if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"},origin);
+    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+    // Update password in Supabase
+    const spRes=await fetch(`${SUPABASE_URL}/functions/v1/admin-set-password`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email:email.toLowerCase(),password:newPassword}),
+    });
+    const spData=await spRes.json();
+    if(!spRes.ok||!spData.success)return R(500,{error:spData.error||"فشل تحديث كلمة المرور"},origin);
+    return R(200,{success:true,message:"تم تغيير كلمة المرور بنجاح"},origin);
+  }catch(err){
+    console.error("Reset password error:",err.message);
+    return R(500,{error:"خطأ في تحديث كلمة المرور: "+err.message},origin);
   }
 }
 
 // ============ ADMIN: CREATE USER ============
-async function handleAdminCreateUser(body){
+async function handleAdminCreateUser(body,origin){
 const{email,name,phone,password,role,job_title_ar,department_id,can_approve,approval_limit}=body;
-if(!email||!name||!password)return R(400,{error:"email و name و password مطلوبة"});
+if(!email||!name||!password)return R(400,{error:"email و name و password مطلوبة"},origin);
 try{
 // 1. Create Cognito user
 const createCmd=new AdminCreateUserCommand({
@@ -238,9 +294,9 @@ const staffRecord={
   updatedAt:new Date().toISOString(),
 };
 await d.send(new PutCommand({TableName:T["staff-users"],Item:staffRecord}));
-return R(201,staffRecord);
+return R(201,staffRecord,origin);
 }catch(err){
-if(err.name==="UsernameExistsException")return R(409,{error:"البريد الإلكتروني مستخدم مسبقاً"});
-return R(500,{error:err.message});
+if(err.name==="UsernameExistsException")return R(409,{error:"البريد الإلكتروني مستخدم مسبقاً"},origin);
+return R(500,{error:err.message},origin);
 }
 }

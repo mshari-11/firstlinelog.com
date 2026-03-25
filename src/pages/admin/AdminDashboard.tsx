@@ -16,10 +16,12 @@ import {
   Calendar,
   Activity,
   ChevronLeft,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const stats = [
   {
@@ -31,6 +33,7 @@ const stats = [
     color: "text-blue-600",
     bg: "bg-blue-50",
     link: "/admin/orders",
+    tip: "عدد الطلبات الكلي من بداية التشغيل",
   },
   {
     title: "السائقين النشطين",
@@ -41,6 +44,7 @@ const stats = [
     color: "text-emerald-600",
     bg: "bg-emerald-50",
     link: "/admin/drivers",
+    tip: "السائقين الذين أكملوا طلب واحد على الأقل خلال 30 يوم",
   },
   {
     title: "الإيرادات الشهرية",
@@ -51,6 +55,7 @@ const stats = [
     color: "text-primary",
     bg: "bg-primary/10",
     link: "/admin-panel/finance",
+    tip: "إجمالي الإيرادات للشهر الحالي من جميع المنصات",
   },
   {
     title: "متوسط وقت التسليم",
@@ -61,6 +66,7 @@ const stats = [
     color: "text-amber-600",
     bg: "bg-amber-50",
     link: "/admin/reports",
+    tip: "متوسط الوقت من استلام الطلب حتى تسليمه للعميل",
   },
 ];
 
@@ -135,7 +141,19 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <p className="text-2xl font-bold tracking-tight font-mono">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                  {stat.title}
+                  {stat.tip && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs max-w-[200px]">{stat.tip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </p>
               </CardContent>
             </Card>
           </motion.div>

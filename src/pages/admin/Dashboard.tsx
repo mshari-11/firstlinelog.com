@@ -16,6 +16,8 @@ import {
   ResponsiveContainer, BarChart, Bar,
 } from "recharts";
 import { ChartCard, PageHeader, chartTooltipStyle } from "@/components/admin/FinanceUI";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const ordersChartData = [
@@ -102,32 +104,32 @@ export default function AdminDashboard() {
     {
       key: "totalCouriers",   label: "إجمالي المناديب",     icon: Users,        accent: "var(--con-brand)",
       change: 8,  val: stats.totalCouriers   || 47,   format: (v: number) => String(v),
-      link: "/admin-panel/couriers",
+      link: "/admin-panel/couriers", tip: "عدد المناديب المسجلين في النظام",
     },
     {
       key: "todayOrders",     label: "طلبات اليوم",          icon: Package,      accent: "var(--con-success)",
       change: 12, val: stats.todayOrders     || 245,  format: (v: number) => String(v),
-      link: "/admin-panel/orders",
+      link: "/admin-panel/orders", tip: "عدد الطلبات المستلمة اليوم من جميع المنصات",
     },
     {
       key: "monthRevenue",    label: "إيرادات الشهر",        icon: DollarSign,   accent: "var(--con-info)",
       change: 24, val: stats.monthRevenue    || 128000, format: (v: number) => `${v.toLocaleString("ar-SA")} ر.س`,
-      link: "/admin-panel/finance-dashboard",
+      link: "/admin-panel/finance-dashboard", tip: "إجمالي الإيرادات للشهر الحالي قبل خصم المصاريف",
     },
     {
       key: "pendingComplaints",label: "شكاوى معلقة",         icon: AlertCircle,  accent: "var(--con-danger)",
       change: -3, val: stats.pendingComplaints|| 7,    format: (v: number) => String(v),
-      link: "/admin-panel/complaints",
+      link: "/admin-panel/complaints", tip: "شكاوى لم يتم حلها أو تعيينها بعد",
     },
     {
       key: "activeCouriers",  label: "مناديب نشطون الآن",   icon: Bike,         accent: "var(--con-warning)",
       val: stats.activeCouriers || 38, format: (v: number) => String(v),
-      link: "/admin-panel/dispatch",
+      link: "/admin-panel/dispatch", tip: "عدد المناديب المتصلين حالياً ويستقبلون طلبات",
     },
     {
       key: "pendingApprovals",label: "اعتمادات بانتظار",    icon: Clock,        accent: "var(--con-warning)",
       val: stats.pendingApprovals || 4, format: (v: number) => String(v),
-      link: "/admin-panel/approvals",
+      link: "/admin-panel/approvals", tip: "عمليات مالية أو إدارية تنتظر موافقة المدير",
     },
   ];
 
@@ -175,8 +177,18 @@ export default function AdminDashboard() {
               ? <div className="con-skeleton" style={{ height: 22, width: "60%", borderRadius: 5, marginBottom: 6 }} />
               : <div className="con-kpi-value" style={{ color: kpi.accent }}>{kpi.format(kpi.val)}</div>
             }
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: 4 }}>
+            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
               {kpi.label}
+              {(kpi as any).tip && (
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={11} style={{ color: "var(--con-text-muted)", cursor: "help" }} />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p style={{ fontSize: 12, maxWidth: 200 }}>{(kpi as any).tip}</p>
+                  </TooltipContent>
+                </UITooltip>
+              )}
             </div>
           </div>
         ))}

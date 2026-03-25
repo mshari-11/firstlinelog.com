@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 const driversData = [
   { id: "DRV-001", name: "أحمد محمد الغامدي", phone: "05XXXXXXX1", city: "جدة", platform: "هنقرستيشن", status: "active", rating: 4.8, orders: 1247, joinDate: "2024-03" },
@@ -174,17 +175,43 @@ export default function AdminDrivers() {
                   return (
                     <TableRow key={driver.id} className="hover:bg-muted/30">
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-9 h-9">
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                              {driver.name.split(" ")[0][0]}{driver.name.split(" ")[1]?.[0] || ""}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">{driver.name}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{driver.id}</p>
-                          </div>
-                        </div>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <div className="flex items-center gap-3 cursor-pointer">
+                              <Avatar className="w-9 h-9">
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                  {driver.name.split(" ")[0][0]}{driver.name.split(" ")[1]?.[0] || ""}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium text-sm hover:underline">{driver.name}</p>
+                                <p className="text-xs text-muted-foreground font-mono">{driver.id}</p>
+                              </div>
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-72" side="left">
+                            <div className="flex gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                  {driver.name.split(" ")[0][0]}{driver.name.split(" ")[1]?.[0] || ""}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="space-y-1 flex-1">
+                                <p className="text-sm font-semibold">{driver.name}</p>
+                                <p className="text-xs text-muted-foreground">{driver.phone}</p>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{driver.city}</span>
+                                  <span>{driver.platform}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs pt-1">
+                                  {driver.rating > 0 && <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" />{driver.rating}</span>}
+                                  <span className="font-mono">{driver.orders.toLocaleString("ar-SA")} طلب</span>
+                                  <span>منذ {driver.joinDate}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">

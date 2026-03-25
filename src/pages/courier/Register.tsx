@@ -18,6 +18,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   User, Mail, Phone, CreditCard, Building2, MapPin, ChevronRight, ChevronLeft,
   Camera, Upload, CheckCircle2, Clock, AlertTriangle, Eye, EyeOff,
@@ -1031,13 +1032,13 @@ export default function CourierRegister() {
               <>
                 <div style={grid2}>
                   <Field label="نوع المركبة" icon={Car} error={errors.vehicle_type as string}>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <RadioGroup value={form.vehicle_type} onValueChange={(val) => set("vehicle_type", val)} style={{ display: "flex", gap: "0.5rem" }}>
                       {[
                         { value: "bike", icon: Bike, label: "دراجة" },
                         { value: "car",  icon: Car,  label: "سيارة" },
                         { value: "van",  icon: Car,  label: "ون" },
                       ].map((t) => (
-                        <button key={t.value} onClick={() => set("vehicle_type", t.value)}
+                        <label key={t.value}
                           style={{
                             flex: 1, padding: "0.5rem 0.25rem",
                             borderRadius: "8px", border: "1px solid",
@@ -1048,10 +1049,11 @@ export default function CourierRegister() {
                             fontSize: "12px", fontWeight: 600,
                             display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem",
                           }}>
+                          <RadioGroupItem value={t.value} className="sr-only" />
                           <t.icon size={14} /> {t.label}
-                        </button>
+                        </label>
                       ))}
-                    </div>
+                    </RadioGroup>
                   </Field>
                   <Field label="ماركة المركبة" error={errors.vehicle_brand as string}>
                     <select style={selectStyle} value={form.vehicle_brand} onChange={(e) => set("vehicle_brand", e.target.value)}>

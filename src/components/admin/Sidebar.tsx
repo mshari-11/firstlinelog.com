@@ -13,6 +13,7 @@ import {
   ChevronLeft, Zap, Shield, GraduationCap, Lock, Target, Plug,
   User, ChevronUp, KeyRound,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -299,23 +300,12 @@ export function AdminSidebar() {
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--con-bg-surface-1)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "var(--con-bg-elevated)"; }}
             >
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "var(--con-radius-sm)",
-                  background: "var(--con-brand)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#0C0E14",
-                }}
-              >
-                {initials}
+              <motion.div whileHover={{ scale: 1.08 }} style={{ flexShrink: 0 }}>
+                <Avatar className="h-7 w-7 rounded-md" style={{ background: "var(--con-brand)" }}>
+                  <AvatarFallback className="rounded-md text-[11px] font-bold" style={{ background: "var(--con-brand)", color: "#0C0E14" }}>
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
               </motion.div>
 
               {!collapsed && (

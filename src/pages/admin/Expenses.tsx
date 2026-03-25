@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line,
 } from "recharts";
 import { DollarSign, TrendingDown, Plus, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   KPICard, ChartCard, PageHeader, DataTable, StatusBadge,
   chartTooltipStyle, formatSAR,
@@ -115,6 +116,11 @@ function ExpenseModal({ onClose, onSave }: { onClose: () => void; onSave: (data:
                 <select value={field.value} onChange={(e) => field.onChange(e.target.value)} style={inputStyle}>
                   {field.options!.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
+              ) : field.type === "date" ? (
+                <DatePicker
+                  date={field.value ? new Date(field.value) : undefined}
+                  onSelect={(d) => field.onChange(d ? d.toISOString().split("T")[0] : "")}
+                />
               ) : (
                 <input type={field.type} placeholder={field.placeholder} value={field.value} onChange={(e) => field.onChange(e.target.value)} style={inputStyle} />
               )}

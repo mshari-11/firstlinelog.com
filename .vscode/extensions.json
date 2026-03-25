@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "github.copilot-chat",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "dsznajder.es7-react-js-snippets",
+    "mikestead.dotenv",
+    "usernamehw.errorlens",
+    "aarondill.vercel-project-manager-vscode"
+  ]
+}

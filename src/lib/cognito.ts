@@ -133,6 +133,31 @@ export function getIdToken(session: CognitoUserSession): string {
 }
 
 /**
+ * Translate Cognito error codes/messages to Arabic
+ */
+function translateCognitoError(err: { code?: string; message?: string }, fallback: string): string {
+  const code = err.code || "";
+  const msg  = err.message || "";
+  if (code === "UserNotFoundException" || msg.includes("User does not exist") || msg.includes("Username/client id combination not found"))
+    return "البريد الإلكتروني غير مسجّل في النظام";
+  if (code === "NotAuthorizedException")
+    return "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+  if (code === "LimitExceededException" || msg.includes("Attempt limit exceeded"))
+    return "تجاوزت الحد المسموح به من المحاولات. انتظر قليلاً وحاول مجدداً";
+  if (code === "InvalidParameterException" || msg.includes("Invalid parameter"))
+    return "البريد الإلكتروني غير صالح";
+  if (code === "CodeMismatchException" || msg.includes("Invalid verification code"))
+    return "رمز التحقق غير صحيح";
+  if (code === "ExpiredCodeException" || msg.includes("Invalid code provided") || msg.includes("expired"))
+    return "انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً";
+  if (code === "InvalidPasswordException" || msg.includes("Password did not conform"))
+    return "كلمة المرور لا تستوفي متطلبات الأمان (8 أحرف على الأقل، حرف كبير، رقم)";
+  if (code === "TooManyRequestsException")
+    return "طلبات كثيرة. انتظر دقيقة وحاول مجدداً";
+  return msg || fallback;
+}
+
+/**
  * Forgot password — sends OTP code via Cognito (SES email)
  */
 export function cognitoForgotPassword(email: string): Promise<{ error?: string }> {
@@ -145,9 +170,8 @@ export function cognitoForgotPassword(email: string): Promise<{ error?: string }
           resolve({});
         },
         onFailure: (err) => {
-          console.error("forgotPassword onFailure:", err);
-          const msg = err.message || "تعذّر إرسال رمز التحقق";
-          resolve({ error: msg.includes("User does not exist") ? "البريد الإلكتروني غير مسجّل" : msg });
+          console.error("forgotPassword onFailure — code:", err.code, "msg:", err.message);
+          resolve({ error: translateCognitoError(err, "تعذّر إرسال رمز التحقق") });
         },
         inputVerificationCode: (data) => {
           console.log("forgotPassword inputVerificationCode:", data);
@@ -173,7 +197,10 @@ export function cognitoConfirmPassword(
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
     cognitoUser.confirmPassword(code, newPassword, {
       onSuccess: () => resolve({}),
-      onFailure: (err) => resolve({ error: err.message || "فشل تغيير كلمة المرور" }),
+      onFailure: (err) => {
+        console.error("confirmPassword onFailure — code:", err.code, "msg:", err.message);
+        resolve({ error: translateCognitoError(err, "فشل تغيير كلمة المرور") });
+      },
     });
   });
 }

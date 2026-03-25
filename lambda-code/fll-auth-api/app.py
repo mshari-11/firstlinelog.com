@@ -124,12 +124,13 @@ def generate_magic_link_token(email):
     return supabase_auth_admin_request('/admin/generate_link', payload)
 
 def handler(event, context):
+    print(f"EVENT: path={event.get('rawPath','?')} method={event.get('requestContext',{}).get('http',{}).get('method','?')}")
     method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     path = event.get('rawPath', event.get('path', ''))
-    
+
     if method == 'OPTIONS':
         return cors(200, {})
-    
+
     try:
         body = json.loads(event.get('body', '{}')) if event.get('body') else {}
     except:
@@ -464,8 +465,9 @@ def get_me(event):
 
 def send_custom_otp(body):
     """Generate 6-digit OTP, store in Supabase, send via SES."""
+    print(f"send_custom_otp called with body: {body}")
     email = (body.get('email', '') or '').strip().lower()
-    
+
     if not email:
         return cors(400, {'message': 'البريد الإلكتروني مطلوب'})
     

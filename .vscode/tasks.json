@@ -1,0 +1,150 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Dev Server (npm run dev)",
+      "type": "shell",
+      "command": "npm run dev",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "🔨 Build Production",
+      "type": "shell",
+      "command": "npm run build",
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "🌐 Vercel — Preview Deploy",
+      "type": "shell",
+      "command": "vercel",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "deploy" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Vercel — Production Deploy",
+      "type": "shell",
+      "command": "vercel --prod",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "deploy" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Vercel — Pull Env Variables",
+      "type": "shell",
+      "command": "vercel env pull .env.local",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Vercel — Logs",
+      "type": "shell",
+      "command": "vercel logs --follow",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "logs" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "📦 Git — Push to Main",
+      "type": "shell",
+      "command": "git add -A && git commit -m \"${input:commitMessage}\" && git push origin main",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "git" },
+      "problemMatcher": []
+    },
+    {
+      "label": "📦 Git — Status",
+      "type": "shell",
+      "command": "git status && git log --oneline -5",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🤖 Claude Code — Start",
+      "type": "shell",
+      "command": "claude",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "ai" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "🤖 Claude Code — Continue",
+      "type": "shell",
+      "command": "claude -c",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "ai" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "☁️ AWS — List Lambda Functions",
+      "type": "shell",
+      "command": "aws lambda list-functions --region me-south-1 --query \"Functions[].FunctionName\" --output table",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "☁️ AWS — Lambda Logs (last 5min)",
+      "type": "shell",
+      "command": "aws logs filter-log-events --log-group-name /aws/lambda/${input:lambdaName} --region me-south-1 --start-time ${input:logMinutes} --output text",
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "logs" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🗄️ Supabase — Status",
+      "type": "shell",
+      "command": "npx supabase status",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🗄️ Supabase — DB Push",
+      "type": "shell",
+      "command": "npx supabase db push",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🗄️ Supabase — Generate Types",
+      "type": "shell",
+      "command": "npx supabase gen types typescript --linked > src/lib/database.types.ts",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧹 Clean — node_modules & reinstall",
+      "type": "shell",
+      "command": "Remove-Item -Recurse -Force node_modules; Remove-Item package-lock.json; npm install",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 Full Deploy Pipeline",
+      "type": "shell",
+      "command": "npm run build && git add -A && git commit -m \"${input:commitMessage}\" && git push origin main && vercel --prod",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "description": "Git commit message",
+      "default": "update",
+      "type": "promptString"
+    },
+    {
+      "id": "lambdaName",
+      "description": "Lambda function name",
+      "default": "auth-api",
+      "type": "promptString"
+    },
+    {
+      "id": "logMinutes",
+      "description": "Minutes ago (in ms timestamp)",
+      "default": "300000",
+      "type": "promptString"
+    }
+  ]
+}

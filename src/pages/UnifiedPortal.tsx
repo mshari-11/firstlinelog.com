@@ -233,7 +233,7 @@ export default function UnifiedPortal() {
                       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                     }}
                   />
-                  <User size={16} color="#94a3b8" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
+                  <User size={16} color="#94a3b8" style={{ position: "absolute", insetInlineStart: "12px", top: "50%", transform: "translateY(-50%)" }} />
                 </div>
               </div>
 
@@ -254,7 +254,7 @@ export default function UnifiedPortal() {
                     }}
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)} style={{
-                    position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)",
+                    position: "absolute", insetInlineStart: "12px", top: "50%", transform: "translateY(-50%)",
                     background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex",
                   }}>
                     {showPass ? <EyeOff size={16} color="#94a3b8" /> : <Eye size={16} color="#94a3b8" />}

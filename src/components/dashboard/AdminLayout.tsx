@@ -94,7 +94,7 @@ export function AdminLayout() {
   return (
     <div dir="rtl" className="min-h-screen bg-muted/30 flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-sidebar text-sidebar-foreground border-l border-sidebar-border">
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-sidebar text-sidebar-foreground border-s border-sidebar-border">
         {/* Logo */}
         <div className="flex items-center gap-3 h-16 px-6 border-b border-sidebar-border">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">

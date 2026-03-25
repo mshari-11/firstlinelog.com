@@ -81,8 +81,8 @@ export default function Invoices() {
 
       <div className="con-toolbar" style={{ flexWrap: "wrap", gap: 10 }}>
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
-          <Search size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالعميل أو رقم الفاتورة..." className="con-input" style={{ paddingRight: 32, width: "100%" }} />
+          <Search size={14} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالعميل أو رقم الفاتورة..." className="con-input" style={{ paddingInlineEnd: 32, width: "100%" }} />
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {(["all", "draft", "sent", "paid", "overdue"] as const).map(s => (

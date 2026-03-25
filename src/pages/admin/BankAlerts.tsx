@@ -126,8 +126,8 @@ export default function BankAlerts() {
       {/* Filters */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem" }}>
         <div style={{ position: "relative", flex: 1 }}>
-          <Search size={13} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
-          <input className="con-input" placeholder="بحث برسالة التنبيه أو معرف المندوب..." value={search} onChange={e => setSearch(e.target.value)} style={{ paddingRight: 30, width: "100%" }} />
+          <Search size={13} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
+          <input className="con-input" placeholder="بحث برسالة التنبيه أو معرف المندوب..." value={search} onChange={e => setSearch(e.target.value)} style={{ paddingInlineEnd: 30, width: "100%" }} />
         </div>
         <select className="con-input" value={readFilter} onChange={e => setReadFilter(e.target.value as any)} style={{ width: 130 }}>
           <option value="all">الكل</option>

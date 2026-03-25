@@ -150,7 +150,7 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-r-2 border-primary/30 pr-3">المنصة</h4>
+              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-e-2 border-primary/30 pe-3">المنصة</h4>
               <ul className="space-y-4 text-base font-medium">
                 <li><Link to={ROUTE_PATHS.ABOUT} className="hover:text-primary transition-colors flex items-center gap-2">من نحن</Link></li>
                 <li><Link to={ROUTE_PATHS.SERVICES} className="hover:text-primary transition-colors flex items-center gap-2">خدماتنا</Link></li>
@@ -159,7 +159,7 @@ export function Layout({ children }: LayoutProps) {
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-r-2 border-primary/30 pr-3">الفرص</h4>
+              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-e-2 border-primary/30 pe-3">الفرص</h4>
               <ul className="space-y-4 text-base font-medium">
                 <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">سجل كقائد مركبة</Link></li>
                 <li><Link to={ROUTE_PATHS.JOIN_US} className="hover:text-primary transition-colors">شراكات الأساطيل</Link></li>
@@ -167,7 +167,7 @@ export function Layout({ children }: LayoutProps) {
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-r-2 border-primary/30 pr-3">التواصل</h4>
+              <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-8 border-e-2 border-primary/30 pe-3">التواصل</h4>
               <div className="space-y-4 text-base font-medium">
                 <div className="flex items-center gap-3">
                   <Mail className="text-primary flex-shrink-0" />

@@ -1,8 +1,19 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/admin/auth";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   Users,
@@ -203,6 +214,8 @@ export default function AdminCouriers() {
   const [appStatusFilter, setAppStatusFilter] = useState<string>("all");
   const [selectedApp, setSelectedApp] = useState<DriverApplication | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [rejectDialogApp, setRejectDialogApp] = useState<DriverApplication | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [verificationError, setVerificationError] = useState("");
   const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
@@ -371,9 +384,10 @@ export default function AdminCouriers() {
     }
   }
 
-  async function handleReject(app: DriverApplication) {
-    const reason = prompt("سبب الرفض:");
-    if (!reason) return;
+  async function handleReject(app: DriverApplication, reason: string) {
+    if (!reason.trim()) return;
+    setRejectDialogApp(null);
+    setRejectReason("");
     setActionLoading(app.id);
     try {
       if (!supabase) {
@@ -626,7 +640,7 @@ export default function AdminCouriers() {
                           {isActionable && (
                             <>
                               <IconButton icon={ThumbsUp} onClick={() => handleApprove(app)} title="قبول" variant="brand" />
-                              <IconButton icon={ThumbsDown} onClick={() => handleReject(app)} title="رفض" variant="danger" />
+                              <IconButton icon={ThumbsDown} onClick={() => { setRejectDialogApp(app); setRejectReason(""); }} title="رفض" variant="danger" />
                             </>
                           )}
                         </div>
@@ -657,7 +671,7 @@ export default function AdminCouriers() {
               <Button variant="ghost" onClick={() => markUnderReview(selectedApp)} disabled={actionLoading === selectedApp.id}>بدء/تحديث المراجعة</Button>
               <Button variant="ghost" onClick={() => requestCorrection(selectedApp)} disabled={actionLoading === selectedApp.id}>طلب استكمال</Button>
               <Button onClick={() => handleApprove(selectedApp)} disabled={actionLoading === selectedApp.id} icon={ThumbsUp}>قبول الطلب</Button>
-              <Button variant="danger" onClick={() => handleReject(selectedApp)} disabled={actionLoading === selectedApp.id} icon={ThumbsDown}>رفض الطلب</Button>
+              <Button variant="danger" onClick={() => { setRejectDialogApp(selectedApp); setRejectReason(""); }} disabled={actionLoading === selectedApp.id} icon={ThumbsDown}>رفض الطلب</Button>
             </>
           ) : undefined
         }
@@ -758,6 +772,39 @@ export default function AdminCouriers() {
           </div>
         )}
       </Modal>
+
+      {/* Reject Confirmation Dialog */}
+      <AlertDialog open={!!rejectDialogApp} onOpenChange={(open) => { if (!open) { setRejectDialogApp(null); setRejectReason(""); } }}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الرفض</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رفض طلب <strong>{rejectDialogApp?.full_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div style={{ padding: "8px 0" }}>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="سبب الرفض (إلزامي)"
+              rows={3}
+              className="con-input"
+              style={{ width: "100%", resize: "none", fontSize: "var(--con-text-table)" }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => rejectDialogApp && handleReject(rejectDialogApp, rejectReason)}
+              disabled={!rejectReason.trim()}
+              style={{ background: "var(--con-danger)", opacity: rejectReason.trim() ? 1 : 0.5 }}
+            >
+              تأكيد الرفض
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </PageWrapper>
   );
 }

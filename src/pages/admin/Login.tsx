@@ -74,7 +74,7 @@ function InputField({
           autoFocus={autoFocus}
           maxLength={maxLength}
           className="con-input"
-          style={{ width: "100%", ...(rightSlot ? { paddingLeft: "2.5rem" } : {}) }}
+          style={{ width: "100%", ...(rightSlot ? { paddingInlineStart: "2.5rem" } : {}) }}
         />
         {rightSlot && (
           <div style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)" }}>

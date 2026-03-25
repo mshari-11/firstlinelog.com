@@ -49,7 +49,7 @@ export default function ForgotPassword() {
       const res = await fetch(`${API_BASE}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), code: otp.trim(), newPassword: password }),
+        body: JSON.stringify({ email: email.trim(), code: otp.trim(), new_password: password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "حدث خطأ");

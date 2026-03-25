@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   DollarSign, CheckCircle2, Clock, XCircle, Search,
   Download, Eye, Wallet, RefreshCw, Plus,
@@ -428,8 +429,10 @@ export default function Finance() {
     });
     if (error) {
       setCreateError("تعذر إنشاء السجل المالي");
+      toast.error("تعذر إنشاء السجل المالي");
       return;
     }
+    toast.success("تم إنشاء السجل المالي بنجاح");
     setShowCreateModal(false);
     setNewRecord({ courier_name: "", net: "1000", gross: "1000" });
     await fetchFinanceData();
@@ -484,13 +487,17 @@ export default function Finance() {
         read: false,
       });
       if (!error) {
+        toast.success("تم إرسال تنبيه الحساب البنكي");
         setAlertSent(prev => new Set(prev).add(record.id));
         setTimeout(() => {
           setAlertSent(prev => { const n = new Set(prev); n.delete(record.id); return n; });
         }, 3000);
+      } else {
+        toast.error("فشل إرسال التنبيه");
       }
     } catch (err) {
       console.error("خطأ في إرسال التنبيه:", err);
+      toast.error("فشل إرسال التنبيه");
     } finally {
       setSendingAlert(null);
     }
@@ -504,10 +511,14 @@ export default function Finance() {
       if (newStatus === "paid")     updates.paid_at     = new Date().toISOString();
       const { error } = await supabase.from("finance").update(updates).eq("id", id);
       if (!error) {
+        const msgs: Record<string, string> = { approved: "تم اعتماد الدفعة بنجاح", paid: "تم تأكيد الدفع بنجاح", rejected: "تم رفض الدفعة" };
+        toast.success(msgs[newStatus] ?? "تم تحديث الحالة");
         await fetchFinanceData();
         if (selectedRecord?.id === id) {
           setSelectedRecord(prev => prev ? { ...prev, payment_status: newStatus } : null);
         }
+      } else {
+        toast.error("حدث خطأ أثناء تحديث الحالة");
       }
     } finally {
       setUpdating(null);
@@ -605,7 +616,7 @@ export default function Finance() {
         {/* Search */}
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
           <Search size={14} style={{
-            position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+            position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)",
             color: "var(--con-text-muted)", pointerEvents: "none",
           }} />
           <input
@@ -614,7 +625,7 @@ export default function Finance() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="con-input"
-            style={{ paddingRight: 32, width: "100%" }}
+            style={{ paddingInlineEnd: 32, width: "100%" }}
           />
         </div>
 

@@ -18,6 +18,7 @@ import {
 import { ChartCard, PageHeader, chartTooltipStyle } from "@/components/admin/FinanceUI";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Info, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
@@ -187,7 +188,7 @@ export default function AdminDashboard() {
               )}
             </div>
             {loading
-              ? <div className="con-skeleton" style={{ height: 22, width: "60%", borderRadius: 5, marginBottom: 6 }} />
+              ? <Skeleton className="h-6 w-3/5 rounded-md mb-1.5" />
               : <div className="con-kpi-value" style={{ color: kpi.accent }}>{kpi.format(kpi.val)}</div>
             }
             <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>

@@ -321,7 +321,7 @@
   text-transform: uppercase;
   color: var(--con-text-muted);
   white-space: nowrap;
-  text-align: right;
+  text-align: start;
 }
 
 .fll-console .con-table tbody tr {
@@ -340,7 +340,7 @@
 .fll-console .con-table td {
   padding: 0.6875rem 0.875rem;
   color: var(--con-text-secondary);
-  text-align: right;
+  text-align: start;
 }
 
 .fll-console .con-table td.con-td-primary {
@@ -560,7 +560,7 @@
 .fll-console .con-sidebar {
   width: 260px;
   background: var(--con-bg-surface-1);
-  border-left: 1px solid var(--con-border-default);
+  border-inline-start: 1px solid var(--con-border-default);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -617,7 +617,7 @@
 }
 
 .fll-console .con-nav-badge {
-  margin-right: auto;
+  margin-inline-end: auto;
   font-size: 0.5625rem;
   font-weight: 700;
   padding: 1px 6px;
@@ -630,7 +630,7 @@
 /* ── Main content area ── */
 .fll-console .con-main {
   flex: 1;
-  margin-right: 260px;
+  margin-inline-end: 260px;
   min-height: 100vh;
   background: var(--con-bg-app);
   overflow-x: hidden;
@@ -867,21 +867,21 @@
 }
 
 [dir="rtl"] .text-left {
-  text-align: right;
+  text-align: end;
 }
 
 [dir="rtl"] .text-right {
-  text-align: left;
+  text-align: start;
 }
 
 [dir="rtl"] .ml-auto {
-  margin-left: 0;
-  margin-right: auto;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
 }
 
 [dir="rtl"] .mr-auto {
-  margin-right: 0;
-  margin-left: auto;
+  margin-inline-end: 0;
+  margin-inline-start: auto;
 }
 
 /* Arabic Typography Improvements */
@@ -1055,7 +1055,7 @@
     overflow: hidden;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     padding: 2rem;
-    text-align: right;
+    text-align: start;
   }
 
   .fll-metric-card:hover {

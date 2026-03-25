@@ -466,9 +466,9 @@ export default function DriverWallet() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Search */}
             <div style={{ position: "relative" }}>
-              <Search size={14} style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
+              <Search size={14} style={{ position: "absolute", insetInlineEnd: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
               <input className="con-input" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث باسم السائق أو الجوال..." style={{ paddingRight: "2.25rem", width: "100%" }} />
+                placeholder="ابحث باسم السائق أو الجوال..." style={{ paddingInlineEnd: "2.25rem", width: "100%" }} />
             </div>
 
             <div className="con-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -633,9 +633,9 @@ export default function DriverWallet() {
           {/* Filters */}
           <div className="con-toolbar">
             <div style={{ position: "relative", flex: 1 }}>
-              <Search size={14} style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
+              <Search size={14} style={{ position: "absolute", insetInlineEnd: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
               <input className="con-input" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث بالسائق أو الوصف..." style={{ paddingRight: "2.25rem", width: "100%" }} />
+                placeholder="ابحث بالسائق أو الوصف..." style={{ paddingInlineEnd: "2.25rem", width: "100%" }} />
             </div>
             <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
               {["all", ...Object.keys(EVENT_META)].map((ev) => (

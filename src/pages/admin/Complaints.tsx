@@ -12,6 +12,7 @@ import {
   AlertTriangle, Phone, Mail, PanelRightOpen,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -102,6 +103,8 @@ export default function Complaints() {
   const [newMessage, setNewMessage] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [assignTo, setAssignTo] = useState("");
+  const [page, setPage] = useState(1);
+  const perPage = 15;
 
   // ── Fetch complaints ──────────────────────────────────────────────────────────
   const fetchComplaints = useCallback(async () => {
@@ -252,6 +255,13 @@ export default function Complaints() {
     return matchSearch && matchStatus;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+
+  // Reset page when filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+
   // ── Stats KPIs ────────────────────────────────────────────────────────────────
   const kpis = stats
     ? [
@@ -333,13 +343,13 @@ export default function Complaints() {
         background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)",
       }}>
         <div style={{ position: "relative", flex: "1 1 220px" }}>
-          <Search size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
+          <Search size={14} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
           <input
             className="con-input"
             placeholder="بحث برقم الشكوى أو اسم العميل..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", paddingRight: 32, fontSize: 12 }}
+            style={{ width: "100%", paddingInlineEnd: 32, fontSize: 12 }}
           />
         </div>
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }} className="button-group-filter" role="group">
@@ -392,7 +402,7 @@ export default function Complaints() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((c) => {
+                  paged.map((c) => {
                     const sm = STATUS_META[c.status] || STATUS_META.new;
                     const pm = PRIORITY_META[c.priority || "medium"] || PRIORITY_META.medium;
                     const isSelected = selectedComplaint?.id === c.id;
@@ -444,6 +454,25 @@ export default function Complaints() {
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div style={{ padding: "10px 16px", borderTop: "1px solid var(--con-border-default)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} style={{ cursor: page === 1 ? "default" : "pointer", opacity: page === 1 ? 0.4 : 1 }} />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span style={{ fontSize: 12, color: "var(--con-text-muted)", padding: "0 8px" }}>
+                      {page} / {totalPages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} style={{ cursor: page === totalPages ? "default" : "pointer", opacity: page === totalPages ? 0.4 : 1 }} />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
 
         {/* ── Detail Panel ── */}

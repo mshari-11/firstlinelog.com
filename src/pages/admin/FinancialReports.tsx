@@ -301,7 +301,7 @@ function IncomeStatementView({ data }: { data: any }) {
                    key === "insurance" ? "التأمين" :
                    key === "admin" ? "إداري" : "أخرى"}
                 </td>
-                <td style={{ textAlign: "right", color: "var(--con-danger)", fontWeight: 600, fontFamily: "var(--con-font-mono)" }}>
+                <td style={{ textAlign: "start", color: "var(--con-danger)", fontWeight: 600, fontFamily: "var(--con-font-mono)" }}>
                   -{(value / 1000).toFixed(1)}ك ر.س
                 </td>
               </tr>
@@ -375,8 +375,8 @@ function RevenueAnalysisView({ data }: { data: any }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-              <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المنصة</th>
-              <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
+              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المنصة</th>
+              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
               <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النسبة</th>
               <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النمو</th>
             </tr>
@@ -385,7 +385,7 @@ function RevenueAnalysisView({ data }: { data: any }) {
             {data.byPlatform.map((p: any) => (
               <tr key={p.name} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
                 <td style={{ padding: "12px 16px", color: "var(--con-text-primary)" }}>{p.name}</td>
-                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "right" }}>
+                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
                   {(p.revenue / 1000).toFixed(1)}ك ر.س
                 </td>
                 <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
@@ -409,8 +409,8 @@ function RevenueAnalysisView({ data }: { data: any }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-              <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
-              <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
+              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
+              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
               <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الطلبات</th>
               <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النسبة</th>
             </tr>
@@ -419,7 +419,7 @@ function RevenueAnalysisView({ data }: { data: any }) {
             {data.byCity.map((c: any) => (
               <tr key={c.city} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
                 <td style={{ padding: "12px 16px", color: "var(--con-text-primary)" }}>{c.city}</td>
-                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "right" }}>
+                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
                   {(c.revenue / 1000).toFixed(1)}ك ر.س
                 </td>
                 <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
@@ -446,8 +446,8 @@ function CityPerformanceView({ data }: { data: any }) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
-                <th style={{ textAlign: "right", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
+                <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
+                <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الطلبات</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>متوسط الطلب</th>
                 <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المناديب</th>
@@ -458,7 +458,7 @@ function CityPerformanceView({ data }: { data: any }) {
               {data.cities.map((city: any) => (
                 <tr key={city.name} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
                   <td style={{ padding: "12px 16px", color: "var(--con-text-primary)", fontWeight: 600 }}>{city.name}</td>
-                  <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "right" }}>
+                  <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
                     {(city.revenue / 1000).toFixed(1)}ك ر.س
                   </td>
                   <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>

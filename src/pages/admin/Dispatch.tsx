@@ -11,6 +11,7 @@ import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/lib/supabase";
+import { Combobox } from "@/components/ui/combobox";
 import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
@@ -500,13 +501,13 @@ export default function Dispatch() {
           {/* Panel header */}
           <div style={{ padding: "0.875rem 1rem", borderBottom: "1px solid var(--con-border-default)" }}>
             <div style={{ position: "relative", marginBottom: "0.5rem" }}>
-              <Search size={13} style={{ position: "absolute", right: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
+              <Search size={13} style={{ position: "absolute", insetInlineEnd: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
               <input
                 className="con-input"
                 placeholder="بحث برقم الطلب أو العميل..."
                 value={orderSearch}
                 onChange={(e) => setOrderSearch(e.target.value)}
-                style={{ width: "100%", paddingRight: "2rem", fontSize: "12px" }}
+                style={{ width: "100%", paddingInlineEnd: "2rem", fontSize: "12px" }}
               />
             </div>
             <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }} role="group">
@@ -607,35 +608,22 @@ export default function Dispatch() {
                             <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--con-text-muted)", marginBottom: "0.375rem" }}>
                               إسناد إلى سائق:
                             </p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                              {drivers.filter((d) => d.status === "available").map((d) => (
-                                <button
-                                  key={d.id}
-                                  onClick={(e) => { e.stopPropagation(); assignOrder(order.id, d.id); }}
-                                  style={{
-                                    display: "flex", alignItems: "center", gap: "0.5rem",
-                                    padding: "0.375rem 0.625rem",
-                                    background: "var(--con-bg-elevated)",
-                                    border: "1px solid var(--con-border-default)",
-                                    borderRadius: "var(--con-radius-sm)",
-                                    cursor: "pointer",
-                                    fontSize: "12px", color: "var(--con-text-primary)",
-                                    textAlign: "right",
-                                  }}
-                                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--con-brand)")}
-                                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--con-border-default)")}
-                                >
-                                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: DRIVER_STATUS_CONFIG[d.status].dot, flexShrink: 0 }} />
-                                  <span style={{ flex: 1 }}>{d.name}</span>
-                                  <span style={{ fontSize: "11px", color: "var(--con-text-muted)" }}>{d.vehicle}</span>
-                                  <Star size={11} style={{ color: "var(--con-warning)" }} />
-                                  <span style={{ fontSize: "11px", fontFamily: "var(--con-font-mono)", color: "var(--con-warning)" }}>{d.rating}</span>
-                                </button>
-                              ))}
-                              {drivers.filter((d) => d.status === "available").length === 0 && (
-                                <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>لا يوجد سائق متاح حالياً</p>
-                              )}
-                            </div>
+                            {drivers.filter((d) => d.status === "available").length === 0 ? (
+                              <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>لا يوجد سائق متاح حالياً</p>
+                            ) : (
+                              <Combobox
+                                options={drivers.filter((d) => d.status === "available").map((d) => ({
+                                  value: d.id,
+                                  label: `${d.name} — ${d.vehicle} (${d.rating})`,
+                                }))}
+                                placeholder="اختر سائق..."
+                                searchPlaceholder="ابحث عن سائق..."
+                                emptyMessage="لا يوجد سائق مطابق"
+                                onValueChange={(driverId) => {
+                                  if (driverId) assignOrder(order.id, driverId);
+                                }}
+                              />
+                            )}
                           </div>
                         )}
 

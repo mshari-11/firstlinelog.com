@@ -203,7 +203,7 @@ export default function DriverLogin() {
       fontSize: "13px", color: "#22c55e", marginBottom: "1rem",
     },
     eyeBtn: {
-      position: "absolute" as const, left: "12px", top: "50%", transform: "translateY(-50%)",
+      position: "absolute" as const, insetInlineStart: "12px", top: "50%", transform: "translateY(-50%)",
       background: "none", border: "none", cursor: "pointer", color: "#7e8ca2",
       padding: 0, display: "flex",
     },

@@ -172,7 +172,7 @@ export default function Vehicles() {
         {/* Search */}
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
           <Search size={14} style={{
-            position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+            position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)",
             color: "var(--con-text-muted)", pointerEvents: "none",
           }} />
           <input
@@ -180,7 +180,7 @@ export default function Vehicles() {
             onChange={e => setSearch(e.target.value)}
             placeholder="بحث بالرقم، الماركة، أو المندوب..."
             className="con-input"
-            style={{ paddingRight: 32, width: "100%" }}
+            style={{ paddingInlineEnd: 32, width: "100%" }}
           />
         </div>
 

@@ -219,12 +219,12 @@ export default function ApplicationStatus() {
             <Search
               size={14}
               style={{
-                position: "absolute", right: "0.75rem", top: "50%",
+                position: "absolute", insetInlineEnd: "0.75rem", top: "50%",
                 transform: "translateY(-50%)", color: "#475569", pointerEvents: "none",
               }}
             />
             <input
-              style={{ ...inputStyle, paddingRight: "2.25rem" }}
+              style={{ ...inputStyle, paddingInlineEnd: "2.25rem" }}
               placeholder="APP-1A2B3C"
               value={ref}
               onChange={(e) => {

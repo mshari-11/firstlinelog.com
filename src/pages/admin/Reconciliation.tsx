@@ -342,13 +342,13 @@ export default function Reconciliation() {
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value as Platform)}
                 className="con-input"
-                style={{ width: "100%", appearance: "none", paddingLeft: "2rem" }}
+                style={{ width: "100%", appearance: "none", paddingInlineStart: "2rem" }}
               >
                 {(Object.keys(PLATFORM_LABELS) as Platform[]).map((p) => (
                   <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
                 ))}
               </select>
-              <ChevronDown size={14} style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
+              <ChevronDown size={14} style={{ position: "absolute", insetInlineStart: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)", pointerEvents: "none" }} />
             </div>
           </div>
 
@@ -452,13 +452,13 @@ export default function Reconciliation() {
           {/* Toolbar */}
           <div className="con-toolbar" style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--con-border-default)" }}>
             <div style={{ position: "relative", flex: 1 }}>
-              <Search size={14} style={{ position: "absolute", right: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
+              <Search size={14} style={{ position: "absolute", insetInlineEnd: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
               <input
                 className="con-input"
                 placeholder="بحث برقم الطلب أو المندوب..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ width: "100%", paddingRight: "2rem" }}
+                style={{ width: "100%", paddingInlineEnd: "2rem" }}
               />
             </div>
 

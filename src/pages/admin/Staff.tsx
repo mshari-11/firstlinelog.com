@@ -3,6 +3,16 @@
  * Enterprise HR Console — staff management, permissions, departments
  */
 import { useState, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,6 +20,7 @@ import { toast } from "sonner";
 import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Empty, EmptyMedia as EmptyIcon, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
@@ -235,6 +246,7 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
   onToggleActive: () => void;
   onClose: () => void;
 }) {
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const dept = departments.find(d => d.id === member.department_id);
   const grantedCount = Object.values(member.permissions).filter(Boolean).length;
 
@@ -317,7 +329,7 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
           <ShieldOff size={12} /> سحب الكل
         </button>
         <button
-          onClick={onToggleActive}
+          onClick={member.is_active ? () => setShowDeactivateDialog(true) : onToggleActive}
           style={{
             display: "flex", alignItems: "center", gap: 5,
             fontSize: 11, fontWeight: 600,
@@ -331,6 +343,27 @@ function PermissionsPanel({ member, departments, onTogglePermission, onGrantAll,
           {member.is_active ? <ShieldOff size={12} /> : <ShieldCheck size={12} />} {member.is_active ? "تعطيل" : "تفعيل"}
         </button>
       </div>
+
+      {/* Deactivate Confirmation Dialog */}
+      <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد تعطيل الموظف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من تعطيل حساب <strong>{member.name}</strong>؟ لن يتمكن من الدخول إلى لوحة الإدارة.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setShowDeactivateDialog(false); onToggleActive(); }}
+              style={{ background: "var(--con-danger)" }}
+            >
+              تأكيد التعطيل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Permission grid */}
       <div style={{
@@ -406,10 +439,11 @@ function DepartmentsTab({ departments, staff, showAddModal, onCloseAdd, onRefres
   return (
     <div>
       {departments.length === 0 ? (
-        <div className="con-empty">
-          <Building2 size={32} style={{ opacity: 0.25, marginBottom: 10 }} />
-          <div>لا توجد أقسام بعد</div>
-        </div>
+        <Empty>
+          <EmptyIcon><Building2 className="size-10" /></EmptyIcon>
+          <EmptyTitle>لا توجد أقسام بعد</EmptyTitle>
+          <EmptyDescription>لم يتم إنشاء أي قسم حتى الآن</EmptyDescription>
+        </Empty>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
           {departments.map(dept => {
@@ -891,7 +925,7 @@ export default function AdminStaff() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ position: "relative" }}>
               <Search size={13} style={{
-                position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)",
+                position: "absolute", insetInlineEnd: 9, top: "50%", transform: "translateY(-50%)",
                 color: "var(--con-text-muted)", pointerEvents: "none",
               }} />
               <input
@@ -899,7 +933,7 @@ export default function AdminStaff() {
                 onChange={e => setSearch(e.target.value)}
                 placeholder="بحث بالاسم أو القسم..."
                 className="con-input"
-                style={{ paddingRight: 28, width: "100%" }}
+                style={{ paddingInlineEnd: 28, width: "100%" }}
               />
             </div>
 
@@ -910,9 +944,10 @@ export default function AdminStaff() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="con-empty" style={{ padding: "32px 16px" }}>
-                <Users size={28} style={{ opacity: 0.25, marginBottom: 8 }} />
-                <div style={{ fontSize: "var(--con-text-body)" }}>لا يوجد موظفون</div>
+              <Empty>
+                <EmptyIcon><Users className="size-10" /></EmptyIcon>
+                <EmptyTitle>لا يوجد موظفين</EmptyTitle>
+                <EmptyDescription>لم يتم العثور على نتائج مطابقة</EmptyDescription>
                 <button
                   onClick={() => setShowAddModal(true)}
                   className="con-btn-primary"
@@ -920,7 +955,7 @@ export default function AdminStaff() {
                 >
                   <UserPlus size={12} /> إضافة موظف
                 </button>
-              </div>
+              </Empty>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {filtered.map(member => (

@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Combobox } from "@/components/ui/combobox";
 
 const ordersData = [
   { id: "FLL-10847", platform: "هنقرستيشن", customer: "عميل #4821", driver: "أحمد محمد", city: "جدة", status: "delivered", amount: 45, date: "2026-02-20", time: "14:35" },
@@ -78,11 +79,15 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<typeof ordersData[0] | null>(null);
+  const [cityFilter, setCityFilter] = useState("");
+
+  const cityOptions = [...new Set(ordersData.map(o => o.city))].map(c => ({ value: c, label: c }));
 
   const filteredOrders = ordersData.filter((o) => {
     const matchSearch = o.id.includes(search) || o.platform.includes(search) || o.driver.includes(search) || o.city.includes(search);
     const matchTab = tab === "all" || o.status === tab;
-    return matchSearch && matchTab;
+    const matchCity = !cityFilter || o.city === cityFilter;
+    return matchSearch && matchTab && matchCity;
   });
 
   return (
@@ -144,14 +149,26 @@ export default function AdminOrders() {
               <TabsTrigger value="cancelled">ملغي</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="relative max-w-md">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="بحث بالرقم، المنصة، السائق..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-10"
-            />
+          <div className="flex gap-3 items-center flex-wrap">
+            <div className="relative max-w-md flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث بالرقم، المنصة، السائق..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+            <div className="w-48">
+              <Combobox
+                options={cityOptions}
+                value={cityFilter}
+                onValueChange={setCityFilter}
+                placeholder="كل المدن"
+                searchPlaceholder="ابحث عن مدينة..."
+                emptyMessage="لا توجد مدن"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>

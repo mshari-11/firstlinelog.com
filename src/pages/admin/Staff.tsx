@@ -7,6 +7,9 @@ import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
@@ -98,23 +101,20 @@ function ModalField({ label, value, onChange, type = "text", span = false, place
   label: string; value: string; onChange: (v: string) => void;
   type?: string; span?: boolean; placeholder?: string;
 }) {
+  const id = label.replace(/\s/g, "-");
   return (
-    <div style={span ? { gridColumn: "span 2" } : {}}>
-      {label && (
-        <label style={{
-          fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)",
-          display: "block", marginBottom: 5, fontWeight: 500,
-        }}>{label}</label>
-      )}
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="con-input"
-        style={{ width: "100%" }}
-      />
-    </div>
+    <Field style={span ? { gridColumn: "span 2" } : {}}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldContent>
+        <Input
+          id={id}
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      </FieldContent>
+    </Field>
   );
 }
 

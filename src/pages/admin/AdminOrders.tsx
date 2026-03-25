@@ -41,6 +41,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Drawer, DrawerClose, DrawerContent, DrawerDescription,
+  DrawerFooter, DrawerHeader, DrawerTitle,
+} from "@/components/ui/drawer";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 const ordersData = [
   { id: "FLL-10847", platform: "هنقرستيشن", customer: "عميل #4821", driver: "أحمد محمد", city: "جدة", status: "delivered", amount: 45, date: "2026-02-20", time: "14:35" },
@@ -71,6 +77,7 @@ const summaryStats = [
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState<typeof ordersData[0] | null>(null);
 
   const filteredOrders = ordersData.filter((o) => {
     const matchSearch = o.id.includes(search) || o.platform.includes(search) || o.driver.includes(search) || o.city.includes(search);
@@ -192,9 +199,9 @@ export default function AdminOrders() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
-                            <DropdownMenuItem><Eye className="w-3.5 h-3.5 ml-2" />عرض التفاصيل</DropdownMenuItem>
-                            <DropdownMenuItem>تتبع الطلب</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500">إلغاء الطلب</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSelectedOrder(order)}><Eye className="w-3.5 h-3.5 ml-2" />عرض التفاصيل</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast.info(`تتبع الطلب ${order.id}`)}>تتبع الطلب</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-500" onClick={() => toast.error(`تم إلغاء الطلب ${order.id}`)}>إلغاء الطلب</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -206,6 +213,40 @@ export default function AdminOrders() {
           </div>
         </CardContent>
       </Card>
+      {/* Order Detail Drawer */}
+      <Drawer open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DrawerContent dir="rtl">
+          <div className="mx-auto w-full max-w-lg">
+            <DrawerHeader>
+              <DrawerTitle>تفاصيل الطلب {selectedOrder?.id}</DrawerTitle>
+              <DrawerDescription>معلومات الطلب كاملة</DrawerDescription>
+            </DrawerHeader>
+            {selectedOrder && (
+              <div className="px-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-muted-foreground">المنصة:</span> <strong>{selectedOrder.platform}</strong></div>
+                  <div><span className="text-muted-foreground">العميل:</span> <strong>{selectedOrder.customer}</strong></div>
+                  <div><span className="text-muted-foreground">السائق:</span> <strong>{selectedOrder.driver}</strong></div>
+                  <div><span className="text-muted-foreground">المدينة:</span> <strong>{selectedOrder.city}</strong></div>
+                  <div><span className="text-muted-foreground">المبلغ:</span> <strong>{selectedOrder.amount} ر.س</strong></div>
+                  <div><span className="text-muted-foreground">التاريخ:</span> <strong>{selectedOrder.date}</strong></div>
+                  <div><span className="text-muted-foreground">الوقت:</span> <strong>{selectedOrder.time}</strong></div>
+                  <div>
+                    <span className="text-muted-foreground">الحالة:</span>{" "}
+                    <Badge variant={statusConfig[selectedOrder.status]?.variant}>{statusConfig[selectedOrder.status]?.label}</Badge>
+                  </div>
+                </div>
+                <Separator />
+              </div>
+            )}
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">إغلاق</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </motion.div>
   );
 }

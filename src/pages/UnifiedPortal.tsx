@@ -66,13 +66,6 @@ export default function UnifiedPortal() {
   async function handleForgotOTPVerify(e: React.FormEvent) {
     e.preventDefault();
     if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    // OTP verified together with password reset in next step
-    setError("");
-    go("reset-password");
-  }
-
-  async function handleResetPassword(e: React.FormEvent) {
-    e.preventDefault();
     if (newPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
     setError(""); setSuccess(""); setLoading(true);
     const result = await cognitoConfirmPassword(resetEmail.trim(), otp, newPassword);
@@ -332,10 +325,10 @@ export default function UnifiedPortal() {
             </form>
           )}
 
-          {/* ══ Forgot Password — Verify OTP ══ */}
+          {/* ══ Forgot Password — OTP + New Password (combined) ══ */}
           {screen === "forgot-otp" && (
             <form onSubmit={handleForgotOTPVerify}>
-              <button type="button" onClick={() => { go("forgot"); setOtp(""); }} style={{
+              <button type="button" onClick={() => { go("forgot"); setOtp(""); setNewPassword(""); }} style={{
                 background: "none", border: "none", cursor: "pointer", color: "#64748b",
                 fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
                 padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
@@ -344,13 +337,17 @@ export default function UnifiedPortal() {
               </button>
               <div style={{ marginBottom: "1.25rem", textAlign: "center" }}>
                 <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
-                  التحقق من البريد
+                  إعادة تعيين كلمة المرور
                 </h2>
                 <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
-                  أدخل رمز التحقق المُرسل إلى {resetEmail}
+                  أدخل رمز التحقق المُرسل إلى {resetEmail} وكلمة المرور الجديدة
                 </p>
               </div>
-              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+
+              <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                رمز التحقق
+              </label>
+              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
@@ -365,6 +362,23 @@ export default function UnifiedPortal() {
                   </InputOTPGroup>
                 </InputOTP>
               </div>
+
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                  كلمة المرور الجديدة
+                </label>
+                <input
+                  type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                  placeholder="8 أحرف على الأقل، حرف كبير + رقم" autoComplete="new-password"
+                  style={{
+                    width: "100%", padding: "10px 14px", fontSize: "14px",
+                    background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
+                    color: "#1e293b", outline: "none", boxSizing: "border-box",
+                    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  }}
+                />
+              </div>
+
               {error && (
                 <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
                   {error}
@@ -380,53 +394,6 @@ export default function UnifiedPortal() {
                 background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
                 cursor: (loading || otp.length !== 6) ? "not-allowed" : "pointer",
                 opacity: (loading || otp.length !== 6) ? 0.5 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
-                {loading ? "جارٍ التحقق..." : "تحقق"}
-              </button>
-            </form>
-          )}
-
-          {/* ══ Reset Password — New Password ══ */}
-          {screen === "reset-password" && (
-            <form onSubmit={handleResetPassword}>
-              <div style={{ marginBottom: "1.25rem" }}>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
-                  كلمة مرور جديدة
-                </h2>
-                <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
-                  أدخل كلمة المرور الجديدة (6 أحرف على الأقل)
-                </p>
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
-                  كلمة المرور الجديدة
-                </label>
-                <input
-                  type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                  placeholder="••••••••" autoComplete="new-password" autoFocus
-                  style={{
-                    width: "100%", padding: "10px 14px", fontSize: "14px",
-                    background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
-                    color: "#1e293b", outline: "none", boxSizing: "border-box",
-                    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                  }}
-                />
-              </div>
-              {error && (
-                <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem" }}>
-                  {success}
-                </div>
-              )}
-              <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
                 fontFamily: "'IBM Plex Sans Arabic', sans-serif",
               }}>
                 {loading ? "جارٍ التحديث..." : "تحديث كلمة المرور"}

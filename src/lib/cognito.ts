@@ -4,7 +4,7 @@
  *
  * PATCH: amazon-cognito-identity-js does not recognise me-south-1 region.
  * We monkey-patch the SDK's internal region regex so that the standard
- * CognitoUserPool constructor works without any fallback hacks.
+ * CognitoUserPool constructor works without any fallback hacks.h
  */
 import {
       CognitoUserPool,
@@ -84,7 +84,7 @@ function createPool(): CognitoUserPool {
   /**
        * Minimal Cognito IDP client that uses the global fetch API.
        * The SDK calls  client.request(operation, params, callback)
-       * where operation is e.g. "AWSCognitoIdentityProviderService.InitiateAuth".
+       * where operation is e.g. "InitiateAuth" (we prepend the service prefix).
        */
   pool.client = {
           endpoint,
@@ -93,7 +93,7 @@ function createPool(): CognitoUserPool {
           request(operation: string, params: unknown, callback: (err: Error | null, data?: unknown) => void) {
                     const headers: Record<string, string> = {
                                 "Content-Type": "application/x-amz-json-1.1",
-                                "X-Amz-Target": operation,
+                                "X-Amz-Target": "AWSCognitoIdentityProviderService." + operation,
                     };
 
             fetch(endpoint, {

@@ -50,8 +50,8 @@ import {
       }
 })();
 
-const USER_POOL_ID = import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN";
-const CLIENT_ID    = import.meta.env.VITE_COGNITO_CLIENT_ID    || "6n49ej8fl92i9rtotbk5o9o0d1";
+const USER_POOL_ID = (import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN").trim();
+const CLIENT_ID    = (import.meta.env.VITE_COGNITO_CLIENT_ID    || "6n49ej8fl92l9rtotbk5o9o0d1").trim();
 
 /**
  * Build a CognitoUserPool that works even when the SDK regex
@@ -64,8 +64,11 @@ const CLIENT_ID    = import.meta.env.VITE_COGNITO_CLIENT_ID    || "6n49ej8fl92i9
 function createPool(): CognitoUserPool {
       // --- Attempt 1: normal construction ---
   try {
-          return new CognitoUserPool({ UserPoolId: USER_POOL_ID, ClientId: CLIENT_ID });
-  } catch {
+          const pool = new CognitoUserPool({ UserPoolId: USER_POOL_ID, ClientId: CLIENT_ID });
+          console.log("[cognito] Pool created successfully for", USER_POOL_ID);
+          return pool;
+  } catch (err) {
+          console.warn("[cognito] SDK constructor failed:", err instanceof Error ? err.message : err);
           // falls through to manual construction
   }
 

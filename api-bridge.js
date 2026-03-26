@@ -14,7 +14,7 @@ const FLL_CONFIG = {
   AI_API_BASE: 'https://51n1gng40f.execute-api.me-south-1.amazonaws.com',
   COGNITO: {
     USER_POOL_ID: 'me-south-1_aJtmQ0QrN',
-    CLIENT_ID: '6n49ej8fl92i9rtotbk5o9o0d1',
+    CLIENT_ID: '6n49ej8fl92l9rtotbk5o9o0d1',
     REGION: 'me-south-1'
   }
 };

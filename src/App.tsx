@@ -133,6 +133,8 @@ const GovSLAConfig = lazy(() => import("@/pages/admin/governance/SLAConfig"));
 const GovAuditDashboard = lazy(() => import("@/pages/admin/governance/AuditDashboard"));
 const GovInfrastructure = lazy(() => import("@/pages/admin/governance/InfrastructureOverview"));
 const GovApiManagement = lazy(() => import("@/pages/admin/governance/ApiManagement"));
+const AccountingComponents = lazy(() => import("@/pages/admin/AccountingComponents"));
+const PayoutRunWorkflow = lazy(() => import("@/pages/admin/PayoutRunWorkflow"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -226,6 +228,9 @@ export default function App() {
               <Route path="shipments" element={<PermissionGuard permission="orders"><Shipments /></PermissionGuard>} />
               <Route path="invoices" element={<PermissionGuard permission="finance"><Invoices /></PermissionGuard>} />
               <Route path="payouts" element={<PermissionGuard permission="finance"><PayoutManagement /></PermissionGuard>} />
+              <Route path="accounting-components" element={<PermissionGuard permission="finance"><AccountingComponents /></PermissionGuard>} />
+              <Route path="payout-workflow" element={<PermissionGuard permission="finance"><PayoutRunWorkflow /></PermissionGuard>} />
+              <Route path="payout-workflow/:batchId" element={<PermissionGuard permission="finance"><PayoutRunWorkflow /></PermissionGuard>} />
               <Route path="email-logs" element={<AccessGuard roles={["admin", "owner"]}><EmailLogs /></AccessGuard>} />
               <Route path="risk" element={<AccessGuard roles={["admin", "owner"]}><RiskManagement /></AccessGuard>} />
               <Route path="reactivation" element={<AccessGuard roles={["admin", "owner"]}><AccountReactivation /></AccessGuard>} />

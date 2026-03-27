@@ -1,9 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 
-import { CHAT_API_URL } from "@/lib/api";
+import { API_BASE, CHAT_API_URL } from "@/lib/api";
+
+// Supabase edge function fallback URL
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const EDGE_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-support-system`;
+
 const ALLOWED_DEPARTMENTS = ["finance", "operations", "supervisors", "fleet", "hr", "المالية", "التشغيل", "المشرفين", "المركبات", "الموارد البشرية"];
 
 interface ChatMessage {
@@ -26,27 +32,50 @@ export function AdminAiAssistant() {
     let active = true;
     async function checkAccess() {
       if (!user) return;
+      // Admin/owner always allowed
       if (user.role === "admin" || user.role === "owner") {
         if (active) setAllowed(true);
         return;
       }
-      if (user.role !== "staff" || !supabase) {
-        if (active) setAllowed(false);
+      // Staff: check permissions first (no Supabase needed)
+      if (user.role === "staff") {
+        const hasOpsPermission = Boolean(
+          user.permissions?.finance || user.permissions?.orders || user.permissions?.reports ||
+          user.permissions?.couriers || user.permissions?.complaints || user.permissions?.excel
+        );
+        if (hasOpsPermission) {
+          if (active) setAllowed(true);
+          return;
+        }
+        // Check department via Supabase if available
+        const dept = user.department_name || "";
+        if (ALLOWED_DEPARTMENTS.includes(dept)) {
+          if (active) setAllowed(true);
+          return;
+        }
+        // Try Supabase department lookup as last resort
+        if (supabase) {
+          try {
+            const { data } = await supabase
+              .from("staff_profiles")
+              .select("departments(name_ar)")
+              .eq("user_id", user.id)
+              .single();
+            const deptName = (data as any)?.departments?.name_ar || "";
+            if (active) setAllowed(ALLOWED_DEPARTMENTS.includes(deptName));
+          } catch {
+            if (active) setAllowed(false);
+          }
+        } else {
+          // No supabase + no matching permissions → still allow staff with any permission
+          if (active) setAllowed(false);
+        }
         return;
       }
-      const { data } = await supabase
-        .from("staff_profiles")
-        .select("departments(name_ar)")
-        .eq("user_id", user.id)
-        .single();
-      const dept = user.department_name || (data as any)?.departments?.name || (data as any)?.departments?.name_ar || "";
-      const hasOpsPermission = Boolean(user.permissions?.finance || user.permissions?.orders || user.permissions?.reports || user.permissions?.couriers || user.permissions?.complaints || user.permissions?.excel);
-      if (active) setAllowed(ALLOWED_DEPARTMENTS.includes(dept) || hasOpsPermission);
+      if (active) setAllowed(false);
     }
     checkAccess();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [user]);
 
   useEffect(() => {
@@ -60,20 +89,55 @@ export function AdminAiAssistant() {
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
+
+    const payload = {
+      message: text,
+      history: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+      source: "admin-console",
+      role: user?.role,
+      user_id: user?.id,
+    };
+
     try {
-      const res = await fetch(CHAT_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: nextMessages.map((m) => ({ role: m.role, content: m.content })),
-          source: "admin-console",
-          role: user?.role,
-          user_id: user?.id,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply || "تعذر الحصول على رد من المساعد الآن." }]);
+      // Try Lambda API Gateway first
+      let reply: string | null = null;
+      try {
+        const res = await fetch(CHAT_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          reply = data.reply || null;
+        }
+      } catch { /* Lambda unavailable, try edge function */ }
+
+      // Fallback: Supabase edge function
+      if (!reply && SUPABASE_ANON_KEY) {
+        try {
+          const res = await fetch(EDGE_CHAT_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "apikey": SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(15000),
+          });
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            reply = data.reply || data.message || null;
+          }
+        } catch { /* edge function also unavailable */ }
+      }
+
+      setMessages((prev) => [...prev, {
+        role: "assistant",
+        content: reply || "تعذر الحصول على رد من المساعد الآن. يرجى المحاولة مرة أخرى.",
+      }]);
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", content: "حدث خطأ في الاتصال بالمساعد السحابي." }]);
     } finally {

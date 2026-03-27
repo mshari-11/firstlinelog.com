@@ -7,6 +7,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { CHAT_API_URL } from "@/lib/api";
 
 interface Message {
     id: string;
@@ -78,7 +79,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
 
                                       try {
                                               // إرسال الرسالة إلى API مع userRole للتحقق من الصلاحيات
-          const response = await fetch("/api/ai-chat", {
+          const response = await fetch(CHAT_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -99,7 +100,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
           const assistantMsg: Message = {
                     id: (Date.now() + 1).toString(),
                     role: "assistant",
-                    content: data.message || "عذراً، لم أتمكن من معالجة طلبك.",
+                    content: data.reply || data.message || "عذراً، لم أتمكن من معالجة طلبك.",
                     timestamp: new Date(),
           };
 
@@ -158,7 +159,7 @@ export default function ChatWidget({ userRole, userId, userName }: ChatWidgetPro
                                                       <div>
                                                                       <p className="text-sm font-semibold text-white">مساعد فيرست لاين</p>
                                                                       <p className="text-xs" style={{ color: "oklch(0.65 0.08 200)" }}>
-                                                                                        مدعوم بـ GPT-5
+                                                                                        مدعوم بالذكاء الاصطناعي
                                                                       </p>
                                                       </div>
                                         </div>

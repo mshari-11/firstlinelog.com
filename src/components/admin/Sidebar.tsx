@@ -100,7 +100,7 @@ export function AdminSidebar() {
       dir="rtl"
       animate={{ width: sidebarWidth }}
       transition={{ duration: 0.3, ease }}
-      style={{ width: sidebarWidth, overflow: "hidden" }}
+      style={{ width: sidebarWidth, overflowX: "hidden", overflowY: "auto" }}
     >
 
       {/* ── Logo ── */}

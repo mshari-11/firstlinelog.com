@@ -208,8 +208,8 @@ export function AdminAiAssistant() {
 
           <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             {messages.map((msg, idx) => (
-              <div key={idx} style={{ alignSelf: msg.role === "user" ? "flex-start" : "stretch", display: "flex", justifyContent: msg.role === "user" ? "flex-start" : "flex-end" }}>
-                <div style={{ maxWidth: "88%", background: msg.role === "user" ? "var(--con-bg-elevated)" : "var(--con-brand-subtle)", border: `1px solid ${msg.role === "user" ? "var(--con-border-default)" : "var(--con-border-brand)"}`, color: msg.role === "user" ? "var(--con-text-primary)" : "var(--con-text-secondary)", padding: "10px 12px", borderRadius: 14, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+              <div key={idx} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "88%", background: msg.role === "user" ? "var(--con-bg-elevated)" : "var(--con-brand-subtle)", border: `1px solid ${msg.role === "user" ? "var(--con-border-default)" : "var(--con-border-brand)"}`, color: msg.role === "user" ? "var(--con-text-primary)" : "var(--con-text-secondary)", padding: "10px 14px", borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
                   {msg.content}
                 </div>
               </div>

@@ -3,6 +3,9 @@
  * Manages real-time alerts, SLA breaches, and notification state
  */
 import { create } from "zustand";
+import { supabase } from "@/lib/supabase";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
 
 export type NotificationType = "complaint" | "order" | "finance" | "system" | "sla" | "approval";
 export type NotificationPriority = "low" | "normal" | "high" | "urgent";
@@ -100,8 +103,56 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
 
   loadNotifications: async () => {
     set({ loading: true });
-    // TODO: Fetch from API — GET /api/notifications
-    // For now, using mock data
+    try {
+      // Try API first
+      const res = await fetch(`${API_BASE}/api/notifications`, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((n: any) => ({
+            id: n.id || `ntf-${Date.now()}-${Math.random()}`,
+            type: n.type || "system",
+            priority: n.priority || "normal",
+            title: n.title || "",
+            message: n.message || "",
+            read: Boolean(n.read),
+            link: n.link,
+            moduleId: n.moduleId,
+            createdAt: n.created_at || n.createdAt || new Date().toISOString(),
+          }));
+          set({ notifications: mapped, loading: false });
+          return;
+        }
+      }
+    } catch { /* fall through to Supabase */ }
+
+    // Try Supabase fallback
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("notifications" as any)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (!error && data && data.length > 0) {
+          const mapped = data.map((n: any) => ({
+            id: String(n.id),
+            type: n.type || "system",
+            priority: n.priority || "normal",
+            title: n.title || "",
+            message: n.message || "",
+            read: Boolean(n.read || n.is_read),
+            link: n.link,
+            moduleId: n.module_id,
+            createdAt: n.created_at || new Date().toISOString(),
+          }));
+          set({ notifications: mapped, loading: false });
+          return;
+        }
+      } catch { /* keep mock */ }
+    }
+
+    // Keep existing mock data
     set({ loading: false });
   },
 

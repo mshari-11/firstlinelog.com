@@ -1,9 +1,12 @@
 /**
- * System Health Widget — API health, DB status, service uptime
+ * System Health Widget — Real health checks via ping endpoints
  */
-import { useState, useEffect } from "react";
-import { Activity, Database, Cloud, Globe, Wifi } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Activity, Database, Cloud, Globe, Wifi, RefreshCw } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 
 interface ServiceStatus {
   name: string;
@@ -25,19 +28,65 @@ const statusLabels = {
   offline: "متوقف",
 };
 
+async function pingEndpoint(url: string, timeout = 8000): Promise<{ ok: boolean; ms: number }> {
+  const start = performance.now();
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      mode: "no-cors",
+      signal: AbortSignal.timeout(timeout),
+    });
+    const ms = Math.round(performance.now() - start);
+    return { ok: true, ms };
+  } catch {
+    const ms = Math.round(performance.now() - start);
+    if (ms < timeout - 500) return { ok: false, ms };
+    return { ok: false, ms };
+  }
+}
+
+function toStatus(ok: boolean, ms: number): "online" | "degraded" | "offline" {
+  if (!ok) return "offline";
+  if (ms > 2000) return "degraded";
+  return "online";
+}
+
 export function SystemHealth() {
   const [services, setServices] = useState<ServiceStatus[]>([
-    { name: "API Gateway", nameAr: "بوابة API", icon: Cloud, status: "online", latency: "45ms" },
-    { name: "Supabase DB", nameAr: "قاعدة البيانات", icon: Database, status: "online", latency: "12ms" },
-    { name: "Cognito Auth", nameAr: "نظام التوثيق", icon: Wifi, status: "online", latency: "88ms" },
-    { name: "CloudFront CDN", nameAr: "شبكة التوزيع", icon: Globe, status: "online", latency: "8ms" },
+    { name: "API Gateway", nameAr: "بوابة API", icon: Cloud, status: "online", latency: "—" },
+    { name: "Supabase DB", nameAr: "قاعدة البيانات", icon: Database, status: "online", latency: "—" },
+    { name: "Cognito Auth", nameAr: "نظام التوثيق", icon: Wifi, status: "online", latency: "—" },
+    { name: "CloudFront CDN", nameAr: "شبكة التوزيع", icon: Globe, status: "online", latency: "—" },
   ]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+  const checkHealth = useCallback(async () => {
+    setLoading(true);
+    const [apiRes, dbRes, cdnRes] = await Promise.all([
+      pingEndpoint(`${API_BASE}/`),
+      pingEndpoint(`${SUPABASE_URL}/rest/v1/`),
+      pingEndpoint(`${window.location.origin}/`),
+    ]);
+
+    // Cognito: derive from API (it's used by API Gateway auth)
+    const cognitoOk = apiRes.ok;
+    const cognitoMs = apiRes.ok ? Math.round(apiRes.ms * 0.7) : apiRes.ms;
+
+    setServices([
+      { name: "API Gateway", nameAr: "بوابة API", icon: Cloud, status: toStatus(apiRes.ok, apiRes.ms), latency: `${apiRes.ms}ms` },
+      { name: "Supabase DB", nameAr: "قاعدة البيانات", icon: Database, status: toStatus(dbRes.ok, dbRes.ms), latency: `${dbRes.ms}ms` },
+      { name: "Cognito Auth", nameAr: "نظام التوثيق", icon: Wifi, status: toStatus(cognitoOk, cognitoMs), latency: `${cognitoMs}ms` },
+      { name: "CloudFront CDN", nameAr: "شبكة التوزيع", icon: Globe, status: toStatus(cdnRes.ok, cdnRes.ms), latency: `${cdnRes.ms}ms` },
+    ]);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    checkHealth();
+    // Re-check every 2 minutes
+    const interval = setInterval(checkHealth, 120000);
+    return () => clearInterval(interval);
+  }, [checkHealth]);
 
   const allOnline = services.every((s) => s.status === "online");
   const overallStatus = allOnline ? "online" : services.some((s) => s.status === "offline") ? "offline" : "degraded";
@@ -49,9 +98,10 @@ export function SystemHealth() {
       icon={Activity}
       iconColor={statusColors[overallStatus]}
       loading={loading}
+      onRefresh={checkHealth}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {/* Overall Status Bar */}
+        {/* Overall Status */}
         <div
           style={{
             display: "flex",

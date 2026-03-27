@@ -5,6 +5,7 @@
  */
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
+import { useNotificationStore } from "@/stores/useNotificationStore";
 import {
   LayoutDashboard, Users, ClipboardList, FileSpreadsheet,
   Wallet, MessageSquare, BarChart3, Car, Building2,
@@ -54,6 +55,8 @@ export function AdminSidebar() {
   const { user, signOut, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { getUnreadCount } = useNotificationStore();
+  const unreadCount = getUnreadCount();
   const [collapsed, setCollapsed] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -255,7 +258,7 @@ export function AdminSidebar() {
         >
           <Bell size={collapsed ? 18 : 15} style={{ flexShrink: 0 }} />
           {!collapsed && <span style={{ flex: 1, fontSize: 13 }}>التنبيهات</span>}
-          {!collapsed && (
+          {!collapsed && unreadCount > 0 && (
             <span
               style={{
                 fontSize: 10,
@@ -266,10 +269,10 @@ export function AdminSidebar() {
                 padding: "1px 5px",
               }}
             >
-              3
+              {unreadCount}
             </span>
           )}
-          {collapsed && (
+          {collapsed && unreadCount > 0 && (
             <span
               style={{
                 position: "absolute",

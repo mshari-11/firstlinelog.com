@@ -151,10 +151,10 @@ function fileToBase64(file: File): Promise<string> {
 // ─── Step indicator ───────────────────────────────────────────────────────────
 const STEPS = [
   { num: 1, label: "البيانات الشخصية" },
-  { num: 2, label: "التحقق من البريد" },
-  { num: 3, label: "التحقق الحيوي" },
-  { num: 4, label: "الوثائق" },
-  { num: 5, label: "المركبة والإرسال" },
+  { num: 2, label: "التحقق الحيوي" },
+  { num: 3, label: "الوثائق" },
+  { num: 4, label: "المركبة" },
+  { num: 5, label: "التحقق والإرسال" },
 ];
 
 function StepBar({ current }: { current: number }) {
@@ -553,7 +553,7 @@ export default function CourierRegister() {
         setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
       } else {
         set("emailVerified", true);
-        setStep(3);
+        submitApplication();
       }
     } catch {
       setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
@@ -825,99 +825,8 @@ export default function CourierRegister() {
           </div>
         )}
 
-        {/* ─── Step 2: Email OTP ─────────────────────────────────────────────── */}
+        {/* ─── Step 2: Camera + Liveness ─────────────────────────────────────── */}
         {step === 2 && (
-          <div style={stepContent}>
-            <h3 style={stepTitle}>التحقق من البريد الإلكتروني</h3>
-            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "1.5rem" }}>
-              سيتم إرسال رمز تحقق مكون من 6 أرقام إلى{" "}
-              <strong style={{ color: "#60a5fa" }}>{form.email}</strong>
-            </p>
-
-            {!otpSent ? (
-              <div style={{ textAlign: "center" }}>
-                <button
-                  style={{ ...btnPrimary, fontSize: "14px", padding: "0.75rem 2rem" }}
-                  onClick={sendOtp}
-                  disabled={otpSending}
-                >
-                  {otpSending ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الإرسال...</> : <>
-                    <Mail size={15} style={{ display: "inline", marginLeft: 6 }} />
-                    إرسال رمز التحقق
-                  </>}
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{
-                    width: "56px", height: "56px", borderRadius: "50%",
-                    background: "#0d2244", border: "2px solid #1d4ed8",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 0.75rem",
-                  }}>
-                    <Mail size={24} style={{ color: "#60a5fa" }} />
-                  </div>
-                  <p style={{ fontSize: "13px", color: "#94a3b8" }}>
-                    تم إرسال الرمز. تحقق من بريدك الإلكتروني (قد يكون في مجلد الرسائل غير المرغوب فيها).
-                  </p>
-                </div>
-
-                <Field label="رمز التحقق (6 أرقام)" icon={Shield} error={errors.otpCode as string}>
-                  <div dir="ltr" style={{ display: "flex", justifyContent: "center" }}>
-                    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={form.otpCode} onChange={(val) => set("otpCode", val)}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                      <InputOTPSeparator />
-                      <InputOTPGroup>
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                </Field>
-
-                <div style={navRow}>
-                  <button style={btnSecondary} onClick={() => setStep(1)}>
-                    <ChevronRight size={15} /> رجوع
-                  </button>
-                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                    {otpCooldown > 0 ? (
-                      <span style={{ fontSize: "12px", color: "#475569" }}>
-                        <Clock size={12} style={{ display: "inline", marginLeft: 4 }} />
-                        إعادة الإرسال بعد {otpCooldown}ث
-                      </span>
-                    ) : (
-                      <button style={{ ...btnSecondary, fontSize: "12px" }} onClick={sendOtp} disabled={otpSending}>
-                        <RefreshCw size={12} /> إعادة الإرسال
-                      </button>
-                    )}
-                    <button style={btnPrimary} onClick={verifyOtp} disabled={otpVerifying}>
-                      {otpVerifying ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> تحقق...</> : "تحقق"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!otpSent && (
-              <div style={navRow}>
-                <button style={btnSecondary} onClick={() => setStep(1)}>
-                  <ChevronRight size={15} /> رجوع
-                </button>
-              </div>
-            )}
-
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
-
-        {/* ─── Step 3: Camera + Liveness ─────────────────────────────────────── */}
-        {step === 3 && (
           <div style={stepContent}>
             <h3 style={stepTitle}>التحقق الحيوي والصورة الشخصية</h3>
             <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "1rem" }}>
@@ -945,13 +854,13 @@ export default function CourierRegister() {
             )}
 
             <div style={navRow}>
-              <button style={btnSecondary} onClick={() => setStep(2)}>
+              <button style={btnSecondary} onClick={() => setStep(1)}>
                 <ChevronRight size={15} /> رجوع
               </button>
               <button
                 style={{ ...btnPrimary, opacity: form.livenessComplete ? 1 : 0.4 }}
                 disabled={!form.livenessComplete}
-                onClick={() => setStep(4)}
+                onClick={() => setStep(3)}
               >
                 التالي <ChevronLeft size={15} />
               </button>
@@ -959,8 +868,8 @@ export default function CourierRegister() {
           </div>
         )}
 
-        {/* ─── Step 4: Documents ─────────────────────────────────────────────── */}
-        {step === 4 && (
+        {/* ─── Step 3: Documents ─────────────────────────────────────────────── */}
+        {step === 3 && (
           <div style={stepContent}>
             <h3 style={stepTitle}>رفع الوثائق الرسمية</h3>
             <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "1rem" }}>
@@ -990,20 +899,20 @@ export default function CourierRegister() {
             </div>
 
             <div style={navRow}>
-              <button style={btnSecondary} onClick={() => setStep(3)}>
+              <button style={btnSecondary} onClick={() => setStep(2)}>
                 <ChevronRight size={15} /> رجوع
               </button>
-              <button style={btnPrimary} onClick={() => { if (validateStep4()) setStep(5); }}>
+              <button style={btnPrimary} onClick={() => { if (validateStep4()) setStep(4); }}>
                 التالي <ChevronLeft size={15} />
               </button>
             </div>
           </div>
         )}
 
-        {/* ─── Step 5: Vehicle + Submit ──────────────────────────────────────── */}
-        {step === 5 && (
+        {/* ─── Step 4: Vehicle ────────────────────────────────────────────────── */}
+        {step === 4 && (
           <div style={stepContent}>
-            <h3 style={stepTitle}>معلومات المركبة والإرسال</h3>
+            <h3 style={stepTitle}>معلومات المركبة</h3>
 
             {/* Vehicle toggle */}
             <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem" }}>
@@ -1141,16 +1050,131 @@ export default function CourierRegister() {
             )}
 
             <div style={navRow}>
-              <button style={btnSecondary} onClick={() => setStep(4)}>
+              <button style={btnSecondary} onClick={() => setStep(3)}>
                 <ChevronRight size={15} /> رجوع
               </button>
-              <button style={{ ...btnPrimary, background: "#15803d" }} onClick={submitApplication} disabled={submitting}>
-                {submitting
-                  ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الإرسال...</>
-                  : <><CheckCircle2 size={15} /> إرسال الطلب</>
-                }
+              <button style={btnPrimary} onClick={() => { if (validateStep5()) setStep(5); }}>
+                التالي <ChevronLeft size={15} />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ─── Step 5: Email OTP + Submit ─────────────────────────────────────── */}
+        {step === 5 && (
+          <div style={stepContent}>
+            <h3 style={stepTitle}>التحقق من البريد وإرسال الطلب</h3>
+            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "1.5rem" }}>
+              سيتم إرسال رمز تحقق مكون من 6 أرقام إلى{" "}
+              <strong style={{ color: "#60a5fa" }}>{form.email}</strong>
+            </p>
+
+            {/* Summary */}
+            <div style={{ background: "#081524", borderRadius: "10px", padding: "1rem", border: "1px solid #1e3a5f", marginBottom: "1rem" }}>
+              <p style={{ fontSize: "12px", fontWeight: 600, color: "#93c5fd", marginBottom: "0.5rem" }}>ملخص الطلب</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                {[
+                  { l: "الاسم",        v: form.full_name },
+                  { l: "الهوية",       v: form.national_id },
+                  { l: "المدينة",      v: form.city },
+                  { l: "البريد",       v: form.email },
+                  { l: "التحقق الحيوي", v: form.livenessComplete ? "مكتمل ✓" : "غير مكتمل" },
+                  { l: "وثائق الهوية", v: form.doc_national_id ? "مرفوعة ✓" : "غير مرفوعة" },
+                ].map((r) => (
+                  <div key={r.l} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                    <span style={{ color: "#475569" }}>{r.l}</span>
+                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>{r.v || "—"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {!otpSent ? (
+              <div style={{ textAlign: "center" }}>
+                <button
+                  style={{ ...btnPrimary, fontSize: "14px", padding: "0.75rem 2rem" }}
+                  onClick={sendOtp}
+                  disabled={otpSending}
+                >
+                  {otpSending ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الإرسال...</> : <>
+                    <Mail size={15} style={{ display: "inline", marginLeft: 6 }} />
+                    إرسال رمز التحقق
+                  </>}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    width: "56px", height: "56px", borderRadius: "50%",
+                    background: "#0d2244", border: "2px solid #1d4ed8",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 0.75rem",
+                  }}>
+                    <Mail size={24} style={{ color: "#60a5fa" }} />
+                  </div>
+                  <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+                    تم إرسال الرمز. تحقق من بريدك الإلكتروني (قد يكون في مجلد الرسائل غير المرغوب فيها).
+                  </p>
+                </div>
+
+                <Field label="رمز التحقق (6 أرقام)" icon={Shield} error={errors.otpCode as string}>
+                  <div dir="ltr" style={{ display: "flex", justifyContent: "center" }}>
+                    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={form.otpCode} onChange={(val) => set("otpCode", val)}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </Field>
+
+                <div style={navRow}>
+                  <button style={btnSecondary} onClick={() => setStep(4)}>
+                    <ChevronRight size={15} /> رجوع
+                  </button>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {otpCooldown > 0 ? (
+                      <span style={{ fontSize: "12px", color: "#475569" }}>
+                        <Clock size={12} style={{ display: "inline", marginLeft: 4 }} />
+                        إعادة الإرسال بعد {otpCooldown}ث
+                      </span>
+                    ) : (
+                      <button style={{ ...btnSecondary, fontSize: "12px" }} onClick={sendOtp} disabled={otpSending}>
+                        <RefreshCw size={12} /> إعادة الإرسال
+                      </button>
+                    )}
+                    <button style={{ ...btnPrimary, background: "#15803d" }} onClick={verifyOtp} disabled={otpVerifying || submitting}>
+                      {(otpVerifying || submitting) ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ التحقق...</> : <><CheckCircle2 size={15} /> تحقق وأرسل الطلب</>}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!otpSent && (
+              <div style={navRow}>
+                <button style={btnSecondary} onClick={() => setStep(4)}>
+                  <ChevronRight size={15} /> رجوع
+                </button>
+              </div>
+            )}
+
+            {errors.general && (
+              <div style={{ background: "#450a0a", border: "1px solid #b91c1c", borderRadius: "8px", padding: "0.75rem", fontSize: "12px", color: "#fca5a5", marginTop: "0.75rem" }}>
+                <AlertTriangle size={13} style={{ display: "inline", marginLeft: 4 }} />
+                {errors.general}
+              </div>
+            )}
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         )}
       </div>

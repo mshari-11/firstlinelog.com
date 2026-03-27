@@ -3,7 +3,8 @@
  * Upload Excel/CSV files from multiple delivery platforms,
  * normalize the data, detect variances against internal records.
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 import {
   UploadCloud,
@@ -63,8 +64,8 @@ interface UploadedFile {
   uploadedAt: Date;
 }
 
-// ─── Mock internal records (would come from Supabase in production) ───────────
-const MOCK_INTERNAL: InternalRecord[] = [
+// ─── Fallback internal records (used when Supabase is unavailable) ───────────
+const FALLBACK_INTERNAL: InternalRecord[] = [
   { order_id: "ORD-001", expected_amount: 45.00, date: "2026-03-01", platform: "jahez",         courier_id: "COU-01" },
   { order_id: "ORD-002", expected_amount: 32.50, date: "2026-03-01", platform: "hungerstation",  courier_id: "COU-02" },
   { order_id: "ORD-003", expected_amount: 78.00, date: "2026-03-02", platform: "toyou",          courier_id: "COU-01" },
@@ -189,16 +190,49 @@ const STATUS_ICON: Record<VarianceStatus, JSX.Element> = {
   missing: <XCircle size={13} />,
 };
 
+// ─── Valid platform keys for safe mapping ─────────────────────────────────────
+const VALID_PLATFORMS = new Set<Platform>(["jahez", "hungerstation", "toyou", "noon", "talabat", "other"]);
+
 // ─── Component ────────────────────────────────────────────────────────────────
+
 export default function Reconciliation() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("jahez");
+  const [internalRecords, setInternalRecords] = useState<InternalRecord[]>(FALLBACK_INTERNAL);
   const [results, setResults] = useState<ReconciliationRow[] | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<VarianceStatus | "all">("all");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Fetch internal records from Supabase orders table
+  useEffect(() => {
+    async function fetchInternalRecords() {
+      try {
+        if (!supabase) throw new Error("no client");
+        const { data, error } = await supabase
+          .from("orders")
+          .select("id, platform, order_date, gross_earnings, net_earnings, courier_id");
+        if (error) throw error;
+        if (!data || data.length === 0) return;
+        const mapped: InternalRecord[] = data.map((row) => ({
+          order_id:        String(row.id),
+          expected_amount: Number(row.gross_earnings) || 0,
+          date:            row.order_date ?? "",
+          platform:        VALID_PLATFORMS.has(row.platform as Platform)
+                             ? (row.platform as Platform)
+                             : "other",
+          courier_id:      row.courier_id != null ? String(row.courier_id) : undefined,
+        }));
+        setInternalRecords(mapped);
+      } catch (err) {
+        console.warn("Reconciliation: failed to load internal records from Supabase, using fallback.", err);
+        setInternalRecords(FALLBACK_INTERNAL);
+      }
+    }
+    fetchInternalRecords();
+  }, []);
 
   // ── KPI derived values
   const kpi = results
@@ -267,7 +301,7 @@ export default function Reconciliation() {
   );
 
   const handleRunReconciliation = () => {
-    setResults(reconcile(uploadedFiles, MOCK_INTERNAL));
+    setResults(reconcile(uploadedFiles, internalRecords));
   };
 
   const handleExportCSV = () => {

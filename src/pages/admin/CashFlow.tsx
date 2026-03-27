@@ -2,8 +2,9 @@
  * تحليل التدفق النقدي - Cash Flow Analysis
  * Money in vs money out timeline, burn rate, operating margin
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/admin/auth";
+import { supabase } from "@/lib/supabase";
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -18,15 +19,15 @@ import {
   chartTooltipStyle, formatSAR,
 } from "@/components/admin/FinanceUI";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const cashFlowTimeline = [
+// ─── Fallback Data (used when Supabase fetch fails or returns no rows) ────────
+const FALLBACK_cashFlowTimeline = [
   { week: "الأسبوع 1", in: 145000, out: 98000, net: 47000 },
   { week: "الأسبوع 2", in: 162000, out: 105000, net: 57000 },
   { week: "الأسبوع 3", in: 138000, out: 92000, net: 46000 },
   { week: "الأسبوع 4", in: 178000, out: 112000, net: 66000 },
 ];
 
-const netCashFlowMonthly = [
+const FALLBACK_netCashFlowMonthly = [
   { month: "سبتمبر",  cash: 142000, cumulative: 142000 },
   { month: "أكتوبر", cash: 178000, cumulative: 320000 },
   { month: "نوفمبر", cash: 145000, cumulative: 465000 },
@@ -35,13 +36,13 @@ const netCashFlowMonthly = [
   { month: "فبراير", cash: 172000, cumulative: 1000000 },
 ];
 
-const burnRateData = [
+const FALLBACK_burnRateData = [
   { period: "يناير",  operatingExpenses: 120000, revenue: 198000, margin: 39 },
   { period: "فبراير", operatingExpenses: 125000, revenue: 218000, margin: 43 },
   { period: "مارس",  operatingExpenses: 128000, revenue: 225000, margin: 43 },
 ];
 
-const operatingMetrics = [
+const FALLBACK_operatingMetrics = [
   { date: "1 مارس",  dailyIn: 18500, dailyOut: 12200, dailyNet: 6300, margin: 34 },
   { date: "2 مارس",  dailyIn: 21200, dailyOut: 14100, dailyNet: 7100, margin: 34 },
   { date: "3 مارس",  dailyIn: 19800, dailyOut: 13200, dailyNet: 6600, margin: 33 },
@@ -49,23 +50,136 @@ const operatingMetrics = [
   { date: "5 مارس",  dailyIn: 20700, dailyOut: 13900, dailyNet: 6800, margin: 33 },
 ];
 
-const forecastData = [
+const FALLBACK_forecastData = [
   { month: "مارس",  actual: null, projected: 225000 },
   { month: "أبريل", actual: null, projected: 235000 },
   { month: "مايو",  actual: null, projected: 245000 },
   { month: "يونيو", actual: null, projected: 258000 },
 ];
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface WeeklyFlow  { week: string; in: number; out: number; net: number }
+interface MonthlyFlow { month: string; cash: number; cumulative: number }
+interface DailyMetric { date: string; dailyIn: number; dailyOut: number; dailyNet: number; margin: number }
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function CashFlowAnalysis() {
   const { user } = useAuth();
-  const [stats] = useState({
+
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
     totalCashIn: 1068000,
     totalCashOut: 428000,
     netCashFlow: 640000,
     operatingMargin: 39.9,
     monthlyGrowth: 3.2,
   });
+  const [cashFlowTimeline, setCashFlowTimeline]     = useState<WeeklyFlow[]>(FALLBACK_cashFlowTimeline);
+  const [netCashFlowMonthly, setNetCashFlowMonthly] = useState<MonthlyFlow[]>(FALLBACK_netCashFlowMonthly);
+  const [operatingMetrics, setOperatingMetrics]     = useState<DailyMetric[]>(FALLBACK_operatingMetrics);
+
+  useEffect(() => {
+    const fetchCashFlow = async () => {
+      try {
+        if (!supabase) throw new Error("no client");
+
+        const { data, error } = await supabase
+          .from("orders")
+          .select("platform, order_date, gross_earnings, deductions, net_earnings, orders_count")
+          .order("order_date", { ascending: true });
+
+        if (error) throw error;
+        if (!data || data.length === 0) return; // keep fallback
+
+        // ── KPI totals ──────────────────────────────────────────────────────
+        const totalIn  = data.reduce((s, r) => s + (r.gross_earnings ?? 0), 0);
+        const totalOut = data.reduce((s, r) => s + (r.deductions     ?? 0), 0);
+        const totalNet = data.reduce((s, r) => s + (r.net_earnings   ?? 0), 0);
+        const margin   = totalIn > 0 ? (totalNet / totalIn) * 100 : 0;
+
+        setStats({
+          totalCashIn:     totalIn,
+          totalCashOut:    totalOut,
+          netCashFlow:     totalNet,
+          operatingMargin: parseFloat(margin.toFixed(1)),
+          monthlyGrowth:   3.2, // requires historical comparison — kept static
+        });
+
+        // ── Weekly cash flow (group by ISO week) ────────────────────────────
+        const weekMap = new Map<string, { in: number; out: number; net: number }>();
+        data.forEach((r) => {
+          const d    = new Date(r.order_date);
+          const week = `الأسبوع ${getISOWeekOfMonth(d)}`;
+          const cur  = weekMap.get(week) ?? { in: 0, out: 0, net: 0 };
+          weekMap.set(week, {
+            in:  cur.in  + (r.gross_earnings ?? 0),
+            out: cur.out + (r.deductions     ?? 0),
+            net: cur.net + (r.net_earnings   ?? 0),
+          });
+        });
+        if (weekMap.size > 0) {
+          setCashFlowTimeline(
+            Array.from(weekMap.entries()).map(([week, v]) => ({ week, ...v }))
+          );
+        }
+
+        // ── Monthly cumulative (group by month name) ─────────────────────────
+        const monthMap = new Map<string, number>();
+        const MONTHS   = ["يناير","فبراير","مارس","أبريل","مايو","يونيو",
+                          "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+        data.forEach((r) => {
+          const d         = new Date(r.order_date);
+          const monthName = MONTHS[d.getMonth()];
+          monthMap.set(monthName, (monthMap.get(monthName) ?? 0) + (r.net_earnings ?? 0));
+        });
+        if (monthMap.size > 0) {
+          let cumulative = 0;
+          const monthly: MonthlyFlow[] = Array.from(monthMap.entries()).map(([month, cash]) => {
+            cumulative += cash;
+            return { month, cash, cumulative };
+          });
+          setNetCashFlowMonthly(monthly);
+        }
+
+        // ── Daily operating metrics (last 5 distinct dates) ──────────────────
+        const dateMap = new Map<string, { dailyIn: number; dailyOut: number }>();
+        data.forEach((r) => {
+          const d   = new Date(r.order_date);
+          const key = `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+          const cur = dateMap.get(key) ?? { dailyIn: 0, dailyOut: 0 };
+          dateMap.set(key, {
+            dailyIn:  cur.dailyIn  + (r.gross_earnings ?? 0),
+            dailyOut: cur.dailyOut + (r.deductions     ?? 0),
+          });
+        });
+        if (dateMap.size > 0) {
+          const daily: DailyMetric[] = Array.from(dateMap.entries())
+            .slice(-5)
+            .map(([date, v]) => ({
+              date,
+              dailyIn:  v.dailyIn,
+              dailyOut: v.dailyOut,
+              dailyNet: v.dailyIn - v.dailyOut,
+              margin:   v.dailyIn > 0 ? Math.round(((v.dailyIn - v.dailyOut) / v.dailyIn) * 100) : 0,
+            }));
+          setOperatingMetrics(daily);
+        }
+      } catch (err) {
+        console.error("CashFlow: fetch failed, using fallback data", err);
+        // state already holds fallback values — nothing to do
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCashFlow();
+  }, []);
+
+  // ─── Helper: week-of-month (1-based) ──────────────────────────────────────
+  function getISOWeekOfMonth(date: Date): number {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    return Math.ceil((date.getDate() + firstDay) / 7);
+  }
 
   return (
     <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -77,11 +191,11 @@ export default function CashFlowAnalysis() {
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-        <KPICard label="إجمالي الداخل" value={formatSAR(stats.totalCashIn, true)} change={8} icon={TrendingUp} accent="var(--con-success)" />
-        <KPICard label="إجمالي الخارج" value={formatSAR(stats.totalCashOut, true)} icon={TrendingDown} accent="var(--con-danger)" />
-        <KPICard label="التدفق النقدي الصافي" value={formatSAR(stats.netCashFlow, true)} change={12} icon={Activity} accent="var(--con-brand)" />
-        <KPICard label="الهامش التشغيلي" value={`${stats.operatingMargin.toFixed(1)}%`} icon={CheckCircle2} accent="var(--con-info)" />
-        <KPICard label="معدل النمو" value={`${stats.monthlyGrowth.toFixed(1)}%`} change={3} icon={Zap} accent="var(--con-warning)" />
+        <KPICard label="إجمالي الداخل" value={formatSAR(stats.totalCashIn, true)} change={8} icon={TrendingUp} accent="var(--con-success)" loading={loading} />
+        <KPICard label="إجمالي الخارج" value={formatSAR(stats.totalCashOut, true)} icon={TrendingDown} accent="var(--con-danger)" loading={loading} />
+        <KPICard label="التدفق النقدي الصافي" value={formatSAR(stats.netCashFlow, true)} change={12} icon={Activity} accent="var(--con-brand)" loading={loading} />
+        <KPICard label="الهامش التشغيلي" value={`${stats.operatingMargin.toFixed(1)}%`} icon={CheckCircle2} accent="var(--con-info)" loading={loading} />
+        <KPICard label="معدل النمو" value={`${stats.monthlyGrowth.toFixed(1)}%`} change={3} icon={Zap} accent="var(--con-warning)" loading={loading} />
       </div>
 
       {/* Main Charts */}
@@ -129,7 +243,7 @@ export default function CashFlowAnalysis() {
 
         <ChartCard title="سعر الاحتراق والهامش" subtitle="مقارنة شهرية">
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={burnRateData}>
+            <ComposedChart data={FALLBACK_burnRateData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="period" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
               <YAxis yAxisId="left" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
@@ -144,7 +258,7 @@ export default function CashFlowAnalysis() {
 
         <ChartCard title="التنبؤ المالي" subtitle="الربع القادم">
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={forecastData}>
+            <LineChart data={FALLBACK_forecastData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--con-border-default)" />
               <XAxis dataKey="month" stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
               <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />

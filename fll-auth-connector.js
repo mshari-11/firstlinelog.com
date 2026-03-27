@@ -1,5 +1,5 @@
 /**
- * FLL Auth Connector v4.0 — Production
+ * FLL Auth Connector v4.1 — Production
  * OTP disabled — direct password login only
  *
  * Strategy: Intercepts form submission and calls AWS Cognito API
@@ -8,19 +8,62 @@
  * Pages:
  * - /login          → نظام السائقين والمناديب (login via static JS)
  * - /unified-login  → Unified portal (login via React component)
+ *
+ * v4.1: Updated REDIRECT map to SPA routes + legacy HTML redirect guard
  */
 
 (function() {
   'use strict';
 
   const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+
+  // Role → SPA route mapping
   const REDIRECT = {
-    driver: '/courier-dashboard.html', staff: '/staff-dashboard.html',
-    admin: '/admin-dashboard.html', finance: '/admin-dashboard.html#finance',
-    hr: '/admin-dashboard.html#staff', ops: '/admin-dashboard.html#orders',
-    fleet: '/admin-dashboard.html#couriers', executive: '/admin-dashboard.html',
-    SystemAdmin: '/admin-dashboard.html'
+    driver:      '/courier/portal',
+    staff:       '/admin-panel/dashboard',
+    admin:       '/admin-panel/dashboard',
+    finance:     '/admin-panel/finance',
+    hr:          '/admin-panel/staff',
+    ops:         '/admin-panel/dispatch',
+    fleet:       '/admin-panel/fleet',
+    executive:   '/admin-panel/dashboard',
+    SystemAdmin: '/admin-panel/dashboard'
   };
+
+  // Legacy HTML page → SPA route mapping
+  // Any direct navigation to these old HTML paths is caught and redirected.
+  const LEGACY_HTML_MAP = {
+    '/admin-dashboard.html':            '/admin-panel/dashboard',
+    '/courier-dashboard.html':          '/courier/portal',
+    '/staff-dashboard.html':            '/admin-panel/dashboard',
+    '/staff-finance.html':              '/admin-panel/finance',
+    '/staff-fleet.html':                '/admin-panel/fleet',
+    '/staff-hr.html':                   '/admin-panel/staff',
+    '/staff-ops.html':                  '/admin-panel/dispatch',
+    '/marketplace-integrations.html':   '/admin-panel/marketplace',
+    '/unauthorized.html':               '/unified-login'
+  };
+
+  // --- Legacy HTML redirect guard (runs immediately) ---
+  (function redirectLegacyHTML() {
+    var current = window.location.pathname;
+    if (LEGACY_HTML_MAP[current]) {
+      // Preserve any hash fragment (e.g. admin-dashboard.html#finance)
+      var hash = window.location.hash;
+      var target = LEGACY_HTML_MAP[current];
+      // Map legacy hash anchors to dedicated SPA routes where applicable
+      if (current === '/admin-dashboard.html' && hash) {
+        var hashMap = {
+          '#finance':   '/admin-panel/finance',
+          '#staff':     '/admin-panel/staff',
+          '#orders':    '/admin-panel/orders',
+          '#couriers':  '/admin-panel/couriers'
+        };
+        if (hashMap[hash]) target = hashMap[hash];
+      }
+      window.location.replace(target);
+    }
+  })();
 
   // --- Session ---
   function saveSession(d) {
@@ -190,5 +233,5 @@
   // --- Global ---
   window.FLLAuth = { getSession, clearSession, logout:()=>{clearSession();window.location.href='/';}, isLoggedIn:()=>!!getSession(), getUser:()=>getSession(), getToken:()=>localStorage.getItem('fll_token') };
 
-  console.log('✅ FLL Auth Connector v4.0 — Alert interception active (NO OTP)');
+  console.log('✅ FLL Auth Connector v4.1 — Alert interception active (NO OTP) | Legacy HTML redirect guard active');
 })();

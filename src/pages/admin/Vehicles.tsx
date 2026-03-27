@@ -22,12 +22,16 @@ interface Vehicle {
   lastService: string;
 }
 
-const mockVehicles: Vehicle[] = [
+const VEHICLE_TYPE_MAP: Record<string, string> = {
+  motorcycle: "دراجة نارية",
+  car: "سيارة",
+  bicycle: "دراجة هوائية",
+  van: "فان",
+};
+
+const FALLBACK_VEHICLES: Vehicle[] = [
   { id: 1, plate: "ABC-1234", type: "دراجة نارية",  brand: "هوندا",   year: 2022, courier: "أحمد محمد",   city: "الرياض",  status: "active",      lastService: "2025-12-01" },
   { id: 2, plate: "XYZ-5678", type: "سيارة",        brand: "تويوتا",  year: 2021, courier: "محمد علي",    city: "جدة",     status: "maintenance", lastService: "2025-11-15" },
-  { id: 3, plate: "DEF-9012", type: "دراجة هوائية", brand: "جاينت",   year: 2023, courier: "خالد سعد",   city: "الدمام",  status: "active",      lastService: "2026-01-10" },
-  { id: 4, plate: "GHI-3456", type: "دراجة نارية",  brand: "ياماها",  year: 2020, courier: "عمر حسن",    city: "الرياض",  status: "inactive",    lastService: "2025-10-20" },
-  { id: 5, plate: "JKL-7890", type: "سيارة",        brand: "هيونداي", year: 2022, courier: "يوسف أحمد",  city: "مكة",     status: "active",      lastService: "2026-01-20" },
 ];
 
 const STATUS_META: Record<VehicleStatus, { label: string; badgeClass: string }> = {
@@ -56,7 +60,8 @@ function formatDate(dateStr: string) {
 export default function Vehicles() {
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
-  const [vehicles, setVehicles]         = useState<Vehicle[]>(mockVehicles);
+  const [vehicles, setVehicles]         = useState<Vehicle[]>(FALLBACK_VEHICLES);
+  const [loading, setLoading]           = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newVehicle, setNewVehicle]     = useState({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
 
@@ -80,25 +85,30 @@ export default function Vehicles() {
 
   useEffect(() => {
     async function fetchVehicles() {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*, couriers(full_name, city)")
-        .order("created_at", { ascending: false });
+      setLoading(true);
+      try {
+        if (!supabase) throw new Error("no client");
+        const { data, error } = await supabase
+          .from("fll_vehicles")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        const mapped: Vehicle[] = data.map((v: any) => ({
-          id:          v.id,
-          plate:       v.plate_number  || "",
-          type:        v.vehicle_type  || "دراجة نارية",
-          brand:       v.brand         || "",
-          year:        v.year          || 2022,
-          courier:     v.couriers?.full_name || "غير محدد",
-          city:        v.couriers?.city      || "",
-          status:      v.status        || "active",
-          lastService: v.last_service_date   || "",
-        }));
-        setVehicles(mapped);
-      }
+        if (!error && data && data.length > 0) {
+          const mapped: Vehicle[] = data.map((v: any) => ({
+            id:          v.id,
+            plate:       v.plate_number || "",
+            type:        VEHICLE_TYPE_MAP[v.vehicle_type] || v.vehicle_type || "دراجة نارية",
+            brand:       v.brand || "",
+            year:        v.year || 2024,
+            courier:     v.rider_name || "غير معيّن",
+            city:        v.city || "",
+            status:      (v.status === "maintenance" ? "maintenance" : v.status === "inactive" ? "inactive" : "active") as VehicleStatus,
+            lastService: v.insurance_exp || "",
+          }));
+          setVehicles(mapped);
+        }
+      } catch { /* keep fallback */ }
+      finally { setLoading(false); }
     }
     fetchVehicles();
   }, []);

@@ -5,6 +5,17 @@
         "outputDirectory": ".",
         "cleanUrls": true,
         "trailingSlash": false,
+        "redirects": [
+                    { "source": "/admin-dashboard.html", "destination": "/admin-panel/dashboard", "statusCode": 301 },
+                    { "source": "/courier-dashboard.html", "destination": "/courier/portal", "statusCode": 301 },
+                    { "source": "/staff-dashboard.html", "destination": "/admin-panel/dashboard", "statusCode": 301 },
+                    { "source": "/staff-finance.html", "destination": "/admin-panel/finance", "statusCode": 301 },
+                    { "source": "/staff-fleet.html", "destination": "/admin-panel/fleet", "statusCode": 301 },
+                    { "source": "/staff-hr.html", "destination": "/admin-panel/staff", "statusCode": 301 },
+                    { "source": "/staff-ops.html", "destination": "/admin-panel/dispatch", "statusCode": 301 },
+                    { "source": "/marketplace-integrations.html", "destination": "/admin-panel/marketplace", "statusCode": 301 },
+                    { "source": "/unauthorized.html", "destination": "/unified-login", "statusCode": 301 }
+        ],
         "rewrites": [
                     { "source": "/admin-panel/(.*)", "destination": "/dist/index" },
                     { "source": "/admin-panel", "destination": "/dist/index" },

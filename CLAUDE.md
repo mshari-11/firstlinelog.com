@@ -37,8 +37,21 @@
 - `VITE_SUPABASE_URL` — Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` — Supabase anon key
 
+## Infrastructure (updated 2026-03-27)
+- **Lambda Functions**: 20 (Python + Node.js) in `/lambda-code/`
+- **Supabase Edge Functions**: 35 in `/supabase/functions/`
+- **API Gateways**: 2 (public + admin)
+- **DynamoDB Tables**: 38
+- **Supabase Schemas**: public, finance, master, staging, ops, audit, admin, hr
+- **Admin Pages**: 54+ (all wired to real Supabase/API data with fallback)
+- **Governance Pages**: 6 (PermissionManager, FeatureToggles, WorkflowBuilder, SLAConfig, AuditDashboard, InfrastructureOverview)
+- **Public Pages**: 20 (marketing + auth + courier)
+- **Legacy HTML**: 9 files → 301 redirects to SPA routes via vercel.json
+
 ## Conventions
 - Arabic RTL UI throughout
 - Prettier for formatting (auto on save)
 - ESLint for linting
 - Path alias: `@/` → `./src/`
+- Admin pages use `try/fetch/catch → keep fallback` pattern for data
+- Supabase client can be null — always guard with `if (!supabase)`

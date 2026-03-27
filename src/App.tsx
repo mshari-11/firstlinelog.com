@@ -125,6 +125,14 @@ const MarketplaceIntegrations = lazy(() => import("@/pages/admin/MarketplaceInte
 const FinanceClose = lazy(() => import("@/pages/admin/FinanceClose"));
 const MonthlyReport = lazy(() => import("@/pages/admin/MonthlyReport"));
 
+// ── Governance pages (Control Tower) ────────────────────────────────────
+const GovPermissions = lazy(() => import("@/pages/admin/governance/PermissionManager"));
+const GovFeatureToggles = lazy(() => import("@/pages/admin/governance/FeatureToggles"));
+const GovWorkflows = lazy(() => import("@/pages/admin/governance/WorkflowBuilder"));
+const GovSLAConfig = lazy(() => import("@/pages/admin/governance/SLAConfig"));
+const GovAuditDashboard = lazy(() => import("@/pages/admin/governance/AuditDashboard"));
+const GovInfrastructure = lazy(() => import("@/pages/admin/governance/InfrastructureOverview"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -232,6 +240,14 @@ export default function App() {
               <Route path="marketplace" element={<AccessGuard roles={["admin", "owner"]}><MarketplaceIntegrations /></AccessGuard>} />
               <Route path="finance-close" element={<PermissionGuard permission="finance"><FinanceClose /></PermissionGuard>} />
               <Route path="monthly-report" element={<PermissionGuard permission="finance"><MonthlyReport /></PermissionGuard>} />
+
+              {/* ── Governance & Control Tower pages ── */}
+              <Route path="governance/permissions" element={<AccessGuard roles={["admin", "owner"]}><GovPermissions /></AccessGuard>} />
+              <Route path="governance/features" element={<AccessGuard roles={["admin", "owner"]}><GovFeatureToggles /></AccessGuard>} />
+              <Route path="governance/workflows" element={<AccessGuard roles={["admin", "owner"]}><GovWorkflows /></AccessGuard>} />
+              <Route path="governance/sla" element={<AccessGuard roles={["admin", "owner"]}><GovSLAConfig /></AccessGuard>} />
+              <Route path="governance/audit" element={<AccessGuard roles={["admin", "owner"]}><GovAuditDashboard /></AccessGuard>} />
+              <Route path="governance/infrastructure" element={<AccessGuard roles={["admin", "owner"]}><GovInfrastructure /></AccessGuard>} />
 
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>

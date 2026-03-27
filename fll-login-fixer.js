@@ -1,9 +1,11 @@
 /**
- * FLL Login Fixer v3.0
+ * FLL Login Fixer v3.1
  * OTP disabled — direct password login only
  * - Intercepts form submit
  * - Sends to AWS Cognito API
  * - Auto-redirects on success
+ *
+ * v3.1: getRedirectPath updated to SPA routes (aligned with fll-auth-connector v4.1)
  */
 (function() {
   const p = location.pathname;
@@ -119,7 +121,17 @@
   }
 
   function getRedirectPath(groups) {
-    const map = { SystemAdmin:'/admin-dashboard', admin:'/admin-dashboard', finance:'/staff-finance', hr:'/staff-hr', ops:'/staff-ops', fleet:'/staff-fleet', staff:'/staff-dashboard', driver:'/courier-dashboard', executive:'/admin-dashboard' };
+    const map = {
+      SystemAdmin: '/admin-panel/dashboard',
+      admin:       '/admin-panel/dashboard',
+      executive:   '/admin-panel/dashboard',
+      staff:       '/admin-panel/dashboard',
+      finance:     '/admin-panel/finance',
+      hr:          '/admin-panel/staff',
+      ops:         '/admin-panel/dispatch',
+      fleet:       '/admin-panel/fleet',
+      driver:      '/courier/portal'
+    };
     for (const g of (groups||[])) { if (map[g]) return map[g]; }
     return '/';
   }

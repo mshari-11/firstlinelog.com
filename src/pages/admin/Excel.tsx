@@ -1,7 +1,9 @@
 /**
  * صفحة استيراد Excel
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import {
   FileSpreadsheet, Upload, CheckCircle2, XCircle,
   Clock, AlertCircle, Download, Eye, RefreshCw,
@@ -31,7 +33,7 @@ const statusMap: Record<string, { label: string; color: string; icon: React.Elem
   pending: { label: "قيد المراجعة", color: "text-yellow-400", icon: Clock },
 };
 
-const mockHistory: ImportHistory[] = [
+const FALLBACK_HISTORY: ImportHistory[] = [
   { id: "1", filename: "رواتب_فبراير_2025.xlsx", type: "salaries", rows: 47, status: "pending", uploaded_by: "محمد الشمري", created_at: "منذ 2 ساعة" },
   { id: "2", filename: "طلبات_يناير_2025.xlsx", type: "orders", rows: 1234, status: "success", uploaded_by: "أحمد العمري", created_at: "منذ يوم" },
   { id: "3", filename: "مناديب_جدد_2025.xlsx", type: "couriers", rows: 12, status: "success", uploaded_by: "خالد السالم", created_at: "منذ 3 أيام" },
@@ -45,6 +47,30 @@ export default function AdminExcel() {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [history, setHistory] = useState<ImportHistory[]>(FALLBACK_HISTORY);
+  const [loading, setLoading] = useState(false);
+
+  async function fetchHistory() {
+    if (!supabase) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("excel_imports")
+        .select("id, filename, type, rows, status, errors, uploaded_by, created_at")
+        .order("created_at", { ascending: false });
+      if (!error && data && data.length > 0) {
+        setHistory(data as ImportHistory[]);
+      }
+    } catch {
+      // keep FALLBACK_HISTORY on error
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -62,10 +88,22 @@ export default function AdminExcel() {
 
   async function handleUpload() {
     if (!file) return;
+    if (!supabase) throw new Error("no client");
     setUploading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setUploading(false);
-    setFile(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", selectedType);
+      const res = await fetch(`${API_BASE}/api/excel/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+      setFile(null);
+      await fetchHistory();
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -189,13 +227,13 @@ export default function AdminExcel() {
       <div className="space-y-3">
         <h2 className="text-white font-semibold">سجل الاستيراد</h2>
         <div className="bg-slate-800/40 border border-blue-700/30 rounded-2xl overflow-hidden">
-          {mockHistory.map((item, i) => {
+          {history.map((item, i) => {
             const StatusIcon = statusMap[item.status].icon;
             return (
               <div
                 key={item.id}
                 className={`flex items-center justify-between px-5 py-4 transition-colors hover:bg-slate-700/20 ${
-                  i < mockHistory.length - 1 ? "border-b border-slate-800/50" : ""
+                  i < history.length - 1 ? "border-b border-slate-800/50" : ""
                 }`}
               >
                 <div className="flex items-center gap-4">

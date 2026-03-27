@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap");
+h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ==========================================================================
+/* ===================================================h=======================
    OBSIDIAN COMMAND — FLL ADMIN CONSOLE DESIGN SYSTEM
    These tokens apply ONLY to elements inside .fll-console
    Direction: Deep charcoal command center with sharp teal accents.
@@ -569,6 +569,7 @@
   height: 100vh;
   z-index: 50;
   box-shadow: -4px 0 24px rgba(0,0,0,0.2);
+       overflow-y: auto;
 }
 
 .fll-console .con-sidebar-logo {
@@ -630,7 +631,7 @@
 /* ── Main content area ── */
 .fll-console .con-main {
   flex: 1;
-  margin-inline-end: 260px;
+  margin-inline-start: 260px;
   min-height: 100vh;
   background: var(--con-bg-app);
   overflow-x: hidden;

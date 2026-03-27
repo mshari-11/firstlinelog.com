@@ -306,6 +306,7 @@ export default function ApiManagement() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [tab, setTab] = useState("endpoints");
+  const [testProgress, setTestProgress] = useState<{ current: number; total: number } | null>(null);
 
   const onlineCount = endpoints.filter((e) => e.status === "online").length;
   const offlineCount = endpoints.filter((e) => e.status === "offline").length;
@@ -331,16 +332,22 @@ export default function ApiManagement() {
     } catch {
       const ms = Math.round(performance.now() - start);
       setEndpoints((prev) =>
-        prev.map((e) => (e.id === ep.id ? { ...e, status: ms > 7000 ? "offline" as const : "online" as const, latency: ms } : e))
+        prev.map((e) => (e.id === ep.id ? { ...e, status: "offline" as const, latency: ms } : e))
       );
+      toast.error(`${ep.nameAr}: غير متصل (${ms}ms)`);
     }
     setTesting(null);
   }, []);
 
   const testAll = useCallback(async () => {
-    for (const ep of endpoints) {
-      await testEndpoint(ep);
+    const total = endpoints.length;
+    setTestProgress({ current: 0, total });
+    for (let i = 0; i < total; i++) {
+      setTestProgress({ current: i + 1, total });
+      await testEndpoint(endpoints[i]);
     }
+    setTestProgress(null);
+    toast.success(`تم فحص ${total} endpoint`);
   }, [endpoints, testEndpoint]);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -383,6 +390,61 @@ export default function ApiManagement() {
       </KPIGrid>
 
       {/* Connection Info Card */}
+      {/* Progress Bar */}
+      {testProgress && (
+        <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-brand)", borderRadius: "var(--con-radius-lg)", padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)" }}>
+              جارٍ فحص الـ Endpoints...
+            </span>
+            <span style={{ fontSize: "var(--con-text-caption)", fontFamily: "var(--con-font-mono)", color: "var(--con-brand)" }}>
+              {testProgress.current}/{testProgress.total}
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: "var(--con-bg-elevated)", overflow: "hidden" }}>
+            <div style={{ height: "100%", borderRadius: 3, background: "var(--con-brand)", transition: "width 0.3s", width: `${(testProgress.current / testProgress.total) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Widget Connection Status */}
+      <Card title="حالة ربط الويدجت" subtitle="أي ويدجت داشبورد مرتبط ببيانات حقيقية">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8 }}>
+          {[
+            { name: "KPIOverview", nameAr: "المؤشرات الرئيسية", connected: true, source: "Supabase" },
+            { name: "RecentActivity", nameAr: "آخر الطلبات", connected: true, source: "Supabase" },
+            { name: "PendingApprovals", nameAr: "الاعتمادات", connected: true, source: "API + Supabase" },
+            { name: "SystemHealth", nameAr: "صحة النظام", connected: true, source: "Ping" },
+            { name: "AlertsPanel", nameAr: "التنبيهات", connected: true, source: "API + Supabase" },
+            { name: "ChartsPanel", nameAr: "الرسوم البيانية", connected: true, source: "Supabase" },
+            { name: "FinanceSnapshot", nameAr: "النظرة المالية", connected: true, source: "Supabase" },
+            { name: "OperationsMap", nameAr: "التوزيع التشغيلي", connected: true, source: "Supabase" },
+            { name: "ModuleStatusGrid", nameAr: "حالة الوحدات", connected: true, source: "Store" },
+            { name: "QuickActions", nameAr: "إجراءات سريعة", connected: false, source: "تنقل فقط" },
+            { name: "InfrastructurePanel", nameAr: "البنية التحتية", connected: true, source: "API + Supabase" },
+          ].map((w) => (
+            <div
+              key={w.name}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "8px 12px", borderRadius: "var(--con-radius-sm)",
+                background: w.connected ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.02)",
+                border: `1px solid ${w.connected ? "rgba(34,197,94,0.2)" : "var(--con-border-default)"}`,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "var(--con-text-body)", fontWeight: 500, color: "var(--con-text-primary)" }}>{w.nameAr}</div>
+                <div style={{ fontSize: 10, color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)" }}>{w.source}</div>
+              </div>
+              {w.connected
+                ? <CheckCircle2 size={14} style={{ color: "var(--con-success)" }} />
+                : <Clock size={14} style={{ color: "var(--con-text-disabled)" }} />
+              }
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <Card title="معلومات الاتصال" subtitle="استخدم هذه المعلومات لربط أي خدمة خارجية">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div>

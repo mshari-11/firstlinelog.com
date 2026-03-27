@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { cognitoSignIn, cognitoSignOut, getCognitoGroups, cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
+import { sendOtp as sendLambdaOtp, verifyOtp as verifyLambdaOtp } from "@/lib/otp-service";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
@@ -146,8 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function verifyEmailOtp(email: string, token: string) {
-    // OTP login not directly supported — use forgot password flow instead
-    return { error: "استخدم كلمة المرور لتسجيل الدخول، أو أعد تعيينها من 'نسيت كلمة المرور'" };
+    try {
+      const result = await verifyLambdaOtp(email, token, "login");
+      if (result.error) {
+        return { error: result.error === "Failed to verify OTP" ? "رمز التحقق غير صحيح أو منتهي الصلاحية" : result.error };
+      }
+      return { redirectUrl: "/admin-panel/dashboard" };
+    } catch {
+      return { error: "تعذّر التحقق من الرمز. حاول مرة أخرى." };
+    }
   }
 
   async function handleSignOut() {

@@ -9,8 +9,9 @@ import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/comp
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 import { cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
+import { sendOtp, verifyOtp } from "@/lib/otp-service";
 
-type Screen = "login" | "forgot" | "forgot-otp" | "reset-password";
+type Screen = "login" | "login-otp" | "forgot" | "forgot-otp" | "reset-password";
 
 const NAV_LINKS = [
   { label: "الرئيسية", href: "/" },
@@ -43,13 +44,42 @@ export default function UnifiedPortal() {
     e.preventDefault();
     if (!email.trim()) { setError("أدخل البريد الإلكتروني"); return; }
     if (!password) { setError("أدخل كلمة المرور"); return; }
-    setError(""); setLoading(true);
+    setError(""); setSuccess(""); setLoading(true);
 
     const res = await signIn(email.trim(), password);
+    if (res.error) { setError(res.error); setLoading(false); return; }
+
+    // Send OTP after successful password verification
+    setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
+    const otpRes = await sendOtp(email.trim(), "login");
+    setLoading(false);
+    if (otpRes.error) { setError(otpRes.error); return; }
+
+    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني من no-reply@fll.sa");
+    setOtp("");
+    go("login-otp");
+  }
+
+  async function handleLoginOTPVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
+    setError(""); setSuccess(""); setLoading(true);
+
+    const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
     if (res.error) { setError(res.error); return; }
 
-    navigate("/admin-panel/dashboard");
+    setSuccess("تم التحقق بنجاح! جارٍ التوجيه...");
+    setTimeout(() => navigate("/admin-panel/dashboard"), 1000);
+  }
+
+  async function handleLoginOTPResend() {
+    setError(""); setLoading(true);
+    const res = await sendOtp(email.trim(), "login");
+    setLoading(false);
+    if (res.error) { setError(res.error); return; }
+    setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
+    setOtp("");
   }
 
   async function handleForgotSend(e: React.FormEvent) {
@@ -266,6 +296,95 @@ export default function UnifiedPortal() {
                   display: "inline-flex", alignItems: "center", gap: "4px",
                 }}>
                   <Lock size={12} /> نسيت كلمة المرور؟
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ══ Login OTP Verification ══ */}
+          {screen === "login-otp" && (
+            <form onSubmit={handleLoginOTPVerify}>
+              <button type="button" onClick={() => { go("login"); setOtp(""); }} style={{
+                background: "none", border: "none", cursor: "pointer", color: "#64748b",
+                fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
+                padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+              }}>
+                &larr; رجوع لتسجيل الدخول
+              </button>
+              <div style={{ marginBottom: "1.25rem", textAlign: "center" }}>
+                <div style={{
+                  width: "48px", height: "48px", borderRadius: "50%", margin: "0 auto 0.75rem",
+                  background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "2px solid #bbf7d0",
+                }}>
+                  <Mail size={22} color="#16a34a" />
+                </div>
+                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                  التحقق من الهوية
+                </h2>
+                <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
+                  أدخل رمز التحقق المُرسل إلى <strong style={{ color: "#1e3a5f" }}>{email}</strong>
+                </p>
+                <p style={{ fontSize: "11px", color: "#cbd5e1", margin: "4px 0 0" }}>
+                  المرسل: no-reply@fll.sa
+                </p>
+              </div>
+
+              <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px", textAlign: "center" }}>
+                رمز التحقق (6 أرقام)
+              </label>
+              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              {error && (
+                <div style={{
+                  padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca",
+                  borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem",
+                  display: "flex", alignItems: "center", gap: "8px",
+                }}>
+                  <span style={{ fontSize: "16px" }}>&#9888;</span> {error}
+                </div>
+              )}
+              {success && (
+                <div style={{
+                  padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0",
+                  borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem",
+                }}>
+                  {success}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading || otp.length !== 6} style={{
+                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
+                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
+                cursor: (loading || otp.length !== 6) ? "not-allowed" : "pointer",
+                opacity: (loading || otp.length !== 6) ? 0.5 : 1,
+                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              }}>
+                {loading ? "جارٍ التحقق..." : <><Lock size={15} /> تأكيد الدخول</>}
+              </button>
+
+              <div style={{ marginTop: "1rem", textAlign: "center" }}>
+                <button type="button" onClick={handleLoginOTPResend} disabled={loading} style={{
+                  background: "none", border: "none", cursor: loading ? "not-allowed" : "pointer",
+                  fontSize: "13px", color: "#1e3a5f", fontWeight: 500,
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}>
+                  لم يصلك الرمز؟ إعادة الإرسال
                 </button>
               </div>
             </form>

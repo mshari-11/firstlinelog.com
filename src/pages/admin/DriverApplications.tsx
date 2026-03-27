@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, User, Phone, Mail, MapPin, Car } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, User, Phone, Mail, MapPin, Car, CreditCard } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AppStatus = "pending" | "under_review" | "approved" | "rejected" | "archived";
@@ -18,6 +18,8 @@ interface DriverApp {
   city: string;
   phone: string;
   email: string;
+  stc_bank_phone_local?: string;
+  stc_bank_phone_int?: string;
   platform_app: string;
   contract_type: string;
   has_vehicle: boolean;
@@ -221,6 +223,7 @@ export default function DriverApplications() {
                 { icon: <User size={13} />, label: "الاسم", value: selected.full_name },
                 { icon: <User size={13} />, label: "رقم الهوية", value: selected.national_id },
                 { icon: <Phone size={13} />, label: "الهاتف", value: selected.phone },
+                { icon: <CreditCard size={13} />, label: "STC Bank", value: selected.stc_bank_phone_int ? `+${selected.stc_bank_phone_int}` : "غير مسجل" },
                 { icon: <Mail size={13} />, label: "البريد", value: selected.email },
                 { icon: <MapPin size={13} />, label: "المدينة", value: selected.city },
                 { icon: <User size={13} />, label: "الجنسية", value: selected.nationality },

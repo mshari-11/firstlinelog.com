@@ -68,6 +68,7 @@ interface FormData {
   bank_name: string;
   bank_account: string;
   iban: string;
+  stc_bank_phone: string;
   captchaAnswer: string;
   // Step 2
   otpCode: string;
@@ -99,7 +100,7 @@ interface FormData {
 const EMPTY_FORM: FormData = {
   full_name: "", national_id: "", nationality: "سعودي", city: "", phone: "",
   email: "", platform_app: "", contract_type: "", bank_name: "", bank_account: "",
-  iban: "", captchaAnswer: "", otpCode: "", emailVerified: false,
+  iban: "", stc_bank_phone: "", captchaAnswer: "", otpCode: "", emailVerified: false,
   selfieDataUrl: "", livenessComplete: false, livenessScore: 0,
   doc_national_id: null, doc_national_id_back: null, doc_driver_license: null, doc_bank_cert: null,
   has_vehicle: false, vehicle_type: "", vehicle_brand: "", vehicle_model: "",
@@ -500,6 +501,7 @@ export default function CourierRegister() {
     if (!form.contract_type) e.contract_type = "اختر نوع التعاقد";
     if (!form.bank_name) e.bank_name = "اختر اسم البنك";
     if (!form.iban || !/^SA\d{22}$/.test(form.iban)) e.iban = "رقم IBAN غير صحيح (يبدأ بـ SA ويتكون من 24 خانة)";
+    if (!form.stc_bank_phone || !/^5\d{8}$/.test(form.stc_bank_phone)) e.stc_bank_phone = "رقم STC Bank مطلوب (9 أرقام تبدأ بـ 5)";
     if (form.captchaAnswer.trim() !== captcha.answer) e.captcha = "إجابة CAPTCHA غير صحيحة";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -780,6 +782,29 @@ export default function CourierRegister() {
                     dir="ltr" />
                 </Field>
               </div>
+              <Field label="رقم STC Bank (للتحويلات)" icon={Phone} error={errors.stc_bank_phone as string}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }} dir="ltr">
+                  <span style={{
+                    padding: "8px 10px", fontSize: "13px", fontWeight: 600,
+                    background: "#0f2744", border: "1px solid #1e3a5f", borderRadius: "6px 0 0 6px",
+                    color: "#60a5fa", fontFamily: "monospace", whiteSpace: "nowrap",
+                  }}>966+</span>
+                  <input
+                    style={{ ...inputStyle, borderRadius: "0 6px 6px 0", flex: 1, fontFamily: "monospace", letterSpacing: "1px" }}
+                    placeholder="5XXXXXXXX"
+                    value={form.stc_bank_phone}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 9);
+                      set("stc_bank_phone", v);
+                    }}
+                    inputMode="numeric"
+                    maxLength={9}
+                  />
+                </div>
+                <p style={{ fontSize: "10px", color: "#475569", margin: "4px 0 0", textAlign: "left" }}>
+                  الرقم المسجل في STC Bank — سيُستخدم لتحويل المستحقات: <span style={{ fontFamily: "monospace", color: "#60a5fa" }}>966{form.stc_bank_phone || "5XXXXXXXX"}</span>
+                </p>
+              </Field>
             </div>
 
             {/* CAPTCHA */}

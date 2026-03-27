@@ -59,6 +59,18 @@ const p=rawPath.split("/").filter(x=>x);
 // Strip /api prefix
 if(p[0]==="api")p.shift();
 
+// ── Lambda Proxy: forward /auth/* and /ai/* to dedicated Lambdas ─────────────
+const{LambdaClient,InvokeCommand}=require("@aws-sdk/client-lambda");
+const lambdaProxy=new LambdaClient({region:"me-south-1"});
+if(p[0]==="auth"||p[0]==="ai"){
+  const targetFn=p[0]==="auth"?"fll-auth-api":"fll-ai-chatbot";
+  try{
+    const invoke=await lambdaProxy.send(new InvokeCommand({FunctionName:targetFn,Payload:JSON.stringify(e)}));
+    const payload=JSON.parse(new TextDecoder().decode(invoke.Payload));
+    return payload;
+  }catch(err){return R(502,{error:"Proxy error: "+err.message,target:targetFn})}
+}
+
 // ── Auth check (skip for public paths) ────────────────────────────────────────
 const firstSegment=p[0]||"";
 if(!PUBLIC_PATHS.has(firstSegment)){

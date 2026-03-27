@@ -132,6 +132,7 @@ const GovWorkflows = lazy(() => import("@/pages/admin/governance/WorkflowBuilder
 const GovSLAConfig = lazy(() => import("@/pages/admin/governance/SLAConfig"));
 const GovAuditDashboard = lazy(() => import("@/pages/admin/governance/AuditDashboard"));
 const GovInfrastructure = lazy(() => import("@/pages/admin/governance/InfrastructureOverview"));
+const GovApiManagement = lazy(() => import("@/pages/admin/governance/ApiManagement"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -248,6 +249,7 @@ export default function App() {
               <Route path="governance/sla" element={<AccessGuard roles={["admin", "owner"]}><GovSLAConfig /></AccessGuard>} />
               <Route path="governance/audit" element={<AccessGuard roles={["admin", "owner"]}><GovAuditDashboard /></AccessGuard>} />
               <Route path="governance/infrastructure" element={<AccessGuard roles={["admin", "owner"]}><GovInfrastructure /></AccessGuard>} />
+              <Route path="governance/api" element={<AccessGuard roles={["admin", "owner"]}><GovApiManagement /></AccessGuard>} />
 
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>

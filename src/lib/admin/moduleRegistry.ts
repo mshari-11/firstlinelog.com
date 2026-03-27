@@ -118,6 +118,7 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
 
   // ── Infrastructure (NEW) ──
   { id: "infrastructure",  labelAr: "البنية التحتية",      label: "Infrastructure",    group: "infrastructure", icon: "Server",   path: "/admin-panel/governance/infrastructure", enabled: true, isCore: false, order: 80, version: "1.0.0", features: [] },
+  { id: "api-management",  labelAr: "إدارة API والربط",    label: "API Management",    group: "infrastructure", icon: "Plug",     path: "/admin-panel/governance/api",            enabled: true, isCore: false, order: 81, version: "1.0.0", features: [] },
 ];
 
 /**

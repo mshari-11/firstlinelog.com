@@ -569,6 +569,7 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
   height: 100vh;
   z-index: 50;
   box-shadow: -4px 0 24px rgba(0,0,0,0.2);
+       overflow-y: auto;
 }
 
 .fll-console .con-sidebar-logo {

@@ -15,7 +15,12 @@
 (function() {
   'use strict';
 
-  const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+  const API = 'https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod';
+
+  // Cognito config (same as React SPA)
+  const COGNITO_POOL_ID = 'me-south-1_aJtmQ0QrN';
+  const COGNITO_CLIENT_ID = '6n49ej8fl92i9rtotbk5o9o0d1';
+  const COGNITO_ENDPOINT = 'https://cognito-idp.me-south-1.amazonaws.com/';
 
   // Role → SPA route mapping
   const REDIRECT = {
@@ -44,26 +49,18 @@
     '/unauthorized.html':               '/unified-login'
   };
 
-  // --- Force SPA for auth routes ---
-  // The static site's Skywork JS handles clicks client-side, rendering the
-  // old login form instead of letting Vercel rewrite to the React SPA.
-  // We intercept clicks on auth links and force a full page navigation.
-  var SPA_ROUTES = ['/unified-login', '/admin/login', '/login', '/forgot-password', '/reset-password',
-                    '/admin-panel', '/courier/portal', '/courier/register', '/application-status'];
+  // --- Force full navigation for admin-panel routes only ---
+  // Auth routes stay in static site (dark theme), but admin-panel needs SPA.
   document.addEventListener('click', function(e) {
     var link = e.target.closest('a');
     if (!link) return;
     var href = link.getAttribute('href');
-    if (!href) return;
-    for (var i = 0; i < SPA_ROUTES.length; i++) {
-      if (href === SPA_ROUTES[i] || href.startsWith(SPA_ROUTES[i] + '/')) {
-        e.preventDefault();
-        e.stopPropagation();
-        window.location.href = href;
-        return;
-      }
+    if (href && href.startsWith('/admin-panel')) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = href;
     }
-  }, true); // useCapture=true to fire BEFORE Skywork's handlers
+  }, true);
 
   // --- Legacy HTML redirect guard (runs immediately) ---
   (function redirectLegacyHTML() {
@@ -151,7 +148,42 @@
     _alert.call(window, msg);
   };
 
-  // --- Real Login (NO OTP) ---
+  // --- Cognito Direct Auth (NO OTP) ---
+  async function cognitoAuth(email, password) {
+    const res = await fetch(COGNITO_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-amz-json-1.1',
+        'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth'
+      },
+      body: JSON.stringify({
+        AuthFlow: 'USER_PASSWORD_AUTH',
+        ClientId: COGNITO_CLIENT_ID,
+        AuthParameters: { USERNAME: email, PASSWORD: password }
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const code = (data.__type || '').split('#').pop();
+      const errorMap = {
+        'NotAuthorizedException': 'اسم المستخدم أو كلمة المرور غير صحيحة',
+        'UserNotFoundException': 'البريد الإلكتروني غير مسجّل في النظام',
+        'UserNotConfirmedException': 'يجب تفعيل الحساب — تحقق من بريدك الإلكتروني',
+        'LimitExceededException': 'تجاوزت الحد المسموح. انتظر قليلاً وحاول مجدداً',
+        'InvalidParameterException': 'البريد الإلكتروني غير صالح'
+      };
+      return { error: errorMap[code] || data.message || 'خطأ في تسجيل الدخول' };
+    }
+    return { tokens: data.AuthenticationResult };
+  }
+
+  function parseJWT(token) {
+    try {
+      const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+      return JSON.parse(atob(b64));
+    } catch { return {}; }
+  }
+
   async function doLogin(page) {
     const v = getVals();
     const id = v.username || v.email || '';
@@ -162,21 +194,68 @@
     setLoad(btn, true);
     showToast('جاري تسجيل الدخول...','info',10000);
 
-    const r = await authAPI('/auth/login', { username: id, password: pw });
+    const result = await cognitoAuth(id, pw);
     setLoad(btn, false);
 
-    // NO OTP — direct token expected
-    if (r.ok && r.data.token) {
-      saveSession(r.data);
-      try { fetch(`${API}/api/audit-log`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',actor:r.data.email||r.data.username,resource_type:page==='/login'?'driver':'staff',timestamp:new Date().toISOString()})}); } catch(e){}
-      showToast(`مرحباً ${r.data.name||r.data.username}! جاري التحويل...`,'success');
-      setTimeout(()=>{ window.location.href = getRedirect(r.data.groups); }, 1200);
-    } else if (r.status===403 && r.data.needsVerification) {
-      showToast('يجب تفعيل الحساب — تحقق من بريدك الإلكتروني','warning',6000);
-    } else {
-      showToast(r.data.message||'بيانات الدخول غير صحيحة','error');
+    if (result.error) {
+      showToast(result.error, 'error');
+      return;
+    }
+
+    // Parse tokens
+    const idPayload = parseJWT(result.tokens.IdToken || '');
+    const accessPayload = parseJWT(result.tokens.AccessToken || '');
+    const groups = accessPayload['cognito:groups'] || [];
+    const userName = idPayload['name'] || idPayload['email'] || id;
+    const userEmail = idPayload['email'] || id;
+    const userSub = idPayload['sub'] || '';
+    const role = groups.includes('admin') || groups.includes('SystemAdmin') ? 'admin' : 'staff';
+
+    // Save session (compatible with React SPA's auth.tsx)
+    localStorage.setItem('fll_session', JSON.stringify({
+      token: result.tokens.AccessToken,
+      expires_at: new Date(accessPayload.exp * 1000).toISOString()
+    }));
+    localStorage.setItem('fll_user', JSON.stringify({
+      id: userSub, email: userEmail, name: userName, role: role
+    }));
+
+    // Also save for bridge scripts
+    saveSession({ token: result.tokens.AccessToken, username: id, email: userEmail, name: userName, groups: groups });
+
+    showToast(`مرحباً ${userName}! جاري التحويل...`, 'success');
+    setTimeout(() => { window.location.href = '/admin-panel/dashboard'; }, 1000);
+  }
+
+  // --- Direct form submit intercept (backup for when alert isn't triggered) ---
+  function interceptLoginButton() {
+    const p = window.location.pathname;
+    if (p !== '/login' && p !== '/unified-login') return;
+    document.querySelectorAll('button').forEach(function(btn) {
+      const t = (btn.textContent || '').trim();
+      if ((t.includes('تسجيل الدخول') || t.includes('دخول')) && !btn.dataset.fllLoginHooked) {
+        btn.dataset.fllLoginHooked = '1';
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          doLogin(p);
+        }, true);
+      }
+    });
+  }
+  function initLoginIntercept() {
+    interceptLoginButton();
+    setTimeout(interceptLoginButton, 500);
+    setTimeout(interceptLoginButton, 1500);
+    setTimeout(interceptLoginButton, 3000);
+    if (document.body) {
+      new MutationObserver(function(){ setTimeout(interceptLoginButton, 100); })
+        .observe(document.body, { childList: true, subtree: true });
     }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLoginIntercept);
+  else initLoginIntercept();
 
   // --- Register: Redirect to full courier registration wizard ---
   function doRegister() {

@@ -13,14 +13,31 @@
 
   const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
 
-  function fixLoginPage() {
-    // 1. Hide phone validation errors
+  // 0. Inject CSS to permanently hide phone validation errors
+  const hideCSS = document.createElement('style');
+  hideCSS.textContent = `
+    [class*="error"], [class*="alert"], [class*="validation"], [role="alert"] {
+      /* Only hide if contains phone error text — handled by MutationObserver below */
+    }
+  `;
+  document.head.appendChild(hideCSS);
+
+  // Persistent observer to kill phone validation messages as soon as they appear
+  function nukePhoneErrors() {
     document.querySelectorAll('*').forEach(el => {
       const t = el.textContent || '';
       if ((t.includes('يبدأ بـ 5') || t.includes('يكون 9') || t.includes('رقم الهاتف غير صحيح')) && el.children.length === 0) {
-        el.style.display = 'none';
+        el.remove();
       }
     });
+  }
+  nukePhoneErrors();
+  const obs = new MutationObserver(nukePhoneErrors);
+  obs.observe(document.body, { childList: true, subtree: true });
+
+  function fixLoginPage() {
+    // 1. Hide phone validation errors (backup)
+    nukePhoneErrors();
 
     // 2. Fix inputs on unified-login
     if (p === '/unified-login') {

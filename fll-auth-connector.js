@@ -202,7 +202,7 @@
       return;
     }
 
-    // Parse tokens
+    // Parse tokens and store temporarily
     const idPayload = parseJWT(result.tokens.IdToken || '');
     const accessPayload = parseJWT(result.tokens.AccessToken || '');
     const groups = accessPayload['cognito:groups'] || [];
@@ -211,20 +211,194 @@
     const userSub = idPayload['sub'] || '';
     const role = groups.includes('admin') || groups.includes('SystemAdmin') ? 'admin' : 'staff';
 
-    // Save session (compatible with React SPA's auth.tsx)
+    // Store auth data temporarily (will finalize after OTP)
+    window._fllPendingAuth = { tokens: result.tokens, idPayload, accessPayload, groups, userName, userEmail, userSub, role, id };
+
+    // Send OTP to email
+    showToast('تم التحقق! جارٍ إرسال رمز التحقق...', 'success', 3000);
+    try {
+      const otpRes = await fetch(API + '/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, type: 'login' }),
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!otpRes.ok) throw new Error('OTP send failed');
+    } catch(e) {
+      console.warn('OTP send failed, trying Supabase edge function:', e);
+      try {
+        const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'; // will use env if available
+        await fetch('https://djebhztfewjfyyoortvv.supabase.co/functions/v1/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': sbKey },
+          body: JSON.stringify({ email: userEmail, type: 'login' }),
+          signal: AbortSignal.timeout(10000)
+        });
+      } catch(e2) { console.warn('Edge function OTP also failed:', e2); }
+    }
+
+    // Show OTP input UI
+    showOTPScreen(userEmail);
+  }
+
+  // --- OTP Screen (6-digit boxes) ---
+  function showOTPScreen(email) {
+    // Find the form container and replace it
+    const formContainer = document.querySelector('[class*="login-form"], form, [class*="card"]') ||
+      (function() { const cards = document.querySelectorAll('div'); for (const c of cards) { if (c.querySelector('button') && c.querySelector('input') && c.offsetHeight > 200) return c; } return null; })();
+    if (!formContainer) { showToast('خطأ في عرض شاشة التحقق', 'error'); return; }
+
+    const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+
+    formContainer.innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="width:56px;height:56px;border-radius:14px;background:rgba(59,130,246,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
+        </div>
+        <h3 style="font-size:18px;font-weight:700;color:var(--con-text-primary,#e2e8f0);margin:0 0 6px;">التحقق الثنائي</h3>
+        <p style="font-size:13px;color:var(--con-text-muted,#7e8ca2);margin:0 0 24px;">تم إرسال رمز التحقق إلى<br><span style="color:var(--con-brand,#3b82f6);font-weight:600;">${maskedEmail}</span></p>
+
+        <div id="fll-otp-boxes" dir="ltr" style="display:flex;justify-content:center;gap:8px;margin-bottom:24px;">
+          ${[0,1,2,3,4,5].map(i => `<input id="fll-otp-${i}" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code"
+            style="width:46px;height:54px;text-align:center;font-size:22px;font-weight:700;
+            background:rgba(15,25,40,0.6);border:2px solid rgba(59,130,246,0.3);border-radius:12px;
+            color:#e2e8f0;outline:none;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='rgba(59,130,246,0.3)'">`).join('')}
+        </div>
+
+        <button id="fll-otp-verify" style="width:100%;padding:14px;border:none;border-radius:10px;
+          background:linear-gradient(135deg,#c9a84c,#b8963f);color:#0b1622;font-size:15px;font-weight:700;
+          cursor:pointer;margin-bottom:12px;transition:opacity 0.2s;">
+          تحقق
+        </button>
+
+        <button id="fll-otp-resend" style="width:100%;padding:12px;border:1px solid rgba(126,140,162,0.3);
+          border-radius:10px;background:transparent;color:#7e8ca2;font-size:13px;cursor:pointer;">
+          إعادة إرسال الرمز
+        </button>
+
+        <p id="fll-otp-error" style="color:#ef4444;font-size:13px;margin-top:12px;display:none;"></p>
+      </div>
+    `;
+
+    // Auto-focus first box
+    setTimeout(() => document.getElementById('fll-otp-0')?.focus(), 100);
+
+    // Handle input navigation between boxes
+    for (let i = 0; i < 6; i++) {
+      const box = document.getElementById('fll-otp-' + i);
+      box.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value && i < 5) document.getElementById('fll-otp-' + (i + 1))?.focus();
+        // Auto-submit when all 6 digits entered
+        if (i === 5 && this.value) {
+          const code = getOTPCode();
+          if (code.length === 6) document.getElementById('fll-otp-verify')?.click();
+        }
+      });
+      box.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !this.value && i > 0) {
+          document.getElementById('fll-otp-' + (i - 1))?.focus();
+        }
+      });
+      // Handle paste
+      box.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        for (let j = 0; j < paste.length && j < 6; j++) {
+          const b = document.getElementById('fll-otp-' + j);
+          if (b) b.value = paste[j];
+        }
+        if (paste.length >= 6) document.getElementById('fll-otp-verify')?.click();
+        else document.getElementById('fll-otp-' + Math.min(paste.length, 5))?.focus();
+      });
+    }
+
+    // Verify button
+    document.getElementById('fll-otp-verify').onclick = async function() {
+      const code = getOTPCode();
+      if (code.length !== 6) { showOTPError('أدخل رمز التحقق الكامل (6 أرقام)'); return; }
+      this.disabled = true; this.textContent = 'جاري التحقق...'; this.style.opacity = '0.7';
+
+      let verified = false;
+      try {
+        const r = await fetch(API + '/auth/verify-custom-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: window._fllPendingAuth.userEmail, code, type: 'login' }),
+          signal: AbortSignal.timeout(10000)
+        });
+        if (r.ok) verified = true;
+      } catch(e) { console.warn('API verify failed:', e); }
+
+      // Fallback: Supabase edge function
+      if (!verified) {
+        try {
+          const r = await fetch('https://djebhztfewjfyyoortvv.supabase.co/functions/v1/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: window._fllPendingAuth.userEmail, code, type: 'login' }),
+            signal: AbortSignal.timeout(10000)
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && (d.success || d.verified)) verified = true;
+        } catch(e) { console.warn('Edge verify failed:', e); }
+      }
+
+      if (verified) {
+        finalizeLogin();
+      } else {
+        this.disabled = false; this.textContent = 'تحقق'; this.style.opacity = '1';
+        showOTPError('رمز التحقق غير صحيح أو منتهي الصلاحية');
+      }
+    };
+
+    // Resend button
+    document.getElementById('fll-otp-resend').onclick = async function() {
+      this.disabled = true; this.textContent = 'جاري الإرسال...';
+      try {
+        await fetch(API + '/auth/send-otp', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: window._fllPendingAuth.userEmail, type: 'login' }),
+          signal: AbortSignal.timeout(10000)
+        });
+      } catch(e) {}
+      showToast('تم إرسال رمز جديد', 'success');
+      this.disabled = false; this.textContent = 'إعادة إرسال الرمز';
+      // Clear boxes
+      for (let i = 0; i < 6; i++) { const b = document.getElementById('fll-otp-' + i); if (b) b.value = ''; }
+      document.getElementById('fll-otp-0')?.focus();
+    };
+  }
+
+  function getOTPCode() {
+    let code = '';
+    for (let i = 0; i < 6; i++) { code += (document.getElementById('fll-otp-' + i)?.value || ''); }
+    return code;
+  }
+
+  function showOTPError(msg) {
+    const el = document.getElementById('fll-otp-error');
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  }
+
+  function finalizeLogin() {
+    const auth = window._fllPendingAuth;
+    if (!auth) return;
+
+    // Save session (compatible with React SPA)
     localStorage.setItem('fll_session', JSON.stringify({
-      token: result.tokens.AccessToken,
-      expires_at: new Date(accessPayload.exp * 1000).toISOString()
+      token: auth.tokens.AccessToken,
+      expires_at: new Date(auth.accessPayload.exp * 1000).toISOString()
     }));
     localStorage.setItem('fll_user', JSON.stringify({
-      id: userSub, email: userEmail, name: userName, role: role
+      id: auth.userSub, email: auth.userEmail, name: auth.userName, role: auth.role
     }));
+    saveSession({ token: auth.tokens.AccessToken, username: auth.id, email: auth.userEmail, name: auth.userName, groups: auth.groups });
 
-    // Also save for bridge scripts
-    saveSession({ token: result.tokens.AccessToken, username: id, email: userEmail, name: userName, groups: groups });
-
-    showToast(`مرحباً ${userName}! جاري التحويل...`, 'success');
+    showToast(`مرحباً ${auth.userName}! جاري التحويل...`, 'success');
     setTimeout(() => { window.location.href = '/admin-panel/dashboard'; }, 1000);
+    delete window._fllPendingAuth;
   }
 
   // --- Direct form submit intercept (backup for when alert isn't triggered) ---

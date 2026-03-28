@@ -255,8 +255,8 @@
         <div style="width:56px;height:56px;border-radius:14px;background:rgba(59,130,246,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
         </div>
-        <h3 style="font-size:18px;font-weight:700;color:var(--con-text-primary,#e2e8f0);margin:0 0 6px;">التحقق الثنائي</h3>
-        <p style="font-size:13px;color:var(--con-text-muted,#7e8ca2);margin:0 0 24px;">تم إرسال رمز التحقق إلى<br><span style="color:var(--con-brand,#3b82f6);font-weight:600;">${maskedEmail}</span></p>
+        <h3 style="font-size:20px;font-weight:700;color:#ffffff;margin:0 0 10px;text-align:center;">التحقق الثنائي</h3>
+        <p style="font-size:15px;color:#cbd5e1;margin:0 0 24px;text-align:center;line-height:1.8;">تم إرسال رمز التحقق إلى<br><span style="color:#60a5fa;font-weight:700;font-size:16px;">${maskedEmail}</span></p>
 
         <div id="fll-otp-boxes" dir="ltr" style="display:flex;justify-content:center;gap:8px;margin-bottom:24px;">
           ${[0,1,2,3,4,5].map(i => `<input id="fll-otp-${i}" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code"

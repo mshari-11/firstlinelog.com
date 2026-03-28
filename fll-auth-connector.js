@@ -214,27 +214,21 @@
     // Store auth data temporarily (will finalize after OTP)
     window._fllPendingAuth = { tokens: result.tokens, idPayload, accessPayload, groups, userName, userEmail, userSub, role, id };
 
-    // Send OTP to email
+    // Send OTP to email via Supabase Edge Function
     showToast('تم التحقق! جارٍ إرسال رمز التحقق...', 'success', 3000);
+    const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13';
     try {
-      const otpRes = await fetch(API + '/auth/send-otp', {
+      const otpRes = await fetch(`${SUPABASE_URL}/functions/v1/send-otp-email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}`, 'apikey': SUPABASE_ANON },
         body: JSON.stringify({ email: userEmail, type: 'login' }),
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(15000)
       });
-      if (!otpRes.ok) throw new Error('OTP send failed');
+      const otpData = await otpRes.json().catch(() => ({}));
+      if (!otpRes.ok) console.warn('OTP send response:', otpData);
     } catch(e) {
-      console.warn('OTP send failed, trying Supabase edge function:', e);
-      try {
-        const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'; // will use env if available
-        await fetch('https://djebhztfewjfyyoortvv.supabase.co/functions/v1/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': sbKey },
-          body: JSON.stringify({ email: userEmail, type: 'login' }),
-          signal: AbortSignal.timeout(10000)
-        });
-      } catch(e2) { console.warn('Edge function OTP also failed:', e2); }
+      console.warn('Edge function OTP failed:', e);
     }
 
     // Show OTP input UI
@@ -321,29 +315,19 @@
       this.disabled = true; this.textContent = 'جاري التحقق...'; this.style.opacity = '0.7';
 
       let verified = false;
+      const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13';
       try {
-        const r = await fetch(API + '/auth/verify-custom-otp', {
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}`, 'apikey': SUPABASE_ANON },
           body: JSON.stringify({ email: window._fllPendingAuth.userEmail, code, type: 'login' }),
           signal: AbortSignal.timeout(10000)
         });
-        if (r.ok) verified = true;
-      } catch(e) { console.warn('API verify failed:', e); }
-
-      // Fallback: Supabase edge function
-      if (!verified) {
-        try {
-          const r = await fetch('https://djebhztfewjfyyoortvv.supabase.co/functions/v1/verify-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: window._fllPendingAuth.userEmail, code, type: 'login' }),
-            signal: AbortSignal.timeout(10000)
-          });
-          const d = await r.json().catch(() => ({}));
-          if (r.ok && (d.success || d.verified)) verified = true;
-        } catch(e) { console.warn('Edge verify failed:', e); }
-      }
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && (d.success || d.verified)) verified = true;
+        else if (d.error) showOTPError(d.error);
+      } catch(e) { console.warn('Verify failed:', e); }
 
       if (verified) {
         finalizeLogin();

@@ -44,6 +44,27 @@
     '/unauthorized.html':               '/unified-login'
   };
 
+  // --- Force SPA for auth routes ---
+  // The static site's Skywork JS handles clicks client-side, rendering the
+  // old login form instead of letting Vercel rewrite to the React SPA.
+  // We intercept clicks on auth links and force a full page navigation.
+  var SPA_ROUTES = ['/unified-login', '/admin/login', '/login', '/forgot-password', '/reset-password',
+                    '/admin-panel', '/courier/portal', '/courier/register', '/application-status'];
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href) return;
+    for (var i = 0; i < SPA_ROUTES.length; i++) {
+      if (href === SPA_ROUTES[i] || href.startsWith(SPA_ROUTES[i] + '/')) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = href;
+        return;
+      }
+    }
+  }, true); // useCapture=true to fire BEFORE Skywork's handlers
+
   // --- Legacy HTML redirect guard (runs immediately) ---
   (function redirectLegacyHTML() {
     var current = window.location.pathname;

@@ -7,7 +7,7 @@ import { cognitoSignIn, cognitoSignOut, getCognitoGroups, cognitoForgotPassword,
 import { sendOtp as sendLambdaOtp, verifyOtp as verifyLambdaOtp } from "@/lib/otp-service";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod";
 const SESSION_KEY = "fll_session";
 const USER_KEY = "fll_user";
 

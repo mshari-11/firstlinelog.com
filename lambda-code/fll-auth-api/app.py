@@ -21,13 +21,13 @@ import urllib.parse
 
 ADMIN_REDIRECT_URL = 'https://fll.sa/admin-panel/dashboard'
 
-region = os.environ.get('REGION', 'me-south-1')
+region = os.environ.get('REGION', 'us-east-1')
 user_pool_id = os.environ.get('USER_POOL_ID', '')
 client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
-ses = boto3.client('ses', region_name=region)
+ses = boto3.client('ses', region_name='me-south-1')  # SES verified in me-south-1
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')

@@ -63,9 +63,11 @@ if(p[0]==="api")p.shift();
 const{LambdaClient,InvokeCommand}=require("@aws-sdk/client-lambda");
 const lambdaProxy=new LambdaClient({region:process.env.AWS_REGION||"us-east-1"});
 if(p[0]==="auth"||p[0]==="ai"){
-  const targetFn=p[0]==="auth"?"fll-auth-api":"fll-ai-chatbot";
+  const targetFn=p[0]==="auth"?"fll-auth-handler":"fll-ai-chatbot";
+  // Ensure rawPath is set for downstream Lambda (HTTP API v2 format)
+  const proxyEvent={...e,rawPath:rawPath,path:rawPath,httpMethod:m,requestContext:{...e.requestContext,http:{method:m,path:rawPath}}};
   try{
-    const invoke=await lambdaProxy.send(new InvokeCommand({FunctionName:targetFn,Payload:JSON.stringify(e)}));
+    const invoke=await lambdaProxy.send(new InvokeCommand({FunctionName:targetFn,Payload:JSON.stringify(proxyEvent)}));
     const payload=JSON.parse(new TextDecoder().decode(invoke.Payload));
     return payload;
   }catch(err){return R(502,{error:"Proxy error: "+err.message,target:targetFn})}

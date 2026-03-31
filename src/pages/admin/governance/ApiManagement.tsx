@@ -8,6 +8,7 @@ import {
   RefreshCw, ChevronDown, ChevronUp, Zap, Globe,
   Database, Shield, MessageSquare, FileText, Users,
   CreditCard, AlertTriangle, Server, ExternalLink, Terminal,
+  BookOpen,
 } from "lucide-react";
 import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Badge, Button, Toolbar, Select, Tabs } from "@/components/admin/ui";
 import { toast } from "sonner";
@@ -307,6 +308,7 @@ export default function ApiManagement() {
   const [filter, setFilter] = useState("all");
   const [tab, setTab] = useState("endpoints");
   const [testProgress, setTestProgress] = useState<{ current: number; total: number } | null>(null);
+  const [showGuide, setShowGuide] = useState(true);
 
   const onlineCount = endpoints.filter((e) => e.status === "online").length;
   const offlineCount = endpoints.filter((e) => e.status === "offline").length;
@@ -380,6 +382,121 @@ export default function ApiManagement() {
           </div>
         }
       />
+
+      {/* API Guide Section */}
+      <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: "var(--con-radius-lg)", overflow: "hidden", marginBottom: 0 }}>
+        <div
+          onClick={() => setShowGuide(!showGuide)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", cursor: "pointer", background: "var(--con-bg-surface-2)" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <BookOpen size={16} style={{ color: "var(--con-brand)" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>دليل API والتكاملات</span>
+          </div>
+          {showGuide ? <ChevronUp size={16} style={{ color: "var(--con-text-muted)" }} /> : <ChevronDown size={16} style={{ color: "var(--con-text-muted)" }} />}
+        </div>
+        {showGuide && (
+          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Section A: أنواع الـ APIs */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <Plug size={14} style={{ color: "var(--con-brand)" }} /> أنواع الـ APIs
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+                {[
+                  { label: "Auth", desc: "تسجيل الدخول، OTP، استعادة كلمة المرور", icon: <Shield size={14} style={{ color: "var(--con-warning)" }} />, color: "var(--con-warning)" },
+                  { label: "Operations", desc: "الطلبات، المناديب، الشكاوى", icon: <Zap size={14} style={{ color: "var(--con-brand)" }} />, color: "var(--con-brand)" },
+                  { label: "Finance", desc: "الدفعات، الفواتير، المحافظ", icon: <CreditCard size={14} style={{ color: "var(--con-success)" }} />, color: "var(--con-success)" },
+                  { label: "Drivers", desc: "التسجيل، KYC، التدريب", icon: <Users size={14} style={{ color: "var(--con-info)" }} />, color: "var(--con-info)" },
+                  { label: "AI", desc: "المحادثة الذكية، تحليل مالي", icon: <MessageSquare size={14} style={{ color: "#8B5CF6" }} />, color: "#8B5CF6" },
+                ].map(api => (
+                  <div key={api.label} style={{ padding: "10px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)", display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    {api.icon}
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: api.color }}>{api.label}</div>
+                      <div style={{ fontSize: 11, color: "var(--con-text-muted)", marginTop: 2, lineHeight: 1.5 }}>{api.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section B: أمثلة API Calls */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <Terminal size={14} style={{ color: "var(--con-brand)" }} /> أمثلة API Calls
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { code: `POST /auth/send-otp\n{ "email": "user@fll.sa", "type": "login" }\n→ { "success": true, "message": "تم إرسال رمز التحقق" }` },
+                  { code: `GET /drivers?limit=10&status=active\n→ { "items": [...], "count": 10 }` },
+                  { code: `POST /driver/apply\n{ "full_name": "أحمد", "phone": "563636006", ... }\n→ { "success": true, "app_ref": "APP-XXXXXXX" }` },
+                  { code: `POST /ai/chat\n{ "message": "كم عدد الطلبات اليوم؟", "role": "admin" }\n→ { "reply": "عدد الطلبات اليوم 245 طلب..." }` },
+                  { code: `GET /ops/health\n→ { "status": "healthy", "uptime": "99.9%", "region": "us-east-1" }` },
+                ].map((ex, i) => (
+                  <pre key={i} style={{
+                    padding: "10px 14px",
+                    borderRadius: "var(--con-radius-sm)",
+                    background: "#0C0E14",
+                    border: "1px solid var(--con-border-default)",
+                    fontFamily: "var(--con-font-mono)",
+                    fontSize: 11,
+                    color: "#A3ABBE",
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    lineHeight: 1.7,
+                    direction: "ltr",
+                    textAlign: "left",
+                  }}>
+                    {ex.code}
+                  </pre>
+                ))}
+              </div>
+            </div>
+
+            {/* Section C: رموز الحالة */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <FileText size={14} style={{ color: "var(--con-info)" }} /> رموز الحالة
+              </h3>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { code: "200", label: "نجاح", emoji: "\u2705", color: "var(--con-success)" },
+                  { code: "400", label: "خطأ في البيانات", emoji: "\u26A0\uFE0F", color: "var(--con-warning)" },
+                  { code: "401", label: "غير مصرح", emoji: "\uD83D\uDD12", color: "var(--con-danger)" },
+                  { code: "404", label: "غير موجود", emoji: "\uD83D\uDD0D", color: "var(--con-text-muted)" },
+                  { code: "500", label: "خطأ في الخادم", emoji: "\u274C", color: "var(--con-danger)" },
+                ].map(s => (
+                  <div key={s.code} style={{ padding: "8px 14px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: "var(--con-font-mono)", fontSize: 13, fontWeight: 700, color: s.color }}>{s.code}</span>
+                    <span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>{s.label}</span>
+                    <span style={{ fontSize: 14 }}>{s.emoji}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section D: نصائح */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <AlertTriangle size={14} style={{ color: "var(--con-warning)" }} /> نصائح
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  "استخدم Postman أو curl لاختبار الـ APIs",
+                  "لا ترسل API keys في الرابط — استخدم Headers",
+                  "Rate limit: 100 طلب/دقيقة",
+                ].map((tip, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--con-warning)", flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: "var(--con-text-secondary)", lineHeight: 1.6 }}>{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <KPIGrid cols="repeat(5, 1fr)">
         <KPICard label="إجمالي الـ Endpoints" value={ENDPOINTS.length} icon={Plug} accent="var(--con-brand)" />

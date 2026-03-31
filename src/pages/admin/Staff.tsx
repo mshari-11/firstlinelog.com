@@ -27,6 +27,7 @@ import {
   X, Check, Eye,
   ClipboardList, DollarSign, MessageSquare,
   FileSpreadsheet, Car, UserPlus, AlertCircle, Download, Printer,
+  Upload, FileDown,
 } from "lucide-react";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
@@ -740,6 +741,451 @@ function AddDepartmentModal({ onClose, onSaved }: { onClose: () => void; onSaved
   );
 }
 
+// ─── Bulk Import Modal ────────────────────────────────────────────────────────
+
+interface ImportRow {
+  full_name: string;
+  email: string;
+  phone: string;
+  job_title: string;
+  department: string;
+  role: string;
+  password: string;
+  _error?: string;
+}
+
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else current += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === "," || ch === "\t") { result.push(current.trim()); current = ""; }
+      else current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function parseCSVText(text: string): string[][] {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  return lines.map(parseCSVLine);
+}
+
+function mapRowsToImportData(rows: string[][], headerRow: string[]): ImportRow[] {
+  const headerMap: Record<string, number> = {};
+  const aliases: Record<string, string[]> = {
+    full_name: ["full_name", "الاسم الكامل", "الاسم", "name", "اسم"],
+    email: ["email", "البريد الإلكتروني", "البريد", "ايميل"],
+    phone: ["phone", "رقم الجوال", "الجوال", "جوال", "mobile", "هاتف"],
+    job_title: ["job_title", "المسمى الوظيفي", "المسمى", "الوظيفة", "title"],
+    department: ["department", "القسم", "قسم", "dept"],
+    role: ["role", "الدور", "دور"],
+    password: ["password", "كلمة المرور", "كلمة_المرور", "pass"],
+  };
+  // map header columns
+  headerRow.forEach((h, idx) => {
+    const lower = h.toLowerCase().trim();
+    for (const [field, names] of Object.entries(aliases)) {
+      if (names.some(n => n === lower || n === h.trim())) {
+        headerMap[field] = idx;
+      }
+    }
+  });
+
+  return rows.map(cols => ({
+    full_name: cols[headerMap.full_name ?? 0] || "",
+    email: cols[headerMap.email ?? 1] || "",
+    phone: cols[headerMap.phone ?? 2] || "",
+    job_title: cols[headerMap.job_title ?? 3] || "",
+    department: cols[headerMap.department ?? 4] || "",
+    role: cols[headerMap.role ?? 5] || "",
+    password: cols[headerMap.password ?? 6] || "",
+  }));
+}
+
+function BulkImportModal({ departments, onClose, onDone }: {
+  departments: Department[];
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<ImportRow[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number; errors: ImportRow[] }>({
+    current: 0, total: 0, errors: [],
+  });
+  const [dragOver, setDragOver] = useState(false);
+  const [parseError, setParseError] = useState("");
+
+  function mapDepartmentId(deptName: string): string | null {
+    if (!deptName) return null;
+    const lower = deptName.trim().toLowerCase();
+    const found = departments.find(d =>
+      d.name_ar === deptName.trim() || d.name.toLowerCase() === lower || d.name_ar.includes(deptName.trim())
+    );
+    return found ? found.id : null;
+  }
+
+  function mapRole(role: string): string {
+    const lower = role.trim().toLowerCase();
+    if (["admin", "أدمن", "مدير"].includes(lower)) return "admin";
+    if (["viewer", "مشاهد", "عارض"].includes(lower)) return "viewer";
+    return "staff";
+  }
+
+  async function handleFile(file: File) {
+    setImportFile(file);
+    setParseError("");
+    setImportData([]);
+    setImportProgress({ current: 0, total: 0, errors: [] });
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext === "xlsx" || ext === "xls") {
+      setParseError("ملفات .xlsx/.xls غير مدعومة مباشرة. يرجى تحويل الملف إلى CSV أولاً (حفظ كـ CSV من Excel).");
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const rows = parseCSVText(text);
+      if (rows.length < 2) {
+        setParseError("الملف لا يحتوي على بيانات كافية (يجب أن يحتوي على صف عناوين وصف بيانات واحد على الأقل)");
+        return;
+      }
+      const header = rows[0];
+      const dataRows = rows.slice(1);
+      const mapped = mapRowsToImportData(dataRows, header);
+      setImportData(mapped);
+    } catch {
+      setParseError("تعذّر قراءة الملف. تأكد أنه ملف CSV صالح.");
+    }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  async function handleImport() {
+    if (!importData.length) return;
+    setImporting(true);
+    const errors: ImportRow[] = [];
+    const total = importData.length;
+    setImportProgress({ current: 0, total, errors: [] });
+
+    for (let i = 0; i < importData.length; i++) {
+      const row = importData[i];
+      try {
+        const res = await fetch(`${API_BASE}/admin/create-user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: row.full_name,
+            email: row.email,
+            phone: row.phone,
+            password: row.password || "Temp@1234",
+            role: mapRole(row.role),
+            job_title_ar: row.job_title || "موظف",
+            department_id: mapDepartmentId(row.department),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errors.push({ ...row, _error: data.error || `خطأ ${res.status}` });
+        }
+      } catch {
+        errors.push({ ...row, _error: "تعذّر الاتصال بالخادم" });
+      }
+      setImportProgress({ current: i + 1, total, errors: [...errors] });
+    }
+
+    setImporting(false);
+    if (errors.length === 0) {
+      toast.success(`تم استيراد ${total} موظف بنجاح`);
+      onDone();
+      onClose();
+    } else {
+      toast.warning(`تم استيراد ${total - errors.length} موظف بنجاح، ${errors.length} أخطاء`);
+    }
+  }
+
+  function downloadTemplate() {
+    const headers = "full_name,email,phone,job_title,department,role,password";
+    const row1 = "أحمد محمد,ahmed@example.com,0501234567,محاسب,المالية,staff,Pass@1234";
+    const row2 = "فاطمة علي,fatima@example.com,0559876543,مديرة موارد بشرية,الموارد البشرية,admin,Pass@5678";
+    const csv = [headers, row1, row2].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "staff_import_template.csv";
+    a.click();
+  }
+
+  const previewRows = importData.slice(0, 10);
+  const done = importProgress.current === importProgress.total && importProgress.total > 0 && !importing;
+
+  return (
+    <Modal title="استيراد موظفين من Excel / CSV" onClose={onClose}>
+      {/* Download template */}
+      <button
+        onClick={downloadTemplate}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          fontSize: "var(--con-text-caption)", fontWeight: 500,
+          padding: "6px 12px", borderRadius: 6, cursor: "pointer",
+          background: "rgba(59,130,246,0.08)", color: "var(--con-brand)",
+          border: "1px solid rgba(59,130,246,0.2)", marginBottom: 14,
+          width: "100%", justifyContent: "center",
+        }}
+      >
+        <FileDown size={14} /> تحميل نموذج CSV جاهز
+      </button>
+
+      {/* Column mapping guide */}
+      <div style={{
+        background: "var(--con-bg-surface-2)", borderRadius: 8, padding: "10px 14px",
+        marginBottom: 14, fontSize: "var(--con-text-caption)",
+        border: "1px solid var(--con-border-default)",
+      }}>
+        <div style={{ fontWeight: 600, color: "var(--con-text-secondary)", marginBottom: 6 }}>
+          الأعمدة المطلوبة:
+        </div>
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px 8px",
+          fontFamily: "var(--con-font-mono)", fontSize: 11,
+          color: "var(--con-text-muted)",
+        }}>
+          {[
+            ["الاسم الكامل", "full_name"],
+            ["البريد الإلكتروني", "email"],
+            ["رقم الجوال", "phone"],
+            ["المسمى الوظيفي", "job_title"],
+            ["القسم", "department"],
+            ["الدور", "role"],
+            ["كلمة المرور", "password"],
+          ].map(([ar, en]) => (
+            <div key={en} style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ color: "var(--con-text-secondary)", fontWeight: 500, fontFamily: "inherit" }}>{ar}</span>
+              <span style={{ color: "var(--con-text-muted)", direction: "ltr" }}>{en}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Drop zone */}
+      {!importFile && (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById("bulk-import-input")?.click()}
+          style={{
+            border: `2px dashed ${dragOver ? "var(--con-brand)" : "var(--con-border-strong)"}`,
+            borderRadius: 10, padding: "32px 20px",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 10, cursor: "pointer",
+            background: dragOver ? "rgba(59,130,246,0.06)" : "transparent",
+            transition: "all 0.2s",
+          }}
+        >
+          <Upload size={28} style={{ color: dragOver ? "var(--con-brand)" : "var(--con-text-muted)" }} />
+          <div style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", fontWeight: 500, textAlign: "center" }}>
+            اسحب ملف Excel هنا أو اضغط للاختيار
+          </div>
+          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+            الحد الأقصى: 50 MB — يدعم آلاف السجلات
+          </div>
+          <input
+            id="bulk-import-input"
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            style={{ display: "none" }}
+            onChange={handleFileInput}
+          />
+        </div>
+      )}
+
+      {/* Selected file info */}
+      {importFile && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+          background: "var(--con-bg-surface-2)", borderRadius: 7,
+          border: "1px solid var(--con-border-default)", marginBottom: 12,
+        }}>
+          <FileSpreadsheet size={16} style={{ color: "var(--con-brand)", flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: "var(--con-text-table)", color: "var(--con-text-primary)", fontWeight: 500 }}>
+            {importFile.name}
+          </span>
+          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+            {importData.length} سجل
+          </span>
+          <button
+            className="con-btn-ghost"
+            style={{ padding: "2px 6px" }}
+            onClick={() => { setImportFile(null); setImportData([]); setParseError(""); setImportProgress({ current: 0, total: 0, errors: [] }); }}
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* Parse error */}
+      {parseError && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.25)",
+          color: "var(--con-danger)", fontSize: "var(--con-text-table)",
+          padding: "10px 12px", borderRadius: 7, marginBottom: 12,
+        }}>
+          <AlertCircle size={14} /> {parseError}
+        </div>
+      )}
+
+      {/* Preview table */}
+      {previewRows.length > 0 && !importing && !done && (
+        <div style={{
+          maxHeight: 240, overflowY: "auto", overflowX: "auto",
+          border: "1px solid var(--con-border-default)",
+          borderRadius: 8, marginBottom: 14,
+        }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--con-text-caption)" }}>
+            <thead>
+              <tr style={{ background: "var(--con-bg-surface-2)" }}>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>#</th>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>الاسم</th>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>البريد</th>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>الجوال</th>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>القسم</th>
+                <th style={{ padding: "6px 8px", textAlign: "right", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-muted)", fontWeight: 600 }}>الدور</th>
+              </tr>
+            </thead>
+            <tbody>
+              {previewRows.map((row, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid var(--con-border-default)" }}>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)" }}>{i + 1}</td>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-primary)" }}>{row.full_name}</td>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-secondary)", direction: "ltr" }}>{row.email}</td>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-secondary)", direction: "ltr" }}>{row.phone}</td>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-secondary)" }}>{row.department}</td>
+                  <td style={{ padding: "5px 8px", color: "var(--con-text-secondary)" }}>{row.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {importData.length > 10 && (
+            <div style={{ padding: "6px 10px", fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", textAlign: "center" }}>
+              يعرض أول 10 سجلات من أصل {importData.length}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Import progress */}
+      {importing && (
+        <div style={{
+          padding: "14px 16px", borderRadius: 8,
+          background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)",
+          marginBottom: 14,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: "var(--con-text-table)", color: "var(--con-text-primary)", fontWeight: 500 }}>
+              جارٍ الاستيراد... {importProgress.current}/{importProgress.total}
+            </span>
+            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+              {Math.round((importProgress.current / importProgress.total) * 100)}%
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: "var(--con-bg-surface-1)", overflow: "hidden" }}>
+            <div style={{
+              height: "100%", borderRadius: 3,
+              background: "var(--con-brand)",
+              width: `${(importProgress.current / importProgress.total) * 100}%`,
+              transition: "width 0.3s",
+            }} />
+          </div>
+          {importProgress.errors.length > 0 && (
+            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-danger)", marginTop: 6 }}>
+              {importProgress.errors.length} خطأ حتى الآن
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Results */}
+      {done && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "10px 14px",
+            borderRadius: 8, marginBottom: 8,
+            background: importProgress.errors.length === 0 ? "rgba(22,163,74,0.08)" : "rgba(234,179,8,0.08)",
+            border: `1px solid ${importProgress.errors.length === 0 ? "rgba(22,163,74,0.25)" : "rgba(234,179,8,0.25)"}`,
+          }}>
+            <span style={{
+              fontSize: "var(--con-text-table)", fontWeight: 500,
+              color: importProgress.errors.length === 0 ? "var(--con-success)" : "var(--con-warning)",
+            }}>
+              تم استيراد {importProgress.total - importProgress.errors.length} موظف بنجاح
+              {importProgress.errors.length > 0 && `، ${importProgress.errors.length} أخطاء`}
+            </span>
+          </div>
+          {importProgress.errors.length > 0 && (
+            <div style={{
+              maxHeight: 180, overflowY: "auto",
+              border: "1px solid rgba(220,38,38,0.2)", borderRadius: 8,
+            }}>
+              {importProgress.errors.map((errRow, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "6px 10px", fontSize: "var(--con-text-caption)",
+                  borderBottom: "1px solid var(--con-border-default)",
+                  background: "rgba(220,38,38,0.04)",
+                }}>
+                  <span style={{ color: "var(--con-text-primary)", fontWeight: 500, minWidth: 100 }}>{errRow.full_name || errRow.email}</span>
+                  <span style={{ color: "var(--con-danger)", flex: 1 }}>{errRow._error}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+        <button onClick={onClose} className="con-btn-ghost">
+          {done ? "إغلاق" : "إلغاء"}
+        </button>
+        {!done && (
+          <button
+            onClick={handleImport}
+            disabled={importing || importData.length === 0}
+            className="con-btn-primary"
+            style={{ opacity: (importing || importData.length === 0) ? 0.6 : 1 }}
+          >
+            {importing
+              ? `جارٍ الاستيراد... ${importProgress.current}/${importProgress.total}`
+              : <><Upload size={14} /> استيراد {importData.length} موظف</>}
+          </button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminStaff() {
@@ -751,6 +1197,7 @@ export default function AdminStaff() {
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddDeptModal, setShowAddDeptModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -885,6 +1332,9 @@ export default function AdminStaff() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button className="con-btn-ghost" onClick={() => { window.print(); }}>
             <Printer size={14} /> طباعة
+          </button>
+          <button className="con-btn-ghost" onClick={() => setShowImportModal(true)}>
+            <FileSpreadsheet size={14} /> استيراد Excel
           </button>
           <button className="con-btn-ghost" onClick={() => {
             const rows = staff.map(s => ({
@@ -1051,6 +1501,13 @@ export default function AdminStaff() {
           departments={departments}
           onClose={() => setShowAddModal(false)}
           onSaved={fetchData}
+        />
+      )}
+      {showImportModal && (
+        <BulkImportModal
+          departments={departments}
+          onClose={() => setShowImportModal(false)}
+          onDone={fetchData}
         />
       )}
     </div>

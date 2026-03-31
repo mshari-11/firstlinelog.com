@@ -3,7 +3,7 @@
  * عرض سجلات n8n_workflow_logs والمصادر الخارجية
  */
 import { useState, useEffect, useCallback } from "react";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database, Download, Printer, Play, Plus, X, Save } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database, Download, Printer, Play, Plus, X, Save, BookOpen, ChevronDown, ChevronUp, Globe, Bell, Mail, Truck, FileText, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -60,6 +60,7 @@ export default function N8nWorkflows() {
   const [srcType, setSrcType] = useState("webhook");
   const [srcUrl, setSrcUrl] = useState("");
   const [srcStatus, setSrcStatus] = useState<SourceStatus>("active");
+  const [showGuide, setShowGuide] = useState(true);
 
   function handleAddSource() {
     if (!srcName.trim()) { toast.error("يرجى كتابة اسم المصدر"); return; }
@@ -136,6 +137,112 @@ export default function N8nWorkflows() {
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
           </button>
         </div>
+      </div>
+
+      {/* Guide Section */}
+      <div className="con-card" style={{ marginBottom: "1.5rem", overflow: "hidden" }}>
+        <div
+          onClick={() => setShowGuide(!showGuide)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", cursor: "pointer", background: "var(--con-bg-surface-2)" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <BookOpen size={16} style={{ color: "var(--con-accent)" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>دليل سير العمل والتكاملات</span>
+          </div>
+          {showGuide ? <ChevronUp size={16} style={{ color: "var(--con-text-muted)" }} /> : <ChevronDown size={16} style={{ color: "var(--con-text-muted)" }} />}
+        </div>
+        {showGuide && (
+          <div style={{ padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            {/* Section A: ما هو n8n */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 6px", display: "flex", alignItems: "center", gap: 6 }}>
+                <Zap size={14} style={{ color: "var(--con-accent)" }} /> ما هو n8n؟
+              </h3>
+              <p style={{ fontSize: 12, color: "var(--con-text-secondary)", margin: 0, lineHeight: 1.8 }}>
+                n8n هو نظام أتمتة مفتوح المصدر يربط بين الخدمات المختلفة. يمكنك إنشاء سير عمل (Workflow) يتفاعل تلقائياً مع أحداث النظام.
+              </p>
+            </div>
+
+            {/* Section B: أنواع المصادر الخارجية */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <Database size={14} style={{ color: "var(--con-info)" }} /> أنواع المصادر الخارجية
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  { type: "Webhook", desc: "رابط يستقبل بيانات من منصات خارجية (مثل: جاهز يرسل طلب جديد)", icon: <Globe size={13} style={{ color: "var(--con-success)" }} />, badge: "con-badge-success" },
+                  { type: "Cron", desc: "مهام مجدولة تعمل تلقائياً (مثل: تقرير يومي كل صباح الساعة 8)", icon: <Clock size={13} style={{ color: "var(--con-warning)" }} />, badge: "con-badge-warning" },
+                  { type: "Manual", desc: "يتم تشغيله يدوياً من لوحة التحكم", icon: <Play size={13} style={{ color: "var(--con-info)" }} />, badge: "con-badge-info" },
+                ].map(item => (
+                  <div key={item.type} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", borderRadius: 6, background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-subtle)" }}>
+                    {item.icon}
+                    <div style={{ flex: 1 }}>
+                      <span className={`con-badge ${item.badge}`} style={{ fontSize: 10, marginBottom: 4, display: "inline-block" }}>{item.type}</span>
+                      <p style={{ fontSize: 12, color: "var(--con-text-secondary)", margin: "4px 0 0", lineHeight: 1.6 }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section C: أمثلة عملية */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <FileText size={14} style={{ color: "var(--con-brand, var(--con-accent))" }} /> أمثلة عملية
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+                {[
+                  { title: "طلب جديد من جاهز", type: "Webhook", badge: "con-badge-success", icon: <Truck size={18} style={{ color: "var(--con-success)" }} />, steps: ["يستقبل الطلب", "ينشئ سجل", "يرسل إشعار للسائق"] },
+                  { title: "تقرير يومي تلقائي", type: "Cron (8:00 صباحاً)", badge: "con-badge-warning", icon: <Mail size={18} style={{ color: "var(--con-warning)" }} />, steps: ["يجمع إحصائيات اليوم", "يعالج البيانات", "يرسل إيميل للإدارة"] },
+                  { title: "تنبيه شكوى عاجلة", type: "Webhook", badge: "con-badge-success", icon: <Bell size={18} style={{ color: "var(--con-danger)" }} />, steps: ["شكوى أولوية عالية", "إشعار فوري", "تصعيد تلقائي"] },
+                  { title: "مزامنة بيانات هنقرستيشن", type: "Cron (كل ساعة)", badge: "con-badge-warning", icon: <RefreshCw size={18} style={{ color: "var(--con-info)" }} />, steps: ["يسحب الطلبات", "يعالج البيانات", "يحدث القاعدة"] },
+                  { title: "إشعار انتهاء رخصة سائق", type: "Cron (يومياً)", badge: "con-badge-warning", icon: <AlertCircle size={18} style={{ color: "var(--con-warning)" }} />, steps: ["يفحص تواريخ الانتهاء", "يحدد المنتهية", "ينبّه HR"] },
+                  { title: "تحديث حالة الطلب", type: "Webhook", badge: "con-badge-success", icon: <Settings size={18} style={{ color: "var(--con-accent)" }} />, steps: ["المنصة تحدث الحالة", "يُحدَّث في النظام", "يُرسل SMS"] },
+                ].map((ex, i) => (
+                  <div key={i} className="con-card" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8, border: "1px solid var(--con-border-subtle)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--con-bg-surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {ex.icon}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-primary)" }}>{ex.title}</div>
+                        <span className={`con-badge ${ex.badge}`} style={{ fontSize: 9, marginTop: 2 }}>{ex.type}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+                      {ex.steps.map((step, si) => (
+                        <span key={si} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--con-text-secondary)" }}>
+                          <span style={{ padding: "2px 6px", borderRadius: 4, background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-subtle)", fontSize: 10 }}>{step}</span>
+                          {si < ex.steps.length - 1 && <span style={{ color: "var(--con-text-muted)", fontSize: 12 }}>&larr;</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section D: كيف تضيف مصدر جديد */}
+            <div>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                <Plus size={14} style={{ color: "var(--con-success)" }} /> كيف تضيف مصدر جديد؟
+              </h3>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { num: 1, text: "اضغط \"إضافة مصدر\"" },
+                  { num: 2, text: "اختر النوع" },
+                  { num: 3, text: "أدخل رابط Webhook أو جدولة Cron" },
+                  { num: 4, text: "فعّل المصدر" },
+                ].map(step => (
+                  <div key={step.num} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 6, background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-subtle)" }}>
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--con-accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{step.num}</span>
+                    <span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>{step.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats */}

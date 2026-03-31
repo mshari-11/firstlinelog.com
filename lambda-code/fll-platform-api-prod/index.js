@@ -2,7 +2,9 @@ const{DynamoDBClient}=require("@aws-sdk/client-dynamodb");
 const{DynamoDBDocumentClient,GetCommand,PutCommand,DeleteCommand,ScanCommand,QueryCommand}=require("@aws-sdk/lib-dynamodb");
 const{CognitoIdentityProviderClient,AdminCreateUserCommand,AdminAddUserToGroupCommand,AdminSetUserPasswordCommand}=require("@aws-sdk/client-cognito-identity-provider");
 const{SESClient,SendEmailCommand}=require("@aws-sdk/client-ses");
+const{LambdaClient,InvokeCommand}=require("@aws-sdk/client-lambda");
 const sesClient=new SESClient({region:"me-south-1"});
+const lambdaMe=new LambdaClient({region:"me-south-1"});
 const SES_FROM=process.env.SES_FROM||"FLL Platform <no-reply@fll.sa>";
 const c=new DynamoDBClient({region:"me-south-1"});
 const d=DynamoDBDocumentClient.from(c);
@@ -23,6 +25,17 @@ const p=rawPath.split("/").filter(x=>x);
 
 // Strip /api prefix
 if(p[0]==="api")p.shift();
+
+// === DRIVER ROUTES (proxy to fll-driver-onboarding in me-south-1) ===
+if(p[0]==="driver"){
+  const driverEvent={httpMethod:m,path:"/"+p.join("/"),headers:e.headers||{},body:e.body||"{}",queryStringParameters:e.queryStringParameters||{},requestContext:{identity:{sourceIp:(e.requestContext?.http?.sourceIp||e.requestContext?.identity?.sourceIp||"")}}};
+  try{
+    const inv=await lambdaMe.send(new InvokeCommand({FunctionName:"fll-driver-onboarding",Payload:Buffer.from(JSON.stringify(driverEvent))}));
+    const resp=JSON.parse(new TextDecoder().decode(inv.Payload));
+    if(resp.statusCode){resp.headers={...resp.headers,...getHeaders(origin)};return resp;}
+    return R(200,resp,origin);
+  }catch(err){return R(502,{error:"Driver service unavailable: "+err.message},origin)}
+}
 
 // === FLEET ROUTES ===
 if(p[0]==="fleet"){

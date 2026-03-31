@@ -145,6 +145,7 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "n8n-workflows",         label: "سير العمل (n8n)",    path: "/admin-panel/n8n-workflows",          group: "النظام",            icon: "Zap",             enabled: true,  order: 42 },
   { id: "accounting-components", label: "المكونات المحاسبية", path: "/admin-panel/accounting-components", group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 43, permission: "finance" },
   { id: "payout-workflow",       label: "سير عمل الدفع",      path: "/admin-panel/payout-workflow",       group: "المالية والموارد", icon: "GitBranch",       enabled: true,  order: 44, permission: "finance" },
+  { id: "payroll-calculator",   label: "حاسبة الرواتب",      path: "/admin-panel/payroll-calculator",   group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 45, permission: "finance" },
 ];
 
 const STORAGE_KEY = "fll_page_config_v1";

@@ -138,6 +138,8 @@ const PayoutRunWorkflow = lazy(() => import("@/pages/admin/PayoutRunWorkflow"));
 const PayrollCalculator = lazy(() => import("@/pages/admin/PayrollCalculator"));
 const HelpGuide = lazy(() => import("@/pages/admin/HelpGuide"));
 const DriverLogin = lazy(() => import("@/pages/DriverLogin"));
+const DriverClassifications = lazy(() => import("@/pages/admin/DriverClassifications"));
+const PayrollManagement = lazy(() => import("@/pages/admin/PayrollManagement"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -235,6 +237,8 @@ export default function App() {
               <Route path="payout-workflow" element={<PermissionGuard permission="finance"><PayoutRunWorkflow /></PermissionGuard>} />
               <Route path="payroll-calculator" element={<PermissionGuard permission="finance"><PayrollCalculator /></PermissionGuard>} />
               <Route path="help-guide" element={<HelpGuide />} />
+              <Route path="driver-classifications" element={<DriverClassifications />} />
+              <Route path="payroll-management" element={<PermissionGuard permission="finance"><PayrollManagement /></PermissionGuard>} />
               <Route path="payout-workflow/:batchId" element={<PermissionGuard permission="finance"><PayoutRunWorkflow /></PermissionGuard>} />
               <Route path="email-logs" element={<AccessGuard roles={["admin", "owner"]}><EmailLogs /></AccessGuard>} />
               <Route path="risk" element={<AccessGuard roles={["admin", "owner"]}><RiskManagement /></AccessGuard>} />

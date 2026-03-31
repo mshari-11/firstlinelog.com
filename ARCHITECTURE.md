@@ -178,7 +178,7 @@ xlsx             │ Excel export
 ### API Gateway Endpoints
 
 ```
-MAIN API:  https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com
+MAIN API:  https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com
 AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 ```
 
@@ -187,7 +187,7 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        API GATEWAY                               │
-│  xr7wsfym5k.execute-api.me-south-1.amazonaws.com                │
+│  k8d4arcxu4.execute-api.us-east-1.amazonaws.com                │
 ├──────────┬──────────┬──────────┬──────────┬──────────┬──────────┤
 │  fll-    │  fll-    │  fll-    │  fll-    │  fll-    │  fll-    │
 │  auth-   │  otp-    │  driver- │  kyc-    │  chatbot │  contact │

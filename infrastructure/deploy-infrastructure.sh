@@ -9,7 +9,7 @@ set -euo pipefail
 
 REGION="me-south-1"
 ACCOUNT_ID="230811072086"
-API_ID_MAIN="xr7wsfym5k"
+API_ID_MAIN="k8d4arcxu4"
 API_ID_AI="51n1gng40f"
 
 RED='\033[0;31m'

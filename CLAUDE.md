@@ -40,7 +40,7 @@
 ## Infrastructure (updated 2026-03-28)
 - **Lambda Functions**: 16 (Python 3.12 + Node.js 18.x) in `/lambda-code/`
 - **Supabase Edge Functions**: 35 in `/supabase/functions/`
-- **API Gateways**: 2 (HTTP API `xr7wsfym5k` ⚠️ BROKEN + REST API `qihrv9osed` OK)
+- **API Gateways**: 2 (HTTP API `k8d4arcxu4` ⚠️ BROKEN + REST API `qihrv9osed` OK)
 - **DynamoDB Tables**: 39 (all Active)
 - **S3 Buckets**: 17
 - **CloudWatch Alarms**: 37 (36 OK, 1 Insufficient data)
@@ -102,5 +102,5 @@
 - SES production: 50k/day, identities: fll.sa, noreply@fll.sa
 - S3 Buckets: 17
 - EventBridge rules: 10 (SLA hourly, backup daily, payout weekly)
-- Old API Gateways (`xr7wsfym5k`, `qihrv9osed`): BROKEN — do not reference
+- Old API Gateways (`k8d4arcxu4`, `qihrv9osed`): BROKEN — do not reference
 - Old Cognito (`me-south-1_aJtmQ0QrN`): kept for backward compatibility

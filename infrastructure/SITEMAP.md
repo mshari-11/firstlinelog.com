@@ -103,7 +103,7 @@
 Frontend (Vercel)
      |
      v
-API Gateway (xr7wsfym5k)
+API Gateway (k8d4arcxu4)
      |
      ├── /auth/*  ─────────────> fll-auth-api
      │                           ├── Cognito (login/register)

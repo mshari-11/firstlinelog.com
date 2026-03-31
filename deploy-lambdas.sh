@@ -2,7 +2,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # FLL Lambda Deployment Scripts
 # Region: me-south-1 (Bahrain)
-# API Gateway: xr7wsfym5k (fll-platform-api-prod)
+# API Gateway: k8d4arcxu4 (fll-platform-api-prod)
 # ═══════════════════════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -22,7 +22,7 @@
 set -euo pipefail
 
 REGION="me-south-1"
-API_ID="xr7wsfym5k"
+API_ID="k8d4arcxu4"
 ACCOUNT_ID="230811072086"
 ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/fll-ai-finance-review-role"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -285,12 +285,12 @@ deploy_onboarding() {
   log "${FUNC_NAME} deployed successfully!"
   echo ""
   echo "Endpoints:"
-  echo "  POST https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/otp/send"
-  echo "  POST https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/otp/verify"
-  echo "  POST https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/apply"
-  echo "  GET  https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/application-status"
-  echo "  POST https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/applications/{id}/approve"
-  echo "  POST https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/driver/applications/{id}/reject"
+  echo "  POST https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/otp/send"
+  echo "  POST https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/otp/verify"
+  echo "  POST https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/apply"
+  echo "  GET  https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/application-status"
+  echo "  POST https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/applications/{id}/approve"
+  echo "  POST https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/driver/applications/{id}/reject"
   echo ""
 }
 

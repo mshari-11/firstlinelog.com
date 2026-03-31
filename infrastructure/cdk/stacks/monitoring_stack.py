@@ -108,7 +108,7 @@ class FLLMonitoringStack(Stack):
 
         # ── API Gateway Alarms ──
         api_gateways = [
-            ("xr7wsfym5k", "fll-platform-api-prod"),
+            ("k8d4arcxu4", "fll-platform-api-prod"),
             ("51n1gng40f", "fll-ai-dashboard"),
         ]
 

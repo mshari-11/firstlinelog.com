@@ -12,35 +12,55 @@ import {
   Phone, User, Printer, CheckCircle2, AlertTriangle, Edit3,
 } from "lucide-react";
 
+/* ── Custom Field Types ────────────────────────────────────────────────── */
+interface CustomField {
+  id: string;
+  label: string;
+  type: "addition" | "deduction";
+  calc: "fixed" | "percentage"; // fixed amount or % of gross
+  defaultValue: number;
+}
+
+const CUSTOM_FIELDS_KEY = "fll_payroll_fields_v1";
+
+function loadCustomFields(): CustomField[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_FIELDS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [
+    { id: "fuel_allowance", label: "بدل وقود", type: "addition", calc: "fixed", defaultValue: 0 },
+    { id: "operations_allowance", label: "بدل تشغيل", type: "addition", calc: "fixed", defaultValue: 500 },
+    { id: "performance_bonus", label: "مكافأة أداء", type: "addition", calc: "fixed", defaultValue: 0 },
+    { id: "fll_commission", label: "عمولة FLL", type: "deduction", calc: "percentage", defaultValue: 12 },
+    { id: "insurance", label: "تأمين صحي", type: "deduction", calc: "fixed", defaultValue: 200 },
+    { id: "maintenance", label: "صيانة", type: "deduction", calc: "fixed", defaultValue: 150 },
+    { id: "penalties", label: "جزاءات", type: "deduction", calc: "fixed", defaultValue: 0 },
+    { id: "vat", label: "ضريبة VAT", type: "deduction", calc: "percentage", defaultValue: 15 },
+  ];
+}
+
+function saveCustomFields(fields: CustomField[]) {
+  localStorage.setItem(CUSTOM_FIELDS_KEY, JSON.stringify(fields));
+}
+
 /* ── Types ─────────────────────────────────────────────────────────────── */
 interface DriverPayroll {
   id: string;
   name: string;
-  phone: string;           // 9 digits starting with 5
+  phone: string;
   platform: string;
   contract_type: "freelancer" | "company_sponsored" | "kafala" | "ajir";
   has_company_vehicle: boolean;
   vehicle_type: string;
   city: string;
   total_orders: number;
-  order_rate: number;       // per-order rate
-  gross_earnings: number;   // calculated
-  // Additions
-  fuel_allowance: number;
-  operations_allowance: number;
-  performance_bonus: number;
-  other_additions: number;
-  // Deductions
-  fll_commission_rate: number; // percentage (e.g. 12)
-  fll_commission: number;      // calculated
-  vehicle_cost: number;        // monthly vehicle cost if company vehicle
-  insurance: number;
-  maintenance: number;
-  penalties: number;
-  other_deductions: number;
-  vat_rate: number;            // 15
-  vat_amount: number;          // calculated
-  // Final
+  order_rate: number;
+  gross_earnings: number;
+  // Dynamic fields stored as key-value
+  customValues: Record<string, number>;
+  // Calculated
+  vehicle_cost: number;
   total_additions: number;
   total_deductions: number;
   net_payout: number;
@@ -68,39 +88,33 @@ const VEHICLE_MONTHLY_COST: Record<string, number> = {
   "بدون مركبة": 0,
 };
 
-function emptyDriver(id?: string): DriverPayroll {
+function emptyDriver(fields: CustomField[], id?: string): DriverPayroll {
+  const customValues: Record<string, number> = {};
+  fields.forEach(f => { customValues[f.id] = f.defaultValue; });
   return {
     id: id || "d-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
     name: "", phone: "", platform: "jahez", contract_type: "freelancer",
     has_company_vehicle: false, vehicle_type: "سيارة صغيرة", city: "الرياض",
     total_orders: 0, order_rate: 12,
-    gross_earnings: 0,
-    fuel_allowance: 0, operations_allowance: 500, performance_bonus: 0, other_additions: 0,
-    fll_commission_rate: 12, fll_commission: 0,
-    vehicle_cost: 0, insurance: 200, maintenance: 150, penalties: 0, other_deductions: 0,
-    vat_rate: 15, vat_amount: 0,
-    total_additions: 0, total_deductions: 0, net_payout: 0,
+    gross_earnings: 0, customValues,
+    vehicle_cost: 0, total_additions: 0, total_deductions: 0, net_payout: 0,
   };
 }
 
-function recalc(d: DriverPayroll): DriverPayroll {
+function recalc(d: DriverPayroll, fields: CustomField[]): DriverPayroll {
   const gross = d.total_orders * d.order_rate;
-  const additions = d.fuel_allowance + d.operations_allowance + d.performance_bonus + d.other_additions;
-  const commission = Math.round(gross * d.fll_commission_rate / 100);
+  let additions = 0;
+  let deductions = 0;
+  for (const f of fields) {
+    const val = d.customValues[f.id] || 0;
+    const amount = f.calc === "percentage" ? Math.round(gross * val / 100) : val;
+    if (f.type === "addition") additions += amount;
+    else deductions += amount;
+  }
   const vehicleCost = d.has_company_vehicle ? (VEHICLE_MONTHLY_COST[d.vehicle_type] || 0) : 0;
-  const deductions = commission + vehicleCost + d.insurance + d.maintenance + d.penalties + d.other_deductions;
-  const vat = Math.round(gross * d.vat_rate / 100);
-  const net = gross + additions - deductions - vat;
-  return {
-    ...d,
-    gross_earnings: gross,
-    fll_commission: commission,
-    vehicle_cost: vehicleCost,
-    total_additions: additions,
-    total_deductions: deductions,
-    vat_amount: vat,
-    net_payout: net,
-  };
+  deductions += vehicleCost;
+  const net = gross + additions - deductions;
+  return { ...d, gross_earnings: gross, vehicle_cost: vehicleCost, total_additions: additions, total_deductions: deductions, net_payout: net };
 }
 
 function normalizePhone(raw: string): string {
@@ -115,12 +129,53 @@ const fmt = (n: number) => new Intl.NumberFormat("ar-SA", { style: "currency", c
 
 /* ── Component ─────────────────────────────────────────────────────────── */
 export default function PayrollCalculator() {
+  const [customFields, setCustomFields] = useState<CustomField[]>(loadCustomFields);
   const [drivers, setDrivers] = useState<DriverPayroll[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showFieldEditor, setShowFieldEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<DriverPayroll>(emptyDriver());
+  const [form, setForm] = useState<DriverPayroll>(emptyDriver(customFields));
   const [generating, setGenerating] = useState(false);
-  const [tab, setTab] = useState<"calculator" | "stc">("calculator");
+  const [tab, setTab] = useState<"calculator" | "stc" | "fields">("calculator");
+
+  // Field editor state
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldType, setNewFieldType] = useState<"addition" | "deduction">("addition");
+  const [newFieldCalc, setNewFieldCalc] = useState<"fixed" | "percentage">("fixed");
+  const [newFieldDefault, setNewFieldDefault] = useState(0);
+  const [editFieldId, setEditFieldId] = useState<string | null>(null);
+
+  function addCustomField() {
+    if (!newFieldLabel.trim()) { toast.error("أدخل اسم الحقل"); return; }
+    const id = "cf_" + Date.now();
+    const field: CustomField = { id, label: newFieldLabel.trim(), type: newFieldType, calc: newFieldCalc, defaultValue: newFieldDefault };
+    const updated = [...customFields, field];
+    setCustomFields(updated);
+    saveCustomFields(updated);
+    // Add to all existing drivers
+    setDrivers(prev => prev.map(d => ({ ...d, customValues: { ...d.customValues, [id]: newFieldDefault } })));
+    setNewFieldLabel(""); setNewFieldDefault(0);
+    toast.success("تم إضافة الحقل");
+  }
+
+  function removeCustomField(fieldId: string) {
+    const updated = customFields.filter(f => f.id !== fieldId);
+    setCustomFields(updated);
+    saveCustomFields(updated);
+    setDrivers(prev => prev.map(d => {
+      const cv = { ...d.customValues };
+      delete cv[fieldId];
+      return recalc({ ...d, customValues: cv }, updated);
+    }));
+    toast.success("تم حذف الحقل");
+  }
+
+  function renameCustomField(fieldId: string, newLabel: string) {
+    const updated = customFields.map(f => f.id === fieldId ? { ...f, label: newLabel } : f);
+    setCustomFields(updated);
+    saveCustomFields(updated);
+    toast.success("تم تعديل الاسم");
+  }
 
   const totals = useMemo(() => {
     const t = { gross: 0, additions: 0, deductions: 0, vat: 0, net: 0, count: drivers.length };
@@ -129,7 +184,7 @@ export default function PayrollCalculator() {
   }, [drivers]);
 
   function openAdd() {
-    const d = emptyDriver();
+    const d = emptyDriver(customFields);
     setForm(d);
     setEditingId(null);
     setShowForm(true);
@@ -141,19 +196,24 @@ export default function PayrollCalculator() {
     setShowForm(true);
   }
 
-  function updateForm(key: keyof DriverPayroll, val: string | number | boolean) {
+  function updateForm(key: string, val: string | number | boolean) {
     setForm(prev => {
-      const next = { ...prev, [key]: val } as DriverPayroll;
+      const next = { ...prev } as DriverPayroll;
+      if (key.startsWith("cf_") || customFields.some(f => f.id === key)) {
+        next.customValues = { ...next.customValues, [key]: val as number };
+      } else {
+        (next as any)[key] = val;
+      }
       if (key === "platform") next.order_rate = DEFAULT_RATES[val as string] || 12;
       if (key === "has_company_vehicle" && !val) next.vehicle_cost = 0;
-      return recalc(next);
+      return recalc(next, customFields);
     });
   }
 
   function saveDriver() {
     if (!form.name.trim()) { toast.error("أدخل اسم المندوب"); return; }
     if (!form.phone.trim()) { toast.error("أدخل رقم الجوال"); return; }
-    const calculated = recalc(form);
+    const calculated = recalc(form, customFields);
     if (editingId) {
       setDrivers(prev => prev.map(d => d.id === editingId ? calculated : d));
       toast.success("تم تحديث بيانات المندوب");
@@ -261,6 +321,7 @@ export default function PayrollCalculator() {
         {[
           { id: "calculator" as const, label: "حاسبة الرواتب", icon: Calculator },
           { id: "stc" as const, label: "تصدير STC Bank", icon: FileSpreadsheet },
+          { id: "fields" as const, label: "إدارة بنود الراتب", icon: Edit3 },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className="con-btn" style={{
             background: tab === t.id ? "var(--con-accent)" : "transparent",
@@ -401,6 +462,97 @@ export default function PayrollCalculator() {
         </div>
       )}
 
+      {/* Fields Management Tab */}
+      {tab === "fields" && (
+        <div className="con-card" style={{ padding: "1.5rem" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 1rem", display: "flex", alignItems: "center", gap: 8 }}>
+            <Edit3 size={16} style={{ color: "var(--con-accent)" }} /> إدارة بنود الإضافات والخصومات
+          </h2>
+          <p style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: "1.25rem" }}>
+            أضف أو عدّل أو احذف بنود الراتب. التغييرات تنعكس فوراً على حاسبة الرواتب.
+          </p>
+
+          {/* Existing fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: "1.5rem" }}>
+            {customFields.map(f => (
+              <div key={f.id} style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 8,
+                background: f.type === "addition" ? "rgba(34,197,94,0.06)" : "rgba(239,68,68,0.06)",
+                border: `1px solid ${f.type === "addition" ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: f.type === "addition" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+                  color: f.type === "addition" ? "var(--con-success)" : "var(--con-danger)",
+                }}>
+                  {f.type === "addition" ? <Plus size={14} /> : <TrendingDown size={14} />}
+                </div>
+                {editFieldId === f.id ? (
+                  <input
+                    className="con-input"
+                    style={{ flex: 1, fontSize: 13 }}
+                    defaultValue={f.label}
+                    autoFocus
+                    onBlur={e => { renameCustomField(f.id, e.target.value); setEditFieldId(null); }}
+                    onKeyDown={e => { if (e.key === "Enter") { renameCustomField(f.id, (e.target as HTMLInputElement).value); setEditFieldId(null); } }}
+                  />
+                ) : (
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "var(--con-text-primary)" }}>{f.label}</span>
+                )}
+                <span className={`con-badge ${f.type === "addition" ? "con-badge-success" : "con-badge-danger"}`} style={{ fontSize: 10 }}>
+                  {f.type === "addition" ? "إضافة" : "خصم"}
+                </span>
+                <span className="con-badge con-badge-info" style={{ fontSize: 10 }}>
+                  {f.calc === "percentage" ? "نسبة %" : "مبلغ ثابت"}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--con-text-muted)", fontFamily: "monospace" }}>
+                  افتراضي: {f.defaultValue}{f.calc === "percentage" ? "%" : " ر.س"}
+                </span>
+                <button onClick={() => setEditFieldId(f.id)} title="تعديل الاسم" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--con-accent)" }}>
+                  <Edit3 size={13} />
+                </button>
+                <button onClick={() => removeCustomField(f.id)} title="حذف" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--con-danger)" }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add new field */}
+          <div style={{ padding: "1rem", background: "var(--con-bg-elevated)", borderRadius: 10, border: "1px solid var(--con-border-default)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12 }}>إضافة بند جديد</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 100px", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>اسم البند</label>
+                <input className="con-input" style={{ width: "100%" }} value={newFieldLabel} onChange={e => setNewFieldLabel(e.target.value)} placeholder="مثال: بدل سكن" />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>النوع</label>
+                <select className="con-input" style={{ width: "100%" }} value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                  <option value="addition">إضافة (+)</option>
+                  <option value="deduction">خصم (-)</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>طريقة الحساب</label>
+                <select className="con-input" style={{ width: "100%" }} value={newFieldCalc} onChange={e => setNewFieldCalc(e.target.value as any)}>
+                  <option value="fixed">مبلغ ثابت (ر.س)</option>
+                  <option value="percentage">نسبة من الإجمالي (%)</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>القيمة</label>
+                <input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={newFieldDefault} onChange={e => setNewFieldDefault(parseFloat(e.target.value) || 0)} />
+              </div>
+            </div>
+            <button onClick={addCustomField} className="con-btn-primary" style={{ marginTop: 12, gap: 6 }}>
+              <Plus size={14} /> إضافة البند
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Add/Edit Modal ─────────────────────────────────────────────── */}
       {showForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "auto" }} onClick={() => setShowForm(false)}>
@@ -462,28 +614,32 @@ export default function PayrollCalculator() {
                 <input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.order_rate} onChange={e => updateForm("order_rate", parseFloat(e.target.value) || 0)} />
               </FormField>
 
-              {/* Additions */}
-              <div style={{ gridColumn: "1 / -1", fontSize: 12, fontWeight: 700, color: "var(--con-success)", marginTop: 8 }}>الإضافات</div>
-              <FormField label="بدل وقود" icon={Plus}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.fuel_allowance} onChange={e => updateForm("fuel_allowance", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="بدل تشغيل" icon={Plus}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.operations_allowance} onChange={e => updateForm("operations_allowance", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="مكافأة أداء" icon={Plus}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.performance_bonus} onChange={e => updateForm("performance_bonus", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="إضافات أخرى" icon={Plus}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.other_additions} onChange={e => updateForm("other_additions", parseFloat(e.target.value) || 0)} /></FormField>
+              {/* Dynamic Additions */}
+              {customFields.filter(f => f.type === "addition").length > 0 && (
+                <div style={{ gridColumn: "1 / -1", fontSize: 12, fontWeight: 700, color: "var(--con-success)", marginTop: 8 }}>الإضافات</div>
+              )}
+              {customFields.filter(f => f.type === "addition").map(f => (
+                <FormField key={f.id} label={`${f.label}${f.calc === "percentage" ? " (%)" : ""}`} icon={Plus}>
+                  <input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.customValues[f.id] || 0} onChange={e => updateForm(f.id, parseFloat(e.target.value) || 0)} />
+                </FormField>
+              ))}
 
-              {/* Deductions */}
-              <div style={{ gridColumn: "1 / -1", fontSize: 12, fontWeight: 700, color: "var(--con-danger)", marginTop: 8 }}>الخصومات</div>
-              <FormField label="نسبة عمولة FLL (%)" icon={Receipt}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.fll_commission_rate} onChange={e => updateForm("fll_commission_rate", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="تأمين صحي" icon={Receipt}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.insurance} onChange={e => updateForm("insurance", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="صيانة" icon={Receipt}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.maintenance} onChange={e => updateForm("maintenance", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="جزاءات" icon={AlertTriangle}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.penalties} onChange={e => updateForm("penalties", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="نسبة الضريبة (%)" icon={Receipt}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.vat_rate} onChange={e => updateForm("vat_rate", parseFloat(e.target.value) || 0)} /></FormField>
-              <FormField label="خصومات أخرى" icon={Receipt}><input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.other_deductions} onChange={e => updateForm("other_deductions", parseFloat(e.target.value) || 0)} /></FormField>
+              {/* Dynamic Deductions */}
+              {customFields.filter(f => f.type === "deduction").length > 0 && (
+                <div style={{ gridColumn: "1 / -1", fontSize: 12, fontWeight: 700, color: "var(--con-danger)", marginTop: 8 }}>الخصومات</div>
+              )}
+              {customFields.filter(f => f.type === "deduction").map(f => (
+                <FormField key={f.id} label={`${f.label}${f.calc === "percentage" ? " (%)" : ""}`} icon={Receipt}>
+                  <input className="con-input" dir="ltr" type="number" style={{ width: "100%", fontFamily: "monospace" }} value={form.customValues[f.id] || 0} onChange={e => updateForm(f.id, parseFloat(e.target.value) || 0)} />
+                </FormField>
+              ))}
             </div>
 
             {/* Live calculation summary */}
             <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--con-bg-elevated)", borderRadius: 8, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", textAlign: "center" }}>
               <div><div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>الإجمالي</div><div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace" }}>{fmt(form.gross_earnings)}</div></div>
               <div><div style={{ fontSize: 10, color: "var(--con-success)" }}>+ الإضافات</div><div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: "var(--con-success)" }}>{fmt(form.total_additions)}</div></div>
-              <div><div style={{ fontSize: 10, color: "var(--con-danger)" }}>- الخصومات</div><div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: "var(--con-danger)" }}>{fmt(form.total_deductions + form.vat_amount)}</div></div>
+              <div><div style={{ fontSize: 10, color: "var(--con-danger)" }}>- الخصومات</div><div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: "var(--con-danger)" }}>{fmt(form.total_deductions)}</div></div>
               <div><div style={{ fontSize: 10, color: "var(--con-accent)" }}>الصافي</div><div style={{ fontSize: 18, fontWeight: 700, fontFamily: "monospace", color: "var(--con-accent)" }}>{fmt(form.net_payout)}</div></div>
             </div>
 

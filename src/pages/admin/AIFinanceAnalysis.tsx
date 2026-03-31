@@ -18,9 +18,19 @@ const suggestedPrompts = [
   { icon: Sparkles, text: "ما هي التوصيات لتحسين الهامش التشغيلي؟" },
 ];
 
-const mockAnomalies: { date: string; category: string; amount: number; normal: number; severity: string; reason: string }[] = [];
+const mockAnomalies = [
+  { date: "2026-03-10", category: "الوقود والصيانة", amount: 8500, normal: 4200, severity: "high", reason: "صيانة طارئة لسيارات متعددة" },
+  { date: "2026-03-08", category: "إداري", amount: 3200, normal: 1500, severity: "medium", reason: "مصاريف غير متوقعة" },
+  { date: "2026-03-05", category: "رواتب السائقين", amount: 76000, normal: 69000, severity: "low", reason: "راتب إضافي للعاملين بالساعات الإضافية" },
+];
 
-const mockPredictions: Record<string, { value: number; trend: string; confidence: number }> = {};
+const mockPredictions = {
+  marchRevenue: { value: 225000, trend: "up", confidence: 87 },
+  aprilRevenue: { value: 235000, trend: "up", confidence: 82 },
+  mayRevenue: { value: 245000, trend: "up", confidence: 78 },
+  operatingMargin: { value: 38.5, trend: "stable", confidence: 85 },
+  burnRate: { value: -645000, trend: "down", confidence: 88 },
+};
 
 interface ChatMessage {
   id: string;
@@ -469,27 +479,23 @@ export default function AIFinanceAnalysis() {
               توقعات بناءً على تحليل الاتجاهات التاريخية
             </p>
           </div>
-          {Object.keys(mockPredictions).length === 0 ? (
-            <p style={{ textAlign: "center", color: "var(--con-text-muted)", padding: 40 }}>لا توجد تنبؤات حالياً</p>
-          ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
             <div>
               <h4 style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)", fontWeight: 600, marginBottom: 12 }}>
                 توقعات الإيرادات
               </h4>
-              {mockPredictions.marchRevenue && <PredictionCard label="إيرادات مارس" data={mockPredictions.marchRevenue} />}
-              {mockPredictions.aprilRevenue && <PredictionCard label="إيرادات أبريل" data={mockPredictions.aprilRevenue} />}
-              {mockPredictions.mayRevenue && <PredictionCard label="إيرادات مايو" data={mockPredictions.mayRevenue} />}
+              <PredictionCard label="إيرادات مارس" data={mockPredictions.marchRevenue} />
+              <PredictionCard label="إيرادات أبريل" data={mockPredictions.aprilRevenue} />
+              <PredictionCard label="إيرادات مايو" data={mockPredictions.mayRevenue} />
             </div>
             <div>
               <h4 style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)", fontWeight: 600, marginBottom: 12 }}>
                 توقعات الأداء
               </h4>
-              {mockPredictions.operatingMargin && <PredictionCard label="الهامش التشغيلي" data={mockPredictions.operatingMargin} />}
-              {mockPredictions.burnRate && <PredictionCard label="معدل الاحتراق" data={mockPredictions.burnRate} />}
+              <PredictionCard label="الهامش التشغيلي" data={mockPredictions.operatingMargin} />
+              <PredictionCard label="معدل الاحتراق" data={mockPredictions.burnRate} />
             </div>
           </div>
-          )}
         </div>
       )}
 

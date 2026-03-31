@@ -85,9 +85,21 @@ function normalizeOrder(raw: any): Order {
 import { API_BASE } from "@/lib/api";
 
 // ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
-const MOCK_DRIVERS: Driver[] = [];
+const MOCK_DRIVERS: Driver[] = [
+  { id: "D01", name: "محمد العتيبي",   phone: "0501234567", rating: 4.8, status: "available",  lat: 24.7136, lng: 46.6753, vehicle: "دراجة نارية" },
+  { id: "D02", name: "خالد الزهراني",  phone: "0512345678", rating: 4.5, status: "busy",       lat: 24.7250, lng: 46.6900, vehicle: "سيارة",       activeOrderId: "O02" },
+  { id: "D03", name: "سعد الدوسري",    phone: "0523456789", rating: 4.9, status: "available",  lat: 24.6980, lng: 46.7100, vehicle: "دراجة نارية" },
+  { id: "D04", name: "فهد القحطاني",   phone: "0534567890", rating: 4.2, status: "offline",    lat: 24.7400, lng: 46.6500, vehicle: "سيارة" },
+  { id: "D05", name: "عبدالله الشمري", phone: "0545678901", rating: 4.7, status: "available",  lat: 24.7050, lng: 46.6600, vehicle: "دراجة نارية" },
+];
 
-const MOCK_ORDERS: Order[] = [];
+const MOCK_ORDERS: Order[] = [
+  { id: "O01", customer: "أحمد محمد",    address: "حي النزهة، شارع الأمير سلطان", platform: "جاهز",          amount: 45.00,  status: "pending",    lat: 24.7190, lng: 46.6820, createdAt: "14:22" },
+  { id: "O02", customer: "سارة العلي",   address: "حي الملقا، طريق أنس بن مالك",  platform: "هنقرستيشن",   amount: 32.50,  status: "assigned",   lat: 24.7260, lng: 46.6950, createdAt: "14:18", assignedDriverId: "D02", estimatedTime: 12 },
+  { id: "O03", customer: "فيصل الغامدي", address: "حي العليا، شارع التخصصي",       platform: "طلبات",        amount: 78.00,  status: "delivering", lat: 24.6900, lng: 46.7200, createdAt: "14:05", assignedDriverId: "D02", estimatedTime: 7 },
+  { id: "O04", customer: "نورة الحربي",  address: "حي الياسمين، شارع التحلية",     platform: "نون",          amount: 55.25,  status: "pending",    lat: 24.7380, lng: 46.6580, createdAt: "14:30" },
+  { id: "O05", customer: "ماجد الرشيدي", address: "حي الروضة، شارع الإمام الترمذي", platform: "جاهز",        amount: 91.00,  status: "delivered",  lat: 24.7070, lng: 46.6640, createdAt: "13:55", assignedDriverId: "D01" },
+];
 
 // ─── Status configs ───────────────────────────────────────────────────────────
 const DRIVER_STATUS_CONFIG: Record<DriverStatus, { label: string; color: string; dot: string }> = {

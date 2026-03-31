@@ -21,15 +21,46 @@ import {
 } from "@/components/admin/FinanceUI";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
-const mockRevenueData: { month: string; revenue: number; orders: number }[] = [];
+const mockRevenueData = [
+  { month: "سبتمبر",  revenue: 156000, orders: 420 },
+  { month: "أكتوبر", revenue: 189000, orders: 480 },
+  { month: "نوفمبر", revenue: 172000, orders: 450 },
+  { month: "ديسمبر", revenue: 245000, orders: 620 },
+  { month: "يناير",  revenue: 198000, orders: 510 },
+  { month: "فبراير", revenue: 218000, orders: 570 },
+];
 
-const mockExpenseData: { name: string; value: number; percentage: number }[] = [];
+const mockExpenseData = [
+  { name: "رواتب السائقين", value: 145000, percentage: 35 },
+  { name: "عمولات المنصة", value: 98000, percentage: 24 },
+  { name: "الوقود والصيانة", value: 72000, percentage: 17 },
+  { name: "التأمين", value: 52000, percentage: 13 },
+  { name: "إداري", value: 42000, percentage: 10 },
+  { name: "أخرى", value: 11000, percentage: 1 },
+];
 
-const mockCityData: { city: string; revenue: number; orders: number; percentage: number }[] = [];
+const mockCityData = [
+  { city: "الرياض", revenue: 285000, orders: 845, percentage: 45 },
+  { city: "جدة", revenue: 156000, orders: 420, percentage: 25 },
+  { city: "الدمام", revenue: 98000, orders: 280, percentage: 15 },
+  { city: "القصيم", revenue: 52000, orders: 140, percentage: 8 },
+  { city: "الطائف", revenue: 31000, orders: 85, percentage: 5 },
+];
 
-const mockCashFlowData: { week: string; in: number; out: number; net: number }[] = [];
+const mockCashFlowData = [
+  { week: "أسبوع 1", in: 145000, out: 98000, net: 47000 },
+  { week: "أسبوع 2", in: 162000, out: 105000, net: 57000 },
+  { week: "أسبوع 3", in: 138000, out: 92000, net: 46000 },
+  { week: "أسبوع 4", in: 178000, out: 112000, net: 66000 },
+];
 
-const mockTransactions: { id: string; type: string; description: string; amount: number; status: string; date: string; time: string }[] = [];
+const mockTransactions = [
+  { id: "TXN001", type: "إيراد", description: "طلب #12345 - أحمد محمد", amount: 45.00, status: "completed", date: "2026-03-12", time: "14:32" },
+  { id: "TXN002", type: "صرف", description: "دفع براتب - فهد الغامدي", amount: -2500.00, status: "completed", date: "2026-03-12", time: "13:45" },
+  { id: "TXN003", type: "إيراد", description: "طلب #12344 - خالد العمري", amount: 38.50, status: "completed", date: "2026-03-12", time: "12:18" },
+  { id: "TXN004", type: "صرف", description: "رسوم منصة - مارس", amount: -12450.00, status: "pending", date: "2026-03-12", time: "11:00" },
+  { id: "TXN005", type: "إيراد", description: "طلب #12343 - سعد الزهراني", amount: 52.75, status: "completed", date: "2026-03-11", time: "16:22" },
+];
 
 const colorPalette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -82,12 +113,12 @@ export default function FinanceDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<FinanceStats>({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    netProfit: 0,
-    driverPayments: 0,
-    cashFlow: 0,
-    totalOrders: 0,
+    totalRevenue: 1218000,
+    totalExpenses: 420000,
+    netProfit: 798000,
+    driverPayments: 145000,
+    cashFlow: 216000,
+    totalOrders: 3125,
   });
   const [loading, setLoading] = useState(true);
 

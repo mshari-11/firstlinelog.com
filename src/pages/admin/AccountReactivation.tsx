@@ -13,7 +13,12 @@ const STATUS: Record<RequestStatus, { label: string; cls: string; icon: JSX.Elem
   rejected: { label: "مرفوض", cls: "con-badge-danger", icon: <XCircle size={12} /> },
 };
 
-const MOCK: ReactivationRequest[] = [];
+const MOCK: ReactivationRequest[] = [
+  { id: "REA-001", user: "محمد العتيبي", email: "mohammed@fll.sa", suspendReason: "مخالفة شروط الخدمة", requestDate: "2026-03-20", status: "pending" },
+  { id: "REA-002", user: "خالد الشمري", email: "khaled@fll.sa", suspendReason: "عدم النشاط لمدة 90 يوم", requestDate: "2026-03-19", status: "pending" },
+  { id: "REA-003", user: "فهد القحطاني", email: "fahad@fll.sa", suspendReason: "شكاوى متكررة من العملاء", requestDate: "2026-03-17", status: "approved" },
+  { id: "REA-004", user: "سعد الدوسري", email: "saad@fll.sa", suspendReason: "محاولة احتيال", requestDate: "2026-03-15", status: "rejected" },
+];
 
 export default function AccountReactivation() {
   const navigate = useNavigate();

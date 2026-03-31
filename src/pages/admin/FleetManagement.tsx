@@ -21,7 +21,14 @@ const STATUS_MAP: Record<VehicleStatus, { label: string; cls: string }> = {
   inactive: { label: "غير نشطة", cls: "con-badge-danger" },
 };
 
-const MOCK: Vehicle[] = [];
+const MOCK: Vehicle[] = [
+  { id: "VEH-001", name: "تويوتا هايلكس 2024", type: "بيك أب", driver: "فهد السبيعي", status: "active", lastMaintenance: "2026-03-10", location: "الرياض - حي العليا" },
+  { id: "VEH-002", name: "هيونداي H100 2023", type: "فان", driver: "سعد الحربي", status: "active", lastMaintenance: "2026-03-05", location: "الرياض - حي النخيل" },
+  { id: "VEH-003", name: "ميتسوبيشي كانتر 2024", type: "شاحنة صغيرة", driver: "—", status: "maintenance", lastMaintenance: "2026-03-18", location: "ورشة الصيانة" },
+  { id: "VEH-004", name: "تويوتا هايس 2023", type: "فان", driver: "—", status: "available", lastMaintenance: "2026-02-28", location: "المستودع الرئيسي" },
+  { id: "VEH-005", name: "إيسوزو NPR 2024", type: "شاحنة", driver: "عبدالله العتيبي", status: "active", lastMaintenance: "2026-03-12", location: "جدة - حي الصفا" },
+  { id: "VEH-006", name: "نيسان أورفان 2023", type: "فان", driver: "—", status: "available", lastMaintenance: "2026-03-01", location: "المستودع الرئيسي" },
+];
 
 export default function FleetManagement() {
   const navigate = useNavigate();

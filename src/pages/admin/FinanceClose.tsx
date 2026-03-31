@@ -29,7 +29,12 @@ const STATUS_MAP = {
   failed:      { label: "فشل",           cls: "con-badge-danger",  icon: <XCircle size={11} /> },
 };
 
-const MOCK_RECORDS: FinanceCloseRecord[] = [];
+const MOCK_RECORDS: FinanceCloseRecord[] = [
+  { id: "fc-1", close_date: "2026-03-23", status: "closed", total_revenue: 45320, total_expenses: 12400, net: 32920, orders_count: 234, payouts_count: 18, closed_by: "مدير المالية", closed_at: "2026-03-23T22:00:00Z", created_at: "2026-03-23T00:00:00Z" },
+  { id: "fc-2", close_date: "2026-03-22", status: "closed", total_revenue: 38900, total_expenses: 10200, net: 28700, orders_count: 198, payouts_count: 15, closed_by: "مدير المالية", closed_at: "2026-03-22T22:30:00Z", created_at: "2026-03-22T00:00:00Z" },
+  { id: "fc-3", close_date: "2026-03-21", status: "closed", total_revenue: 52100, total_expenses: 14300, net: 37800, orders_count: 267, payouts_count: 21, closed_by: "مدير المالية", closed_at: "2026-03-21T23:00:00Z", created_at: "2026-03-21T00:00:00Z" },
+  { id: "fc-4", close_date: "2026-03-24", status: "open", total_revenue: 0, total_expenses: 0, net: 0, orders_count: 0, payouts_count: 0, created_at: "2026-03-24T00:00:00Z" },
+];
 
 export default function FinanceClose() {
   const [records, setRecords] = useState<FinanceCloseRecord[]>(MOCK_RECORDS);

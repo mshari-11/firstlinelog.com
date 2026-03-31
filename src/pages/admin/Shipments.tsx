@@ -13,7 +13,14 @@ const STATUS_MAP: Record<ShipmentStatus, { label: string; cls: string }> = {
   cancelled: { label: "ملغاة", cls: "con-badge-danger" },
 };
 
-const MOCK: Shipment[] = [];
+const MOCK: Shipment[] = [
+  { id: "SHP-001", trackingNumber: "FLL-2026032101", platform: "هنقرستيشن", customer: "محمد العلي", driver: "فهد السبيعي", status: "active", amount: 85 },
+  { id: "SHP-002", trackingNumber: "FLL-2026032102", platform: "مرسول", customer: "سارة الخالد", driver: "سعد الحربي", status: "in_transit", amount: 120 },
+  { id: "SHP-003", trackingNumber: "FLL-2026032003", platform: "جاهز", customer: "أحمد الراشد", driver: "عبدالله العتيبي", status: "delivered", amount: 65 },
+  { id: "SHP-004", trackingNumber: "FLL-2026031904", platform: "هنقرستيشن", customer: "نورة المطيري", driver: "خالد الشمري", status: "delivered", amount: 95 },
+  { id: "SHP-005", trackingNumber: "FLL-2026031905", platform: "تو يو", customer: "عمر القحطاني", driver: "—", status: "cancelled", amount: 45 },
+  { id: "SHP-006", trackingNumber: "FLL-2026032106", platform: "مرسول", customer: "ريم الحربي", driver: "فهد السبيعي", status: "active", amount: 150 },
+];
 
 export default function Shipments() {
   const navigate = useNavigate();

@@ -18,7 +18,13 @@ const STATUS: Record<ReportStatus, { label: string; cls: string; icon: JSX.Eleme
 
 const TYPE_LABELS: Record<ReportType, string> = { financial: "مالي", operational: "تشغيلي", performance: "أداء" };
 
-const MOCK: AIReport[] = [];
+const MOCK: AIReport[] = [
+  { id: "AI-001", title: "تحليل الإيرادات الشهرية", type: "financial", date: "2026-03-21", status: "ready", recommendations: 5 },
+  { id: "AI-002", title: "تقرير كفاءة التوصيل", type: "operational", date: "2026-03-20", status: "ready", recommendations: 3 },
+  { id: "AI-003", title: "تقييم أداء السائقين", type: "performance", date: "2026-03-19", status: "ready", recommendations: 7 },
+  { id: "AI-004", title: "توقعات الطلب للربع القادم", type: "financial", date: "2026-03-21", status: "processing", recommendations: 0 },
+  { id: "AI-005", title: "تحليل مسارات التوصيل", type: "operational", date: "2026-03-18", status: "ready", recommendations: 4 },
+];
 
 export default function AIReports() {
   const navigate = useNavigate();

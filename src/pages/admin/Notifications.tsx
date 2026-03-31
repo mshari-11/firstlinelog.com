@@ -22,7 +22,16 @@ const TYPE_MAP: Record<NotifType, { label: string; cls: string; icon: JSX.Elemen
   system: { label: "نظام", cls: "con-badge-success", icon: <Settings size={12} />, route: "/admin-panel/settings" },
 };
 
-const MOCK: Notification[] = [];
+const MOCK: Notification[] = [
+  { id: "NTF-001", type: "complaint", title: "شكوى جديدة من عميل", message: "العميل محمد أحمد قدم شكوى بخصوص تأخر التوصيل", read: false, date: "2026-03-21T10:00:00Z", link: "/admin-panel/complaints" },
+  { id: "NTF-002", type: "order", title: "طلب جديد بانتظار التعيين", message: "طلب #ORD-450 بحاجة لتعيين سائق", read: false, date: "2026-03-21T09:30:00Z", link: "/admin-panel/orders" },
+  { id: "NTF-003", type: "finance", title: "فاتورة بحاجة اعتماد", message: "فاتورة صيانة بمبلغ 8,500 ر.س بانتظار الاعتماد", read: false, date: "2026-03-21T09:00:00Z", link: "/admin-panel/finance" },
+  { id: "NTF-004", type: "system", title: "تحديث النظام مكتمل", message: "تم تحديث النظام إلى الإصدار 2.5.0 بنجاح", read: true, date: "2026-03-21T08:00:00Z", link: "/admin-panel/settings" },
+  { id: "NTF-005", type: "order", title: "طلب تم تسليمه", message: "الطلب #ORD-448 تم تسليمه بنجاح", read: true, date: "2026-03-20T16:00:00Z", link: "/admin-panel/orders" },
+  { id: "NTF-006", type: "complaint", title: "شكوى عاجلة", message: "شكوى بخصوص منتج تالف - أولوية عالية", read: false, date: "2026-03-20T14:00:00Z", link: "/admin-panel/complaints" },
+  { id: "NTF-007", type: "finance", title: "تقرير مالي جاهز", message: "التقرير المالي الأسبوعي جاهز للمراجعة", read: true, date: "2026-03-20T12:00:00Z", link: "/admin-panel/finance" },
+  { id: "NTF-008", type: "system", title: "صيانة مجدولة", message: "صيانة مجدولة للنظام يوم الجمعة 2:00 صباحا", read: true, date: "2026-03-19T10:00:00Z", link: "/admin-panel/settings" },
+];
 
 export default function Notifications() {
   const navigate = useNavigate();

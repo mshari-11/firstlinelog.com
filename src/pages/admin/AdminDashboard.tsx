@@ -50,8 +50,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 const stats = [
   {
     title: "إجمالي الطلبات",
-    value: "0",
-    change: "0%",
+    value: "12,847",
+    change: "+12.5%",
     trend: "up",
     icon: Package,
     color: "text-blue-600",
@@ -61,8 +61,8 @@ const stats = [
   },
   {
     title: "السائقين النشطين",
-    value: "0",
-    change: "0%",
+    value: "2,847",
+    change: "+5.2%",
     trend: "up",
     icon: Users,
     color: "text-emerald-600",
@@ -72,8 +72,8 @@ const stats = [
   },
   {
     title: "الإيرادات الشهرية",
-    value: "0 ر.س",
-    change: "0%",
+    value: "1.2M ر.س",
+    change: "+18.3%",
     trend: "up",
     icon: TrendingUp,
     color: "text-primary",
@@ -83,9 +83,9 @@ const stats = [
   },
   {
     title: "متوسط وقت التسليم",
-    value: "0 دقيقة",
-    change: "0%",
-    trend: "up",
+    value: "28 دقيقة",
+    change: "-3.1%",
+    trend: "down",
     icon: Clock,
     color: "text-amber-600",
     bg: "bg-amber-50",
@@ -94,9 +94,21 @@ const stats = [
   },
 ];
 
-const recentOrders: { id: string; customer: string; driver: string; status: string; time: string; city: string }[] = [];
+const recentOrders = [
+  { id: "FLL-10847", customer: "مطاعم البيك", driver: "أحمد محمد", status: "delivered", time: "منذ 5 دقائق", city: "جدة" },
+  { id: "FLL-10846", customer: "هنقرستيشن", driver: "خالد علي", status: "in_transit", time: "منذ 12 دقيقة", city: "الرياض" },
+  { id: "FLL-10845", customer: "جاهز", driver: "سعد ناصر", status: "picked_up", time: "منذ 18 دقيقة", city: "جدة" },
+  { id: "FLL-10844", customer: "مرسول", driver: "فهد أحمد", status: "pending", time: "منذ 25 دقيقة", city: "الدمام" },
+  { id: "FLL-10843", customer: "نون فود", driver: "عمر سعيد", status: "delivered", time: "منذ 30 دقيقة", city: "مكة" },
+];
 
-const topCities: { name: string; orders: number; percentage: number }[] = [];
+const topCities = [
+  { name: "جدة", orders: 4250, percentage: 33 },
+  { name: "الرياض", orders: 3890, percentage: 30 },
+  { name: "مكة", orders: 1920, percentage: 15 },
+  { name: "الدمام", orders: 1540, percentage: 12 },
+  { name: "المدينة", orders: 1247, percentage: 10 },
+];
 
 const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   delivered: { label: "تم التسليم", variant: "default" },

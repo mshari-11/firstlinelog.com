@@ -85,11 +85,28 @@ const fmtTime = (s: string) =>
 
 // ── Mock data (used until Supabase tables are created) ────────────────────
 
-const MOCK_WALLETS: DriverWallet[] = [];
+const MOCK_WALLETS: DriverWallet[] = [
+  { id: "w1", driver_id: "d1", driver_name: "أحمد محمد السالم",  driver_phone: "0501234567", balance: 1840.50, pending_balance: 320.00, total_earned: 24800, total_paid_out: 22960, last_payout_at: "2025-02-28", is_frozen: false, updated_at: new Date().toISOString() },
+  { id: "w2", driver_id: "d2", driver_name: "خالد العمري",       driver_phone: "0557654321", balance: 2310.00, pending_balance: 0,      total_earned: 18400, total_paid_out: 16090, last_payout_at: "2025-02-28", is_frozen: false, updated_at: new Date().toISOString() },
+  { id: "w3", driver_id: "d3", driver_name: "فهد الغامدي",       driver_phone: "0509876543", balance: 3120.75, pending_balance: 450.00, total_earned: 31200, total_paid_out: 28080, last_payout_at: "2025-02-21", is_frozen: false, updated_at: new Date().toISOString() },
+  { id: "w4", driver_id: "d4", driver_name: "سعد الزهراني",      driver_phone: "0551112233", balance: 0,        pending_balance: 0,      total_earned: 9200,  total_paid_out: 9200,  last_payout_at: "2025-03-01", is_frozen: true,  freeze_reason: "مخالفة سياسة الاستخدام", updated_at: new Date().toISOString() },
+  { id: "w5", driver_id: "d5", driver_name: "محمد القحطاني",     driver_phone: "0556667788", balance: 980.00,  pending_balance: 120.00, total_earned: 15600, total_paid_out: 14620, last_payout_at: "2025-02-14", is_frozen: false, updated_at: new Date().toISOString() },
+];
 
-const MOCK_TRANSACTIONS: WalletTransaction[] = [];
+const MOCK_TRANSACTIONS: WalletTransaction[] = [
+  { id: "t1", driver_id: "d1", driver_name: "أحمد محمد السالم",  transaction_id: "tx1", event_type: "order_payment", amount: 84,   balance_before: 1756.50, balance_after: 1840.50, description: "12 طلب — جاهز", reference_type: "platform_report", reference_id: "JHZ-2025-03",    created_at: "2025-03-11T14:23:00Z" },
+  { id: "t2", driver_id: "d3", driver_name: "فهد الغامدي",       transaction_id: "tx2", event_type: "payout",        amount: -2800, balance_before: 5920.75, balance_after: 3120.75, description: "دفعة الأسبوع 9",  reference_type: "payout_batch",    reference_id: "PAY-2025-W09",     created_at: "2025-03-10T09:00:00Z" },
+  { id: "t3", driver_id: "d2", driver_name: "خالد العمري",       transaction_id: "tx3", event_type: "bonus",         amount: 150,  balance_before: 2160.00, balance_after: 2310.00, description: "حافز 50 طلب",     reference_type: "bonus_rule",      reference_id: "BONUS-MARCH",      created_at: "2025-03-09T11:30:00Z" },
+  { id: "t4", driver_id: "d1", driver_name: "أحمد محمد السالم",  transaction_id: "tx4", event_type: "vehicle_cost",  amount: -120, balance_before: 1876.50, balance_after: 1756.50, description: "تكلفة مركبة مارس", reference_type: "vehicle",         reference_id: "VEH-001",          created_at: "2025-03-08T08:00:00Z" },
+  { id: "t5", driver_id: "d5", driver_name: "محمد القحطاني",     transaction_id: "tx5", event_type: "penalty",       amount: -50,  balance_before: 1030.00, balance_after: 980.00,  description: "تأخر في الاستلام", reference_type: "order",           reference_id: "#10234",           created_at: "2025-03-07T16:45:00Z" },
+  { id: "t6", driver_id: "d3", driver_name: "فهد الغامدي",       transaction_id: "tx6", event_type: "order_payment", amount: 245,  balance_before: 5675.75, balance_after: 5920.75, description: "35 طلب — مرسول",  reference_type: "platform_report", reference_id: "MRS-2025-03",      created_at: "2025-03-06T18:00:00Z" },
+];
 
-const MOCK_BATCHES: PayoutBatch[] = [];
+const MOCK_BATCHES: PayoutBatch[] = [
+  { id: "b1", batch_ref: "PAY-2025-W10", status: "draft",      total_amount: 12400, driver_count: 5, period_start: "2025-03-03", period_end: "2025-03-09", created_at: "2025-03-10T08:00:00Z" },
+  { id: "b2", batch_ref: "PAY-2025-W09", status: "completed",  total_amount: 18750, driver_count: 6, period_start: "2025-02-24", period_end: "2025-03-02", created_at: "2025-03-03T08:00:00Z" },
+  { id: "b3", batch_ref: "PAY-2025-W08", status: "completed",  total_amount: 16200, driver_count: 5, period_start: "2025-02-17", period_end: "2025-02-23", created_at: "2025-02-24T08:00:00Z" },
+];
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 

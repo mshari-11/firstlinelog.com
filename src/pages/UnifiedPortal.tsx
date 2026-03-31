@@ -276,7 +276,7 @@ export default function UnifiedPortal() {
                 </div>
               </div>
 
-              {error && (
+              {error && error !== "null" && (
                 <div style={{
                   padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca",
                   borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem",
@@ -364,7 +364,7 @@ export default function UnifiedPortal() {
                 </InputOTP>
               </div>
 
-              {error && (
+              {error && error !== "null" && (
                 <div style={{
                   padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca",
                   borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem",
@@ -438,7 +438,7 @@ export default function UnifiedPortal() {
                   }}
                 />
               </div>
-              {error && (
+              {error && error !== "null" && (
                 <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
                   {error}
                 </div>
@@ -513,7 +513,7 @@ export default function UnifiedPortal() {
                 />
               </div>
 
-              {error && (
+              {error && error !== "null" && (
                 <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
                   {error}
                 </div>

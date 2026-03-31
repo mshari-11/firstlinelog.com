@@ -243,9 +243,10 @@ export function getIdToken(session: CognitoUserSession): string {
 /**
  * Translate Cognito error codes/messages to Arabic
  */
-function translateCognitoError(err: { code?: string; message?: string }, fallback: string): string {
+function translateCognitoError(err: { code?: string; message?: string } | null | undefined, fallback: string): string {
+      if (!err) return fallback;
       const code = err.code || "";
-      const msg = err.message || "";
+      const msg = (err.message && err.message !== "null") ? err.message : "";
       if (code === "UserNotFoundException" || msg.includes("User does not exist") || msg.includes("Username/client id combination not found"))
               return "البريد الإلكتروني غير مسجّل في النظام";
       if (code === "NotAuthorizedException" || msg.includes("Incorrect"))
@@ -262,7 +263,7 @@ function translateCognitoError(err: { code?: string; message?: string }, fallbac
               return "كلمة المرور لا تستوفي متطلبات الأمان (8 أحرف على الأقل، حرف كبير، رقم)";
       if (code === "TooManyRequestsException")
               return "طلبات كثيرة. انتظر دقيقة وحاول مجدداً";
-      return msg || fallback;
+      return (msg && msg !== "null" && msg !== "undefined") ? msg : fallback;
 }
 
 /**

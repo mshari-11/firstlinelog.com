@@ -18,7 +18,7 @@ class FLLWafStack(Stack):
         account = "230811072086"
         region = "me-south-1"
         api_arns = [
-            f"arn:aws:apigateway:{region}::/restapis/xr7wsfym5k/stages/Prod",
+            f"arn:aws:apigateway:{region}::/restapis/k8d4arcxu4/stages/Prod",
             f"arn:aws:apigateway:{region}::/restapis/51n1gng40f/stages/Prod",
         ]
 

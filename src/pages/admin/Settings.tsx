@@ -7,10 +7,13 @@ import {
   ChevronUp, Lock, Key, Zap, AlertTriangle, CheckCircle2, Trash2,
   Monitor, Moon, Sun, Languages, Megaphone, Wifi, WifiOff, Eye, EyeOff,
   HardDrive, ShieldCheck, ExternalLink, Users, Building2, FileText,
+  Cloud, GitBranch, Rocket, Activity, BarChart3, Terminal,
+  Copy, Link2, Trash2, Power, PlayCircle, PauseCircle,
+  Upload, Download, RefreshCcw, Webhook, CircleDot,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
-type Tab = "general" | "security" | "notifications" | "system" | "advanced";
+type Tab = "general" | "security" | "notifications" | "system" | "advanced" | "services" | "permissions";
 
 interface SystemSetting {
   key: string;
@@ -84,6 +87,8 @@ const TAB_CONFIG: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "security",      label: "الأمان",       icon: Shield },
   { id: "notifications", label: "الإشعارات",    icon: Bell },
   { id: "system",        label: "النظام",       icon: Server },
+  { id: "services",      label: "الخدمات",      icon: Cloud },
+  { id: "permissions",   label: "الصلاحيات",    icon: Users },
   { id: "advanced",      label: "متقدم",        icon: Zap },
 ];
 
@@ -273,6 +278,169 @@ export default function AdminSettings() {
           );
         })}
       </div>
+
+      {/* ── Services Tab ──────────────────────────────────────────────── */}
+      {tab === "services" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {/* AWS Services */}
+          <div className="con-card" style={{ padding: "1.25rem" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <Cloud size={16} style={{ color: "#FF9900" }} /> خدمات AWS
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
+              {[
+                { name: "Lambda Functions", desc: "16 وظيفة (Python + Node.js)", status: "active", url: "https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions", icon: Zap, color: "#FF9900" },
+                { name: "API Gateway", desc: "3 واجهات API (Platform + AI + Auth)", status: "active", url: "https://us-east-1.console.aws.amazon.com/apigateway/main/apis?region=us-east-1", icon: Globe, color: "#3b82f6" },
+                { name: "DynamoDB", desc: "39 جدول بيانات", status: "active", url: "https://us-east-1.console.aws.amazon.com/dynamodbv2/home?region=us-east-1#tables", icon: Database, color: "#4F46E5" },
+                { name: "S3 Storage", desc: "17 حاوية تخزين", status: "active", url: "https://s3.console.aws.amazon.com/s3/home?region=us-east-1", icon: HardDrive, color: "#22c55e" },
+                { name: "SES (Email)", desc: "50K/يوم من no-reply@fll.sa", status: "active", url: "https://us-east-1.console.aws.amazon.com/ses/home?region=me-south-1", icon: Mail, color: "#EC4899" },
+                { name: "Cognito", desc: "مصادقة المستخدمين", status: "active", url: "https://us-east-1.console.aws.amazon.com/cognito/v2/idp/user-pools?region=us-east-1", icon: Shield, color: "#8B5CF6" },
+                { name: "CloudWatch", desc: "37 تنبيه مراقبة", status: "active", url: "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1", icon: Activity, color: "#06b6d4" },
+                { name: "EventBridge", desc: "10 قواعد مجدولة", status: "active", url: "https://us-east-1.console.aws.amazon.com/events/home?region=us-east-1", icon: Clock, color: "#f59e0b" },
+                { name: "Bedrock (AI)", desc: "Claude Haiku 4.5 للمحادثة", status: "active", url: "https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1", icon: Megaphone, color: "#D97706" },
+              ].map(svc => (
+                <a key={svc.name} href={svc.url} target="_blank" rel="noopener noreferrer" className="con-card" style={{ padding: "0.75rem", textDecoration: "none", cursor: "pointer", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = svc.color)} onMouseLeave={e => (e.currentTarget.style.borderColor = "")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: svc.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svc.icon size={14} style={{ color: svc.color }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-primary)" }}>{svc.name}</span>
+                    <ExternalLink size={10} style={{ color: "var(--con-text-muted)", marginRight: "auto" }} />
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>{svc.desc}</div>
+                  <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--con-success)" }} />
+                    <span style={{ fontSize: 9, color: "var(--con-success)" }}>نشط</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Vercel */}
+          <div className="con-card" style={{ padding: "1.25rem" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <Rocket size={16} /> Vercel — الاستضافة والنشر
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              {[
+                { name: "لوحة المشروع", desc: "إعدادات النشر والدومين", url: "https://vercel.com/mshari-as-projects/first-line-logistics", icon: Rocket },
+                { name: "Deployments", desc: "سجل عمليات النشر", url: "https://vercel.com/mshari-as-projects/first-line-logistics/deployments", icon: Upload },
+                { name: "Environment Variables", desc: "المتغيرات البيئية (API keys)", url: "https://vercel.com/mshari-as-projects/first-line-logistics/settings/environment-variables", icon: Key },
+                { name: "Analytics", desc: "إحصائيات الزوار والأداء", url: "https://vercel.com/mshari-as-projects/first-line-logistics/analytics", icon: BarChart3 },
+                { name: "Domains", desc: "إدارة النطاقات (fll.sa)", url: "https://vercel.com/mshari-as-projects/first-line-logistics/settings/domains", icon: Globe },
+                { name: "Logs", desc: "سجلات الأخطاء والطلبات", url: "https://vercel.com/mshari-as-projects/first-line-logistics/logs", icon: Terminal },
+              ].map(item => (
+                <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", textDecoration: "none", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--con-accent)")} onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--con-border-default)")}>
+                  <item.icon size={16} style={{ color: "var(--con-text-muted)", flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-primary)" }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>{item.desc}</div>
+                  </div>
+                  <ExternalLink size={10} style={{ color: "var(--con-text-muted)", marginRight: "auto" }} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* GitHub */}
+          <div className="con-card" style={{ padding: "1.25rem" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <GitBranch size={16} /> GitHub — إدارة الكود
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              {[
+                { name: "Repository", desc: "الكود المصدري", url: "https://github.com/mshari-11/firstlinelog.com", icon: GitBranch },
+                { name: "Pull Requests", desc: "مراجعات الكود + Claude AI", url: "https://github.com/mshari-11/firstlinelog.com/pulls", icon: GitBranch },
+                { name: "Issues", desc: "المشاكل والمهام", url: "https://github.com/mshari-11/firstlinelog.com/issues", icon: AlertTriangle },
+                { name: "Actions", desc: "CI/CD + Claude Code Action", url: "https://github.com/mshari-11/firstlinelog.com/actions", icon: PlayCircle },
+              ].map(item => (
+                <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", textDecoration: "none", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--con-accent)")} onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--con-border-default)")}>
+                  <item.icon size={16} style={{ color: "var(--con-text-muted)", flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-primary)" }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>{item.desc}</div>
+                  </div>
+                  <ExternalLink size={10} style={{ color: "var(--con-text-muted)", marginRight: "auto" }} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Supabase */}
+          <div className="con-card" style={{ padding: "1.25rem" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <Database size={16} style={{ color: "#3ECF8E" }} /> Supabase — قاعدة البيانات
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              {[
+                { name: "Database", desc: "الجداول والعلاقات (8 schemas)", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/editor", icon: Database },
+                { name: "Auth", desc: "المستخدمين والصلاحيات", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/auth/users", icon: Users },
+                { name: "Edge Functions", desc: "35 وظيفة خادم", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/functions", icon: Zap },
+                { name: "Storage", desc: "الملفات والوثائق", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/storage/buckets", icon: HardDrive },
+                { name: "SQL Editor", desc: "تنفيذ استعلامات SQL", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/sql", icon: Terminal },
+                { name: "Logs", desc: "سجلات الأحداث", url: "https://supabase.com/dashboard/project/djebhztfewjfyyoortvv/logs/explorer", icon: FileText },
+              ].map(item => (
+                <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", textDecoration: "none", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "#3ECF8E")} onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--con-border-default)")}>
+                  <item.icon size={16} style={{ color: "var(--con-text-muted)", flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-primary)" }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>{item.desc}</div>
+                  </div>
+                  <ExternalLink size={10} style={{ color: "var(--con-text-muted)", marginRight: "auto" }} />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Permissions Tab ─────────────────────────────────────────────── */}
+      {tab === "permissions" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div className="con-card" style={{ padding: "1rem", background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)" }}>
+            <p style={{ fontSize: 12, color: "var(--con-text-secondary)", margin: 0 }}>
+              إدارة صلاحيات الأقسام — كل صلاحية تفتح وصول لقسم معين في لوحة التحكم. لإدارة صلاحيات الموظفين الفردية، انتقل إلى
+              <a href="/admin-panel/staff" style={{ color: "var(--con-accent)", marginRight: 4, marginLeft: 4, textDecoration: "none", fontWeight: 600 }}>الأقسام والموظفين</a>
+            </p>
+          </div>
+          {[
+            { key: "couriers", label: "المناديب", desc: "عرض وإدارة المناديب والطلبات وتعيين السائقين", pages: ["المناديب", "الطلبات", "الخريطة"], icon: Users, color: "#3b82f6" },
+            { key: "orders", label: "الطلبات", desc: "عرض وتتبع وتعديل الطلبات والشحنات", pages: ["الطلبات", "الشحنات", "الإرسال"], icon: FileText, color: "#8B5CF6" },
+            { key: "finance", label: "المالية", desc: "الوصول لكل الأدوات المالية والرواتب والدفعات", pages: ["لوحة المالية", "الإيرادات", "المصروفات", "التدفقات", "الرواتب", "الدفعات", "حاسبة الرواتب"], icon: Building2, color: "#22c55e" },
+            { key: "reports", label: "التقارير", desc: "عرض وتصدير التقارير التحليلية", pages: ["التقارير", "تقارير AI", "التقارير المالية"], icon: BarChart3, color: "#f59e0b" },
+            { key: "excel", label: "Excel", desc: "استيراد وتصدير ملفات Excel", pages: ["استيراد Excel"], icon: Download, color: "#06b6d4" },
+            { key: "hr", label: "الموارد البشرية", desc: "إدارة الموظفين والحضور والتصنيفات", pages: ["الموظفين", "الحضور", "تصنيف السائقين"], icon: Users, color: "#EC4899" },
+            { key: "system", label: "النظام", desc: "إعدادات النظام والتدقيق والمخاطر", pages: ["الإعدادات", "سجل التدقيق", "المخاطر", "الاعتمادات"], icon: Settings2, color: "#64748b" },
+            { key: "governance", label: "الحوكمة", desc: "إدارة API والصلاحيات والبنية التحتية", pages: ["إدارة API", "الأذونات", "البنية التحتية"], icon: Shield, color: "#8B5CF6" },
+          ].map(perm => (
+            <div key={perm.key} className="con-card" style={{ padding: "1rem 1.25rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: perm.color + "18", border: `1px solid ${perm.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <perm.icon size={18} style={{ color: perm.color }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--con-text-primary)" }}>{perm.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--con-text-muted)", marginTop: 2 }}>{perm.desc}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                    {perm.pages.map(p => (
+                      <span key={p} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "var(--con-bg-elevated)", color: "var(--con-text-muted)", border: "1px solid var(--con-border-default)" }}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 10, color: "var(--con-text-muted)", marginBottom: 4 }}>المفتاح</div>
+                  <code style={{ fontSize: 11, fontFamily: "monospace", padding: "3px 8px", borderRadius: 4, background: "var(--con-bg-elevated)", color: perm.color }}>{perm.key}</code>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* System Info Footer */}
       {tab === "advanced" && (

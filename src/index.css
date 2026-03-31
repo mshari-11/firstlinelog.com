@@ -834,7 +834,8 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
   }
 
   body {
-    @apply bg-background text-foreground font-sans min-h-screen;
+    @apply text-foreground font-sans min-h-screen;
+    background: #f8f9fb;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

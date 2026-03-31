@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
+import { Bot, Send, X, Sparkles, Loader2, RefreshCw, Settings } from "lucide-react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 
-import { API_BASE, CHAT_API_URL } from "@/lib/api";
+import { CHAT_API_URL } from "@/lib/api";
 
-// Supabase edge function fallback URL
+// Supabase edge function — PRIMARY endpoint
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const EDGE_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-support-system`;
@@ -17,27 +17,74 @@ interface ChatMessage {
   content: string;
 }
 
+type ServiceStatus = "checking" | "available" | "unavailable";
+
 export function AdminAiAssistant() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const [input, setInput] = useState("");
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>("checking");
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "مرحبًا، أنا مساعد FLL السحابي. أستطيع مساعدتك في التشغيل والمالية والموارد البشرية وتحليل البيانات." },
   ]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  // Check service health on mount and when opened
+  useEffect(() => {
+    checkServiceHealth();
+  }, []);
+
+  useEffect(() => {
+    if (open) checkServiceHealth();
+  }, [open]);
+
+  async function checkServiceHealth() {
+    setServiceStatus("checking");
+    try {
+      // Try edge function health check (GET request)
+      if (SUPABASE_ANON_KEY) {
+        const res = await fetch(EDGE_CHAT_URL, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "apikey": SUPABASE_ANON_KEY,
+          },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (data.status === "ready") {
+            setServiceStatus("available");
+            return;
+          }
+        }
+      }
+
+      // Try Lambda API Gateway as fallback health check
+      const res = await fetch(CHAT_API_URL, {
+        method: "OPTIONS",
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok || res.status === 204) {
+        setServiceStatus("available");
+        return;
+      }
+      setServiceStatus("unavailable");
+    } catch {
+      setServiceStatus("unavailable");
+    }
+  }
+
   useEffect(() => {
     let active = true;
     async function checkAccess() {
       if (!user) return;
-      // Admin/owner always allowed
       if (user.role === "admin" || user.role === "owner") {
         if (active) setAllowed(true);
         return;
       }
-      // Staff: check permissions first (no Supabase needed)
       if (user.role === "staff") {
         const hasOpsPermission = Boolean(
           user.permissions?.finance || user.permissions?.orders || user.permissions?.reports ||
@@ -47,13 +94,11 @@ export function AdminAiAssistant() {
           if (active) setAllowed(true);
           return;
         }
-        // Check department via Supabase if available
         const dept = user.department_name || "";
         if (ALLOWED_DEPARTMENTS.includes(dept)) {
           if (active) setAllowed(true);
           return;
         }
-        // Try Supabase department lookup as last resort
         if (supabase) {
           try {
             const { data } = await supabase
@@ -67,7 +112,6 @@ export function AdminAiAssistant() {
             if (active) setAllowed(false);
           }
         } else {
-          // No supabase + no matching permissions → still allow staff with any permission
           if (active) setAllowed(false);
         }
         return;
@@ -99,23 +143,10 @@ export function AdminAiAssistant() {
     };
 
     try {
-      // Try Lambda API Gateway first
       let reply: string | null = null;
-      try {
-        const res = await fetch(CHAT_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(15000),
-        });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          reply = data.reply || null;
-        }
-      } catch { /* Lambda unavailable, try edge function */ }
 
-      // Fallback: Supabase edge function
-      if (!reply && SUPABASE_ANON_KEY) {
+      // PRIMARY: Supabase edge function
+      if (SUPABASE_ANON_KEY) {
         try {
           const res = await fetch(EDGE_CHAT_URL, {
             method: "POST",
@@ -125,13 +156,35 @@ export function AdminAiAssistant() {
               "apikey": SUPABASE_ANON_KEY,
             },
             body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(30000),
+          });
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            reply = data.reply || null;
+          }
+        } catch { /* edge function unavailable, try Lambda */ }
+      }
+
+      // FALLBACK: Lambda API Gateway
+      if (!reply) {
+        try {
+          const res = await fetch(CHAT_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
             signal: AbortSignal.timeout(15000),
           });
           if (res.ok) {
             const data = await res.json().catch(() => ({}));
-            reply = data.reply || data.message || null;
+            reply = data.reply || null;
           }
-        } catch { /* edge function also unavailable */ }
+        } catch { /* Lambda also unavailable */ }
+      }
+
+      if (reply) {
+        setServiceStatus("available");
+      } else {
+        setServiceStatus("unavailable");
       }
 
       setMessages((prev) => [...prev, {
@@ -146,6 +199,9 @@ export function AdminAiAssistant() {
   }
 
   if (!allowed) return null;
+
+  const statusColor = serviceStatus === "available" ? "#22c55e" : serviceStatus === "checking" ? "#eab308" : "#ef4444";
+  const statusText = serviceStatus === "available" ? "الخدمة متاحة" : serviceStatus === "checking" ? "جاري الفحص..." : "الخدمة غير متاحة حالياً";
 
   return (
     <>
@@ -193,19 +249,70 @@ export function AdminAiAssistant() {
             overflow: "hidden",
           }}
         >
+          {/* Header */}
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--con-border-default)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg, rgba(14,212,197,0.12), rgba(8,17,27,0.4))" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--con-brand-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--con-brand)" }}>
                 <Sparkles size={16} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>FLL Cloud Chat</div>
-                <div style={{ fontSize: 11, color: "var(--con-text-muted)" }}>متاح للإدارة والمالية والتشغيل والموارد</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, display: "inline-block" }} />
+                  FLL Cloud Chat
+                </div>
+                <div style={{ fontSize: 11, color: "var(--con-text-muted)" }}>{statusText}</div>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={18} /></button>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button
+                onClick={checkServiceHealth}
+                style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer", padding: 4 }}
+                title="إعادة فحص الخدمة"
+              >
+                <RefreshCw size={14} />
+              </button>
+              <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer", padding: 4 }}>
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
+          {/* Unavailable banner */}
+          {serviceStatus === "unavailable" && (
+            <div style={{
+              padding: "8px 14px",
+              background: "rgba(239,68,68,0.1)",
+              borderBottom: "1px solid rgba(239,68,68,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}>
+              <span style={{ fontSize: 12, color: "#fca5a5" }}>
+                خدمة الذكاء الاصطناعي غير متاحة مؤقتاً
+              </span>
+              <button
+                onClick={checkServiceHealth}
+                style={{
+                  fontSize: 11,
+                  color: "var(--con-text-muted)",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--con-border-default)",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <RefreshCw size={11} />
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
+
+          {/* Messages */}
           <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             {messages.map((msg, idx) => (
               <div key={idx} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
@@ -215,7 +322,7 @@ export function AdminAiAssistant() {
               </div>
             ))}
             {loading && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div style={{ background: "var(--con-brand-subtle)", border: "1px solid var(--con-border-brand)", padding: "10px 12px", borderRadius: 14, color: "var(--con-text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
                   <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> جاري التفكير...
                 </div>
@@ -223,6 +330,7 @@ export function AdminAiAssistant() {
             )}
           </div>
 
+          {/* Input */}
           <div style={{ padding: 12, borderTop: "1px solid var(--con-border-default)", display: "flex", gap: 8 }}>
             <input
               value={input}
@@ -231,6 +339,7 @@ export function AdminAiAssistant() {
               className="con-input"
               placeholder="اكتب طلبك هنا..."
               style={{ flex: 1 }}
+              disabled={loading}
             />
             <button className="con-btn-primary" onClick={sendMessage} disabled={loading || !input.trim()} style={{ padding: "0.5rem 0.8rem" }}>
               <Send size={14} />

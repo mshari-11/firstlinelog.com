@@ -3,7 +3,8 @@
  * مساعد ذكي مصغر يظهر في أسفل الصفحة
  */
 (function() {
-  const API_URL = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/ai/chat';
+  const SUPABASE_URL = 'https://djebhztfewjfyyoortvv.supabase.co';
+  const API_URL = SUPABASE_URL + '/functions/v1/ai-support-system';
   let conversationId = null;
   let history = [];
   let isOpen = false;
@@ -96,9 +97,10 @@
 
     try {
       const userId = localStorage.getItem('fll_user_id') || 'anonymous';
+      const anonKey = localStorage.getItem('sb-anon-key') || '';
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anonKey, 'apikey': anonKey },
         body: JSON.stringify({ message: text, user_id: userId, conversation_id: conversationId, history: history })
       });
       const data = await res.json();

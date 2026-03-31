@@ -4,6 +4,7 @@
  */
 (function() {
   const API_URL = 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/ai/chat';
+  const FALLBACK_URL = 'https://djebhztfewjfyyoortvv.supabase.co/functions/v1/ai-support-system';
   let conversationId = null;
   let history = [];
   let isOpen = false;
@@ -96,9 +97,10 @@
 
     try {
       const userId = localStorage.getItem('fll_user_id') || 'anonymous';
+      const anonKey = localStorage.getItem('sb-anon-key') || '';
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anonKey, 'apikey': anonKey },
         body: JSON.stringify({ message: text, user_id: userId, conversation_id: conversationId, history: history })
       });
       const data = await res.json();

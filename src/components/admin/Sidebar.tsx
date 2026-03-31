@@ -14,7 +14,7 @@ import {
   User, ChevronUp, KeyRound, ChevronDown, Search, X,
   Package, CheckCircle2, ListTodo, ScrollText, Mail, ShieldAlert,
   UserCheck, Sparkles, Clock, Truck, Link2, FileCheck, CreditCard,
-  Server, ToggleLeft, GitBranch, Timer, Eye, Calculator,
+  Server, ToggleLeft, GitBranch, Timer, Eye, Calculator, HelpCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -39,7 +39,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Shield, GraduationCap, Lock, Target, Plug,
   Package, CheckCircle2, ListTodo, ScrollText, Mail,
   ShieldAlert, UserCheck, Sparkles, Clock, Truck, Link2,
-  FileCheck, CreditCard, Zap, Server, ToggleLeft, GitBranch, Timer, Eye, Calculator,
+  FileCheck, CreditCard, Zap, Server, ToggleLeft, GitBranch, Timer, Eye, Calculator, HelpCircle,
 };
 
 function NavIcon({ name, size = 16 }: { name: string; size?: number }) {

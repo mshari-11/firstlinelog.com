@@ -146,6 +146,7 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "accounting-components", label: "المكونات المحاسبية", path: "/admin-panel/accounting-components", group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 43, permission: "finance" },
   { id: "payout-workflow",       label: "سير عمل الدفع",      path: "/admin-panel/payout-workflow",       group: "المالية والموارد", icon: "GitBranch",       enabled: true,  order: 44, permission: "finance" },
   { id: "payroll-calculator",   label: "حاسبة الرواتب",      path: "/admin-panel/payroll-calculator",   group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 45, permission: "finance" },
+  { id: "help-guide",           label: "الإرشادات",           path: "/admin-panel/help-guide",           group: "النظام",            icon: "HelpCircle",      enabled: true,  order: 46, isCore: true },
 ];
 
 const STORAGE_KEY = "fll_page_config_v1";

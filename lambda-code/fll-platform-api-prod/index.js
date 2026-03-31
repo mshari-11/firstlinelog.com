@@ -151,9 +151,9 @@ async function handleSendOtp(body,origin){
   if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"},origin);
   const code=String(Math.floor(100000+Math.random()*900000));
   const expiresAt=Math.floor(Date.now()/1000)+600; // 10 minutes TTL
-  const id="otp-"+email.toLowerCase()+"-"+(type||"login");
+  const codeId="otp-"+email.toLowerCase()+"-"+(type||"login");
   try{
-    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{id,email:email.toLowerCase(),code,type:type||"login",expiresAt,createdAt:new Date().toISOString()}}));
+    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{codeId,email:email.toLowerCase(),code,type:type||"login",expiresAt,createdAt:new Date().toISOString()}}));
     await sesClient.send(new SendEmailCommand({
       Source:SES_FROM,
       Destination:{ToAddresses:[email]},
@@ -173,16 +173,16 @@ async function handleSendOtp(body,origin){
 async function handleVerifyOtp(body,origin){
   const{email,code,type}=body;
   if(!email||!code)return R(400,{error:"البريد والرمز مطلوبان"},origin);
-  const id="otp-"+email.toLowerCase()+"-"+(type||"login");
+  const codeId="otp-"+email.toLowerCase()+"-"+(type||"login");
   try{
-    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{id}}));
+    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{codeId}}));
     if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"},origin);
     if(r.Item.expiresAt<Math.floor(Date.now()/1000)){
-      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{codeId}}));
       return R(400,{error:"انتهت صلاحية رمز التحقق. أرسل رمزاً جديداً"},origin);
     }
     if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"},origin);
-    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{codeId}}));
     return R(200,{success:true,message:"تم التحقق بنجاح"},origin);
   }catch(err){
     return R(500,{error:"خطأ في التحقق: "+err.message},origin);
@@ -195,9 +195,9 @@ async function handleForgotPassword(body,origin){
   if(!email)return R(400,{error:"البريد الإلكتروني مطلوب"},origin);
   const code=String(Math.floor(100000+Math.random()*900000));
   const expiresAt=Math.floor(Date.now()/1000)+600;
-  const id="otp-"+email.toLowerCase()+"-password_reset";
+  const codeId="otp-"+email.toLowerCase()+"-password_reset";
   try{
-    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{id,email:email.toLowerCase(),code,type:"password_reset",expiresAt,createdAt:new Date().toISOString()}}));
+    await d.send(new PutCommand({TableName:"fll-verification-codes",Item:{codeId,email:email.toLowerCase(),code,type:"password_reset",expiresAt,createdAt:new Date().toISOString()}}));
     await sesClient.send(new SendEmailCommand({
       Source:SES_FROM,
       Destination:{ToAddresses:[email]},
@@ -219,16 +219,16 @@ async function handleResetPassword(body,origin){
   const{email,code,newPassword}=body;
   if(!email||!code||!newPassword)return R(400,{error:"جميع الحقول مطلوبة"},origin);
   if(newPassword.length<6)return R(400,{error:"كلمة المرور يجب أن تكون 6 أحرف على الأقل"},origin);
-  const id="otp-"+email.toLowerCase()+"-password_reset";
+  const codeId="otp-"+email.toLowerCase()+"-password_reset";
   try{
-    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{id}}));
+    const r=await d.send(new GetCommand({TableName:"fll-verification-codes",Key:{codeId}}));
     if(!r.Item)return R(400,{error:"رمز التحقق غير صحيح أو منتهي الصلاحية"},origin);
     if(r.Item.expiresAt<Math.floor(Date.now()/1000)){
-      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+      await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{codeId}}));
       return R(400,{error:"انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً"},origin);
     }
     if(r.Item.code!==String(code))return R(400,{error:"رمز التحقق غير صحيح"},origin);
-    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{id}}));
+    await d.send(new DeleteCommand({TableName:"fll-verification-codes",Key:{codeId}}));
     // Update password in Supabase
     const spRes=await fetch(`${SUPABASE_URL}/functions/v1/admin-set-password`,{
       method:"POST",

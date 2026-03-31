@@ -455,6 +455,24 @@ def admin_application_email_html(record):
     return fll_email_template("طلب تسجيل مندوب جديد", "تم استلام طلب تسجيل جديد ويحتاج مراجعة.", body)
 
 
+def courier_confirmation_email_html(record):
+    app_ref = record["app_ref"]
+    body = f"""
+<p>تم استلام طلب تسجيلك بنجاح وهو الآن قيد المراجعة.</p>
+<table style=\"width:100%;border-collapse:collapse;font-size:14px;margin:16px 0\">
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">رقم الطلب</td><td style=\"font-weight:700;color:#2563eb;font-family:monospace;font-size:16px\">{app_ref}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">الاسم</td><td>{record['full_name']}</td></tr>
+  <tr><td style=\"padding:6px 0;color:#94a3b8\">المدينة</td><td>{record['city']}</td></tr>
+</table>
+<p>يمكنك متابعة حالة طلبك من خلال الرابط التالي:</p>
+<div style=\"text-align:center;margin:20px 0\">
+  <a href=\"https://fll.sa/application-status?ref={app_ref}\" style=\"display:inline-block;background:#1d4ed8;color:#fff;text-decoration:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600\">متابعة حالة الطلب</a>
+</div>
+<p style=\"color:#94a3b8;font-size:13px\">سيتم مراجعة طلبك من قِبل الإدارة وإخطارك بالنتيجة على بريدك الإلكتروني.</p>
+"""
+    return fll_email_template("تأكيد استلام طلب التسجيل", f"مرحباً {record['full_name']}،", body)
+
+
 def decision_email_html(full_name, app_ref, approved, reason=""):
     if approved:
         body = """
@@ -652,6 +670,11 @@ def handle_apply(body, ip_address):
 
     try:
         send_email(ADMIN_EMAILS, f"طلب تسجيل جديد — {record['full_name']} ({app_ref})", admin_application_email_html(record))
+    except Exception:
+        pass
+
+    try:
+        send_email([record["email"]], f"تأكيد استلام طلب التسجيل — {app_ref}", courier_confirmation_email_html(record))
     except Exception:
         pass
 

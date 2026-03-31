@@ -210,6 +210,8 @@ export default function UnifiedPortal() {
           background: "#fff", borderRadius: "12px",
           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
           padding: "2rem",
+          overflow: "hidden",
+          wordBreak: "break-word",
         }}>
 
           {/* ══ Login Screen ══ */}

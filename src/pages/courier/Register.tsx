@@ -139,14 +139,48 @@ function generateCaptcha() {
   return { question: `ما ناتج: ${q} ؟`, answer: String(answer) };
 }
 
-// ─── File → base64 ────────────────────────────────────────────────────────────
-function fileToBase64(file: File): Promise<string> {
+// ─── Image compression ───────────────────────────────────────────────────────
+const MAX_IMAGE_WIDTH = 1200;
+const IMAGE_QUALITY = 0.75;
+
+function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+    // PDFs — no compression, just base64
+    if (file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let w = img.width;
+      let h = img.height;
+      if (w > MAX_IMAGE_WIDTH) {
+        h = Math.round((h * MAX_IMAGE_WIDTH) / w);
+        w = MAX_IMAGE_WIDTH;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
+      resolve(dataUrl.split(",")[1]);
+    };
+    img.onerror = reject;
     const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onload = () => { img.src = reader.result as string; };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ─── File → base64 (with compression) ────────────────────────────────────────
+function fileToBase64(file: File): Promise<string> {
+  return compressImage(file);
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────

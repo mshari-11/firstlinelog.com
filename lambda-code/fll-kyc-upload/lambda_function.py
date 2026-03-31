@@ -45,8 +45,25 @@ def lambda_handler(event, context):
         if not driver_id or not file_data:
             return cors(400, {'error': 'driver_id and file_data required'})
         file_bytes = base64.b64decode(file_data)
+        content_type = 'image/jpeg'
+        # Compress image server-side
+        try:
+            from io import BytesIO
+            from PIL import Image
+            img = Image.open(BytesIO(file_bytes))
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            w, h = img.size
+            if w > 1200:
+                ratio = 1200 / w
+                img = img.resize((1200, int(h * ratio)), Image.LANCZOS)
+            buf = BytesIO()
+            img.save(buf, format='JPEG', quality=75, optimize=True)
+            file_bytes = buf.getvalue()
+        except Exception:
+            pass  # If Pillow not available, upload original
         key = f"{driver_id}/{doc_type}/{uuid.uuid4().hex}_{file_name}"
-        s3.put_object(Bucket=BUCKET, Key=key, Body=file_bytes, ContentType='image/jpeg',
+        s3.put_object(Bucket=BUCKET, Key=key, Body=file_bytes, ContentType=content_type,
                      Metadata={'driver_id':driver_id,'doc_type':doc_type,'uploaded_at':datetime.utcnow().isoformat()})
         try:
             html = fll_email_template(

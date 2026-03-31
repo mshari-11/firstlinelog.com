@@ -84,6 +84,17 @@ if(p[0]==="admin"&&p[1]==="create-user"&&m==="POST"){
   return handleCreateUser(b);
 }
 
+// === SALARY / PAYOUT ROUTES ===
+if(p[0]==="salary"){
+  let b={};try{b=e.body?JSON.parse(e.body):{}}catch(x){}
+  // POST /salary/calculate — حساب الرواتب لكل المناديب
+  if(p[1]==="calculate"&&m==="POST") return handleSalaryCalc(b);
+  // POST /salary/generate-stc — توليد ملف STC Bank Excel
+  if(p[1]==="generate-stc"&&m==="POST") return handleGenerateStc(b);
+  // GET /salary/history — سجل الدفعات السابقة
+  if(p[1]==="history"&&m==="GET") return handleSalaryHistory();
+}
+
 // === DISPATCH ROUTES ===
 if(p[0]==="dispatch"){
   p.shift();
@@ -398,4 +409,182 @@ try{
   if(err.name==="InvalidPasswordException")return R(400,{error:"كلمة المرور ضعيفة — يجب أن تحتوي على أحرف كبيرة وصغيرة وأرقام (8+ أحرف)"});
   return R(500,{error:"خطأ في إنشاء الحساب: "+err.message});
 }
+}
+
+// === SALARY CALCULATION ===
+async function handleSalaryCalc(body){
+const{period,platform_filter}=body;
+const now=new Date().toISOString();
+try{
+  // 1. Load all active drivers
+  const driversRes=await d.send(new ScanCommand({TableName:"fll-drivers"}));
+  const drivers=(driversRes.Items||[]).filter(dr=>dr.status==="active");
+
+  // 2. Load accounting rules
+  const rulesRes=await d.send(new ScanCommand({TableName:"fll-accounting-rules"}));
+  const rules=(rulesRes.Items||[]).filter(r=>r.is_active!==false).sort((a,b)=>(a.priority||0)-(b.priority||0));
+
+  // 3. Load orders for period (or all)
+  const ordersRes=await d.send(new ScanCommand({TableName:"fll-orders",Limit:500}));
+  const orders=ordersRes.Items||[];
+
+  // 4. Calculate per driver
+  const payouts=drivers.map(driver=>{
+    // Count driver's orders
+    const driverOrders=orders.filter(o=>o.assignedDriverId===driver.driverId||o.assignedDriverId===driver.id);
+    const orderCount=driverOrders.length;
+
+    // Base: order earnings (from order amounts or default rate)
+    const defaultRate=driver.per_order_rate||15; // SAR per order
+    let grossEarnings=orderCount*defaultRate;
+
+    // Apply platform-specific rate if available
+    if(driver.platform_rate) grossEarnings=orderCount*driver.platform_rate;
+
+    // Apply accounting rules
+    let totalAdditions=0;
+    let totalDeductions=0;
+    const appliedRules=[];
+
+    for(const rule of rules){
+      // Check scope
+      let applies=false;
+      if(rule.scope_type==="all") applies=true;
+      else if(rule.scope_type==="contract_type"){
+        const vals=JSON.parse(rule.scope_value||"[]");
+        applies=vals.includes(driver.contract_type);
+      }
+      else if(rule.scope_type==="city"){
+        const vals=JSON.parse(rule.scope_value||"[]");
+        applies=vals.includes(driver.city);
+      }
+      else if(rule.scope_type==="platform"){
+        const vals=JSON.parse(rule.scope_value||"[]");
+        applies=vals.includes(driver.platform);
+      }
+      else if(rule.scope_type==="driver"){
+        const vals=JSON.parse(rule.scope_value||"[]");
+        applies=vals.includes(driver.driverId||driver.id);
+      }
+      // Check vehicle ownership
+      else if(rule.scope_type==="vehicle_ownership"){
+        const vals=JSON.parse(rule.scope_value||"[]");
+        applies=vals.includes(driver.vehicle_ownership||"own");
+      }
+
+      if(!applies) continue;
+
+      let amount=0;
+      if(rule.calc_method==="fixed") amount=rule.amount||0;
+      else if(rule.calc_method==="percentage") amount=grossEarnings*((rule.percentage||0)/100);
+
+      if(rule.component_type==="addition"){totalAdditions+=amount;}
+      else{totalDeductions+=amount;}
+
+      appliedRules.push({name:rule.name_ar,type:rule.component_type,amount:Math.round(amount*100)/100});
+    }
+
+    // Vehicle cost (if company vehicle)
+    let vehicleCost=0;
+    if(driver.vehicle_ownership==="company"||driver.contract_type==="company_sponsored"){
+      vehicleCost=driver.vehicle_monthly_cost||500;
+      totalDeductions+=vehicleCost;
+    }
+
+    const netPayout=Math.round((grossEarnings+totalAdditions-totalDeductions)*100)/100;
+
+    return{
+      driverId:driver.driverId||driver.id,
+      name:driver.full_name||driver.name||"—",
+      phone:driver.phone||"",
+      stc_phone:driver.stc_bank_phone_int||driver.stc_bank_phone||"",
+      platform:driver.platform||"—",
+      city:driver.city||"—",
+      contract_type:driver.contract_type||"freelancer",
+      vehicle_ownership:driver.vehicle_ownership||"own",
+      orderCount,
+      grossEarnings:Math.round(grossEarnings*100)/100,
+      totalAdditions:Math.round(totalAdditions*100)/100,
+      totalDeductions:Math.round(totalDeductions*100)/100,
+      vehicleCost,
+      netPayout:Math.max(netPayout,0),
+      appliedRules,
+    };
+  });
+
+  // 5. Save payout batch
+  const batchId="batch-"+Date.now();
+  await d.send(new PutCommand({TableName:"fll-payout-runs",Item:{
+    runId:batchId,
+    period:period||now.split("T")[0].slice(0,7),
+    status:"draft",
+    total_drivers:payouts.length,
+    total_gross:payouts.reduce((s,p)=>s+p.grossEarnings,0),
+    total_net:payouts.reduce((s,p)=>s+p.netPayout,0),
+    total_deductions:payouts.reduce((s,p)=>s+p.totalDeductions,0),
+    total_additions:payouts.reduce((s,p)=>s+p.totalAdditions,0),
+    rules_applied:rules.length,
+    createdAt:now,
+    updatedAt:now,
+  }}));
+
+  return R(200,{
+    batchId,
+    period:period||now.split("T")[0].slice(0,7),
+    summary:{
+      drivers:payouts.length,
+      totalGross:payouts.reduce((s,p)=>s+p.grossEarnings,0),
+      totalAdditions:payouts.reduce((s,p)=>s+p.totalAdditions,0),
+      totalDeductions:payouts.reduce((s,p)=>s+p.totalDeductions,0),
+      totalNet:payouts.reduce((s,p)=>s+p.netPayout,0),
+      rulesApplied:rules.length,
+    },
+    payouts,
+  });
+}catch(err){return R(500,{error:"خطأ في حساب الرواتب: "+err.message})}
+}
+
+// === GENERATE STC BANK CSV ===
+async function handleGenerateStc(body){
+const{batchId,payouts}=body;
+if(!payouts||!payouts.length)return R(400,{error:"لا يوجد مناديب لتوليد الملف"});
+try{
+  // Generate CSV format (Reference, Phone 966+, Amount)
+  const rows=["Reference,Telephone,Amount"];
+  let total=0;
+  const errors=[];
+  for(const p of payouts){
+    if(!p.stc_phone&&!p.phone){errors.push(`${p.name}: رقم STC غير متوفر`);continue;}
+    if(p.netPayout<=0){errors.push(`${p.name}: المبلغ صفر`);continue;}
+    // Normalize phone
+    let phone=String(p.stc_phone||p.phone).replace(/\D/g,"");
+    if(phone.length===9&&phone.startsWith("5"))phone="966"+phone;
+    else if(phone.length===10&&phone.startsWith("0"))phone="966"+phone.slice(1);
+    else if(phone.length!==12||!phone.startsWith("966")){errors.push(`${p.name}: رقم غير صالح ${phone}`);continue;}
+
+    const ref=`${p.name} - ${p.platform} - ${p.contract_type}`;
+    rows.push(`"${ref}","${phone}",${p.netPayout}`);
+    total+=p.netPayout;
+  }
+
+  return R(200,{
+    csv:rows.join("\n"),
+    filename:`STC_Payout_${batchId||"batch"}_${new Date().toISOString().split("T")[0]}.csv`,
+    summary:{
+      totalRows:rows.length-1,
+      totalAmount:Math.round(total*100)/100,
+      errors,
+      errorsCount:errors.length,
+    },
+  });
+}catch(err){return R(500,{error:"خطأ في توليد ملف STC: "+err.message})}
+}
+
+// === SALARY HISTORY ===
+async function handleSalaryHistory(){
+try{
+  const res=await d.send(new ScanCommand({TableName:"fll-payout-runs",Limit:20}));
+  const items=(res.Items||[]).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+  return R(200,{batches:items,count:items.length});
+}catch(err){return R(500,{error:err.message})}
 }

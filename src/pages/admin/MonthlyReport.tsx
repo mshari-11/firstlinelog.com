@@ -3,7 +3,7 @@
  * توليد ومتابعة التقارير المالية الشهرية عبر Lambda fll-monthly-finance-report
  */
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, FileText, Download, Play, Calendar, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { RefreshCw, AlertCircle, FileText, Download, Play, Calendar, TrendingUp, TrendingDown, DollarSign, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 interface MonthlyReport {
@@ -98,9 +98,20 @@ export default function MonthlyReport() {
           </h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>توليد ومراجعة التقارير المالية الشهرية التلقائية</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button onClick={() => { if (!reports.length) return; const headers = ["month","total_revenue","total_expenses","total_payouts","net_profit","total_orders","active_couriers","status"]; const csv = [headers.join(","), ...reports.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "monthly_reports.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => { const latest = reports.find(r => r.pdf_url); if (latest?.pdf_url) window.open(latest.pdf_url, "_blank"); else window.print(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <FileText size={14} /> تصدير PDF
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Generate Section */}

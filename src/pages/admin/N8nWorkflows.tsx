@@ -3,7 +3,8 @@
  * عرض سجلات n8n_workflow_logs والمصادر الخارجية
  */
 import { useState, useEffect, useCallback } from "react";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database, Download, Printer, Play } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 type WorkflowStatus = "success" | "error" | "running" | "pending";
@@ -105,9 +106,20 @@ export default function N8nWorkflows() {
           </h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>سجلات تنفيذ سير العمل التلقائي والمصادر الخارجية</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button onClick={() => { toast("جاري تشغيل سير العمل..."); }} className="con-btn con-btn-primary" style={{ gap: 6 }}>
+            <Play size={14} /> تشغيل سير عمل
+          </button>
+          <button onClick={() => { if (!filteredLogs.length) return; const headers = ["workflow_name","workflow_id","trigger_type","status","started_at","completed_at"]; const csv = [headers.join(","), ...filteredLogs.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "n8n_logs.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

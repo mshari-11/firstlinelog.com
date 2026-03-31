@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, FileText, Shield } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, FileText, Shield, Download, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type ReviewStatus = "pending" | "approved" | "rejected" | "needs_review";
@@ -111,9 +111,20 @@ export default function KYCManagement() {
           </h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>مراجعة الوثائق المرفوعة للتحقق من هوية السائقين</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button onClick={() => { if (!filtered.length) return; const headers = ["doc_type","driver_id","file_size_bytes","mime_type","uploaded_at","review_status"]; const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "kyc_files.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={async () => { const pending = data.filter(f => f.review_status === "pending"); if (!pending.length) { toast.info("لا توجد وثائق معلقة"); return; } if (!supabase) return; const update = { review_status: "approved" as ReviewStatus, reviewed_at: new Date().toISOString() }; const { error: err } = await supabase.from("kyc_files").update(update).in("id", pending.map(f => f.id)); if (err) { toast.error(err.message); return; } setData(prev => prev.map(f => f.review_status === "pending" ? { ...f, ...update } : f)); toast.success(`تم قبول ${pending.length} وثيقة`); }} className="con-btn" style={{ gap: 6, background: "var(--con-success)", color: "#fff", border: "none" }}>
+            <CheckCircle2 size={14} /> موافقة جماعية
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

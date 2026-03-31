@@ -3,7 +3,15 @@
  * Enterprise Fleet Panel — vehicle registry, status tracking, service history
  */
 import { useState, useEffect } from "react";
-import { Truck, Plus, Search, Car, Bike, Package, Wrench, MapPin, AlertCircle, X } from "lucide-react";
+import { Truck, Plus, Search, Car, Bike, Package, Wrench, MapPin, AlertCircle, X, Download, Printer } from "lucide-react";
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 import { supabase } from "../../lib/supabase";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -151,10 +159,25 @@ export default function Vehicles() {
             إدارة مركبات المناديب وتاريخ الصيانة
           </p>
         </div>
-        <button className="con-btn-primary" onClick={() => setShowAddModal(true)}>
-          <Plus size={14} />
-          إضافة مركبة
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { window.print(); }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button className="con-btn-ghost" onClick={() => {
+            const rows = vehicles.map(v => ({
+              النوع: v.type, رقم_اللوحة: v.plate, الماركة: v.brand,
+              السنة: v.year, المندوب: v.courier, المدينة: v.city,
+              الحالة: STATUS_META[v.status]?.label ?? v.status, آخر_صيانة: v.lastService,
+            }));
+            downloadCSV(rows, "vehicles_export");
+          }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button className="con-btn-primary" onClick={() => setShowAddModal(true)}>
+            <Plus size={14} />
+            إضافة مركبة
+          </button>
+        </div>
       </div>
 
       {/* KPI Row */}

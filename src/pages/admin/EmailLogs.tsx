@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Settings, Users, Filter } from "lucide-react";
+import { Mail, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Settings, Users, Filter, Download, Printer, RotateCcw } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type EmailStatus = "sent" | "failed";
 type EmailType = "otp" | "notification" | "confirmation" | "report";
@@ -63,7 +72,11 @@ export default function EmailLogs() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>متابعة حالة الرسائل الإلكترونية المرسلة</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(a => ({ الرقم: a.id, التاريخ: a.date, المستلم: a.recipient, النوع: TYPE_LABELS[a.type], الموضوع: a.subject, الحالة: STATUS[a.status].label })), "email-logs.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -103,7 +116,7 @@ export default function EmailLogs() {
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table className="con-table">
-              <thead><tr><th>التاريخ</th><th>المستلم</th><th>النوع</th><th>الموضوع</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>التاريخ</th><th>المستلم</th><th>النوع</th><th>الموضوع</th><th>الحالة</th><th>إجراء</th></tr></thead>
               <tbody>
                 {filtered.map(a => (
                   <tr key={a.id}>
@@ -112,6 +125,9 @@ export default function EmailLogs() {
                     <td><span className={`con-badge con-badge-sm con-badge-info`}>{TYPE_LABELS[a.type]}</span></td>
                     <td>{a.subject}</td>
                     <td><span className={`con-badge con-badge-sm ${STATUS[a.status].cls}`}>{STATUS[a.status].icon} {STATUS[a.status].label}</span></td>
+                    <td>{a.status === "failed" ? (
+                      <button className="con-btn-ghost" style={{ padding: "4px 8px", fontSize: 11, color: "var(--con-warning)" }} onClick={async () => { try { await fetch(`${API_BASE}/api/email-resend`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: a.id }) }); } catch {} setData(prev => prev.map(e => e.id === a.id ? { ...e, status: "sent" as EmailStatus } : e)); toast.success(`تم إعادة إرسال ${a.id}`); }}><RotateCcw size={12} /> إعادة إرسال</button>
+                    ) : <span style={{ color: "var(--con-text-muted)", fontSize: 11 }}>—</span>}</td>
                   </tr>
                 ))}
               </tbody>

@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, Clock, GraduationCap, Plus, XCircle } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, Clock, GraduationCap, Plus, XCircle, Download, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type TrainingStatus = "assigned" | "in_progress" | "completed" | "failed" | "expired";
@@ -116,6 +116,15 @@ export default function DriverTraining() {
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+          <button onClick={() => { if (!filtered.length) return; const headers = ["training_name","training_type","driver_id","status","completed_at"]; const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "driver_training.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={async () => { const incomplete = data.filter(r => r.status !== "completed"); if (!incomplete.length) { toast.info("جميع التدريبات مكتملة"); return; } for (const r of incomplete) { await updateStatus(r.id, "completed"); } toast.success(`تم إكمال ${incomplete.length} سجل تدريب`); }} className="con-btn" style={{ gap: 6, background: "var(--con-success)", color: "#fff", border: "none" }}>
+            <CheckCircle2 size={14} /> إكمال جماعي
           </button>
           <button onClick={() => setShowModal(true)} className="con-btn con-btn-primary" style={{ gap: 6 }}>
             <Plus size={14} /> إضافة تدريب

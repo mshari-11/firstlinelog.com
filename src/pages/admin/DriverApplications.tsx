@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, User, Phone, Mail, MapPin, Car, CreditCard } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Eye, User, Phone, Mail, MapPin, Car, CreditCard, Download, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AppStatus = "pending" | "under_review" | "approved" | "rejected" | "archived";
@@ -119,9 +119,20 @@ export default function DriverApplications() {
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>طلبات السائقين</h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>مراجعة وإدارة طلبات تسجيل السائقين الجدد</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button onClick={() => { if (!filtered.length) return; const headers = ["app_ref","full_name","phone","city","platform_app","status","created_at"]; const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "driver_applications.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={async () => { const pending = data.filter(a => a.status === "pending"); if (!pending.length) { toast.info("لا توجد طلبات معلقة"); return; } if (!supabase) return; const update = { status: "approved" as AppStatus, reviewed_at: new Date().toISOString() }; const { error: err } = await supabase.from("driver_applications").update(update).in("id", pending.map(a => a.id)); if (err) { toast.error(err.message); return; } setData(prev => prev.map(a => a.status === "pending" ? { ...a, ...update } : a)); toast.success(`تم قبول ${pending.length} طلب`); }} className="con-btn" style={{ gap: 6, background: "var(--con-success)", color: "#fff", border: "none" }}>
+            <CheckCircle2 size={14} /> موافقة جماعية
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

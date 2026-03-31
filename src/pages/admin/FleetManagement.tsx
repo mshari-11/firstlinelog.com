@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Truck, CheckCircle2, Wrench, ParkingCircle, Users, Link2, Car, MapPin } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Truck, CheckCircle2, Wrench, ParkingCircle, Users, Link2, Car, MapPin, Plus, Download, Printer, X } from "lucide-react";
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 import { API_BASE } from "@/lib/api";
 
 type VehicleStatus = "active" | "maintenance" | "available" | "inactive";
@@ -28,6 +36,8 @@ export default function FleetManagement() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<VehicleStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newVehicle, setNewVehicle] = useState({ name: "", type: "فان", driver: "", location: "" });
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -67,7 +77,18 @@ export default function FleetManagement() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة المركبات والصيانة والتتبع</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { window.print(); }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => {
+            const rows = data.map(v => ({
+              المعرف: v.id, المركبة: v.name, النوع: v.type, السائق: v.driver,
+              الحالة: STATUS_MAP[v.status].label, آخر_صيانة: v.lastMaintenance, الموقع: v.location,
+            }));
+            downloadCSV(rows, "fleet_export");
+          }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+          <button className="con-btn-primary" onClick={() => setShowAddModal(true)}><Plus size={14} /> إضافة مركبة</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -130,6 +151,39 @@ export default function FleetManagement() {
           </div>
         )}
       </div>
+
+      {/* Add Vehicle Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
+          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>إضافة مركبة جديدة</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              {[
+                { label: "اسم المركبة *", value: newVehicle.name, key: "name", placeholder: "تويوتا هايلكس 2024" },
+                { label: "النوع", value: newVehicle.type, key: "type", placeholder: "فان" },
+                { label: "السائق", value: newVehicle.driver, key: "driver", placeholder: "—" },
+                { label: "الموقع", value: newVehicle.location, key: "location", placeholder: "الرياض" },
+              ].map((f) => (
+                <div key={f.key}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>{f.label}</label>
+                  <input className="con-input" value={f.value} placeholder={f.placeholder} onChange={(e) => setNewVehicle((prev) => ({ ...prev, [f.key]: e.target.value }))} style={{ width: "100%" }} />
+                </div>
+              ))}
+              <button className="con-btn-primary" disabled={!newVehicle.name} onClick={() => {
+                const next: Vehicle = { id: `VEH-${Date.now()}`, name: newVehicle.name, type: newVehicle.type || "فان", driver: newVehicle.driver || "—", status: "available", lastMaintenance: new Date().toISOString().slice(0, 10), location: newVehicle.location || "—" };
+                setData(prev => [next, ...prev]);
+                setShowAddModal(false);
+                setNewVehicle({ name: "", type: "فان", driver: "", location: "" });
+              }} style={{ width: "100%", justifyContent: "center", marginTop: 4 }}>
+                <Plus size={14} /> إضافة المركبة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

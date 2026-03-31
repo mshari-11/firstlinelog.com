@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShieldAlert, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Settings, FileText, AlertTriangle, Eye, ToggleLeft, ToggleRight } from "lucide-react";
+import { ShieldAlert, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Settings, FileText, AlertTriangle, Eye, ToggleLeft, ToggleRight, Download, Printer, Plus, X } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type RuleStatus = "active" | "disabled";
 type RiskType = "fraud" | "limit_exceed" | "suspicious";
@@ -28,6 +37,8 @@ export default function RiskManagement() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RuleStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [ruleForm, setRuleForm] = useState({ name: "", type: "fraud" as RiskType, threshold: "", status: "active" as RuleStatus });
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -60,7 +71,12 @@ export default function RiskManagement() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>قواعد الكشف عن المخاطر والتنبيهات</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => setShowModal(true)}><Plus size={14} /> قاعدة جديدة</button>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(r => ({ الرقم: r.id, القاعدة: r.name, النوع: TYPE_LABELS[r.type], الحد: r.threshold, الحالة: STATUS[r.status].label, آخر_تشغيل: r.lastRun })), "risk-rules.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -110,7 +126,10 @@ export default function RiskManagement() {
                     <td><span className={`con-badge con-badge-sm ${STATUS[a.status].cls}`}>{STATUS[a.status].icon} {STATUS[a.status].label}</span></td>
                     <td><span style={{ fontFamily: "var(--con-font-mono)", fontSize: 12 }}>{new Date(a.lastRun).toLocaleString("ar-SA")}</span></td>
                     <td>
-                      <button className="con-btn-ghost" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => navigate("/admin-panel/audit-log")}><Eye size={12} /> سجل</button>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        <button className="con-btn-ghost" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => { setData(prev => prev.map(r => r.id === a.id ? { ...r, status: r.status === "active" ? "disabled" as RuleStatus : "active" as RuleStatus } : r)); toast.success(a.status === "active" ? "تم تعطيل القاعدة" : "تم تفعيل القاعدة"); }}>{a.status === "active" ? <ToggleRight size={16} style={{ color: "var(--con-success)" }} /> : <ToggleLeft size={16} style={{ color: "var(--con-text-muted)" }} />}</button>
+                        <button className="con-btn-ghost" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => navigate("/admin-panel/audit-log")}><Eye size={12} /> سجل</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -119,6 +138,31 @@ export default function RiskManagement() {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowModal(false)}>
+          <div style={{ background: "var(--con-bg-surface-1)", borderRadius: 12, padding: 24, width: "90%", maxWidth: 450, border: "1px solid var(--con-border-default)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "var(--con-text-primary)" }}>قاعدة جديدة</h2>
+              <button className="con-btn-ghost" onClick={() => setShowModal(false)} style={{ padding: 4 }}><X size={16} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input className="con-input" placeholder="اسم القاعدة" value={ruleForm.name} onChange={e => setRuleForm(f => ({ ...f, name: e.target.value }))} style={{ width: "100%" }} />
+              <select className="con-input" value={ruleForm.type} onChange={e => setRuleForm(f => ({ ...f, type: e.target.value as RiskType }))} style={{ width: "100%" }}>
+                <option value="fraud">احتيال</option>
+                <option value="limit_exceed">تجاوز حد</option>
+                <option value="suspicious">نشاط مشبوه</option>
+              </select>
+              <input className="con-input" placeholder="الحد (مثال: > 5 معاملات/يوم)" value={ruleForm.threshold} onChange={e => setRuleForm(f => ({ ...f, threshold: e.target.value }))} style={{ width: "100%" }} />
+              <select className="con-input" value={ruleForm.status} onChange={e => setRuleForm(f => ({ ...f, status: e.target.value as RuleStatus }))} style={{ width: "100%" }}>
+                <option value="active">نشطة</option>
+                <option value="disabled">معطلة</option>
+              </select>
+              <button className="con-btn-primary" disabled={!ruleForm.name || !ruleForm.threshold} onClick={() => { const newRule: RiskRule = { id: `RSK-${String(data.length + 1).padStart(3, "0")}`, name: ruleForm.name, type: ruleForm.type, threshold: ruleForm.threshold, status: ruleForm.status, lastRun: new Date().toISOString() }; setData(prev => [newRule, ...prev]); setRuleForm({ name: "", type: "fraud", threshold: "", status: "active" }); setShowModal(false); toast.success("تم إضافة القاعدة"); }} style={{ marginTop: 8 }}><Plus size={14} /> إضافة</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

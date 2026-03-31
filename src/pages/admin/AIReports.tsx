@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Brain, Search, RefreshCw, CheckCircle2, Clock, AlertCircle, FileText, BarChart3, LayoutDashboard, Lightbulb, Eye, Loader2 } from "lucide-react";
+import { Brain, Search, RefreshCw, CheckCircle2, Clock, AlertCircle, FileText, BarChart3, LayoutDashboard, Lightbulb, Eye, Loader2, Download, Printer, Plus } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 const AI_API = "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
@@ -63,7 +64,12 @@ export default function AIReports() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>تقارير وتحليلات مولدة بالذكاء الاصطناعي</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => { toast?.("جاري توليد التقرير..."); fetch(`${AI_API}/runs`, { method: "POST" }).catch(() => {}); }} style={{ gap: 4 }}><Plus size={14} /> تقرير جديد</button>
+          <button className="con-btn-ghost" onClick={() => { if (!filtered.length) return; const headers = Object.keys(filtered[0]); const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ai_reports.csv"; a.click(); }} style={{ gap: 4 }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()} style={{ gap: 4 }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

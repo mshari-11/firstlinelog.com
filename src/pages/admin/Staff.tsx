@@ -26,8 +26,16 @@ import {
   Users, Building2, Plus, Search, Shield, ShieldCheck, ShieldOff,
   X, Check, Eye,
   ClipboardList, DollarSign, MessageSquare,
-  FileSpreadsheet, Car, UserPlus, AlertCircle,
+  FileSpreadsheet, Car, UserPlus, AlertCircle, Download, Printer,
 } from "lucide-react";
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -874,13 +882,27 @@ export default function AdminStaff() {
             إدارة الموظفين وتحديد صلاحياتهم
           </p>
         </div>
-        <button
-          onClick={() => activeTab === "staff" ? setShowAddModal(true) : setShowAddDeptModal(true)}
-          className="con-btn-primary"
-        >
-          <Plus size={14} />
-          {activeTab === "staff" ? "إضافة موظف" : "إضافة قسم"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { window.print(); }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button className="con-btn-ghost" onClick={() => {
+            const rows = staff.map(s => ({
+              الاسم: s.name, البريد: s.email, الجوال: s.phone,
+              القسم: s.department_name, الدور: s.role, الحالة: s.is_active ? "نشط" : "معطّل",
+            }));
+            downloadCSV(rows, "staff_export");
+          }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button
+            onClick={() => activeTab === "staff" ? setShowAddModal(true) : setShowAddDeptModal(true)}
+            className="con-btn-primary"
+          >
+            <Plus size={14} />
+            {activeTab === "staff" ? "إضافة موظف" : "إضافة قسم"}
+          </button>
+        </div>
       </div>
 
       {/* KPI Row */}

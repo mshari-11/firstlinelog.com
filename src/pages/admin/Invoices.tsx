@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Search, RefreshCw, Clock, CheckCircle2, XCircle, AlertCircle, DollarSign, Send, BarChart3, Eye } from "lucide-react";
+import { FileText, Search, RefreshCw, Clock, CheckCircle2, XCircle, AlertCircle, DollarSign, Send, BarChart3, Eye, Plus, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
@@ -27,6 +27,8 @@ export default function Invoices() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InvoiceStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newInv, setNewInv] = useState({ customer: "", amount: "", dueDate: "" });
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -59,7 +61,13 @@ export default function Invoices() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة الفواتير والمدفوعات</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => setShowCreate(true)} style={{ gap: 4 }}><Plus size={14} /> إنشاء فاتورة</button>
+          <button className="con-btn-ghost" onClick={() => { if (!filtered.length) return; const headers = Object.keys(filtered[0]); const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "invoices.csv"; a.click(); }} style={{ gap: 4 }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()} style={{ gap: 4 }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => { setData(prev => prev.map(i => i.status === "sent" || i.status === "overdue" ? { ...i, status: "paid" as InvoiceStatus } : i)); }} style={{ gap: 4, color: "var(--con-success)" }}><CheckCircle2 size={14} /> تحديد كمدفوعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -119,6 +127,23 @@ export default function Invoices() {
           </div>
         )}
       </div>
+      {showCreate && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCreate(false)}>
+          <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: 10, padding: "1.5rem", width: 400 }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 16px" }}>إنشاء فاتورة جديدة</h2>
+            {[{ label: "العميل", key: "customer", type: "text" }, { label: "المبلغ (ر.س)", key: "amount", type: "number" }, { label: "تاريخ الاستحقاق", key: "dueDate", type: "date" }].map(f => (
+              <div key={f.key} style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", display: "block", marginBottom: 4 }}>{f.label}</label>
+                <input className="con-input" type={f.type} value={(newInv as any)[f.key]} onChange={e => setNewInv(p => ({ ...p, [f.key]: e.target.value }))} style={{ width: "100%" }} />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+              <button className="con-btn-ghost" onClick={() => setShowCreate(false)}>إلغاء</button>
+              <button className="con-btn-primary" onClick={() => { if (!newInv.customer || !newInv.amount) return; const inv: Invoice = { id: `INV-${String(data.length + 1).padStart(3, "0")}`, customer: newInv.customer, amount: Number(newInv.amount), issueDate: new Date().toISOString().slice(0, 10), dueDate: newInv.dueDate || new Date().toISOString().slice(0, 10), status: "draft" }; setData(prev => [inv, ...prev]); setShowCreate(false); setNewInv({ customer: "", amount: "", dueDate: "" }); }}><Plus size={14} /> إنشاء</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Package, CheckCircle2, XCircle, Truck, ShoppingCart, Users, Radio } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Package, CheckCircle2, XCircle, Truck, ShoppingCart, Users, Radio, Plus, Download, Printer, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 type ShipmentStatus = "active" | "delivered" | "cancelled" | "in_transit";
@@ -28,6 +28,29 @@ export default function Shipments() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ShipmentStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newShipment, setNewShipment] = useState({ trackingNumber: "", customer: "", driver: "", platform: "", status: "active" as ShipmentStatus });
+
+  function exportCSV() {
+    const header = "رقم الشحنة,المنصة,العميل,السائق,الحالة,المبلغ";
+    const rows = filtered.map(s => `${s.trackingNumber},${s.platform},${s.customer},${s.driver},${STATUS_MAP[s.status].label},${s.amount}`);
+    const csv = "\uFEFF" + [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `shipments-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handlePrint() { window.print(); }
+
+  function handleAddShipment() {
+    if (!newShipment.trackingNumber || !newShipment.customer) return;
+    const s: Shipment = { id: `SHP-${String(data.length + 1).padStart(3, "0")}`, ...newShipment, amount: 0 };
+    setData(prev => [s, ...prev]);
+    setNewShipment({ trackingNumber: "", customer: "", driver: "", platform: "", status: "active" });
+    setShowAddModal(false);
+  }
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -62,7 +85,12 @@ export default function Shipments() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>تتبع وإدارة جميع الشحنات</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+          <button className="con-btn-ghost" onClick={exportCSV}><Download size={14} /> تصدير</button>
+          <button className="con-btn-ghost" onClick={handlePrint}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => setShowAddModal(true)} style={{ background: "var(--con-brand)", color: "#fff", borderColor: "var(--con-brand)" }}><Plus size={14} /> إضافة شحنة</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -119,6 +147,44 @@ export default function Shipments() {
           </div>
         )}
       </div>
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setShowAddModal(false)}>
+          <div dir="rtl" onClick={e => e.stopPropagation()} style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: 12, padding: 24, width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h2 style={{ fontSize: "var(--con-text-section-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إضافة شحنة</h2>
+              <button className="con-btn-ghost" onClick={() => setShowAddModal(false)} style={{ padding: 4 }}><X size={16} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>رقم التتبع *</label>
+                <input className="con-input" style={{ width: "100%" }} value={newShipment.trackingNumber} onChange={e => setNewShipment(p => ({ ...p, trackingNumber: e.target.value }))} placeholder="FLL-2026XXXXXX" />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>العميل *</label>
+                <input className="con-input" style={{ width: "100%" }} value={newShipment.customer} onChange={e => setNewShipment(p => ({ ...p, customer: e.target.value }))} placeholder="اسم العميل" />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>السائق</label>
+                <input className="con-input" style={{ width: "100%" }} value={newShipment.driver} onChange={e => setNewShipment(p => ({ ...p, driver: e.target.value }))} placeholder="اسم السائق" />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المنصة</label>
+                <input className="con-input" style={{ width: "100%" }} value={newShipment.platform} onChange={e => setNewShipment(p => ({ ...p, platform: e.target.value }))} placeholder="هنقرستيشن، مرسول، جاهز..." />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الحالة</label>
+                <select className="con-input" style={{ width: "100%" }} value={newShipment.status} onChange={e => setNewShipment(p => ({ ...p, status: e.target.value as ShipmentStatus }))}>
+                  {(Object.keys(STATUS_MAP) as ShipmentStatus[]).map(k => <option key={k} value={k}>{STATUS_MAP[k].label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-start" }}>
+              <button className="con-btn-ghost" onClick={handleAddShipment} style={{ background: "var(--con-brand)", color: "#fff", borderColor: "var(--con-brand)" }}><Save size={14} /> حفظ</button>
+              <button className="con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
  * إدارة وتتبع عمليات الإغلاق المالي اليومي عبر Lambda fll-daily-finance-close
  */
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Lock, Calendar, DollarSign, Play } from "lucide-react";
+import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Lock, Calendar, DollarSign, Play, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
@@ -88,6 +88,12 @@ export default function FinanceClose() {
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>تتبع وإدارة عمليات الإغلاق المالي اليومي</p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button onClick={() => { if (!records.length) return; const headers = ["close_date","status","total_revenue","total_expenses","net","orders_count","payouts_count","closed_by"]; const csv = [headers.join(","), ...records.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "finance_close.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
           <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
           </button>

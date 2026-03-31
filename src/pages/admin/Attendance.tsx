@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, ClockIcon, UserCheck, UserX, Users, Clock, Building2 } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, ClockIcon, UserCheck, UserX, Users, Clock, Building2, Download, Printer, Plus, X } from "lucide-react";
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -30,6 +38,8 @@ export default function Attendance() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<AttendanceStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [checkinForm, setCheckinForm] = useState({ name: "", time: "", type: "check-in" as "check-in" | "check-out" });
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -64,7 +74,18 @@ export default function Attendance() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>متابعة حضور وانصراف الموظفين</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { window.print(); }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => {
+            const rows = data.map(a => ({
+              الاسم: a.name, القسم: a.department, وقت_الحضور: a.checkIn,
+              وقت_الانصراف: a.checkOut, الحالة: STATUS_MAP[a.status].label,
+            }));
+            downloadCSV(rows, "attendance_export");
+          }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+          <button className="con-btn-primary" onClick={() => setShowCheckinModal(true)}><Plus size={14} /> تسجيل يدوي</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -120,6 +141,56 @@ export default function Attendance() {
           </div>
         )}
       </div>
+
+      {/* Manual Check-in Modal */}
+      {showCheckinModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowCheckinModal(false); }}>
+          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 400, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>تسجيل حضور يدوي</h2>
+              <button onClick={() => setShowCheckinModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>اسم الموظف *</label>
+                <input className="con-input" value={checkinForm.name} placeholder="اسم الموظف" onChange={(e) => setCheckinForm(prev => ({ ...prev, name: e.target.value }))} style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>الوقت *</label>
+                <input className="con-input" type="time" value={checkinForm.time} onChange={(e) => setCheckinForm(prev => ({ ...prev, time: e.target.value }))} style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>النوع</label>
+                <select className="con-input" value={checkinForm.type} onChange={(e) => setCheckinForm(prev => ({ ...prev, type: e.target.value as "check-in" | "check-out" }))} style={{ width: "100%" }}>
+                  <option value="check-in">تسجيل حضور</option>
+                  <option value="check-out">تسجيل انصراف</option>
+                </select>
+              </div>
+              <button className="con-btn-primary" disabled={!checkinForm.name || !checkinForm.time} onClick={() => {
+                const existing = data.find(a => a.name === checkinForm.name);
+                if (existing) {
+                  setData(prev => prev.map(a => a.id === existing.id ? {
+                    ...a,
+                    ...(checkinForm.type === "check-in" ? { checkIn: checkinForm.time, status: "present" as AttendanceStatus } : { checkOut: checkinForm.time }),
+                  } : a));
+                } else {
+                  const next: AttendanceEntry = {
+                    id: `ATT-${Date.now()}`, name: checkinForm.name, department: "—",
+                    checkIn: checkinForm.type === "check-in" ? checkinForm.time : "—",
+                    checkOut: checkinForm.type === "check-out" ? checkinForm.time : "—",
+                    status: "present",
+                  };
+                  setData(prev => [next, ...prev]);
+                }
+                setShowCheckinModal(false);
+                setCheckinForm({ name: "", time: "", type: "check-in" });
+              }} style={{ width: "100%", justifyContent: "center", marginTop: 4 }}>
+                <Plus size={14} /> تسجيل
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

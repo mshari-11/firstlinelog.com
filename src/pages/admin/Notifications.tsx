@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Bell, Mail, MailOpen, ShoppingCart, DollarSign, AlertTriangle, Settings, Clock } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Bell, Mail, MailOpen, ShoppingCart, DollarSign, AlertTriangle, Settings, Clock, Download, Printer, CheckCheck, Trash2 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type NotifType = "complaint" | "order" | "finance" | "system";
 interface Notification { id: string; type: NotifType; title: string; message: string; read: boolean; date: string; link: string; }
@@ -71,7 +80,13 @@ export default function Notifications() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>عرض وإدارة جميع الإشعارات</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => { const unread = data.filter(n => !n.read); if (!unread.length) { toast.info("جميع الإشعارات مقروءة"); return; } setData(prev => prev.map(n => ({ ...n, read: true }))); toast.success(`تم قراءة ${unread.length} إشعار`); }}><CheckCheck size={14} /> قراءة الكل</button>
+          <button className="con-btn-ghost" style={{ color: "var(--con-danger)" }} onClick={() => { const readItems = data.filter(n => n.read); if (!readItems.length) { toast.info("لا توجد إشعارات مقروءة للحذف"); return; } setData(prev => prev.filter(n => !n.read)); toast.success(`تم حذف ${readItems.length} إشعار مقروء`); }}><Trash2 size={14} /> حذف المقروءة</button>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(n => ({ الرقم: n.id, النوع: TYPE_MAP[n.type].label, العنوان: n.title, الرسالة: n.message, الحالة: n.read ? "مقروء" : "غير مقروء", التاريخ: n.date })), "notifications.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

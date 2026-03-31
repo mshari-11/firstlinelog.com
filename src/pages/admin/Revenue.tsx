@@ -10,7 +10,7 @@ import {
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ComposedChart,
 } from "recharts";
-import { DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, Download, Printer, RefreshCw } from "lucide-react";
 import {
   KPICard, ChartCard, PageHeader, DataTable,
   chartTooltipStyle, formatSAR,
@@ -33,6 +33,14 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const colorPalette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function RevenueAnalysis() {
@@ -119,6 +127,19 @@ export default function RevenueAnalysis() {
         icon={DollarSign}
         title="تحليل الإيرادات"
         subtitle="تفصيل شامل للإيرادات حسب المنصات والمدن والمناديب"
+        actions={
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => downloadCSV(platformRevenueData, "revenue-platforms")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <Printer size={14} /> طباعة
+            </button>
+            <button onClick={() => window.location.reload()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <RefreshCw size={14} /> تحديث
+            </button>
+          </div>
+        }
       />
 
       {/* KPI Cards */}

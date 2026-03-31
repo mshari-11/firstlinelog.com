@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserCheck, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Users, ShieldAlert, ThumbsUp, ThumbsDown } from "lucide-react";
+import { UserCheck, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Users, ShieldAlert, ThumbsUp, ThumbsDown, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 type RequestStatus = "pending" | "approved" | "rejected";
@@ -59,7 +59,12 @@ export default function AccountReactivation() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة طلبات إعادة تفعيل الحسابات المعلقة</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { if (!filtered.length) return; const headers = Object.keys(filtered[0]); const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "account_reactivation.csv"; a.click(); }} style={{ gap: 4 }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()} style={{ gap: 4 }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-primary" onClick={() => { const pending = data.filter(a => a.status === "pending"); pending.forEach(a => handleAction(a.id, "approved")); }} style={{ gap: 4, background: "var(--con-success)", borderColor: "var(--con-success)" }}><CheckCircle2 size={14} /> موافقة جماعية</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

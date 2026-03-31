@@ -3,7 +3,8 @@
  * تنبيهات وإشعارات الحسابات البنكية للمناديب
  */
 import { useState, useEffect, useCallback } from "react";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, Bell, Landmark, XCircle } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, Bell, Landmark, XCircle, Download, Printer, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 interface BankAlert {
@@ -103,6 +104,15 @@ export default function BankAlerts() {
               <CheckCircle2 size={13} /> تحديد الكل كمقروء
             </button>
           )}
+          <button onClick={() => { if (!filtered.length) return; const headers = ["alert_type","courier_id","message","is_read","created_at"]; const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "bank_alerts.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={async () => { if (!supabase || !data.length) return; await supabase.from("bank_account_alerts").delete().in("id", data.map(a => a.id)); setData([]); toast.success("تم حذف جميع التنبيهات"); }} className="con-btn con-btn-ghost" style={{ gap: 6, color: "var(--con-danger)" }}>
+            <Trash2 size={14} /> حذف الكل
+          </button>
           <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
           </button>

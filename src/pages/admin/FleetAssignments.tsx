@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Link2, Truck, Users, CheckCircle2, XCircle, Clock, Unlink } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Link2, Truck, Users, CheckCircle2, XCircle, Clock, Unlink, Download, Printer } from "lucide-react";
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 import { API_BASE } from "@/lib/api";
 
 type AssignmentStatus = "assigned" | "unassigned" | "pending";
@@ -66,7 +74,22 @@ export default function FleetAssignments() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة تعيين المركبات للسائقين</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => { window.print(); }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => {
+            const rows = data.map(a => ({
+              المعرف: a.id, المركبة: a.vehicle, السائق: a.driver,
+              تاريخ_التعيين: a.assignDate, الحالة: STATUS_MAP[a.status].label,
+            }));
+            downloadCSV(rows, "fleet_assignments_export");
+          }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+          <button className="con-btn-primary" onClick={() => {
+            const unassigned = data.filter(a => a.status === "unassigned" || a.status === "pending");
+            if (!unassigned.length) return;
+            setData(prev => prev.map(a => (a.status === "pending") ? { ...a, status: "assigned" as AssignmentStatus, assignDate: new Date().toISOString().slice(0, 10) } : a));
+          }}><Link2 size={14} /> تعيين جماعي</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

@@ -13,6 +13,7 @@ import {
 import {
   TrendingUp, TrendingDown, Activity,
   AlertCircle, CheckCircle2, Zap,
+  Download, Printer, RefreshCw,
 } from "lucide-react";
 import {
   KPICard, ChartCard, PageHeader, MetricRow,
@@ -61,6 +62,14 @@ const FALLBACK_forecastData = [
 interface WeeklyFlow  { week: string; in: number; out: number; net: number }
 interface MonthlyFlow { month: string; cash: number; cumulative: number }
 interface DailyMetric { date: string; dailyIn: number; dailyOut: number; dailyNet: number; margin: number }
+
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function CashFlowAnalysis() {
@@ -187,6 +196,19 @@ export default function CashFlowAnalysis() {
         icon={Activity}
         title="تحليل التدفق النقدي"
         subtitle="تحليل شامل للتدفقات المالية وسعر الاحتراق والهامش التشغيلي"
+        actions={
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => downloadCSV(cashFlowTimeline as Record<string, any>[], "cashflow-weekly")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <Printer size={14} /> طباعة
+            </button>
+            <button onClick={() => window.location.reload()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+              <RefreshCw size={14} /> تحديث
+            </button>
+          </div>
+        }
       />
 
       {/* KPI Cards */}

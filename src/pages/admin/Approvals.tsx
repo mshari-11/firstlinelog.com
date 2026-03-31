@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, XCircle, Clock, Search, RefreshCw, DollarSign, Users, FileText, Eye, ThumbsUp, ThumbsDown, AlertCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Search, RefreshCw, DollarSign, Users, FileText, Eye, ThumbsUp, ThumbsDown, AlertCircle, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type ApprovalStatus = "pending" | "approved" | "rejected";
 interface Approval { id: string; type: string; requester: string; description: string; amount?: number; status: ApprovalStatus; createdAt: string; }
@@ -65,7 +73,12 @@ export default function Approvals() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة طلبات الاعتماد والموافقات</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" style={{ background: "var(--con-success)", borderColor: "var(--con-success)" }} onClick={() => { const pending = data.filter(a => a.status === "pending"); if (!pending.length) { toast.info("لا توجد اعتمادات معلقة"); return; } pending.forEach(a => handleAction(a.id, "approved")); toast.success(`تم اعتماد ${pending.length} طلب`); }}><CheckCircle2 size={14} /> اعتماد الكل</button>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(a => ({ الرقم: a.id, النوع: a.type, الطالب: a.requester, الوصف: a.description, المبلغ: a.amount ?? "", الحالة: STATUS[a.status].label, التاريخ: a.createdAt })), "approvals.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

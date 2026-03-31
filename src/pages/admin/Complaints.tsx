@@ -10,6 +10,7 @@ import {
   XCircle, ArrowUpRight, MessageSquare, User, Send,
   Filter, ChevronDown, ChevronUp, Building2, Tag,
   AlertTriangle, Phone, Mail, PanelRightOpen,
+  Download, Printer,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -103,8 +104,39 @@ export default function Complaints() {
   const [newMessage, setNewMessage] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [assignTo, setAssignTo] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const perPage = 15;
+
+  // ── Export & Print helpers ──────────────────────────────────────────────────
+  function exportToCSV() {
+    const rows = filtered.length > 0 ? filtered : complaints;
+    if (rows.length === 0) { toast.error("لا توجد بيانات للتصدير"); return; }
+    const headers = ["رقم الشكوى", "العميل", "التصنيف", "الأولوية", "الحالة", "التاريخ"];
+    const csvRows = [
+      headers.join(","),
+      ...rows.map((c) => [
+        c.id,
+        `"${(c.customer_name || "—").replace(/"/g, '""')}"`,
+        CATEGORY_LABELS[c.category || "other"] || c.category || "أخرى",
+        PRIORITY_META[c.priority || "medium"]?.label || c.priority || "—",
+        STATUS_META[c.status]?.label || c.status,
+        c.createdAt ? new Date(c.createdAt).toLocaleDateString("ar-SA") : "—",
+      ].join(",")),
+    ];
+    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `complaints_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`تم تصدير ${rows.length} شكوى`);
+  }
+
+  function printPage() {
+    window.print();
+  }
 
   // ── Fetch complaints ──────────────────────────────────────────────────────────
   const fetchComplaints = useCallback(async () => {
@@ -292,19 +324,45 @@ export default function Complaints() {
             إدارة الشكاوى
           </h1>
         </div>
-        <button
-          onClick={fetchComplaints}
-          disabled={loading}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "6px 14px", borderRadius: 7, fontSize: 13, fontWeight: 500,
-            background: "var(--con-bg-surface-1)", color: "var(--con-text-secondary)",
-            border: "1px solid var(--con-border-default)", cursor: "pointer",
-          }}
-        >
-          <RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
-          تحديث
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button
+            onClick={exportToCSV}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 7, fontSize: 13, fontWeight: 500,
+              background: "var(--con-bg-surface-1)", color: "var(--con-text-secondary)",
+              border: "1px solid var(--con-border-default)", cursor: "pointer",
+            }}
+          >
+            <Download size={14} />
+            تصدير CSV
+          </button>
+          <button
+            onClick={printPage}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 7, fontSize: 13, fontWeight: 500,
+              background: "var(--con-bg-surface-1)", color: "var(--con-text-secondary)",
+              border: "1px solid var(--con-border-default)", cursor: "pointer",
+            }}
+          >
+            <Printer size={14} />
+            طباعة
+          </button>
+          <button
+            onClick={fetchComplaints}
+            disabled={loading}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 7, fontSize: 13, fontWeight: 500,
+              background: "var(--con-bg-surface-1)", color: "var(--con-text-secondary)",
+              border: "1px solid var(--con-border-default)", cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+            تحديث
+          </button>
+        </div>
       </div>
 
       {/* ── KPIs ── */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wallet, Search, RefreshCw, Clock, CheckCircle2, FileText, AlertCircle, DollarSign, Users, Eye, ArrowRightLeft } from "lucide-react";
+import { Wallet, Search, RefreshCw, Clock, CheckCircle2, FileText, AlertCircle, DollarSign, Users, Eye, ArrowRightLeft, Plus, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -58,7 +58,13 @@ export default function PayoutManagement() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>دورات الدفع والتحويلات للسائقين</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => { const newPay: PayoutRun = { id: `PAY-${String(data.length + 1).padStart(3, "0")}`, period: "جديد", driverCount: 0, amount: 0, status: "draft" }; setData(prev => [...prev, newPay]); toast.success("تم إنشاء دورة دفع جديدة"); }} style={{ gap: 4 }}><Plus size={14} /> إنشاء دفعة</button>
+          <button className="con-btn-ghost" onClick={() => { if (!filtered.length) return; const headers = Object.keys(filtered[0]); const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "payouts.csv"; a.click(); }} style={{ gap: 4 }}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()} style={{ gap: 4 }}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={() => { setData(prev => prev.map(p => p.status === "draft" ? { ...p, status: "approved" as PayoutStatus } : p)); toast.success("تم اعتماد الدفعات"); }} style={{ gap: 4, color: "var(--con-success)" }}><CheckCircle2 size={14} /> اعتماد الدفعات</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

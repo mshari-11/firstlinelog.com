@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, ListTodo, Clock, CheckCircle2, XCircle, Users, Plus, X } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, ListTodo, Clock, CheckCircle2, XCircle, Users, Plus, X, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type Priority = "high" | "medium" | "low";
 type TaskStatus = "pending" | "in_progress" | "completed" | "overdue";
@@ -78,8 +87,11 @@ export default function Tasks() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة المهام وتتبع التقدم</p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="con-btn-primary" onClick={() => setShowModal(true)}><Plus size={14} /> مهمة جديدة</button>
+          <button className="con-btn-primary" style={{ background: "var(--con-success)", borderColor: "var(--con-success)" }} onClick={() => { const targets = filtered.filter(t => t.status !== "completed"); if (!targets.length) { toast.info("جميع المهام مكتملة"); return; } setData(prev => prev.map(t => targets.find(tt => tt.id === t.id) ? { ...t, status: "completed" as TaskStatus } : t)); toast.success(`تم إكمال ${targets.length} مهمة`); }}><CheckCircle2 size={14} /> إكمال المعروضة</button>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(t => ({ الرقم: t.id, العنوان: t.title, المعيّن: t.assignee, الأولوية: PRIORITY_MAP[t.priority].label, الحالة: STATUS_MAP[t.status].label, التاريخ: t.date })), "tasks.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
           <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
         </div>
       </div>

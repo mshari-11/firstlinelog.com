@@ -3,7 +3,7 @@
  * مراقبة مستويات الخدمة وتتبع الانتهاكات
  */
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Target, TrendingDown, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Target, TrendingDown, AlertTriangle, Download, Printer } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 interface SLAMetric {
@@ -55,6 +55,14 @@ const SEV_STYLE: Record<string, { cls: string; label: string }> = {
   high:   { cls: "con-badge-danger",  label: "عالٍ" },
 };
 
+function downloadCSV(data: Record<string, any>[], filename: string) {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+}
+
 export default function SLAScanner() {
   const [metrics, setMetrics] = useState<SLAMetric[]>(MOCK_METRICS);
   const [violations, setViolations] = useState<SLAViolation[]>(MOCK_VIOLATIONS);
@@ -102,9 +110,17 @@ export default function SLAScanner() {
           </h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>تتبع مؤشرات الأداء وانتهاكات مستوى الخدمة</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={() => downloadCSV(violations, "sla-violations")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <Printer size={14} /> طباعة
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Summary */}

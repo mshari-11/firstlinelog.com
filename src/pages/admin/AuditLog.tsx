@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Shield, Users, ShoppingCart, DollarSign, Clock, Activity, UserCheck, FileText } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Shield, Users, ShoppingCart, DollarSign, Clock, Activity, UserCheck, FileText, Download, Printer, Calendar } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const csv = [keys.join(","), ...rows.map(r => keys.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
 
 type ActionType = "login" | "approve" | "reject" | "update" | "delete" | "create";
 interface AuditEntry { id: string; date: string; user: string; action: ActionType; resource: string; details: string; }
@@ -29,6 +37,7 @@ export default function AuditLog() {
   const [data, setData] = useState<AuditEntry[]>(MOCK);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ActionType | "all">("all");
+  const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month">("all");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
@@ -44,7 +53,11 @@ export default function AuditLog() {
   const filtered = data.filter(a => {
     const matchSearch = a.user.includes(search) || a.resource.includes(search) || a.details.includes(search);
     const matchFilter = filter === "all" || a.action === filter;
-    return matchSearch && matchFilter;
+    let matchDate = true;
+    if (dateRange === "today") matchDate = a.date.slice(0, 10) === new Date().toISOString().slice(0, 10);
+    else if (dateRange === "week") matchDate = a.date.slice(0, 10) >= new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    else if (dateRange === "month") matchDate = a.date.slice(0, 10) >= new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    return matchSearch && matchFilter && matchDate;
   });
 
   const today = new Date().toISOString().slice(0, 10);
@@ -66,7 +79,11 @@ export default function AuditLog() {
           </div>
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>تتبع جميع الإجراءات والعمليات في النظام</p>
         </div>
-        <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(a => ({ الرقم: a.id, التاريخ: a.date, المستخدم: a.user, الإجراء: ACTION_MAP[a.action].label, المورد: a.resource, التفاصيل: a.details })), "audit-log.csv")}><Download size={14} /> تصدير CSV</button>
+          <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
+          <button className="con-btn-ghost" onClick={fetchData} disabled={loading}><RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /> تحديث</button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -95,6 +112,14 @@ export default function AuditLog() {
           {(["all", "login", "approve", "reject", "update", "delete", "create"] as const).map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{ padding: "4px 12px", borderRadius: 6, fontSize: "var(--con-text-caption)", fontWeight: 500, border: "1px solid", cursor: "pointer", background: filter === s ? "var(--con-brand)" : "transparent", borderColor: filter === s ? "var(--con-brand)" : "var(--con-border-strong)", color: filter === s ? "#fff" : "var(--con-text-muted)" }}>
               {s === "all" ? "الكل" : ACTION_MAP[s].label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <Calendar size={14} style={{ color: "var(--con-text-muted)" }} />
+          {(["all", "today", "week", "month"] as const).map(d => (
+            <button key={d} onClick={() => setDateRange(d)} style={{ padding: "4px 12px", borderRadius: 6, fontSize: "var(--con-text-caption)", fontWeight: 500, border: "1px solid", cursor: "pointer", background: dateRange === d ? "var(--con-brand)" : "transparent", borderColor: dateRange === d ? "var(--con-brand)" : "var(--con-border-strong)", color: dateRange === d ? "#fff" : "var(--con-text-muted)" }}>
+              {d === "all" ? "الكل" : d === "today" ? "اليوم" : d === "week" ? "الأسبوع" : "الشهر"}
             </button>
           ))}
         </div>

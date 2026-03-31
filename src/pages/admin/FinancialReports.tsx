@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   FileText, Download, Filter, Calendar, TrendingUp,
-  TrendingDown, BarChart3, PieChart, AlertCircle,
+  TrendingDown, BarChart3, PieChart, AlertCircle, Printer,
 } from "lucide-react";
 
 // ─── Report Types ─────────────────────────────────────────────────────────────
@@ -513,6 +513,9 @@ export default function FinancialReports() {
               بيانات وتقارير مالية شاملة للعمليات والإيرادات والمصروفات
             </p>
           </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => window.print()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: 8, color: "var(--con-text-primary)", fontSize: "var(--con-text-caption)", fontWeight: 600, cursor: "pointer" }}><Printer size={14} /> طباعة</button>
+          </div>
 
           {/* Reports Grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
@@ -571,6 +574,25 @@ export default function FinancialReports() {
               >
                 <Download size={18} />
                 تحميل Excel
+              </button>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 16px",
+                  background: "var(--con-bg-surface-1)",
+                  border: "1px solid var(--con-border-default)",
+                  borderRadius: 8,
+                  color: "var(--con-text-primary)",
+                  fontSize: "var(--con-text-body)",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                <Printer size={18} />
+                طباعة
               </button>
               <button
                 onClick={() => setSelectedReport(null)}

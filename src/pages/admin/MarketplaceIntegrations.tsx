@@ -3,7 +3,7 @@
  * إدارة تكاملات المنصات الخارجية عبر Lambda marketplace-integrations
  */
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Link2, Plug, Activity, Settings } from "lucide-react";
+import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Link2, Plug, Activity, Settings, Plus, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
@@ -68,6 +68,9 @@ export default function MarketplaceIntegrations() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"integrations" | "logs">("integrations");
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newIntg, setNewIntg] = useState({ name: "", platform: "custom", webhook_url: "", api_key: "" });
+  const [saving, setSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -104,6 +107,31 @@ export default function MarketplaceIntegrations() {
     setIntegrations(prev => prev.map(i => i.id === id ? { ...i, status: newStatus as any } : i));
   }
 
+  async function addIntegration() {
+    if (!newIntg.name.trim() || !newIntg.platform) return;
+    setSaving(true);
+    const item: Integration = {
+      id: "intg-" + Date.now(),
+      name: newIntg.name.trim(),
+      platform: newIntg.platform,
+      status: "pending",
+      webhook_url: newIntg.webhook_url || undefined,
+      api_key_masked: newIntg.api_key ? newIntg.api_key.slice(0, 4) + "****" : undefined,
+      total_orders: 0,
+    };
+    try {
+      await fetch(`${API_BASE}/api/marketplace/integrations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newIntg, id: item.id }),
+      });
+    } catch { /* save locally */ }
+    setIntegrations(prev => [...prev, item]);
+    setNewIntg({ name: "", platform: "custom", webhook_url: "", api_key: "" });
+    setShowAdd(false);
+    setSaving(false);
+  }
+
   const activeCount = integrations.filter(i => i.status === "active").length;
   const totalOrders = integrations.reduce((s, i) => s + (i.total_orders || 0), 0);
 
@@ -116,9 +144,14 @@ export default function MarketplaceIntegrations() {
           </h1>
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>إدارة ربط المنصات الخارجية وتدفق الطلبات</p>
         </div>
-        <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button onClick={() => setShowAdd(true)} className="con-btn-primary" style={{ gap: 6, fontSize: 12 }}>
+            <Plus size={14} /> إضافة منصة
+          </button>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -190,6 +223,54 @@ export default function MarketplaceIntegrations() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Add Integration Modal ── */}
+      {showAdd && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={() => setShowAdd(false)}>
+          <div className="con-card" style={{ width: "100%", maxWidth: 480, padding: "1.5rem" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <Plus size={16} style={{ color: "var(--con-accent)" }} /> إضافة منصة جديدة
+              </h2>
+              <button onClick={() => setShowAdd(false)} className="con-btn con-btn-ghost" style={{ padding: 4 }}><X size={16} /></button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المنصة</label>
+                <select className="con-input" value={newIntg.platform} onChange={e => setNewIntg(p => ({ ...p, platform: e.target.value }))} style={{ width: "100%" }}>
+                  {Object.entries(PLATFORM_ICONS).map(([k, icon]) => (
+                    <option key={k} value={k}>{icon} {k === "jahez" ? "جاهز" : k === "hungerstation" ? "هنقرستيشن" : k === "noon" ? "نون" : k === "salla" ? "سلة" : k === "zid" ? "زد" : k === "amazon" ? "أمازون" : k === "namshi" ? "نمشي" : "مخصص"}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>اسم التكامل</label>
+                <input className="con-input" style={{ width: "100%" }} placeholder="مثال: جاهز — الرياض" value={newIntg.name} onChange={e => setNewIntg(p => ({ ...p, name: e.target.value }))} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>Webhook URL <span style={{ color: "var(--con-text-muted)", fontWeight: 400 }}>(اختياري)</span></label>
+                <input className="con-input" dir="ltr" style={{ width: "100%", fontFamily: "monospace", fontSize: 12 }} placeholder="https://api.platform.com/webhook" value={newIntg.webhook_url} onChange={e => setNewIntg(p => ({ ...p, webhook_url: e.target.value }))} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>API Key <span style={{ color: "var(--con-text-muted)", fontWeight: 400 }}>(اختياري)</span></label>
+                <input className="con-input" dir="ltr" type="password" style={{ width: "100%", fontFamily: "monospace", fontSize: 12 }} placeholder="sk_live_xxxxxxxxxxxxx" value={newIntg.api_key} onChange={e => setNewIntg(p => ({ ...p, api_key: e.target.value }))} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button onClick={addIntegration} disabled={saving || !newIntg.name.trim()} className="con-btn-primary" style={{ flex: 1, justifyContent: "center", gap: 6, opacity: (!newIntg.name.trim() || saving) ? 0.5 : 1 }}>
+                  {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                  حفظ التكامل
+                </button>
+                <button onClick={() => setShowAdd(false)} className="con-btn con-btn-ghost" style={{ flex: 0.5, justifyContent: "center" }}>إلغاء</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

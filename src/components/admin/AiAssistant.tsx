@@ -1,20 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Bot, Send, X, Sparkles, Loader2, RefreshCw, WifiOff } from "lucide-react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 
-import { API_BASE, CHAT_API_URL } from "@/lib/api";
-
-// Supabase edge function fallback URL
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const EDGE_CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-support-system`;
-
+const CHAT_API_URL = "https://agr6khtuu9.execute-api.us-east-1.amazonaws.com/ai/chat";
 const ALLOWED_DEPARTMENTS = ["finance", "operations", "supervisors", "fleet", "hr", "المالية", "التشغيل", "المشرفين", "المركبات", "الموارد البشرية"];
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1500;
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  error?: boolean;
 }
 
 export function AdminAiAssistant() {
@@ -23,6 +20,7 @@ export function AdminAiAssistant() {
   const [loading, setLoading] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const [input, setInput] = useState("");
+  const [apiStatus, setApiStatus] = useState<"online" | "offline" | "unknown">("unknown");
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "مرحبًا، أنا مساعد FLL السحابي. أستطيع مساعدتك في التشغيل والمالية والموارد البشرية وتحليل البيانات." },
   ]);
@@ -32,55 +30,68 @@ export function AdminAiAssistant() {
     let active = true;
     async function checkAccess() {
       if (!user) return;
-      // Admin/owner always allowed
       if (user.role === "admin" || user.role === "owner") {
         if (active) setAllowed(true);
         return;
       }
-      // Staff: check permissions first (no Supabase needed)
-      if (user.role === "staff") {
-        const hasOpsPermission = Boolean(
-          user.permissions?.finance || user.permissions?.orders || user.permissions?.reports ||
-          user.permissions?.couriers || user.permissions?.complaints || user.permissions?.excel
-        );
-        if (hasOpsPermission) {
-          if (active) setAllowed(true);
-          return;
-        }
-        // Check department via Supabase if available
-        const dept = user.department_name || "";
-        if (ALLOWED_DEPARTMENTS.includes(dept)) {
-          if (active) setAllowed(true);
-          return;
-        }
-        // Try Supabase department lookup as last resort
-        if (supabase) {
-          try {
-            const { data } = await supabase
-              .from("staff_profiles")
-              .select("departments(name_ar)")
-              .eq("user_id", user.id)
-              .single();
-            const deptName = (data as any)?.departments?.name_ar || "";
-            if (active) setAllowed(ALLOWED_DEPARTMENTS.includes(deptName));
-          } catch {
-            if (active) setAllowed(false);
-          }
-        } else {
-          // No supabase + no matching permissions → still allow staff with any permission
-          if (active) setAllowed(false);
-        }
+      if (user.role !== "staff" || !supabase) {
+        if (active) setAllowed(false);
         return;
       }
-      if (active) setAllowed(false);
+      const { data } = await supabase
+        .from("staff_profiles")
+        .select("departments(name_ar)")
+        .eq("user_id", user.id)
+        .single();
+      const dept = user.department_name || (data as any)?.departments?.name || (data as any)?.departments?.name_ar || "";
+      const hasOpsPermission = Boolean(user.permissions?.finance || user.permissions?.orders || user.permissions?.reports || user.permissions?.couriers || user.permissions?.complaints || user.permissions?.excel);
+      if (active) setAllowed(ALLOWED_DEPARTMENTS.includes(dept) || hasOpsPermission);
     }
     checkAccess();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [user]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, open]);
+
+  // Check API health when chat opens
+  useEffect(() => {
+    if (!open || apiStatus !== "unknown") return;
+    fetch(CHAT_API_URL, { method: "OPTIONS" })
+      .then((r) => setApiStatus(r.ok || r.status === 204 ? "online" : "offline"))
+      .catch(() => setApiStatus("offline"));
+  }, [open, apiStatus]);
+
+  const fetchWithRetry = useCallback(async (payload: object, retries = MAX_RETRIES): Promise<{ reply?: string; error?: boolean }> => {
+    try {
+      const res = await fetch(CHAT_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.status === 500 && retries > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY));
+        return fetchWithRetry(payload, retries - 1);
+      }
+      const data = await res.json().catch(() => ({}));
+      if (data.reply) {
+        setApiStatus("online");
+        return { reply: data.reply };
+      }
+      setApiStatus("offline");
+      return { reply: "خدمة المساعد الذكي غير متاحة حالياً. يرجى المحاولة لاحقاً أو التواصل مع الدعم على support@fll.sa", error: true };
+    } catch {
+      if (retries > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY));
+        return fetchWithRetry(payload, retries - 1);
+      }
+      setApiStatus("offline");
+      return { reply: "تعذر الاتصال بالمساعد السحابي. تحقق من اتصال الإنترنت أو حاول مرة أخرى.", error: true };
+    }
+  }, []);
 
   async function sendMessage() {
     const text = input.trim();
@@ -89,60 +100,28 @@ export function AdminAiAssistant() {
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
-
-    const payload = {
+    const result = await fetchWithRetry({
       message: text,
-      history: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+      history: nextMessages.filter((m) => !m.error).map((m) => ({ role: m.role, content: m.content })),
       source: "admin-console",
       role: user?.role,
       user_id: user?.id,
-    };
+    });
+    setMessages((prev) => [...prev, { role: "assistant", content: result.reply || "تعذر الحصول على رد.", error: result.error }]);
+    setLoading(false);
+  }
 
-    try {
-      // Try Lambda API Gateway first
-      let reply: string | null = null;
-      try {
-        const res = await fetch(CHAT_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(15000),
-        });
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          reply = data.reply || null;
-        }
-      } catch { /* Lambda unavailable, try edge function */ }
-
-      // Fallback: Supabase edge function
-      if (!reply && SUPABASE_ANON_KEY) {
-        try {
-          const res = await fetch(EDGE_CHAT_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-              "apikey": SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(15000),
-          });
-          if (res.ok) {
-            const data = await res.json().catch(() => ({}));
-            reply = data.reply || data.message || null;
-          }
-        } catch { /* edge function also unavailable */ }
-      }
-
-      setMessages((prev) => [...prev, {
-        role: "assistant",
-        content: reply || "تعذر الحصول على رد من المساعد الآن. يرجى المحاولة مرة أخرى.",
-      }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "حدث خطأ في الاتصال بالمساعد السحابي." }]);
-    } finally {
-      setLoading(false);
-    }
+  function retryLastMessage() {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    // Remove the last error response
+    setMessages((prev) => {
+      const last = prev[prev.length - 1];
+      return last?.error ? prev.slice(0, -1) : prev;
+    });
+    setApiStatus("unknown");
+    setInput(lastUserMsg.content);
+    setTimeout(() => sendMessage(), 100);
   }
 
   if (!allowed) return null;
@@ -199,18 +178,61 @@ export function AdminAiAssistant() {
                 <Sparkles size={16} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>FLL Cloud Chat</div>
-                <div style={{ fontSize: 11, color: "var(--con-text-muted)" }}>متاح للإدارة والمالية والتشغيل والموارد</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>FLL Cloud Chat</span>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: apiStatus === "online" ? "var(--con-success)" : apiStatus === "offline" ? "var(--con-danger)" : "var(--con-warning)",
+                    display: "inline-block",
+                  }} />
+                </div>
+                <div style={{ fontSize: 11, color: "var(--con-text-muted)" }}>
+                  {apiStatus === "offline" ? "الخدمة غير متاحة حالياً" : "متاح للإدارة والمالية والتشغيل والموارد"}
+                </div>
               </div>
             </div>
             <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={18} /></button>
           </div>
 
           <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+            {apiStatus === "offline" && (
+              <div style={{
+                background: "var(--con-danger-subtle)", border: "1px solid rgba(239,68,68,0.2)",
+                borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 8, fontSize: 12,
+              }}>
+                <WifiOff size={14} style={{ color: "var(--con-danger)", flexShrink: 0 }} />
+                <span style={{ color: "var(--con-text-secondary)", flex: 1 }}>خدمة الذكاء الاصطناعي غير متاحة مؤقتاً</span>
+                <button
+                  onClick={() => setApiStatus("unknown")}
+                  style={{ background: "transparent", border: "none", color: "var(--con-brand)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600 }}
+                >
+                  <RefreshCw size={11} /> إعادة المحاولة
+                </button>
+              </div>
+            )}
             {messages.map((msg, idx) => (
-              <div key={idx} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                <div style={{ maxWidth: "88%", background: msg.role === "user" ? "var(--con-bg-elevated)" : "var(--con-brand-subtle)", border: `1px solid ${msg.role === "user" ? "var(--con-border-default)" : "var(--con-border-brand)"}`, color: msg.role === "user" ? "var(--con-text-primary)" : "var(--con-text-secondary)", padding: "10px 14px", borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+              <div key={idx} style={{ alignSelf: msg.role === "user" ? "flex-start" : "stretch", display: "flex", justifyContent: msg.role === "user" ? "flex-start" : "flex-end" }}>
+                <div style={{
+                  maxWidth: "88%",
+                  background: msg.error ? "var(--con-danger-subtle)" : msg.role === "user" ? "var(--con-bg-elevated)" : "var(--con-brand-subtle)",
+                  border: `1px solid ${msg.error ? "rgba(239,68,68,0.2)" : msg.role === "user" ? "var(--con-border-default)" : "var(--con-border-brand)"}`,
+                  color: msg.role === "user" ? "var(--con-text-primary)" : "var(--con-text-secondary)",
+                  padding: "10px 12px", borderRadius: 14, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap",
+                }}>
                   {msg.content}
+                  {msg.error && (
+                    <button
+                      onClick={retryLastMessage}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 4, marginTop: 8,
+                        background: "transparent", border: "1px solid var(--con-border-default)",
+                        borderRadius: 8, padding: "4px 10px", cursor: "pointer",
+                        color: "var(--con-brand)", fontSize: 11, fontWeight: 600,
+                      }}
+                    >
+                      <RefreshCw size={11} /> إعادة المحاولة
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

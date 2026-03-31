@@ -5,7 +5,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export type ComponentType = "addition" | "deduction";

@@ -9,7 +9,7 @@ import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
 interface ApprovalItem {
   id: string;

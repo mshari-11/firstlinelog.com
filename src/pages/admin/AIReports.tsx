@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Brain, Search, RefreshCw, CheckCircle2, Clock, AlertCircle, FileText, BarChart3, LayoutDashboard, Lightbulb, Eye, Loader2 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
-const AI_API = "https://51n1gng40f.execute-api.me-south-1.amazonaws.com";
+const AI_API = "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
 type ReportStatus = "ready" | "processing" | "failed";
 type ReportType = "financial" | "operational" | "performance";

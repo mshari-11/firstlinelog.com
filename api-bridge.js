@@ -5,13 +5,13 @@
  * APIs:
  * - Auth: /auth/* (login, register, verify, forgot, reset)
  * - Platform: /api/* (drivers, orders, staff, complaints, fleet, etc.)
- * - AI Dashboard: https://51n1gng40f.execute-api.me-south-1.amazonaws.com
+ * - AI Dashboard: https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com
  * - Finance: /finance/* (generate-stc-excel)
  */
 
 const FLL_CONFIG = {
-  API_BASE: 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com',
-  AI_API_BASE: 'https://51n1gng40f.execute-api.me-south-1.amazonaws.com',
+  API_BASE: 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com',
+  AI_API_BASE: 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com',
   COGNITO: {
     USER_POOL_ID: 'me-south-1_aJtmQ0QrN',
     CLIENT_ID: '6n49ej8fl92i9rtotbk5o9o0d1',

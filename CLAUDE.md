@@ -85,19 +85,22 @@
 - Sidebar v2: collapsible groups, search, dynamic notification badges
 - Governance: 7 pages under `/admin-panel/governance/`
 
-## AWS Account (230811072086, me-south-1)
-- 16 Lambda functions, 39 DynamoDB tables, 17 S3 buckets
-- SES production: 50k/day, identities: fll.sa, noreply@fll.sa
-- Cognito: `me-south-1_aJtmQ0QrN` (fll-platform-userpool-prod), MFA=OPTIONAL with TOTP
-- 10 EventBridge rules (SLA hourly, backup daily, payout weekly)
+## AWS Account (230811072086)
 
-### ⚠️ CRITICAL: API Gateway Issues (as of 2026-03-28)
-- **HTTP API `xr7wsfym5k`**: Returns 500 on ALL requests — authorizer is broken
-  - 26 source files reference this endpoint (src/lib/api.ts, auth.tsx, stores, etc.)
-  - ALL OTP, Auth, Chat, AI endpoints are non-functional via this API
-  - Fix: Remove or reconfigure the authorizer via AWS Console → HTTP APIs → xr7wsfym5k → Authorization
-- **REST API `qihrv9osed`** (`fll-platform-api-prod`): Working (stage: prod, rate: 10k/s, burst: 5k)
-  - Endpoint: `https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod`
-  - No WAF/Web ACL configured
-  - Cache cluster: Inactive
-- **`fll-ai-finance-review`**: No invocations detected — function exists but has no trigger
+### Primary Region: us-east-1 (Virginia) — migrated 2026-03-31
+- **Platform API**: `https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com`
+  - Lambda: `fll-platform-api-prod` (Node.js 18.x)
+  - 39 DynamoDB tables (PAY_PER_REQUEST)
+- **AI Chatbot**: `https://agr6khtuu9.execute-api.us-east-1.amazonaws.com/ai/chat`
+  - Lambda: `fll-ai-chatbot` (Python 3.12)
+  - Model: Bedrock Claude Haiku 4.5 (`us.anthropic.claude-haiku-4-5-20251001-v1:0`)
+- **Cognito**: `us-east-1_qHMox2NTB` (fll-platform-userpool-prod)
+  - Staff client: `4rqqpv12h8pco73oice3emavus`
+  - Drivers client: `ttlbr78d29vu4hrt7gh5mekqe`
+
+### Legacy Region: me-south-1 (Bahrain) — ⚠️ unstable, do not use for new services
+- SES production: 50k/day, identities: fll.sa, noreply@fll.sa
+- S3 Buckets: 17
+- EventBridge rules: 10 (SLA hourly, backup daily, payout weekly)
+- Old API Gateways (`xr7wsfym5k`, `qihrv9osed`): BROKEN — do not reference
+- Old Cognito (`me-south-1_aJtmQ0QrN`): kept for backward compatibility

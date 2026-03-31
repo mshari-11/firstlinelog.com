@@ -1,6 +1,6 @@
 const{DynamoDBClient}=require("@aws-sdk/client-dynamodb");
 const{DynamoDBDocumentClient,GetCommand,PutCommand,DeleteCommand,ScanCommand,QueryCommand}=require("@aws-sdk/lib-dynamodb");
-const c=new DynamoDBClient({region:"me-south-1"});
+const c=new DynamoDBClient({region:process.env.AWS_REGION||"us-east-1"});
 const d=DynamoDBDocumentClient.from(c);
 const T={drivers:"fll-drivers","staff-users":"fll-staff-users",complaints:"fll-complaints",vehicles:"fll-vehicles",departments:"fll-departments",roles:"fll-roles",permissions:"fll-permissions",notifications:"fll-notifications","audit-log":"fll-audit-log",approvals:"fll-approvals",tasks:"fll-tasks","payout-runs":"fll-payout-runs","payout-lines":"fll-payout-lines","accounting-rules":"fll-accounting-rules","driver-stats-daily":"fll-driver-stats-daily","vehicle-assignments":"fll-vehicle-assignments","email-logs":"fll-email-logs","rate-limits":"fll-rate-limits",counters:"fll-counters","system-settings":"fll-system-settings","user-profiles":"fll-user-profiles",orders:"fll-orders",users:"fll-users",invoices:"fll-invoices",shipments:"fll-shipments","fleet-requests":"fll-fleet-requests","dept-settings":"fll-dept-settings","driver-baseline":"fll-driver-baseline","risk-thresholds":"fll-risk-thresholds","complaint-messages":"fll-complaint-messages","complaint-transfers":"fll-complaint-transfers","users-auth":"fll-users-auth","account-reactivation-requests":"fll-account-reactivation-requests","email-change-requests":"fll-email-change-requests","verification-codes":"fll-verification-codes",attendance:"fll-attendance"};
 // ── CORS ──────────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ if(p[0]==="api")p.shift();
 
 // ── Lambda Proxy: forward /auth/* and /ai/* to dedicated Lambdas ─────────────
 const{LambdaClient,InvokeCommand}=require("@aws-sdk/client-lambda");
-const lambdaProxy=new LambdaClient({region:"me-south-1"});
+const lambdaProxy=new LambdaClient({region:process.env.AWS_REGION||"us-east-1"});
 if(p[0]==="auth"||p[0]==="ai"){
   const targetFn=p[0]==="auth"?"fll-auth-api":"fll-ai-chatbot";
   try{
@@ -76,6 +76,12 @@ const firstSegment=p[0]||"";
 if(!PUBLIC_PATHS.has(firstSegment)){
   const auth=await authorize(e);
   if(!auth.authorized)return R(401,{error:"Unauthorized",message:auth.error||"Authentication required"});
+}
+
+// === ADMIN USER MANAGEMENT ===
+if(p[0]==="admin"&&p[1]==="create-user"&&m==="POST"){
+  let b={};try{b=e.body?JSON.parse(e.body):{}}catch(x){}
+  return handleCreateUser(b);
 }
 
 // === DISPATCH ROUTES ===
@@ -100,7 +106,7 @@ const res=p[0],pid=p[1]||null;
 let body={};try{body=e.body?JSON.parse(e.body):{}}catch(x){}
 
 if(!res)return R(200,{message:"FLL Platform API v2.2",status:"healthy",tables:Object.keys(T),timestamp:new Date().toISOString()});
-if(res==="health")return R(200,{status:"healthy",region:"me-south-1",version:"2.2",tables:Object.keys(T).length});
+if(res==="health")return R(200,{status:"healthy",region:"us-east-1",version:"2.3",tables:Object.keys(T).length});
 
 if(res==="stats"){
 try{
@@ -302,4 +308,94 @@ if(sub==="status"&&m==="POST"){
 }
 
 return R(404,{error:"Unknown dispatch route",path:p});
+}
+
+// === CREATE USER HANDLER ===
+async function handleCreateUser(body){
+const{CognitoIdentityProviderClient,AdminCreateUserCommand,AdminSetUserPasswordCommand}=require("@aws-sdk/client-cognito-identity-provider");
+const cognito=new CognitoIdentityProviderClient({region:process.env.AWS_REGION||"us-east-1"});
+const USER_POOL_ID=process.env.COGNITO_USER_POOL_ID||"us-east-1_qHMox2NTB";
+
+const{name,email,phone,password,role,job_title_ar,department_id,can_approve,approval_limit,permissions}=body;
+if(!name||!email||!password)return R(400,{error:"الاسم والبريد الإلكتروني وكلمة المرور مطلوبة"});
+
+try{
+  // 1. Create Cognito user
+  const createCmd=new AdminCreateUserCommand({
+    UserPoolId:USER_POOL_ID,
+    Username:email,
+    UserAttributes:[
+      {Name:"email",Value:email},
+      {Name:"email_verified",Value:"true"},
+      {Name:"name",Value:name},
+    ],
+    TemporaryPassword:password,
+    MessageAction:"SUPPRESS",
+  });
+  const cognitoResult=await cognito.send(createCmd);
+  const cognitoUserId=cognitoResult.User?.Username;
+
+  // 2. Set permanent password
+  await cognito.send(new AdminSetUserPasswordCommand({
+    UserPoolId:USER_POOL_ID,
+    Username:email,
+    Password:password,
+    Permanent:true,
+  }));
+
+  // 3. Create user in DynamoDB (users table — key: userId)
+  const userId="user-"+Date.now()+"-"+Math.random().toString(36).substr(2,6);
+  const now=new Date().toISOString();
+  const userRecord={
+    userId:userId,
+    email:email.toLowerCase(),
+    full_name:name,
+    phone:phone||"",
+    role:role||"staff",
+    cognito_id:cognitoUserId,
+    is_active:true,
+    createdAt:now,
+    updatedAt:now,
+  };
+  await d.send(new PutCommand({TableName:"fll-users",Item:userRecord}));
+
+  // 4. Create staff profile in DynamoDB (staff-users table — key: sub)
+  const staffId=cognitoUserId||("staff-"+Date.now()+"-"+Math.random().toString(36).substr(2,6));
+  const defaultPerms=permissions||{couriers:false,orders:false,finance:false,complaints:false,excel:false,reports:false,vehicles:false,staff:false,dispatch:false,wallet:false};
+  const staffRecord={
+    sub:staffId,
+    user_id:userId,
+    job_title_ar:job_title_ar||"موظف",
+    department_id:department_id||null,
+    permissions:defaultPerms,
+    can_approve:can_approve||false,
+    approval_limit:approval_limit||0,
+    is_active:true,
+    createdAt:now,
+    updatedAt:now,
+  };
+  await d.send(new PutCommand({TableName:"fll-staff-users",Item:staffRecord}));
+
+  // 5. Log audit
+  await d.send(new PutCommand({TableName:"fll-audit-log",Item:{
+    auditId:"audit-"+Date.now(),
+    action:"user_created",
+    target_id:userId,
+    target_email:email,
+    details:JSON.stringify({role,department_id,job_title_ar}),
+    timestamp:now,
+  }}));
+
+  return R(201,{
+    message:"تم إنشاء الحساب بنجاح",
+    user:{id:userId,email,name,role:role||"staff"},
+    staff:{id:staffId,permissions:defaultPerms},
+    cognito_id:cognitoUserId,
+  });
+
+}catch(err){
+  if(err.name==="UsernameExistsException")return R(409,{error:"البريد الإلكتروني مسجّل مسبقاً"});
+  if(err.name==="InvalidPasswordException")return R(400,{error:"كلمة المرور ضعيفة — يجب أن تحتوي على أحرف كبيرة وصغيرة وأرقام (8+ أحرف)"});
+  return R(500,{error:"خطأ في إنشاء الحساب: "+err.message});
+}
 }

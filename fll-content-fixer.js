@@ -10,7 +10,7 @@
   const OLD_EMAIL = 'info@firstlinelog.com';
   const NEW_EMAIL = 'info@fll.sa';
   const SUPPORT_EMAIL = 'support@fll.sa';
-  const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+  const API = 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com';
 
   function fixContent() {
     // 1. Replace phone + email in text nodes

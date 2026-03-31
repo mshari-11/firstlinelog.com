@@ -3,7 +3,7 @@
  * مساعد ذكي مصغر يظهر في أسفل الصفحة
  */
 (function() {
-  const API_URL = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com/ai/chat';
+  const API_URL = 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/ai/chat';
   let conversationId = null;
   let history = [];
   let isOpen = false;

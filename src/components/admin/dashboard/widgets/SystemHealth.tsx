@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Activity, Database, Cloud, Globe, Wifi, RefreshCw } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 
 interface ServiceStatus {

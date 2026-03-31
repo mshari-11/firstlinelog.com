@@ -58,7 +58,7 @@ export default function AdminSettings() {
 
       <Card title="معلومات النظام">
         <DetailGrid>
-          <DetailField label="المنطقة" value="me-south-1 (البحرين)" icon={Server} />
+          <DetailField label="المنطقة" value="us-east-1 (فرجينيا)" icon={Server} />
           <DetailField label="الإصدار" value="1.0.0" icon={Server} mono />
           <DetailField label="البيئة" value={import.meta.env.MODE ?? "production"} icon={Server} mono />
           <DetailField label="قاعدة البيانات" value="Supabase (PostgreSQL)" icon={Server} />

@@ -50,8 +50,8 @@ import {
       }
 })();
 
-const USER_POOL_ID = (import.meta.env.VITE_COGNITO_USER_POOL_ID || "me-south-1_aJtmQ0QrN").trim();
-const CLIENT_ID    = (import.meta.env.VITE_COGNITO_CLIENT_ID    || "6n49ej8fl92i9rtotbk5o9o0d1").trim();
+const USER_POOL_ID = (import.meta.env.VITE_COGNITO_USER_POOL_ID || "us-east-1_qHMox2NTB").trim();
+const CLIENT_ID    = (import.meta.env.VITE_COGNITO_CLIENT_ID    || "4rqqpv12h8pco73oice3emavus").trim();
 
 /**
  * Build a CognitoUserPool that works even when the SDK regex

@@ -12,7 +12,7 @@ import {
 import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Badge, Button, Toolbar, Select, Tabs } from "@/components/admin/ui";
 import { toast } from "sonner";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
 
 // ─── Endpoint Definitions ───────────────────────────────────────────────────
@@ -476,7 +476,7 @@ export default function ApiManagement() {
           <div>
             <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>منطقة AWS</div>
             <div style={{ padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 12, color: "var(--con-text-secondary)" }}>
-              me-south-1 (البحرين)
+              us-east-1 (فرجينيا)
             </div>
           </div>
           <div>

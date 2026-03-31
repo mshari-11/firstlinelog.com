@@ -7,7 +7,7 @@ import { cognitoSignIn, cognitoSignOut, getCognitoGroups, cognitoForgotPassword,
 import { sendOtp as sendLambdaOtp, verifyOtp as verifyLambdaOtp } from "@/lib/otp-service";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
-const API_BASE = import.meta.env.VITE_API_BASE || "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 const SESSION_KEY = "fll_session";
 const USER_KEY = "fll_user";
 
@@ -20,6 +20,10 @@ export interface StaffPermissions {
   complaints: boolean;
   excel: boolean;
   reports: boolean;
+  vehicles: boolean;
+  staff: boolean;
+  dispatch: boolean;
+  wallet: boolean;
 }
 
 export interface AdminUser {

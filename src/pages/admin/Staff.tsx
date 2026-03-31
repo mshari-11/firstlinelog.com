@@ -38,12 +38,16 @@ interface Permission {
 }
 
 const ALL_PERMISSIONS: Permission[] = [
-  { key: "couriers",   labelAr: "عرض المناديب",   icon: Users },
-  { key: "orders",     labelAr: "عرض الطلبات",    icon: ClipboardList },
-  { key: "finance",    labelAr: "إدارة المالية",   icon: DollarSign },
-  { key: "complaints", labelAr: "إدارة الشكاوى",  icon: MessageSquare },
-  { key: "excel",      labelAr: "رفع Excel",       icon: FileSpreadsheet },
-  { key: "reports",    labelAr: "عرض التقارير",    icon: Eye },
+  { key: "couriers",   labelAr: "المناديب",        icon: Users },
+  { key: "orders",     labelAr: "الطلبات",         icon: ClipboardList },
+  { key: "finance",    labelAr: "المالية والرواتب", icon: DollarSign },
+  { key: "complaints", labelAr: "الشكاوى",         icon: MessageSquare },
+  { key: "excel",      labelAr: "استيراد Excel",    icon: FileSpreadsheet },
+  { key: "reports",    labelAr: "التقارير",         icon: Eye },
+  { key: "vehicles",   labelAr: "المركبات",        icon: Car },
+  { key: "staff",      labelAr: "الموظفين والأقسام", icon: Building2 },
+  { key: "dispatch",   labelAr: "الخريطة والإرسال", icon: Users },
+  { key: "wallet",     labelAr: "محافظ السائقين",  icon: DollarSign },
 ];
 
 interface StaffMember {

@@ -30,7 +30,7 @@ const awsServices: ServiceDetail[] = [
     provider: "AWS",
     icon: Zap,
     status: "online",
-    detail: "me-south-1",
+    detail: "us-east-1",
     metrics: [
       { label: "عدد الدوال", value: "13" },
       { label: "الاستدعاءات اليوم", value: "4,521" },
@@ -293,7 +293,7 @@ export default function InfrastructureOverview() {
         <KPICard label="خدمات AWS" value={awsServices.length} icon={Cloud} accent="#FF9900" />
         <KPICard label="خدمات أخرى" value={otherServices.length} icon={Globe} accent="var(--con-brand)" />
         <KPICard label="متصل" value={onlineCount} icon={Activity} accent="var(--con-success)" />
-        <KPICard label="منطقة AWS" value="me-south-1" icon={Server} accent="var(--con-info)" mono={false} />
+        <KPICard label="منطقة AWS" value="us-east-1" icon={Server} accent="var(--con-info)" mono={false} />
       </KPIGrid>
 
       {/* Live Metrics (from ops.system_logs or API) */}
@@ -306,7 +306,7 @@ export default function InfrastructureOverview() {
       )}
 
       {/* AWS Services */}
-      <Card title="Amazon Web Services" subtitle="المنطقة: me-south-1 (البحرين) · الحساب: 230811072086">
+      <Card title="Amazon Web Services" subtitle="المنطقة: us-east-1 (فرجينيا) · الحساب: 230811072086">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
           {awsServices.map((svc) => (
             <ServiceCard key={svc.name} svc={svc} />

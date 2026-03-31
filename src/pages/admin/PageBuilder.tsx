@@ -143,6 +143,8 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "sla",                   label: "مراقبة SLA",          path: "/admin-panel/sla",                    group: "التشغيل",           icon: "Target",          enabled: true,  order: 40 },
   { id: "marketplace",           label: "تكاملات المنصات",     path: "/admin-panel/marketplace",            group: "التشغيل",           icon: "Plug",            enabled: true,  order: 41 },
   { id: "n8n-workflows",         label: "سير العمل (n8n)",    path: "/admin-panel/n8n-workflows",          group: "النظام",            icon: "Zap",             enabled: true,  order: 42 },
+  { id: "accounting-components", label: "المكونات المحاسبية", path: "/admin-panel/accounting-components", group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 43, permission: "finance" },
+  { id: "payout-workflow",       label: "سير عمل الدفع",      path: "/admin-panel/payout-workflow",       group: "المالية والموارد", icon: "GitBranch",       enabled: true,  order: 44, permission: "finance" },
 ];
 
 const STORAGE_KEY = "fll_page_config_v1";

@@ -8,6 +8,6 @@ serve(async (req) => {
     admin: "https://fll.sa/unified-login?role=admin",
     register: "https://fll.sa/register",
     forgot: "https://fll.sa/forgot-password",
-    api: "https://xr7wsfym5k.execute-api.me-south-1.amazonaws.com"
+    api: "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com"
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

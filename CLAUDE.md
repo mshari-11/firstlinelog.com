@@ -66,11 +66,36 @@
 - Cache version: `fll-v2` — bump when changing SW behavior
 - Never cache: `/admin*`, `/unified-login`, `/login`, `/courier*`, `/dist/`
 
-## OTP System
-- `input-otp@1.2.4` + shadcn wrapper: `src/components/ui/input-otp.tsx`
-- Used in: UnifiedPortal, DriverLogin, ForgotPassword, Admin Login, Courier Register
-- Lambda: POST `/auth/send-otp` + `/auth/verify-custom-otp` (from no-reply@fll.sa)
-- Admin login: password → OTP → dashboard (2FA enforced)
+## OTP System — LOCKED (DO NOT MODIFY)
+⚠️ **CRITICAL: These files and configurations are LOCKED. DO NOT change, remove, or refactor them.**
+⚠️ **Any modification to OTP flow MUST be approved by the project owner first.**
+
+### Protected Files (NEVER modify without explicit permission):
+- `src/lib/otp-service.ts` — OTP send/verify with dual fallback (API Gateway → Supabase Edge)
+- `src/lib/admin/auth.tsx` — Auth context, signIn, signOut, hasPermission
+- `src/lib/cognito.ts` — Cognito SDK wrapper (Pool: us-east-1_qHMox2NTB, Client: 4rqqpv12h8pco73oice3emavus)
+- `lambda-code/fll-auth-api/app.py` — Auth Lambda (12 routes, SES OTP, Cognito auth)
+- `lambda-code/platform-api-prod.js` — Proxy logic for /auth/* → fll-auth-handler
+
+### OTP Configuration (LOCKED):
+- Lambda: `fll-auth-handler` (Python 3.12, us-east-1)
+- IAM Role: `fll-lambda-execution-role` (SES + Cognito permissions)
+- SES: `no-reply@fll.sa` via me-south-1 (verified domain)
+- Supabase: `admin_otp_codes` table (stores OTP codes, 5-min expiry, rate limited)
+- API Routes: `/auth/send-otp`, `/auth/verify-custom-otp`, `/auth/forgot-password`
+- OTP Types: `login`, `register`, `reset_password`, `verify_email`, `driver_register`, `sensitive_action`
+- Component: `input-otp` (shadcn) — `src/components/ui/input-otp.tsx`
+
+### Pages using OTP (all working, DO NOT break):
+- `/unified-login` — Admin/Staff login (password → OTP → dashboard)
+- `/login` — Driver login (password → OTP → portal)
+- `/forgot-password` — Password reset (email → OTP → new password)
+- `/courier/register` — New courier registration (email → OTP → verify → submit)
+
+### Cognito Groups (LOCKED):
+- `admin` group → role=admin → sees all 47 sidebar pages
+- `staff` group → role=staff → sees pages based on permissions
+- `owner` group → role=owner → sees all pages
 
 ## Finance Engine (March 2026)
 - `finance.accounting_components` — additions/deductions rules (CRUD page)

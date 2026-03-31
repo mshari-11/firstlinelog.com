@@ -6,8 +6,16 @@
   <title>FLL Admin Console</title>
   <link rel="icon" type="image/x-icon" href="/public/favicon.ico" />
 </head>
-<body>
+<body style="margin:0;background:#f8f9fb">
   <div id="root"></div>
+  <script>
+    // Set body bg based on route — dark for admin panel, light for login pages
+    (function(){
+      var p=location.pathname;
+      if(p.indexOf('/admin-panel')===0) document.body.style.background='#0C0E14';
+      else document.body.style.background='#f8f9fb';
+    })();
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

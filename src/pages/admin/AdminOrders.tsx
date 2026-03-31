@@ -65,16 +65,7 @@ import {
 import { Empty, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Inbox } from "lucide-react";
 
-const ordersData = [
-  { id: "FLL-10847", platform: "هنقرستيشن", customer: "عميل #4821", driver: "أحمد محمد", city: "جدة", status: "delivered", amount: 45, date: "2026-02-20", time: "14:35" },
-  { id: "FLL-10846", platform: "جاهز", customer: "عميل #3290", driver: "خالد علي", city: "الرياض", status: "in_transit", amount: 62, date: "2026-02-20", time: "14:28" },
-  { id: "FLL-10845", platform: "مرسول", customer: "عميل #7156", driver: "سعد ناصر", city: "جدة", status: "picked_up", amount: 38, date: "2026-02-20", time: "14:15" },
-  { id: "FLL-10844", platform: "نون فود", customer: "عميل #9432", driver: "—", city: "الدمام", status: "pending", amount: 55, date: "2026-02-20", time: "14:08" },
-  { id: "FLL-10843", platform: "هنقرستيشن", customer: "عميل #2187", driver: "عمر سعيد", city: "مكة", status: "delivered", amount: 29, date: "2026-02-20", time: "13:55" },
-  { id: "FLL-10842", platform: "جاهز", customer: "عميل #6743", driver: "فهد أحمد", city: "الرياض", status: "cancelled", amount: 42, date: "2026-02-20", time: "13:40" },
-  { id: "FLL-10841", platform: "مرسول", customer: "عميل #8901", driver: "محمد يوسف", city: "جدة", status: "delivered", amount: 71, date: "2026-02-20", time: "13:22" },
-  { id: "FLL-10840", platform: "هنقرستيشن", customer: "عميل #1567", driver: "عبدالله سالم", city: "المدينة", status: "in_transit", amount: 36, date: "2026-02-20", time: "13:10" },
-];
+const ordersData: { id: string; platform: string; customer: string; driver: string; city: string; status: string; amount: number; date: string; time: string }[] = [];
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }> = {
   delivered: { label: "تم التسليم", variant: "default", icon: CheckCircle2 },
@@ -85,10 +76,10 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 const summaryStats = [
-  { label: "طلبات اليوم", value: "847", icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
-  { label: "تم التسليم", value: "692", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "في الطريق", value: "98", icon: Truck, color: "text-amber-600", bg: "bg-amber-50" },
-  { label: "ملغي", value: "12", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+  { label: "طلبات اليوم", value: "0", icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+  { label: "تم التسليم", value: "0", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+  { label: "في الطريق", value: "0", icon: Truck, color: "text-amber-600", bg: "bg-amber-50" },
+  { label: "ملغي", value: "0", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
 ];
 
 const emptyOrderForm = { customer: "", platform: "جاهز", driver: "", city: "الرياض", notes: "" };

@@ -8,14 +8,7 @@ import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Toolbar, Select, Badge
 import type { AuditEntry, AuditAction } from "@/lib/admin/governance";
 import { supabase } from "@/lib/supabase";
 
-const mockAuditEntries: AuditEntry[] = [
-  { id: "aud-001", schemaName: "public",  tableName: "couriers",            recordId: "c-123", action: "UPDATE",  oldData: { status: "pending" }, newData: { status: "active" },  changedBy: "admin@fll.sa", changedByName: "مشاري", changedAt: new Date(Date.now() - 30 * 60000).toISOString() },
-  { id: "aud-002", schemaName: "finance", tableName: "payout_batches",      recordId: "pb-45", action: "APPROVE", oldData: null, newData: { status: "approved" }, changedBy: "owner@fll.sa", changedByName: "المالك", changedAt: new Date(Date.now() - 2 * 3600000).toISOString() },
-  { id: "aud-003", schemaName: "public",  tableName: "complaints_requests", recordId: "cr-89", action: "INSERT",  oldData: null, newData: { status: "open", type: "delivery" }, changedBy: "staff@fll.sa", changedByName: "محمد", changedAt: new Date(Date.now() - 5 * 3600000).toISOString() },
-  { id: "aud-004", schemaName: "admin",   tableName: "module_registry",     recordId: "orders", action: "CONFIGURE", oldData: { enabled: false }, newData: { enabled: true }, changedBy: "admin@fll.sa", changedByName: "مشاري", changedAt: new Date(Date.now() - 12 * 3600000).toISOString() },
-  { id: "aud-005", schemaName: "public",  tableName: "couriers",            recordId: "c-456", action: "DELETE",  oldData: { status: "terminated" }, newData: null, changedBy: "admin@fll.sa", changedByName: "مشاري", changedAt: new Date(Date.now() - 24 * 3600000).toISOString() },
-  { id: "aud-006", schemaName: "auth",    tableName: "sessions",            recordId: "s-789", action: "LOGIN",   oldData: null, newData: { email: "admin@fll.sa" }, changedBy: "admin@fll.sa", changedByName: "مشاري", changedAt: new Date(Date.now() - 48 * 3600000).toISOString() },
-];
+const mockAuditEntries: AuditEntry[] = [];
 
 const actionColors: Record<string, string> = {
   INSERT: "var(--con-success)",

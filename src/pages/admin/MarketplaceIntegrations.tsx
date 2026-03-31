@@ -46,20 +46,9 @@ const STATUS_MAP = {
   pending:  { label: "قيد الربط", cls: "con-badge-info" },
 };
 
-const MOCK_INTEGRATIONS: Integration[] = [
-  { id: "1", name: "جاهز للتوصيل", platform: "jahez", status: "active", last_sync: new Date(Date.now() - 5 * 60000).toISOString(), total_orders: 1243 },
-  { id: "2", name: "هنقرستيشن", platform: "hungerstation", status: "active", last_sync: new Date(Date.now() - 15 * 60000).toISOString(), total_orders: 876 },
-  { id: "3", name: "نون", platform: "noon", status: "inactive", total_orders: 0 },
-  { id: "4", name: "سلة", platform: "salla", status: "error", error_message: "API Key منتهي الصلاحية", total_orders: 234 },
-  { id: "5", name: "زد", platform: "zid", status: "pending", total_orders: 0 },
-];
+const MOCK_INTEGRATIONS: Integration[] = [];
 
-const MOCK_LOGS: SyncLog[] = [
-  { id: "l1", platform: "jahez", event_type: "new_order", status: "success", records: 12, created_at: new Date(Date.now() - 5 * 60000).toISOString() },
-  { id: "l2", platform: "hungerstation", event_type: "status_update", status: "success", records: 8, created_at: new Date(Date.now() - 15 * 60000).toISOString() },
-  { id: "l3", platform: "salla", event_type: "new_order", status: "error", records: 0, created_at: new Date(Date.now() - 30 * 60000).toISOString() },
-  { id: "l4", platform: "jahez", event_type: "cancel_order", status: "success", records: 2, created_at: new Date(Date.now() - 45 * 60000).toISOString() },
-];
+const MOCK_LOGS: SyncLog[] = [];
 
 export default function MarketplaceIntegrations() {
   const [integrations, setIntegrations] = useState<Integration[]>(MOCK_INTEGRATIONS);

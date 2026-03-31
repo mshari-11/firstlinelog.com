@@ -29,13 +29,7 @@ const PRIORITY_MAP: Record<Priority, { label: string; cls: string }> = {
   low: { label: "منخفضة", cls: "con-badge-info" },
 };
 
-const MOCK: Task[] = [
-  { id: "TSK-001", title: "مراجعة تقارير المالية الشهرية", assignee: "أحمد المالية", priority: "high", status: "pending", date: "2026-03-21T09:00:00Z", description: "مراجعة جميع التقارير المالية لشهر مارس" },
-  { id: "TSK-002", title: "تحديث بيانات السائقين", assignee: "خالد HR", priority: "medium", status: "in_progress", date: "2026-03-20T10:00:00Z", description: "تحديث معلومات الاتصال والرخص" },
-  { id: "TSK-003", title: "صيانة المركبات الدورية", assignee: "عمر العمليات", priority: "high", status: "overdue", date: "2026-03-15T08:00:00Z", description: "جدولة صيانة الأسطول" },
-  { id: "TSK-004", title: "تدريب الموظفين الجدد", assignee: "نورة الموارد", priority: "low", status: "completed", date: "2026-03-18T11:00:00Z", description: "تدريب على النظام الجديد" },
-  { id: "TSK-005", title: "إعداد تقرير الأداء الأسبوعي", assignee: "سارة العمليات", priority: "medium", status: "pending", date: "2026-03-21T14:00:00Z", description: "تقرير أداء المناديب" },
-];
+const MOCK: Task[] = [];
 
 export default function Tasks() {
   const navigate = useNavigate();

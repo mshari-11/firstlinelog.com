@@ -23,14 +23,7 @@ const ACTION_MAP: Record<ActionType, { label: string; cls: string }> = {
   create: { label: "إنشاء", cls: "con-badge-success" },
 };
 
-const MOCK: AuditEntry[] = [
-  { id: "AUD-001", date: "2026-03-21T08:30:00Z", user: "مشاري الإدارة", action: "login", resource: "لوحة التحكم", details: "تسجيل دخول ناجح من IP 192.168.1.10" },
-  { id: "AUD-002", date: "2026-03-21T09:15:00Z", user: "أحمد المالية", action: "approve", resource: "طلب مالي #APR-003", details: "اعتماد فاتورة صيانة مركبات بمبلغ 12,500 ر.س" },
-  { id: "AUD-003", date: "2026-03-21T10:00:00Z", user: "خالد HR", action: "reject", resource: "طلب إجازة #LEV-045", details: "رفض طلب إجازة بسبب نقص الموظفين" },
-  { id: "AUD-004", date: "2026-03-20T14:20:00Z", user: "سارة العمليات", action: "update", resource: "شحنة #SHP-120", details: "تحديث حالة الشحنة إلى تم التسليم" },
-  { id: "AUD-005", date: "2026-03-20T11:00:00Z", user: "عمر التقنية", action: "delete", resource: "مستخدم #USR-089", details: "حذف حساب مستخدم غير نشط" },
-  { id: "AUD-006", date: "2026-03-19T16:45:00Z", user: "نورة الموارد", action: "create", resource: "موظف جديد #EMP-200", details: "إنشاء ملف موظف جديد - قسم التوصيل" },
-];
+const MOCK: AuditEntry[] = [];
 
 export default function AuditLog() {
   const navigate = useNavigate();

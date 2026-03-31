@@ -13,13 +13,7 @@ const STATUS: Record<InvoiceStatus, { label: string; cls: string; icon: JSX.Elem
   overdue: { label: "متأخرة", cls: "con-badge-danger", icon: <XCircle size={12} /> },
 };
 
-const MOCK: Invoice[] = [
-  { id: "INV-001", customer: "شركة النقل السريع", amount: 25000, issueDate: "2026-03-01", dueDate: "2026-03-15", status: "paid" },
-  { id: "INV-002", customer: "مؤسسة التوصيل المتميز", amount: 18500, issueDate: "2026-03-05", dueDate: "2026-03-20", status: "sent" },
-  { id: "INV-003", customer: "شركة الخليج للخدمات", amount: 32000, issueDate: "2026-03-10", dueDate: "2026-03-25", status: "draft" },
-  { id: "INV-004", customer: "مجموعة الرياض اللوجستية", amount: 15000, issueDate: "2026-02-15", dueDate: "2026-03-01", status: "overdue" },
-  { id: "INV-005", customer: "شركة الأمانة للشحن", amount: 42000, issueDate: "2026-03-12", dueDate: "2026-03-27", status: "sent" },
-];
+const MOCK: Invoice[] = [];
 
 export default function Invoices() {
   const navigate = useNavigate();

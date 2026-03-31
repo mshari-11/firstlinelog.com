@@ -21,12 +21,7 @@ const STATUS: Record<ApprovalStatus, { label: string; cls: string; icon: JSX.Ele
   rejected: { label: "مرفوض", cls: "con-badge-danger", icon: <XCircle size={12} /> },
 };
 
-const MOCK: Approval[] = [
-  { id: "APR-001", type: "مالي", requester: "أحمد المالية", description: "صرف رواتب أسبوع 12", amount: 45000, status: "pending", createdAt: "2026-03-20T10:00:00Z" },
-  { id: "APR-002", type: "موظف", requester: "خالد HR", description: "طلب إجازة سنوية - محمد", status: "pending", createdAt: "2026-03-19T14:00:00Z" },
-  { id: "APR-003", type: "مالي", requester: "سارة المالية", description: "فاتورة صيانة مركبات", amount: 12500, status: "approved", createdAt: "2026-03-18T09:00:00Z" },
-  { id: "APR-004", type: "تشغيلي", requester: "عمر العمليات", description: "تعيين 5 مناديب جدد", status: "rejected", createdAt: "2026-03-17T11:00:00Z" },
-];
+const MOCK: Approval[] = [];
 
 export default function Approvals() {
   const navigate = useNavigate();

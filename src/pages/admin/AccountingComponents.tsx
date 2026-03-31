@@ -13,6 +13,7 @@ import {
   Select, Badge, Button, Modal, Table, ConfirmDialog,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import type { AccountingComponent, ComponentType, CalcMethod, ScopeType } from "@/stores/usePayoutWorkflowStore";
 
@@ -24,14 +25,7 @@ const SCOPE_LABELS: Record<ScopeType, { label: string; icon: React.ElementType }
   driver:        { label: "سائق محدد",       icon: Users },
 };
 
-const MOCK_COMPONENTS: AccountingComponent[] = [
-  { id: "c1", name_ar: "بدل تشغيل",      name_en: "Operations Allowance", component_type: "addition",  calc_method: "fixed",      amount: 500,  scope_type: "all",           is_active: true,  priority: 1, effective_from: "2026-01-01" },
-  { id: "c2", name_ar: "تأمين صحي",       name_en: "Health Insurance",     component_type: "deduction", calc_method: "fixed",      amount: 200,  scope_type: "contract_type", scope_value: '["company_sponsored","kafala"]', is_active: true,  priority: 2, effective_from: "2026-01-01" },
-  { id: "c3", name_ar: "عمولة FLL (12%)",  name_en: "FLL Commission",       component_type: "deduction", calc_method: "percentage", percentage: 12, scope_type: "all",          is_active: true,  priority: 3, effective_from: "2026-01-01" },
-  { id: "c4", name_ar: "مكافأة أداء",      name_en: "Performance Bonus",    component_type: "addition",  calc_method: "fixed",      amount: 300,  scope_type: "platform",      scope_value: '["hungerstation","mrsool"]', is_active: true, priority: 4, effective_from: "2026-03-01" },
-  { id: "c5", name_ar: "صيانة مركبة",      name_en: "Vehicle Maintenance",  component_type: "deduction", calc_method: "fixed",      amount: 150,  scope_type: "contract_type", scope_value: '["company_sponsored"]', is_active: true, priority: 5, effective_from: "2026-01-01" },
-  { id: "c6", name_ar: "سلفة",             name_en: "Advance",              component_type: "deduction", calc_method: "fixed",      amount: 1000, scope_type: "driver",        scope_value: '["d1","d3"]', is_active: false, priority: 6, effective_from: "2026-03-15", effective_to: "2026-04-15" },
-];
+const MOCK_COMPONENTS: AccountingComponent[] = [];
 
 const EMPTY_FORM: Partial<AccountingComponent> = {
   name_ar: "", name_en: "", component_type: "addition", calc_method: "fixed",
@@ -50,14 +44,30 @@ export default function AccountingComponents() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function fetch() {
-      if (!supabase) return;
+    async function loadRules() {
       try {
-        const { data } = await supabase.from("accounting_components" as any).select("*").order("priority");
-        if (data && data.length > 0) setComponents(data as AccountingComponent[]);
+        const res = await fetch(`${API_BASE}/accounting-rules`);
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+          setComponents(data.items.map((r: any) => ({
+            id: r.ruleId || r.id,
+            name_ar: r.name_ar || "",
+            name_en: r.name_en || "",
+            component_type: r.component_type || "addition",
+            calc_method: r.calc_method || "fixed",
+            amount: r.amount || 0,
+            percentage: r.percentage || 0,
+            scope_type: r.scope_type || "all",
+            scope_value: r.scope_value || "",
+            is_active: r.is_active !== false,
+            priority: r.priority || 0,
+            effective_from: r.effective_from || "",
+            effective_to: r.effective_to || "",
+          })));
+        }
       } catch { /* keep mock */ }
     }
-    fetch();
+    loadRules();
   }, []);
 
   const filtered = components.filter((c) => {
@@ -102,19 +112,28 @@ export default function AccountingComponents() {
 
     if (editing) {
       // Update
-      setComponents((prev) => prev.map((c) => c.id === editing.id ? { ...c, ...record } as AccountingComponent : c));
-      if (supabase) {
-        try { await supabase.from("accounting_components" as any).update(record).eq("id", editing.id); } catch { /* silent */ }
-      }
-      toast.success("تم تحديث المكوّن");
+      try {
+        await fetch(`${API_BASE}/accounting-rules/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...record, ruleId: editing.id }),
+        });
+        setComponents((prev) => prev.map((c) => c.id === editing.id ? { ...c, ...record } as AccountingComponent : c));
+        toast.success("تم تحديث المكوّن");
+      } catch { toast.error("فشل تحديث المكوّن"); }
     } else {
       // Create
-      const newComp: AccountingComponent = { ...record, id: `c-${Date.now()}` } as AccountingComponent;
-      setComponents((prev) => [...prev, newComp]);
-      if (supabase) {
-        try { await supabase.from("accounting_components" as any).insert(record); } catch { /* silent */ }
-      }
-      toast.success("تم إنشاء المكوّن");
+      try {
+        const res = await fetch(`${API_BASE}/accounting-rules`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(record),
+        });
+        const data = await res.json();
+        const newComp: AccountingComponent = { ...record, id: data.id || `c-${Date.now()}` } as AccountingComponent;
+        setComponents((prev) => [...prev, newComp]);
+        toast.success("تم إنشاء المكوّن");
+      } catch { toast.error("فشل إنشاء المكوّن"); }
     }
     setSaving(false);
     setModalOpen(false);
@@ -122,12 +141,12 @@ export default function AccountingComponents() {
 
   async function handleDelete() {
     if (!deleteId) return;
-    setComponents((prev) => prev.filter((c) => c.id !== deleteId));
-    if (supabase) {
-      try { await supabase.from("accounting_components" as any).delete().eq("id", deleteId); } catch { /* silent */ }
-    }
+    try {
+      await fetch(`${API_BASE}/accounting-rules/${deleteId}`, { method: "DELETE" });
+      setComponents((prev) => prev.filter((c) => c.id !== deleteId));
+      toast.success("تم حذف المكوّن");
+    } catch { toast.error("فشل حذف المكوّن"); }
     setDeleteId(null);
-    toast.success("تم حذف المكوّن");
   }
 
   function toggleActive(id: string) {

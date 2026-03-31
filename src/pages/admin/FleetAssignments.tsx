@@ -20,13 +20,7 @@ const STATUS_MAP: Record<AssignmentStatus, { label: string; cls: string }> = {
   pending: { label: "بانتظار", cls: "con-badge-warning" },
 };
 
-const MOCK: Assignment[] = [
-  { id: "ASG-001", vehicle: "تويوتا هايلكس 2024", vehicleId: "VEH-001", driver: "فهد السبيعي", driverId: "DRV-010", assignDate: "2026-03-15", status: "assigned" },
-  { id: "ASG-002", vehicle: "هيونداي H100 2023", vehicleId: "VEH-002", driver: "سعد الحربي", driverId: "DRV-015", assignDate: "2026-03-18", status: "assigned" },
-  { id: "ASG-003", vehicle: "ميتسوبيشي كانتر 2024", vehicleId: "VEH-003", driver: "—", driverId: "", assignDate: "—", status: "unassigned" },
-  { id: "ASG-004", vehicle: "إيسوزو NPR 2024", vehicleId: "VEH-005", driver: "عبدالله العتيبي", driverId: "DRV-020", assignDate: "2026-03-21", status: "assigned" },
-  { id: "ASG-005", vehicle: "تويوتا هايس 2023", vehicleId: "VEH-004", driver: "—", driverId: "", assignDate: "—", status: "pending" },
-];
+const MOCK: Assignment[] = [];
 
 export default function FleetAssignments() {
   const navigate = useNavigate();

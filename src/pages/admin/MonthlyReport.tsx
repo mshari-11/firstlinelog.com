@@ -36,11 +36,7 @@ const MONTH_NAMES: Record<string, string> = {
   "09": "سبتمبر","10": "أكتوبر","11": "نوفمبر","12": "ديسمبر",
 };
 
-const MOCK_REPORTS: MonthlyReport[] = [
-  { id: "mr-1", month: "2026-03", year: 2026, status: "ready", total_revenue: 1245000, total_expenses: 342000, total_payouts: 456000, net_profit: 447000, total_orders: 6789, active_couriers: 187, avg_order_value: 183, generated_at: "2026-03-01T06:00:00Z", created_at: "2026-03-01T00:00:00Z" },
-  { id: "mr-2", month: "2026-02", year: 2026, status: "ready", total_revenue: 1134000, total_expenses: 310000, total_payouts: 412000, net_profit: 412000, total_orders: 6123, active_couriers: 175, avg_order_value: 185, generated_at: "2026-02-01T06:00:00Z", created_at: "2026-02-01T00:00:00Z" },
-  { id: "mr-3", month: "2026-01", year: 2026, status: "ready", total_revenue: 987000, total_expenses: 287000, total_payouts: 367000, net_profit: 333000, total_orders: 5432, active_couriers: 162, avg_order_value: 182, generated_at: "2026-01-01T06:00:00Z", created_at: "2026-01-01T00:00:00Z" },
-];
+const MOCK_REPORTS: MonthlyReport[] = [];
 
 export default function MonthlyReport() {
   const [reports, setReports] = useState<MonthlyReport[]>(MOCK_REPORTS);

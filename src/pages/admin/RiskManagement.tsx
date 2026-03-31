@@ -23,13 +23,7 @@ const STATUS: Record<RuleStatus, { label: string; cls: string; icon: JSX.Element
 
 const TYPE_LABELS: Record<RiskType, string> = { fraud: "احتيال", limit_exceed: "تجاوز حد", suspicious: "نشاط مشبوه" };
 
-const MOCK: RiskRule[] = [
-  { id: "RSK-001", name: "كشف المعاملات المكررة", type: "fraud", threshold: "> 3 معاملات/دقيقة", status: "active", lastRun: "2026-03-21T08:00:00Z" },
-  { id: "RSK-002", name: "تجاوز حد السحب اليومي", type: "limit_exceed", threshold: "> 50,000 ر.س", status: "active", lastRun: "2026-03-21T07:30:00Z" },
-  { id: "RSK-003", name: "تسجيل دخول من موقع غريب", type: "suspicious", threshold: "IP غير معروف", status: "active", lastRun: "2026-03-21T06:00:00Z" },
-  { id: "RSK-004", name: "تغيير بيانات الحساب البنكي", type: "fraud", threshold: "> مرة/أسبوع", status: "disabled", lastRun: "2026-03-20T12:00:00Z" },
-  { id: "RSK-005", name: "طلبات مرتجعة متكررة", type: "suspicious", threshold: "> 5 مرتجعات/يوم", status: "active", lastRun: "2026-03-21T09:00:00Z" },
-];
+const MOCK: RiskRule[] = [];
 
 export default function RiskManagement() {
   const navigate = useNavigate();

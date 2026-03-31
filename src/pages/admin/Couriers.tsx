@@ -144,21 +144,9 @@ const appStatusConfig: Record<string, { label: string; variant: "success" | "war
   requires_correction: { label: "استكمال مطلوب", variant: "warning", icon: AlertCircle },
 };
 
-const mockCouriers: Courier[] = [
-  { id: "1", full_name: "أحمد محمد السالم", phone: "0501234567", status: "active", city: "الرياض", rating: 4.8, total_orders: 312, vehicle_type: "دراجة", created_at: "2024-01-15" },
-  { id: "2", full_name: "خالد العمري", phone: "0557654321", status: "on_delivery", city: "جدة", rating: 4.5, total_orders: 198, vehicle_type: "سيارة", created_at: "2024-02-20" },
-  { id: "3", full_name: "فهد الغامدي", phone: "0509876543", status: "active", city: "الرياض", rating: 4.9, total_orders: 445, vehicle_type: "دراجة", created_at: "2023-11-10" },
-  { id: "4", full_name: "سعد الزهراني", phone: "0551112233", status: "inactive", city: "الدمام", rating: 3.9, total_orders: 87, vehicle_type: "دراجة", created_at: "2024-03-05" },
-  { id: "5", full_name: "عمر الشمري", phone: "0503334455", status: "pending", city: "الرياض", rating: undefined, total_orders: 0, vehicle_type: "سيارة", created_at: "2025-02-01" },
-  { id: "6", full_name: "محمد القحطاني", phone: "0556667788", status: "active", city: "مكة", rating: 4.7, total_orders: 234, vehicle_type: "دراجة", created_at: "2024-04-18" },
-];
+const mockCouriers: Courier[] = [];
 
-const mockApplications: DriverApplication[] = [
-  { id: "app-1", app_ref: "FLL-20250301-A1B2", full_name: "ناصر الحربي", national_id: "1088******", email: "n***@gmail.com", phone: "055***4567", city: "الرياض", date_of_birth: "1995-06-15", has_vehicle: true, vehicle_type: "سيارة", vehicle_model: "هيونداي أكسنت", vehicle_year: 2022, plate_number: "أ ب ج ١٢٣٤", status: "pending", created_at: "2025-03-01T10:00:00Z" },
-  { id: "app-2", app_ref: "FLL-20250228-C3D4", full_name: "عبدالله الدوسري", national_id: "1092******", email: "a***@outlook.com", phone: "050***8901", city: "جدة", date_of_birth: "1998-11-20", has_vehicle: false, status: "under_review", created_at: "2025-02-28T14:30:00Z" },
-  { id: "app-3", app_ref: "FLL-20250225-E5F6", full_name: "يوسف الشهري", national_id: "1075******", email: "y***@gmail.com", phone: "053***2345", city: "الدمام", date_of_birth: "1992-03-08", has_vehicle: true, vehicle_type: "دراجة", status: "approved", reviewed_by: "admin@fll.sa", reviewed_at: "2025-02-26T09:00:00Z", created_at: "2025-02-25T08:00:00Z" },
-  { id: "app-4", app_ref: "FLL-20250220-G7H8", full_name: "تركي المطيري", national_id: "1100******", email: "t***@yahoo.com", phone: "054***6789", city: "مكة", date_of_birth: "2000-01-12", has_vehicle: true, vehicle_type: "سيارة", vehicle_model: "تويوتا كورولا", vehicle_year: 2021, status: "rejected", admin_notes: "الهوية غير واضحة", reviewed_by: "admin@fll.sa", reviewed_at: "2025-02-21T16:00:00Z", created_at: "2025-02-20T11:00:00Z" },
-];
+const mockApplications: DriverApplication[] = [];
 
 function initials(name: string) {
   return name.trim().charAt(0);

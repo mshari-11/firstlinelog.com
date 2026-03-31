@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { KeyRound, Mail, ShieldCheck, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
+import { API_BASE } from "@/lib/api";
 
 type Step = "email" | "reset";
 
@@ -22,11 +22,21 @@ export default function ForgotPassword() {
     e.preventDefault();
     if (!email.trim()) return setError("يرجى إدخال البريد الإلكتروني");
     setError(""); setLoading(true);
-    const result = await cognitoForgotPassword(email.trim());
-    setLoading(false);
-    if (result.error) { setError(result.error); return; }
-    setStep("reset");
-    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+    try {
+      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) { setError(data.error || "تعذّر إرسال رمز التحقق"); return; }
+      setStep("reset");
+      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+    } catch {
+      setLoading(false);
+      setError("تعذّر الاتصال بالخادم. حاول مرة أخرى");
+    }
   }
 
   async function handleResetPassword(e: React.FormEvent) {
@@ -36,11 +46,21 @@ export default function ForgotPassword() {
     if (password.length < 6) return setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     if (password !== confirmPassword) return setError("كلمتا المرور غير متطابقتين");
     setError(""); setSuccess(""); setLoading(true);
-    const result = await cognitoConfirmPassword(email.trim(), otp.trim(), password);
-    setLoading(false);
-    if (result.error) { setError(result.error); return; }
-    setSuccess("تم تغيير كلمة المرور بنجاح! جارٍ التحويل...");
-    setTimeout(() => navigate("/unified-login"), 2000);
+    try {
+      const res = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), code: otp.trim(), newPassword: password }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) { setError(data.error || "فشل تغيير كلمة المرور"); return; }
+      setSuccess("تم تغيير كلمة المرور بنجاح! جارٍ التحويل...");
+      setTimeout(() => navigate("/unified-login"), 2000);
+    } catch {
+      setLoading(false);
+      setError("تعذّر الاتصال بالخادم. حاول مرة أخرى");
+    }
   }
 
   return (

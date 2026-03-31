@@ -120,19 +120,19 @@ export default function N8nWorkflows() {
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>سجلات تنفيذ سير العمل التلقائي والمصادر الخارجية</p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-primary" style={{ gap: 6 }}>
+          <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-primary" style={{ gap: 6 }} title="إضافة مصدر بيانات خارجي جديد (Webhook, Cron, أو يدوي) لاستقبال بيانات من أنظمة أخرى">
             <Plus size={14} /> إضافة مصدر
           </button>
-          <button onClick={() => { toast("جاري تشغيل سير العمل..."); }} className="con-btn con-btn-primary" style={{ gap: 6 }}>
+          <button onClick={() => { toast("جاري تشغيل سير العمل..."); }} className="con-btn con-btn-primary" style={{ gap: 6 }} title="تشغيل سير عمل يدوياً — يبدأ تنفيذ سير العمل المحدد فوراً بدون انتظار المؤقت أو الـ Webhook">
             <Play size={14} /> تشغيل سير عمل
           </button>
-          <button onClick={() => { if (!filteredLogs.length) return; const headers = ["workflow_name","workflow_id","trigger_type","status","started_at","completed_at"]; const csv = [headers.join(","), ...filteredLogs.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "n8n_logs.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+          <button onClick={() => { if (!filteredLogs.length) return; const headers = ["workflow_name","workflow_id","trigger_type","status","started_at","completed_at"]; const csv = [headers.join(","), ...filteredLogs.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "n8n_logs.csv"; a.click(); }} className="con-btn con-btn-ghost" style={{ gap: 6 }} title="تصدير جميع سجلات التنفيذ المعروضة إلى ملف CSV — يمكن فتحه بـ Excel لتحليل الأخطاء والأداء">
             <Download size={14} /> تصدير CSV
           </button>
-          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+          <button onClick={() => window.print()} className="con-btn con-btn-ghost" style={{ gap: 6 }} title="طباعة الصفحة الحالية — يُظهر سجلات التنفيذ بتنسيق مناسب للطباعة">
             <Printer size={14} /> طباعة
           </button>
-          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
+          <button onClick={fetchData} disabled={loading} className="con-btn con-btn-ghost" style={{ gap: 6 }} title="تحديث البيانات — يجلب آخر سجلات التنفيذ والمصادر من قاعدة البيانات">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> تحديث
           </button>
         </div>
@@ -141,12 +141,12 @@ export default function N8nWorkflows() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem", marginBottom: "1.5rem" }}>
         {[
-          { label: "الكل", value: stats.total, color: "var(--con-text-secondary)" },
-          { label: "نجح", value: stats.success, color: "var(--con-success)" },
-          { label: "خطأ", value: stats.error, color: "var(--con-danger)" },
-          { label: "يعمل", value: stats.running, color: "var(--con-info)" },
+          { label: "الكل", value: stats.total, color: "var(--con-text-secondary)", tip: "إجمالي عدد عمليات التنفيذ المسجلة" },
+          { label: "نجح", value: stats.success, color: "var(--con-success)", tip: "عمليات اكتملت بنجاح بدون أخطاء" },
+          { label: "خطأ", value: stats.error, color: "var(--con-danger)", tip: "عمليات فشلت — اضغط لعرض تفاصيل الخطأ" },
+          { label: "يعمل", value: stats.running, color: "var(--con-info)", tip: "عمليات قيد التنفيذ الآن" },
         ].map(s => (
-          <div key={s.label} className="con-card" style={{ padding: "0.75rem", textAlign: "center" }}>
+          <div key={s.label} className="con-card" style={{ padding: "0.75rem", textAlign: "center", cursor: "default" }} title={s.tip}>
             <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: "var(--con-text-muted)" }}>{s.label}</div>
           </div>
@@ -155,8 +155,8 @@ export default function N8nWorkflows() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", borderBottom: "1px solid var(--con-border-default)", paddingBottom: "0.5rem" }}>
-        {[{ id: "logs", label: "سجلات التنفيذ" }, { id: "sources", label: "المصادر الخارجية" }].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id as any)} className="con-btn" style={{
+        {[{ id: "logs", label: "سجلات التنفيذ", tip: "عرض جميع عمليات التنفيذ السابقة مع حالتها ومدتها وتفاصيل الأخطاء" }, { id: "sources", label: "المصادر الخارجية", tip: "إدارة مصادر البيانات الخارجية مثل Webhooks و APIs المتصلة بسير العمل" }].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id as any)} title={t.tip} className="con-btn" style={{
             background: tab === t.id ? "var(--con-accent)" : "transparent",
             color: tab === t.id ? "#fff" : "var(--con-text-muted)",
             border: tab === t.id ? "none" : "1px solid var(--con-border-default)",

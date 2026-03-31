@@ -1,0 +1,86 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; [[ \"$f\" == *.ts || \"$f\" == *.tsx || \"$f\" == *.js || \"$f\" == *.jsx || \"$f\" == *.css || \"$f\" == *.json ]] && npx prettier --write \"$f\" --ignore-unknown 2>/dev/null; } || true",
+            "timeout": 15,
+            "statusMessage": "Formatting with Prettier..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "The user is about to run a bash command. Check if it's a destructive git command (git reset --hard, git push --force, git clean -f, git checkout -- .). If destructive, respond with JSON {\"decision\":\"block\",\"reason\":\"Destructive git command blocked\"}. If safe, respond with empty JSON {}. Command: $ARGUMENTS",
+            "if": "Bash(git reset:*)",
+            "timeout": 10,
+            "statusMessage": "Checking git safety..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if this command could delete or overwrite important files (rm -rf, del /f, format, drop table). If dangerous, respond with {\"decision\":\"block\",\"reason\":\"Destructive command blocked\"}. If safe, respond {}. Command: $ARGUMENTS",
+            "if": "Bash(rm -rf:*)",
+            "timeout": 10,
+            "statusMessage": "Safety check..."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreCompact\",\"additionalContext\":\"IMPORTANT: Preserve these across compaction: 1) OTP system is LOCKED - never modify auth files. 2) Never delete mock data from admin pages. 3) AWS region is us-east-1. 4) Cognito Pool: us-east-1_qHMox2NTB. 5) API: k8d4arcxu4.execute-api.us-east-1.amazonaws.com\"}}'",
+            "timeout": 5,
+            "statusMessage": "Preserving critical context..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\":\"Session complete. Remember: OTP is LOCKED, use us-east-1 for AWS, deploy with vercel --prod.\"}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "AWS_DEFAULT_REGION": "us-east-1",
+    "VITE_API_BASE": "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com"
+  },
+  "language": "arabic",
+  "spinnerTipsOverride": {
+    "excludeDefault": false,
+    "tips": [
+      "OTP system is LOCKED — never modify auth files without permission",
+      "AWS region: us-east-1 (Virginia) — migrated from me-south-1",
+      "Deploy: git push origin main → Vercel auto-deploys",
+      "Never delete mock data from admin pages",
+      "Cognito Pool: us-east-1_qHMox2NTB",
+      "API: k8d4arcxu4.execute-api.us-east-1.amazonaws.com"
+    ]
+  },
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+    "pr": "Generated with [Claude Code](https://claude.com/claude-code) — FLL Platform"
+  }
+}

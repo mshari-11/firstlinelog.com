@@ -116,13 +116,13 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "reports",            label: "التقارير",            path: "/admin-panel/reports",            group: "المالية والموارد", icon: "BarChart3",       enabled: true,  order: 14, permission: "reports" },
   { id: "excel",              label: "استيراد Excel",      path: "/admin-panel/excel",              group: "المالية والموارد", icon: "FileSpreadsheet", enabled: true,  order: 15, permission: "excel" },
   { id: "vehicles",           label: "المركبات",            path: "/admin-panel/vehicles",           group: "الأصول والموظفون", icon: "Car",             enabled: true,  order: 16 },
-  { id: "staff",              label: "الأقسام والموظفين",  path: "/admin-panel/staff",              group: "الأصول والموظفون", icon: "Building2",       enabled: true,  order: 17 },
-  { id: "shipments",           label: "الشحنات",             path: "/admin-panel/shipments",          group: "التشغيل",          icon: "Package",         enabled: true,  order: 18, permission: "orders" },
+  { id: "staff",              label: "الأقسام والموظفين",  path: "/admin-panel/staff",              group: "الموارد البشرية",  icon: "Building2",       enabled: true,  order: 17 },
+  { id: "shipments",           label: "الشحنات",             path: "/admin-panel/shipments",          group: "التشغيل",          icon: "Package",         enabled: false, order: 18, permission: "orders" },
   { id: "invoices",            label: "الفواتير",             path: "/admin-panel/invoices",           group: "المالية والموارد", icon: "FileCheck",       enabled: true,  order: 19, permission: "finance" },
   { id: "payouts",             label: "إدارة الدفعات",       path: "/admin-panel/payouts",            group: "المالية والموارد", icon: "CreditCard",      enabled: true,  order: 20, permission: "finance" },
   { id: "fleet",               label: "إدارة الأسطول",       path: "/admin-panel/fleet",              group: "الأصول والموظفون", icon: "Truck",           enabled: true,  order: 21 },
   { id: "fleet-assignments",   label: "تعيينات المركبات",    path: "/admin-panel/fleet-assignments",  group: "الأصول والموظفون", icon: "Link2",           enabled: true,  order: 22 },
-  { id: "attendance",          label: "الحضور والانصراف",    path: "/admin-panel/attendance",          group: "الأصول والموظفون", icon: "Clock",           enabled: true,  order: 23 },
+  { id: "attendance",          label: "الحضور والانصراف",    path: "/admin-panel/attendance",          group: "الموارد البشرية",  icon: "Clock",           enabled: true,  order: 23 },
   { id: "approvals",           label: "الاعتمادات",           path: "/admin-panel/approvals",          group: "النظام",           icon: "CheckCircle2",    enabled: true,  order: 24 },
   { id: "tasks",               label: "المهام",               path: "/admin-panel/tasks",              group: "النظام",           icon: "ListTodo",        enabled: true,  order: 25 },
   { id: "notifications",       label: "الإشعارات",            path: "/admin-panel/notifications",      group: "النظام",           icon: "Bell",            enabled: true,  order: 26 },
@@ -147,6 +147,9 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "payout-workflow",       label: "سير عمل الدفع",      path: "/admin-panel/payout-workflow",       group: "المالية والموارد", icon: "GitBranch",       enabled: true,  order: 44, permission: "finance" },
   { id: "payroll-calculator",   label: "حاسبة الرواتب",      path: "/admin-panel/payroll-calculator",   group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 45, permission: "finance" },
   { id: "help-guide",           label: "الإرشادات",           path: "/admin-panel/help-guide",           group: "النظام",            icon: "HelpCircle",      enabled: true,  order: 46, isCore: true },
+  // ── الموارد البشرية (إضافات) ──
+  { id: "driver-classifications", label: "تصنيف السائقين",    path: "/admin-panel/driver-classifications", group: "الموارد البشرية", icon: "Users",           enabled: true,  order: 47 },
+  { id: "payroll-management",     label: "إدارة الرواتب",      path: "/admin-panel/payroll-management",     group: "الموارد البشرية", icon: "Wallet",          enabled: true,  order: 48, permission: "finance" },
 ];
 
 const STORAGE_KEY = "fll_page_config_v2";

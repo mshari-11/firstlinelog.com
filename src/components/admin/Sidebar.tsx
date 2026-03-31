@@ -54,6 +54,7 @@ const GROUP_META: Record<string, { icon: React.ElementType; color: string }> = {
   "الأصول والموظفون":  { icon: Building2,    color: "var(--con-info)" },
   "النظام":           { icon: Settings2,     color: "var(--con-text-muted)" },
   "السائقون":          { icon: Users,         color: "var(--con-warning)" },
+  "الموارد البشرية":  { icon: Users,         color: "#EC4899" },
   "الحوكمة والتحكم":  { icon: Shield,        color: "#8B5CF6" },
   "البنية التحتية":   { icon: Server,        color: "#FF9900" },
 };

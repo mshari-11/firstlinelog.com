@@ -137,6 +137,7 @@ const AccountingComponents = lazy(() => import("@/pages/admin/AccountingComponen
 const PayoutRunWorkflow = lazy(() => import("@/pages/admin/PayoutRunWorkflow"));
 const PayrollCalculator = lazy(() => import("@/pages/admin/PayrollCalculator"));
 const HelpGuide = lazy(() => import("@/pages/admin/HelpGuide"));
+const DriverLogin = lazy(() => import("@/pages/DriverLogin"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -191,7 +192,7 @@ export default function App() {
             ══════════════════════════════════════════════════════════════ */}
             <Route path="/admin/login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
+            <Route path="/login" element={<AdminAuthProvider><DriverLogin /></AdminAuthProvider>} />
             <Route path="/unified-login" element={<AdminAuthProvider><UnifiedPortal /></AdminAuthProvider>} />
 
             {/* ══════════════════════════════════════════════════════════════

@@ -149,15 +149,24 @@ const DEFAULT_PAGES: PageConfig[] = [
   { id: "help-guide",           label: "الإرشادات",           path: "/admin-panel/help-guide",           group: "النظام",            icon: "HelpCircle",      enabled: true,  order: 46, isCore: true },
 ];
 
-const STORAGE_KEY = "fll_page_config_v1";
+const STORAGE_KEY = "fll_page_config_v2";
 
 function loadConfig(): PageConfig[] {
   try {
+    // Clear old version cache that may have disabled pages
+    if (localStorage.getItem("fll_page_config_v1")) {
+      localStorage.removeItem("fll_page_config_v1");
+    }
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PAGES;
     const saved: PageConfig[] = JSON.parse(raw);
-    const savedIds = new Set(saved.map((p) => p.id));
-    const merged = [...saved, ...DEFAULT_PAGES.filter((p) => !savedIds.has(p.id))];
+    const savedMap = new Map(saved.map((p) => [p.id, p]));
+    // Merge: keep user order/enabled customizations, ensure all defaults exist
+    const merged = DEFAULT_PAGES.map((def) => {
+      const s = savedMap.get(def.id);
+      if (s) return { ...def, enabled: s.enabled, order: s.order };
+      return def; // new page — enabled by default
+    });
     return merged.sort((a, b) => a.order - b.order);
   } catch {
     return DEFAULT_PAGES;

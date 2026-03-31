@@ -3,7 +3,7 @@
  * عرض سجلات n8n_workflow_logs والمصادر الخارجية
  */
 import { useState, useEffect, useCallback } from "react";
-import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database, Download, Printer, Play } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Zap, Database, Download, Printer, Play, Plus, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -55,6 +55,19 @@ export default function N8nWorkflows() {
   const [statusFilter, setStatusFilter] = useState<WorkflowStatus | "all">("all");
   const [tab, setTab] = useState<"logs" | "sources">("logs");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [srcName, setSrcName] = useState("");
+  const [srcType, setSrcType] = useState("webhook");
+  const [srcUrl, setSrcUrl] = useState("");
+  const [srcStatus, setSrcStatus] = useState<SourceStatus>("active");
+
+  function handleAddSource() {
+    if (!srcName.trim()) { toast.error("يرجى كتابة اسم المصدر"); return; }
+    const s: ExternalSource = { id: `src-${Date.now()}`, source_name: srcName, source_type: srcType, config: srcUrl ? { url: srcUrl } : undefined, status: srcStatus, created_at: new Date().toISOString() };
+    setSources(prev => [s, ...prev]);
+    setShowAddModal(false); setSrcName(""); setSrcType("webhook"); setSrcUrl(""); setSrcStatus("active");
+    toast.success("تم إضافة المصدر بنجاح");
+  }
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -107,6 +120,9 @@ export default function N8nWorkflows() {
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>سجلات تنفيذ سير العمل التلقائي والمصادر الخارجية</p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-primary" style={{ gap: 6 }}>
+            <Plus size={14} /> إضافة مصدر
+          </button>
           <button onClick={() => { toast("جاري تشغيل سير العمل..."); }} className="con-btn con-btn-primary" style={{ gap: 6 }}>
             <Play size={14} /> تشغيل سير عمل
           </button>
@@ -235,6 +251,46 @@ export default function N8nWorkflows() {
             )}
           </div>
         </>
+      )}
+
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "92vw", padding: 24 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)" }}>إضافة مصدر خارجي</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>اسم المصدر</label>
+                <input className="con-input" value={srcName} onChange={e => setSrcName(e.target.value)} placeholder="مثال: Webhook Orders" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>النوع</label>
+                <select className="con-input" value={srcType} onChange={e => setSrcType(e.target.value)} style={{ width: "100%" }}>
+                  <option value="webhook">Webhook</option>
+                  <option value="cron">Cron</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>URL (اختياري)</label>
+                <input className="con-input" value={srcUrl} onChange={e => setSrcUrl(e.target.value)} placeholder="https://..." style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الحالة</label>
+                <select className="con-input" value={srcStatus} onChange={e => setSrcStatus(e.target.value as SourceStatus)} style={{ width: "100%" }}>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="con-btn con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+                <button className="con-btn con-btn-primary" onClick={handleAddSource}><Save size={14} /> حفظ</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {tab === "sources" && (

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserCheck, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Users, ShieldAlert, ThumbsUp, ThumbsDown, Download, Printer } from "lucide-react";
+import { UserCheck, Search, RefreshCw, CheckCircle2, XCircle, AlertCircle, Clock, Users, ShieldAlert, ThumbsUp, ThumbsDown, Download, Printer, Plus, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type RequestStatus = "pending" | "approved" | "rejected";
 interface ReactivationRequest { id: string; user: string; email: string; suspendReason: string; requestDate: string; status: RequestStatus; }
@@ -25,6 +26,18 @@ export default function AccountReactivation() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RequestStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newReason, setNewReason] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+
+  function handleAddRequest() {
+    if (!newEmail.trim() || !newReason.trim()) { toast.error("يرجى تعبئة البريد والسبب"); return; }
+    const r: ReactivationRequest = { id: `REA-${String(data.length + 1).padStart(3, "0")}`, user: newEmail.split("@")[0], email: newEmail, suspendReason: newReason, requestDate: new Date().toISOString().slice(0, 10), status: "pending" };
+    setData(prev => [r, ...prev]);
+    setShowAddModal(false); setNewEmail(""); setNewReason(""); setNewNotes("");
+    toast.success("تم إنشاء طلب إعادة التفعيل");
+  }
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -60,6 +73,7 @@ export default function AccountReactivation() {
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة طلبات إعادة تفعيل الحسابات المعلقة</p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => setShowAddModal(true)} style={{ gap: 4 }}><Plus size={14} /> طلب إعادة تفعيل</button>
           <button className="con-btn-ghost" onClick={() => { if (!filtered.length) return; const headers = Object.keys(filtered[0]); const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n"); const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "account_reactivation.csv"; a.click(); }} style={{ gap: 4 }}><Download size={14} /> تصدير CSV</button>
           <button className="con-btn-ghost" onClick={() => window.print()} style={{ gap: 4 }}><Printer size={14} /> طباعة</button>
           <button className="con-btn-primary" onClick={() => { const pending = data.filter(a => a.status === "pending"); pending.forEach(a => handleAction(a.id, "approved")); }} style={{ gap: 4, background: "var(--con-success)", borderColor: "var(--con-success)" }}><CheckCircle2 size={14} /> موافقة جماعية</button>
@@ -128,6 +142,34 @@ export default function AccountReactivation() {
           </div>
         )}
       </div>
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "92vw", padding: 24 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)" }}>طلب إعادة تفعيل حساب</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>البريد الإلكتروني</label>
+                <input className="con-input" type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="user@fll.sa" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>سبب إعادة التفعيل</label>
+                <input className="con-input" value={newReason} onChange={e => setNewReason(e.target.value)} placeholder="سبب طلب إعادة التفعيل" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>ملاحظات إضافية</label>
+                <textarea className="con-input" value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder="ملاحظات (اختياري)" rows={3} style={{ width: "100%", resize: "vertical" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+                <button className="con-btn-primary" onClick={handleAddRequest}><Save size={14} /> حفظ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

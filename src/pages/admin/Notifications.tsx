@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, AlertCircle, Bell, Mail, MailOpen, ShoppingCart, DollarSign, AlertTriangle, Settings, Clock, Download, Printer, CheckCheck, Trash2 } from "lucide-react";
+import { Search, RefreshCw, AlertCircle, Bell, Mail, MailOpen, ShoppingCart, DollarSign, AlertTriangle, Settings, Clock, Download, Printer, CheckCheck, Trash2, Plus, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -39,6 +39,19 @@ export default function Notifications() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<NotifType | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [newType, setNewType] = useState<NotifType>("system");
+  const [newRecipients, setNewRecipients] = useState("");
+
+  function handleAddNotification() {
+    if (!newTitle.trim() || !newMessage.trim()) { toast.error("يرجى تعبئة العنوان والرسالة"); return; }
+    const n: Notification = { id: `NTF-${String(data.length + 1).padStart(3, "0")}`, type: newType, title: newTitle, message: newMessage, read: false, date: new Date().toISOString(), link: TYPE_MAP[newType].route };
+    setData(prev => [n, ...prev]);
+    setShowAddModal(false); setNewTitle(""); setNewMessage(""); setNewType("system"); setNewRecipients("");
+    toast.success("تم إرسال الإشعار بنجاح");
+  }
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -81,6 +94,7 @@ export default function Notifications() {
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>عرض وإدارة جميع الإشعارات</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => setShowAddModal(true)}><Plus size={14} /> إرسال إشعار</button>
           <button className="con-btn-primary" onClick={() => { const unread = data.filter(n => !n.read); if (!unread.length) { toast.info("جميع الإشعارات مقروءة"); return; } setData(prev => prev.map(n => ({ ...n, read: true }))); toast.success(`تم قراءة ${unread.length} إشعار`); }}><CheckCheck size={14} /> قراءة الكل</button>
           <button className="con-btn-ghost" style={{ color: "var(--con-danger)" }} onClick={() => { const readItems = data.filter(n => n.read); if (!readItems.length) { toast.info("لا توجد إشعارات مقروءة للحذف"); return; } setData(prev => prev.filter(n => !n.read)); toast.success(`تم حذف ${readItems.length} إشعار مقروء`); }}><Trash2 size={14} /> حذف المقروءة</button>
           <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(n => ({ الرقم: n.id, النوع: TYPE_MAP[n.type].label, العنوان: n.title, الرسالة: n.message, الحالة: n.read ? "مقروء" : "غير مقروء", التاريخ: n.date })), "notifications.csv")}><Download size={14} /> تصدير CSV</button>
@@ -148,6 +162,40 @@ export default function Notifications() {
           </div>
         )}
       </div>
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "92vw", padding: 24 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)" }}>إرسال إشعار</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>العنوان</label>
+                <input className="con-input" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="عنوان الإشعار" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الرسالة</label>
+                <textarea className="con-input" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="نص الرسالة" rows={3} style={{ width: "100%", resize: "vertical" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>النوع</label>
+                <select className="con-input" value={newType} onChange={e => setNewType(e.target.value as NotifType)} style={{ width: "100%" }}>
+                  {(Object.keys(TYPE_MAP) as NotifType[]).map(t => <option key={t} value={t}>{TYPE_MAP[t].label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المستلمون</label>
+                <input className="con-input" value={newRecipients} onChange={e => setNewRecipients(e.target.value)} placeholder="الكل، مجموعة، أو بريد محدد" style={{ width: "100%" }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+                <button className="con-btn-primary" onClick={handleAddNotification}><Save size={14} /> إرسال</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

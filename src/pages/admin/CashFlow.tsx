@@ -13,7 +13,7 @@ import {
 import {
   TrendingUp, TrendingDown, Activity,
   AlertCircle, CheckCircle2, Zap,
-  Download, Printer, RefreshCw,
+  Download, Printer, RefreshCw, Plus, X, Save,
 } from "lucide-react";
 import {
   KPICard, ChartCard, PageHeader, MetricRow,
@@ -83,6 +83,9 @@ export default function CashFlowAnalysis() {
     operatingMargin: 39.9,
     monthlyGrowth: 3.2,
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ type: "inflow" as "inflow" | "outflow", amount: "", category: "", date: "", description: "" });
+  const [manualTransactions, setManualTransactions] = useState<{ type: string; amount: number; category: string; date: string; description: string }[]>([]);
   const [cashFlowTimeline, setCashFlowTimeline]     = useState<WeeklyFlow[]>(FALLBACK_cashFlowTimeline);
   const [netCashFlowMonthly, setNetCashFlowMonthly] = useState<MonthlyFlow[]>(FALLBACK_netCashFlowMonthly);
   const [operatingMetrics, setOperatingMetrics]     = useState<DailyMetric[]>(FALLBACK_operatingMetrics);
@@ -198,6 +201,9 @@ export default function CashFlowAnalysis() {
         subtitle="تحليل شامل للتدفقات المالية وسعر الاحتراق والهامش التشغيلي"
         actions={
           <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-ghost" style={{ gap: 6, background: "var(--con-brand)", color: "#fff" }}>
+              <Plus size={14} /> إضافة معاملة
+            </button>
             <button onClick={() => downloadCSV(cashFlowTimeline as Record<string, any>[], "cashflow-weekly")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
               <Download size={14} /> تصدير CSV
             </button>
@@ -371,6 +377,81 @@ export default function CashFlowAnalysis() {
           </div>
         </div>
       </div>
+
+      {/* Manual Transactions Table */}
+      {manualTransactions.length > 0 && (
+        <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: 10, padding: 20 }}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: "0 0 12px 0" }}>المعاملات المضافة يدوياً</h3>
+          <table className="con-table" style={{ width: "100%" }}>
+            <thead><tr><th>النوع</th><th>المبلغ</th><th>الفئة</th><th>التاريخ</th><th>الوصف</th></tr></thead>
+            <tbody>
+              {manualTransactions.map((t, i) => (
+                <tr key={i}>
+                  <td><span style={{ color: t.type === "inflow" ? "var(--con-success)" : "var(--con-danger)", fontWeight: 600 }}>{t.type === "inflow" ? "وارد" : "صادر"}</span></td>
+                  <td style={{ fontFamily: "var(--con-font-mono)" }}>{t.amount.toFixed(2)} ر.س</td>
+                  <td>{t.category || "—"}</td>
+                  <td>{t.date || "—"}</td>
+                  <td>{t.description || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Add Transaction Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "90vw", padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إضافة معاملة</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>النوع</label>
+                <select className="con-input" style={{ width: "100%" }} value={addForm.type} onChange={(e) => setAddForm(f => ({ ...f, type: e.target.value as "inflow" | "outflow" }))}>
+                  <option value="inflow">وارد (Inflow)</option>
+                  <option value="outflow">صادر (Outflow)</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المبلغ (ر.س)</label>
+                <input className="con-input" style={{ width: "100%" }} type="number" placeholder="0.00" value={addForm.amount} onChange={(e) => setAddForm(f => ({ ...f, amount: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>الفئة</label>
+                <input className="con-input" style={{ width: "100%" }} type="text" placeholder="مثال: رواتب، إيجار، توصيل" value={addForm.category} onChange={(e) => setAddForm(f => ({ ...f, category: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>التاريخ</label>
+                <input className="con-input" style={{ width: "100%" }} type="date" value={addForm.date} onChange={(e) => setAddForm(f => ({ ...f, date: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>الوصف</label>
+                <input className="con-input" style={{ width: "100%" }} type="text" placeholder="وصف المعاملة" value={addForm.description} onChange={(e) => setAddForm(f => ({ ...f, description: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20 }}>
+              <button className="con-btn con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+              <button className="con-btn con-btn-ghost" style={{ background: "var(--con-brand)", color: "#fff", gap: 6 }} onClick={() => {
+                if (!addForm.amount) return;
+                const amt = parseFloat(addForm.amount);
+                setManualTransactions(prev => [...prev, { type: addForm.type, amount: amt, category: addForm.category, date: addForm.date, description: addForm.description }]);
+                if (addForm.type === "inflow") {
+                  setStats(s => ({ ...s, totalCashIn: s.totalCashIn + amt, netCashFlow: s.netCashFlow + amt }));
+                } else {
+                  setStats(s => ({ ...s, totalCashOut: s.totalCashOut + amt, netCashFlow: s.netCashFlow - amt }));
+                }
+                setAddForm({ type: "inflow", amount: "", category: "", date: "", description: "" });
+                setShowAddModal(false);
+              }}>
+                <Save size={14} /> حفظ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

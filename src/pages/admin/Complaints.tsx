@@ -10,7 +10,7 @@ import {
   XCircle, ArrowUpRight, MessageSquare, User, Send,
   Filter, ChevronDown, ChevronUp, Building2, Tag,
   AlertTriangle, Phone, Mail, PanelRightOpen,
-  Download, Printer,
+  Download, Printer, Plus, Pencil, X, Save,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
@@ -107,6 +107,28 @@ export default function Complaints() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const perPage = 15;
+
+  // Add/Edit complaint modal
+  const emptyComplaintForm = { customer_name: "", order_id: "", title: "", category: "delivery", priority: "medium", description: "" };
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<Complaint | null>(null);
+  const [complaintForm, setComplaintForm] = useState(emptyComplaintForm);
+
+  function openAddComplaint() { setComplaintForm(emptyComplaintForm); setEditingItem(null); setShowAddModal(true); }
+  function openEditComplaint(c: Complaint) {
+    setComplaintForm({ customer_name: c.customer_name || "", order_id: c.order_id || "", title: c.title || "", category: c.category || "delivery", priority: c.priority || "medium", description: c.description || "" });
+    setEditingItem(c); setShowAddModal(true);
+  }
+  function handleSaveComplaint() {
+    if (!complaintForm.customer_name.trim() || !complaintForm.title.trim()) return;
+    if (editingItem) {
+      setComplaints(prev => prev.map(c => c.id === editingItem.id ? { ...c, customer_name: complaintForm.customer_name, order_id: complaintForm.order_id, title: complaintForm.title, category: complaintForm.category, priority: complaintForm.priority, description: complaintForm.description, updatedAt: new Date().toISOString() } : c));
+    } else {
+      const newComplaint: Complaint = { id: `CMP-${Date.now().toString().slice(-6)}`, customer_name: complaintForm.customer_name, order_id: complaintForm.order_id, title: complaintForm.title, category: complaintForm.category, priority: complaintForm.priority, description: complaintForm.description, status: "new", createdAt: new Date().toISOString() };
+      setComplaints(prev => [newComplaint, ...prev]);
+    }
+    setShowAddModal(false);
+  }
 
   // ── Export & Print helpers ──────────────────────────────────────────────────
   function exportToCSV() {
@@ -326,6 +348,18 @@ export default function Complaints() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button
+            onClick={openAddComplaint}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 7, fontSize: 13, fontWeight: 600,
+              background: "var(--con-brand)", color: "#fff",
+              border: "none", cursor: "pointer",
+            }}
+          >
+            <Plus size={14} />
+            تسجيل شكوى
+          </button>
+          <button
             onClick={exportToCSV}
             style={{
               display: "flex", alignItems: "center", gap: 6,
@@ -443,19 +477,20 @@ export default function Complaints() {
                   <th>الأولوية</th>
                   <th>الحالة</th>
                   <th>التاريخ</th>
+                  <th style={{ width: 40 }}></th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: 40, color: "var(--con-text-muted)" }}>
+                    <td colSpan={7} style={{ textAlign: "center", padding: 40, color: "var(--con-text-muted)" }}>
                       <RefreshCw size={16} style={{ animation: "spin 1s linear infinite", marginLeft: 8, display: "inline" }} />
                       جارٍ التحميل...
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: 40, color: "var(--con-text-muted)" }}>
+                    <td colSpan={7} style={{ textAlign: "center", padding: 40, color: "var(--con-text-muted)" }}>
                       لا توجد شكاوى
                     </td>
                   </tr>
@@ -504,6 +539,11 @@ export default function Complaints() {
                         </td>
                         <td style={{ fontSize: 11, color: "var(--con-text-muted)" }}>
                           {c.createdAt ? new Date(c.createdAt).toLocaleDateString("ar-SA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                        </td>
+                        <td>
+                          <button onClick={(e) => { e.stopPropagation(); openEditComplaint(c); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)", padding: 4 }} title="تعديل">
+                            <Pencil size={13} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -747,6 +787,59 @@ export default function Complaints() {
           </div>
         )}
       </div>
+
+      {/* Add/Edit Complaint Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div dir="rtl" onClick={e => e.stopPropagation()} style={{ background: "var(--con-bg-surface-1, #fff)", border: "1px solid var(--con-border-default)", borderRadius: 12, padding: 24, width: 440, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>{editingItem ? "تعديل الشكوى" : "تسجيل شكوى جديدة"}</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>اسم العميل</label>
+                <input className="con-input" value={complaintForm.customer_name} onChange={e => setComplaintForm(f => ({ ...f, customer_name: e.target.value }))} placeholder="اسم العميل" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>رقم الطلب</label>
+                <input className="con-input" value={complaintForm.order_id} onChange={e => setComplaintForm(f => ({ ...f, order_id: e.target.value }))} placeholder="رقم الطلب (اختياري)" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>عنوان الشكوى</label>
+                <input className="con-input" value={complaintForm.title} onChange={e => setComplaintForm(f => ({ ...f, title: e.target.value }))} placeholder="عنوان مختصر" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>التصنيف</label>
+                  <select value={complaintForm.category} onChange={e => setComplaintForm(f => ({ ...f, category: e.target.value }))} style={{ width: "100%", padding: "6px 10px", borderRadius: 7, border: "1px solid var(--con-border-default)", fontSize: 12, background: "var(--con-bg-surface-2)", color: "var(--con-text-primary)" }}>
+                    <option value="delivery">مشكلة توصيل</option>
+                    <option value="quality">جودة الخدمة</option>
+                    <option value="payment">مشكلة مالية</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>الأولوية</label>
+                  <select value={complaintForm.priority} onChange={e => setComplaintForm(f => ({ ...f, priority: e.target.value }))} style={{ width: "100%", padding: "6px 10px", borderRadius: 7, border: "1px solid var(--con-border-default)", fontSize: 12, background: "var(--con-bg-surface-2)", color: "var(--con-text-primary)" }}>
+                    <option value="low">منخفضة</option>
+                    <option value="medium">متوسطة</option>
+                    <option value="high">عالية</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>الوصف</label>
+                <textarea className="con-input" value={complaintForm.description} onChange={e => setComplaintForm(f => ({ ...f, description: e.target.value }))} placeholder="تفاصيل الشكوى..." rows={3} style={{ width: "100%", fontSize: 12, resize: "vertical" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-start" }}>
+              <button onClick={handleSaveComplaint} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 7, background: "var(--con-brand)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Save size={14} />{editingItem ? "حفظ التعديل" : "تسجيل"}</button>
+              <button onClick={() => setShowAddModal(false)} style={{ padding: "8px 20px", borderRadius: 7, background: "var(--con-bg-surface-2)", color: "var(--con-text-secondary)", border: "1px solid var(--con-border-default)", fontSize: 13, cursor: "pointer" }}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Spinner animation */}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

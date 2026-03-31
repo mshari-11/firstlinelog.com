@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, XCircle, Clock, Search, RefreshCw, DollarSign, Users, FileText, Eye, ThumbsUp, ThumbsDown, AlertCircle, Download, Printer } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Search, RefreshCw, DollarSign, Users, FileText, Eye, ThumbsUp, ThumbsDown, AlertCircle, Download, Printer, Plus, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -34,6 +34,19 @@ export default function Approvals() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ApprovalStatus | "all">("all");
   const [loading, setLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newDesc, setNewDesc] = useState("");
+  const [newType, setNewType] = useState("مالي");
+  const [newAmount, setNewAmount] = useState("");
+  const [newPriority, setNewPriority] = useState("عادي");
+
+  function handleAddApproval() {
+    if (!newDesc.trim()) { toast.error("يرجى كتابة وصف الطلب"); return; }
+    const a: Approval = { id: `APR-${String(data.length + 1).padStart(3, "0")}`, type: newType, requester: "المستخدم الحالي", description: newDesc, amount: newAmount ? Number(newAmount) : undefined, status: "pending", createdAt: new Date().toISOString() };
+    setData(prev => [a, ...prev]);
+    setShowAddModal(false); setNewDesc(""); setNewType("مالي"); setNewAmount(""); setNewPriority("عادي");
+    toast.success("تم إنشاء طلب الاعتماد");
+  }
 
   useEffect(() => { fetchData(); }, []);
   async function fetchData() {
@@ -74,6 +87,7 @@ export default function Approvals() {
           <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>إدارة طلبات الاعتماد والموافقات</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="con-btn-primary" onClick={() => setShowAddModal(true)}><Plus size={14} /> طلب اعتماد</button>
           <button className="con-btn-primary" style={{ background: "var(--con-success)", borderColor: "var(--con-success)" }} onClick={() => { const pending = data.filter(a => a.status === "pending"); if (!pending.length) { toast.info("لا توجد اعتمادات معلقة"); return; } pending.forEach(a => handleAction(a.id, "approved")); toast.success(`تم اعتماد ${pending.length} طلب`); }}><CheckCircle2 size={14} /> اعتماد الكل</button>
           <button className="con-btn-ghost" onClick={() => downloadCSV(filtered.map(a => ({ الرقم: a.id, النوع: a.type, الطالب: a.requester, الوصف: a.description, المبلغ: a.amount ?? "", الحالة: STATUS[a.status].label, التاريخ: a.createdAt })), "approvals.csv")}><Download size={14} /> تصدير CSV</button>
           <button className="con-btn-ghost" onClick={() => window.print()}><Printer size={14} /> طباعة</button>
@@ -143,6 +157,47 @@ export default function Approvals() {
           </div>
         )}
       </div>
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "92vw", padding: 24 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)" }}>طلب اعتماد جديد</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الوصف</label>
+                <input className="con-input" value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="وصف طلب الاعتماد" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>النوع</label>
+                <select className="con-input" value={newType} onChange={e => setNewType(e.target.value)} style={{ width: "100%" }}>
+                  <option value="مالي">صرف مالي</option>
+                  <option value="مصروف">مصروف</option>
+                  <option value="موظف">إجازة</option>
+                  <option value="تشغيلي">أخرى</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المبلغ (اختياري)</label>
+                <input className="con-input" type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="0" style={{ width: "100%" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الأولوية</label>
+                <select className="con-input" value={newPriority} onChange={e => setNewPriority(e.target.value)} style={{ width: "100%" }}>
+                  <option value="عادي">عادي</option>
+                  <option value="عالي">عالي</option>
+                  <option value="عاجل">عاجل</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
+                <button className="con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+                <button className="con-btn-primary" onClick={handleAddApproval}><Save size={14} /> حفظ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

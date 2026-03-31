@@ -3,7 +3,7 @@
  * مراقبة مستويات الخدمة وتتبع الانتهاكات
  */
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Target, TrendingDown, AlertTriangle, Download, Printer } from "lucide-react";
+import { RefreshCw, AlertCircle, CheckCircle2, XCircle, Clock, Target, TrendingDown, AlertTriangle, Download, Printer, Plus, Pencil, X, Save } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 
 interface SLAMetric {
@@ -70,6 +70,30 @@ export default function SLAScanner() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"metrics" | "violations">("metrics");
 
+  // Add/Edit metric modal
+  const emptyMetricForm = { name: "", target: "", unit: "دقيقة" };
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingMetric, setEditingMetric] = useState<SLAMetric | null>(null);
+  const [metricForm, setMetricForm] = useState(emptyMetricForm);
+
+  function openAddMetric() { setMetricForm(emptyMetricForm); setEditingMetric(null); setShowAddModal(true); }
+  function openEditMetric(m: SLAMetric) {
+    setMetricForm({ name: m.name, target: String(m.target), unit: m.unit });
+    setEditingMetric(m); setShowAddModal(true);
+  }
+  function handleSaveMetric() {
+    if (!metricForm.name.trim() || !metricForm.target.trim()) return;
+    const targetVal = parseFloat(metricForm.target);
+    if (isNaN(targetVal)) return;
+    if (editingMetric) {
+      setMetrics(prev => prev.map(m => m.id === editingMetric.id ? { ...m, name: metricForm.name, target: targetVal, unit: metricForm.unit } : m));
+    } else {
+      const newMetric: SLAMetric = { id: `m-${Date.now()}`, name: metricForm.name, target: targetVal, current: 0, unit: metricForm.unit, status: "ok", trend: "stable", lastUpdated: new Date().toISOString() };
+      setMetrics(prev => [...prev, newMetric]);
+    }
+    setShowAddModal(false);
+  }
+
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
     try {
@@ -111,6 +135,9 @@ export default function SLAScanner() {
           <p style={{ fontSize: 12, color: "var(--con-text-muted)", margin: "4px 0 0" }}>تتبع مؤشرات الأداء وانتهاكات مستوى الخدمة</p>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={openAddMetric} className="con-btn" style={{ gap: 6, background: "var(--con-accent)", color: "#fff", border: "none" }}>
+            <Plus size={14} /> إضافة مقياس
+          </button>
           <button onClick={() => downloadCSV(violations, "sla-violations")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
             <Download size={14} /> تصدير CSV
           </button>
@@ -168,7 +195,10 @@ export default function SLAScanner() {
                       الهدف: {m.target} {m.unit}
                     </div>
                   </div>
-                  <span className={`con-badge ${ss.cls}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{ss.icon}{ss.label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <button onClick={() => openEditMetric(m)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)", padding: 2 }} title="تعديل"><Pencil size={12} /></button>
+                    <span className={`con-badge ${ss.cls}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{ss.icon}{ss.label}</span>
+                  </div>
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -220,6 +250,44 @@ export default function SLAScanner() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add/Edit Metric Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowAddModal(false)}>
+          <div dir="rtl" onClick={e => e.stopPropagation()} style={{ background: "var(--con-bg-surface-1, #fff)", border: "1px solid var(--con-border-default)", borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>{editingMetric ? "تعديل المقياس" : "إضافة مقياس جديد"}</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>اسم المقياس</label>
+                <input className="con-input" value={metricForm.name} onChange={e => setMetricForm(f => ({ ...f, name: e.target.value }))} placeholder="مثال: متوسط وقت التوصيل" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>القيمة المستهدفة</label>
+                  <input className="con-input" type="number" value={metricForm.target} onChange={e => setMetricForm(f => ({ ...f, target: e.target.value }))} placeholder="45" style={{ width: "100%", fontSize: 12 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>الوحدة</label>
+                  <select value={metricForm.unit} onChange={e => setMetricForm(f => ({ ...f, unit: e.target.value }))} style={{ width: "100%", padding: "6px 10px", borderRadius: 7, border: "1px solid var(--con-border-default)", fontSize: 12, background: "var(--con-bg-surface-2)", color: "var(--con-text-primary)" }}>
+                    <option value="دقيقة">دقيقة</option>
+                    <option value="%">نسبة مئوية (%)</option>
+                    <option value="ساعة">ساعة</option>
+                    <option value="/ 5">من 5</option>
+                    <option value="انتهاك">عدد</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-start" }}>
+              <button onClick={handleSaveMetric} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 7, background: "var(--con-accent, #3b82f6)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Save size={14} />{editingMetric ? "حفظ التعديل" : "إضافة"}</button>
+              <button onClick={() => setShowAddModal(false)} style={{ padding: "8px 20px", borderRadius: 7, background: "var(--con-bg-surface-2)", color: "var(--con-text-secondary)", border: "1px solid var(--con-border-default)", fontSize: 13, cursor: "pointer" }}>إلغاء</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

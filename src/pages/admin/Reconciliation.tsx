@@ -21,6 +21,9 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Plus,
+  X,
+  Save,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -204,6 +207,8 @@ export default function Reconciliation() {
   const [filterStatus, setFilterStatus] = useState<VarianceStatus | "all">("all");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ platform: "jahez" as Platform, order_id: "", expected_amount: "", actual_amount: "", date: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Fetch internal records from Supabase orders table
@@ -338,6 +343,9 @@ export default function Reconciliation() {
         <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>
           رفع ملفات المنصات، تطبيع البيانات، واكتشاف الفروقات مقارنةً بالسجلات الداخلية
         </p>
+        <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-ghost" style={{ marginTop: 8, gap: 6, background: "var(--con-brand)", color: "#fff" }}>
+          <Plus size={14} /> إضافة سجل
+        </button>
       </div>
 
       {/* ── KPI Cards ── */}
@@ -638,6 +646,61 @@ export default function Reconciliation() {
           )}
         </div>
       </div>
+      {/* Add Record Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "90vw", padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إضافة سجل مطابقة</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المنصة</label>
+                <select className="con-input" style={{ width: "100%" }} value={addForm.platform} onChange={(e) => setAddForm(f => ({ ...f, platform: e.target.value as Platform }))}>
+                  {(Object.keys(PLATFORM_LABELS) as Platform[]).map((p) => (
+                    <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>رقم الطلب</label>
+                <input className="con-input" style={{ width: "100%" }} type="text" placeholder="ORD-XXX" value={addForm.order_id} onChange={(e) => setAddForm(f => ({ ...f, order_id: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المبلغ المتوقع (ر.س)</label>
+                <input className="con-input" style={{ width: "100%" }} type="number" placeholder="0.00" value={addForm.expected_amount} onChange={(e) => setAddForm(f => ({ ...f, expected_amount: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المبلغ الفعلي (ر.س)</label>
+                <input className="con-input" style={{ width: "100%" }} type="number" placeholder="0.00" value={addForm.actual_amount} onChange={(e) => setAddForm(f => ({ ...f, actual_amount: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>التاريخ</label>
+                <input className="con-input" style={{ width: "100%" }} type="date" value={addForm.date} onChange={(e) => setAddForm(f => ({ ...f, date: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20 }}>
+              <button className="con-btn con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+              <button className="con-btn con-btn-ghost" style={{ background: "var(--con-brand)", color: "#fff", gap: 6 }} onClick={() => {
+                if (!addForm.order_id || !addForm.expected_amount) return;
+                const newRecord: InternalRecord = {
+                  order_id: addForm.order_id,
+                  expected_amount: parseFloat(addForm.expected_amount),
+                  date: addForm.date,
+                  platform: addForm.platform,
+                };
+                setInternalRecords(prev => [...prev, newRecord]);
+                setResults(null);
+                setAddForm({ platform: "jahez", order_id: "", expected_amount: "", actual_amount: "", date: "" });
+                setShowAddModal(false);
+              }}>
+                <Save size={14} /> حفظ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

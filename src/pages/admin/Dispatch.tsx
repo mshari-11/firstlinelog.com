@@ -16,6 +16,7 @@ import {
   MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
   AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
   Navigation, Phone, Star, Layers, Filter, Zap, Inbox,
+  Plus, X, Save,
 } from "lucide-react";
 import { Empty, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 
@@ -172,6 +173,29 @@ export default function Dispatch() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [showDrivers, setShowDrivers] = useState(true);
   const [showOrders, setShowOrders] = useState(true);
+
+  // Dispatch task modal
+  const emptyDispatchForm = { orderId: "", pickupLocation: "", deliveryLocation: "", priority: "normal" as "normal" | "urgent" };
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [dispatchForm, setDispatchForm] = useState(emptyDispatchForm);
+
+  function openDispatchModal() { setDispatchForm(emptyDispatchForm); setShowDispatchModal(true); }
+  function handleSaveDispatch() {
+    if (!dispatchForm.orderId.trim() || !dispatchForm.pickupLocation.trim() || !dispatchForm.deliveryLocation.trim()) return;
+    const newOrder: Order = {
+      id: dispatchForm.orderId,
+      customer: "عميل جديد",
+      address: dispatchForm.deliveryLocation,
+      platform: "FLL",
+      amount: 0,
+      status: "pending",
+      lat: 24.7136 + (Math.random() - 0.5) * 0.04,
+      lng: 46.6753 + (Math.random() - 0.5) * 0.04,
+      createdAt: new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    setShowDispatchModal(false);
+  }
 
   // ── Fetch real data from dispatch API, fall back to mock ─────────────────────
   useEffect(() => {
@@ -347,6 +371,17 @@ export default function Dispatch() {
 
         {/* Layer toggles */}
         <div style={{ display: "flex", gap: "0.375rem" }}>
+          <button
+            onClick={openDispatchModal}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.375rem",
+              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px", fontWeight: 600, border: "none",
+              cursor: "pointer", background: "var(--con-brand)", color: "#fff",
+            }}
+          >
+            <Plus size={12} /> إنشاء مهمة إرسال
+          </button>
           <button
             onClick={() => setRefreshTick((v) => v + 1)}
             style={{
@@ -700,6 +735,43 @@ export default function Dispatch() {
           </div>
         </div>
       </div>
+
+      {/* Dispatch Task Modal */}
+      {showDispatchModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowDispatchModal(false)}>
+          <div dir="rtl" onClick={e => e.stopPropagation()} style={{ background: "var(--con-bg-surface-1, #fff)", border: "1px solid var(--con-border-default)", borderRadius: 12, padding: 24, width: 420, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إنشاء مهمة إرسال</h2>
+              <button onClick={() => setShowDispatchModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>رقم الطلب</label>
+                <input className="con-input" value={dispatchForm.orderId} onChange={e => setDispatchForm(f => ({ ...f, orderId: e.target.value }))} placeholder="مثال: ORD-1234" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>موقع الاستلام</label>
+                <input className="con-input" value={dispatchForm.pickupLocation} onChange={e => setDispatchForm(f => ({ ...f, pickupLocation: e.target.value }))} placeholder="عنوان الاستلام" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>موقع التسليم</label>
+                <input className="con-input" value={dispatchForm.deliveryLocation} onChange={e => setDispatchForm(f => ({ ...f, deliveryLocation: e.target.value }))} placeholder="عنوان التسليم" style={{ width: "100%", fontSize: 12 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>الأولوية</label>
+                <select value={dispatchForm.priority} onChange={e => setDispatchForm(f => ({ ...f, priority: e.target.value as "normal" | "urgent" }))} style={{ width: "100%", padding: "6px 10px", borderRadius: 7, border: "1px solid var(--con-border-default)", fontSize: 12, background: "var(--con-bg-surface-2)", color: "var(--con-text-primary)" }}>
+                  <option value="normal">عادي</option>
+                  <option value="urgent">عاجل</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-start" }}>
+              <button onClick={handleSaveDispatch} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 7, background: "var(--con-brand)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Save size={14} />إنشاء</button>
+              <button onClick={() => setShowDispatchModal(false)} style={{ padding: "8px 20px", borderRadius: 7, background: "var(--con-bg-surface-2)", color: "var(--con-text-secondary)", border: "1px solid var(--con-border-default)", fontSize: 13, cursor: "pointer" }}>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

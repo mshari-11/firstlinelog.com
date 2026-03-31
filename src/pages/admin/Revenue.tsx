@@ -10,7 +10,7 @@ import {
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ComposedChart,
 } from "recharts";
-import { DollarSign, TrendingUp, Calendar, Download, Printer, RefreshCw } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, Download, Printer, RefreshCw, Plus, X, Save } from "lucide-react";
 import {
   KPICard, ChartCard, PageHeader, DataTable,
   chartTooltipStyle, formatSAR,
@@ -54,6 +54,8 @@ export default function RevenueAnalysis() {
     monthRevenue: 0,
     dailyAverage: 0,
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ platform: "", amount: "", date: "", notes: "" });
 
   useEffect(() => {
     async function fetchRevenue() {
@@ -129,6 +131,9 @@ export default function RevenueAnalysis() {
         subtitle="تفصيل شامل للإيرادات حسب المنصات والمدن والمناديب"
         actions={
           <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setShowAddModal(true)} className="con-btn con-btn-ghost" style={{ gap: 6, background: "var(--con-brand)", color: "#fff" }}>
+              <Plus size={14} /> إضافة إيراد
+            </button>
             <button onClick={() => downloadCSV(platformRevenueData, "revenue-platforms")} className="con-btn con-btn-ghost" style={{ gap: 6 }}>
               <Download size={14} /> تصدير CSV
             </button>
@@ -232,6 +237,58 @@ export default function RevenueAnalysis() {
           ]}
         />
       </div>
+
+      {/* Add Revenue Modal */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }} onClick={() => setShowAddModal(false)}>
+          <div className="con-card" style={{ width: 420, maxWidth: "90vw", padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إضافة إيراد</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المنصة</label>
+                <select className="con-input" style={{ width: "100%" }} value={addForm.platform} onChange={(e) => setAddForm(f => ({ ...f, platform: e.target.value }))}>
+                  <option value="">اختر المنصة</option>
+                  <option value="جاهز">جاهز</option><option value="مرسول">مرسول</option><option value="نون">نون</option>
+                  <option value="صاحب">صاحب</option><option value="HungerStation">HungerStation</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>المبلغ (ر.س)</label>
+                <input className="con-input" style={{ width: "100%" }} type="number" placeholder="0.00" value={addForm.amount} onChange={(e) => setAddForm(f => ({ ...f, amount: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>التاريخ</label>
+                <input className="con-input" style={{ width: "100%" }} type="date" value={addForm.date} onChange={(e) => setAddForm(f => ({ ...f, date: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", display: "block", marginBottom: 4 }}>ملاحظات</label>
+                <input className="con-input" style={{ width: "100%" }} type="text" placeholder="ملاحظات اختيارية" value={addForm.notes} onChange={(e) => setAddForm(f => ({ ...f, notes: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20 }}>
+              <button className="con-btn con-btn-ghost" onClick={() => setShowAddModal(false)}>إلغاء</button>
+              <button className="con-btn con-btn-ghost" style={{ background: "var(--con-brand)", color: "#fff", gap: 6 }} onClick={() => {
+                if (!addForm.platform || !addForm.amount) return;
+                const amt = parseFloat(addForm.amount);
+                setPlatformRevenueData(prev => {
+                  const existing = prev.find(p => p.platform === addForm.platform);
+                  if (existing) {
+                    return prev.map(p => p.platform === addForm.platform ? { ...p, revenue: p.revenue + amt, orders: p.orders + 1 } : p);
+                  }
+                  return [...prev, { platform: addForm.platform, revenue: amt, orders: 1, percentage: 0 }];
+                });
+                setAddForm({ platform: "", amount: "", date: "", notes: "" });
+                setShowAddModal(false);
+              }}>
+                <Save size={14} /> حفظ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

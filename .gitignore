@@ -10,4 +10,5 @@ node_modules/
 *.tmp
 .vercel
 .claude/
+supabase/.temp/
 dist/

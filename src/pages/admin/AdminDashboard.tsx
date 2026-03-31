@@ -18,6 +18,28 @@ import {
   Activity,
   ChevronLeft,
   Info,
+  Plus,
+  ClipboardList,
+  MessageSquare,
+  Wallet,
+  Car,
+  BarChart3,
+  FileSpreadsheet,
+  CreditCard,
+  Settings2,
+  Shield,
+  Bell,
+  ScrollText,
+  GraduationCap,
+  CheckCircle2,
+  Building2,
+  Plug,
+  Map,
+  Target,
+  Zap,
+  Brain,
+  UserCheck,
+  Mail,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +141,35 @@ function OrderSkeleton() {
   );
 }
 
+interface QuickAction {
+  label: string;
+  icon: React.ElementType;
+  path: string;
+  color: string;
+}
+
+function QuickActionGroup({ title, actions, navigate }: { title: string; actions: QuickAction[]; navigate: (p: string) => void }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-muted-foreground mb-2">{title}</p>
+      <div className="flex flex-wrap gap-2">
+        {actions.map(a => (
+          <button
+            key={a.path + a.label}
+            onClick={() => navigate(a.path)}
+            className="group flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background hover:bg-muted/60 hover:border-primary/30 transition-all text-sm"
+          >
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: a.color + "18" }}>
+              <a.icon className="w-3.5 h-3.5" style={{ color: a.color }} />
+            </div>
+            <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground whitespace-nowrap">{a.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [ordersLoading, setOrdersLoading] = React.useState(true);
@@ -182,6 +233,64 @@ export default function AdminDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* ⚡ أوامر سريعة — Quick Actions */}
+      <motion.div variants={item}>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              أوامر سريعة
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* التشغيل */}
+            <QuickActionGroup title="التشغيل" actions={[
+              { label: "طلب جديد", icon: Plus, path: "/admin-panel/orders", color: "#3b82f6" },
+              { label: "إضافة مندوب", icon: Users, path: "/admin-panel/couriers", color: "#10b981" },
+              { label: "تسجيل شكوى", icon: MessageSquare, path: "/admin-panel/complaints", color: "#f59e0b" },
+              { label: "إرسال شحنة", icon: Package, path: "/admin-panel/shipments", color: "#8b5cf6" },
+              { label: "خريطة الإرسال", icon: Map, path: "/admin-panel/dispatch", color: "#06b6d4" },
+              { label: "مراقبة SLA", icon: Target, path: "/admin-panel/sla", color: "#ec4899" },
+              { label: "تكاملات المنصات", icon: Plug, path: "/admin-panel/marketplace", color: "#6366f1" },
+            ]} navigate={navigate} />
+
+            {/* المالية */}
+            <QuickActionGroup title="المالية والموارد" actions={[
+              { label: "إنشاء دفعة", icon: CreditCard, path: "/admin-panel/payouts", color: "#10b981" },
+              { label: "لوحة المالية", icon: Wallet, path: "/admin-panel/finance-dashboard", color: "#3b82f6" },
+              { label: "تحليل AI", icon: Brain, path: "/admin-panel/ai-finance", color: "#8b5cf6" },
+              { label: "تقرير مالي", icon: BarChart3, path: "/admin-panel/financial-reports", color: "#f59e0b" },
+              { label: "استيراد Excel", icon: FileSpreadsheet, path: "/admin-panel/excel", color: "#22c55e" },
+              { label: "الفواتير", icon: ClipboardList, path: "/admin-panel/invoices", color: "#06b6d4" },
+            ]} navigate={navigate} />
+
+            {/* الأصول والموظفون */}
+            <QuickActionGroup title="الأصول والموظفون" actions={[
+              { label: "إضافة مركبة", icon: Car, path: "/admin-panel/vehicles", color: "#3b82f6" },
+              { label: "إدارة الموظفين", icon: Building2, path: "/admin-panel/staff", color: "#10b981" },
+              { label: "إدارة الأسطول", icon: Truck, path: "/admin-panel/fleet", color: "#f59e0b" },
+              { label: "الحضور", icon: Clock, path: "/admin-panel/attendance", color: "#8b5cf6" },
+            ]} navigate={navigate} />
+
+            {/* النظام */}
+            <QuickActionGroup title="النظام" actions={[
+              { label: "الاعتمادات", icon: CheckCircle2, path: "/admin-panel/approvals", color: "#10b981" },
+              { label: "الإشعارات", icon: Bell, path: "/admin-panel/notifications", color: "#f59e0b" },
+              { label: "سجل التدقيق", icon: ScrollText, path: "/admin-panel/audit-log", color: "#6366f1" },
+              { label: "سجل الإيميلات", icon: Mail, path: "/admin-panel/email-logs", color: "#06b6d4" },
+              { label: "الإعدادات", icon: Settings2, path: "/admin-panel/settings", color: "#64748b" },
+            ]} navigate={navigate} />
+
+            {/* السائقون */}
+            <QuickActionGroup title="السائقون" actions={[
+              { label: "طلبات التسجيل", icon: UserCheck, path: "/admin-panel/driver-applications", color: "#3b82f6" },
+              { label: "وثائق KYC", icon: Shield, path: "/admin-panel/kyc", color: "#f59e0b" },
+              { label: "التدريب", icon: GraduationCap, path: "/admin-panel/driver-training", color: "#10b981" },
+            ]} navigate={navigate} />
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* آخر الطلبات */}

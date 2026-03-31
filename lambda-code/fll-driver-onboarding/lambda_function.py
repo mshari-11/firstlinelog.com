@@ -316,34 +316,9 @@ def ensure_recent_email_verification(email):
         raise ValueError("انتهت مهلة التحقق من البريد الإلكتروني، أعد طلب رمز جديد")
 
 
-def compress_image(content, content_type, max_width=1200, quality=75):
-    """Compress image server-side using Pillow if available, otherwise return as-is."""
-    if content_type == "application/pdf":
-        return content, content_type
-    try:
-        from io import BytesIO
-        from PIL import Image
-        img = Image.open(BytesIO(content))
-        # Convert RGBA/P to RGB for JPEG
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
-        w, h = img.size
-        if w > max_width:
-            ratio = max_width / w
-            img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
-        buf = BytesIO()
-        img.save(buf, format="JPEG", quality=quality, optimize=True)
-        return buf.getvalue(), "image/jpeg"
-    except ImportError:
-        # Pillow not installed — return original
-        return content, content_type
-    except Exception:
-        return content, content_type
-
-
 def upload_binary_to_s3(key, content, content_type, metadata=None):
-    # Compress images before upload
-    content, content_type = compress_image(content, content_type)
+    # Note: image compression is handled client-side in Register.tsx
+    # (1200px max width, 75% JPEG quality) before base64 encoding
     extra = {"Bucket": BUCKET, "Key": key, "Body": content, "ContentType": content_type}
     if metadata:
         extra["Metadata"] = metadata

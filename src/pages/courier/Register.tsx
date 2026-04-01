@@ -29,6 +29,18 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { API_BASE } from "@/lib/api";
 
+// Supabase edge functions for OTP (primary), Lambda API as fallback
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const EDGE_OTP_SEND = `${SUPABASE_URL}/functions/v1/send-otp-email`;
+const EDGE_OTP_VERIFY = `${SUPABASE_URL}/functions/v1/verify-email-otp`;
+
+// Fallback API bases for /driver/apply
+const DRIVER_API_BASES = [
+  API_BASE,
+  "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
+];
+
 const CITIES = [
   "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر",
   "الظهران", "أبها", "تبوك", "القصيم", "حائل", "جيزان", "نجران", "الباحة",
@@ -546,23 +558,18 @@ export default function CourierRegister() {
     if (otpCooldown > 0) return;
     setOtpSending(true);
     try {
-      const res = await fetch(`${API_BASE}/driver/otp/send`, {
+      const res = await fetch(EDGE_OTP_SEND, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          full_name: form.full_name,
-          national_id: form.national_id,
-          phone: form.phone,
-          device_fingerprint: getDeviceFingerprint(),
-        }),
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email: form.email, full_name: form.full_name }),
+        signal: AbortSignal.timeout(15000),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
-      } else {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         setOtpSent(true);
         setOtpCooldown(60);
+      } else {
+        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
       }
     } catch {
       setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
@@ -579,17 +586,18 @@ export default function CourierRegister() {
     }
     setOtpVerifying(true);
     try {
-      const res = await fetch(`${API_BASE}/driver/otp/verify`, {
+      const res = await fetch(EDGE_OTP_VERIFY, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
         body: JSON.stringify({ email: form.email, code: form.otpCode }),
+        signal: AbortSignal.timeout(15000),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
-      } else {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
         set("emailVerified", true);
         submitApplication();
+      } else {
+        setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
       }
     } catch {
       setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
@@ -643,17 +651,31 @@ export default function CourierRegister() {
         ip_address: null, // set by Lambda from event context
         user_agent: navigator.userAgent,
       };
-      const res = await fetch(`${API_BASE}/driver/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
-      } else {
-        setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
-        toast.success("تم إرسال طلب التسجيل بنجاح");
+      let submitted = false;
+      for (const base of DRIVER_API_BASES) {
+        try {
+          const res = await fetch(`${base}/driver/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(30000),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
+            toast.success("تم إرسال طلب التسجيل بنجاح");
+            submitted = true;
+            break;
+          }
+          if (res.status === 400 || res.status === 409 || res.status === 429) {
+            setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
+            submitted = true;
+            break;
+          }
+        } catch { /* try next endpoint */ }
+      }
+      if (!submitted) {
+        setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });
       }
     } catch {
       setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });

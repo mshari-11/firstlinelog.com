@@ -558,7 +558,7 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
 
 /* ── Sidebar — Obsidian panel with glass edge ── */
 .fll-console .con-sidebar {
-  width: 260px;
+  width: var(--sidebar-width, 260px);
   background: var(--con-bg-surface-1);
   border-inline-start: 1px solid var(--con-border-default);
   display: flex;
@@ -569,7 +569,8 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
   height: 100vh;
   z-index: 50;
   box-shadow: -4px 0 24px rgba(0,0,0,0.2);
-       overflow-y: auto;
+  overflow-y: auto;
+  transition: width 0.3s cubic-bezier(0.22, 0.68, 0, 1);
 }
 
 .fll-console .con-sidebar-logo {
@@ -631,12 +632,13 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
 /* ── Main content area ── */
 .fll-console .con-main {
   flex: 1;
-  margin-inline-start: 260px;
+  margin-inline-start: var(--sidebar-width, 260px);
   min-height: 100vh;
   background: var(--con-bg-app);
   overflow-x: hidden;
   position: relative;
   z-index: 1;
+  transition: margin-inline-start 0.3s cubic-bezier(0.22, 0.68, 0, 1);
 }
 
 .fll-console .con-content {

@@ -59,6 +59,24 @@ import {
   Eye,
   Calculator,
   HelpCircle,
+  Workflow,
+  Activity,
+  Gauge,
+  Globe,
+  UserCog,
+  BadgeDollarSign,
+  HandCoins,
+  ChartPie,
+  Banknote,
+  CircleDollarSign,
+  Tags,
+  ClipboardCheck,
+  FolderSearch,
+  Star,
+  Blocks,
+  BellRing,
+  CalendarRange,
+  Coins,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -70,9 +88,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { loadConfig } from "@/pages/admin/PageBuilder";
+import { loadFavorites, toggleFavorite } from "./CommandPalette";
 
 // ── Icon map (expanded) ─────────────────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -121,6 +140,25 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Eye,
   Calculator,
   HelpCircle,
+  Workflow,
+  Activity,
+  Gauge,
+  Globe,
+  UserCog,
+  BadgeDollarSign,
+  HandCoins,
+  ChartPie,
+  Banknote,
+  CircleDollarSign,
+  Tags,
+  ClipboardCheck,
+  FolderSearch,
+  KeyRound,
+  Star,
+  Blocks,
+  BellRing,
+  CalendarRange,
+  Coins,
 };
 
 function NavIcon({ name, size = 16 }: { name: string; size?: number }) {
@@ -131,11 +169,12 @@ function NavIcon({ name, size = 16 }: { name: string; size?: number }) {
 // ── Group icons & colors ────────────────────────────────────────────────────
 const GROUP_META: Record<string, { icon: React.ElementType; color: string }> = {
   التشغيل: { icon: Zap, color: "var(--con-brand)" },
-  "المالية والموارد": { icon: CreditCard, color: "var(--con-success)" },
+  "المالية الأساسية": { icon: Gauge, color: "var(--con-success)" },
+  "العمليات المالية": { icon: HandCoins, color: "#10B981" },
   "الأصول والموظفون": { icon: Building2, color: "var(--con-info)" },
   النظام: { icon: Settings2, color: "var(--con-text-muted)" },
   السائقون: { icon: Users, color: "var(--con-warning)" },
-  "الموارد البشرية": { icon: Users, color: "#EC4899" },
+  "الموارد البشرية": { icon: UserCog, color: "#EC4899" },
   "الحوكمة والتحكم": { icon: Shield, color: "#8B5CF6" },
   "البنية التحتية": { icon: Server, color: "#FF9900" },
 };
@@ -161,6 +200,16 @@ export function AdminSidebar() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
   );
+  const [favorites, setFavorites] = useState<string[]>(() => loadFavorites());
+
+  // Listen for storage changes (favorites updated from CommandPalette)
+  useEffect(() => {
+    function handleStorage() {
+      setFavorites(loadFavorites());
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   async function handleSignOut() {
     await signOut();
@@ -218,6 +267,11 @@ export function AdminSidebar() {
   }, [filteredPages]);
 
   const sidebarWidth = collapsed ? 68 : 260;
+
+  // Sync CSS variable for main content margin
+  useEffect(() => {
+    document.documentElement.style.setProperty("--sidebar-width", sidebarWidth + "px");
+  }, [sidebarWidth]);
 
   return (
     <motion.aside
@@ -383,6 +437,112 @@ export function AdminSidebar() {
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Cmd+K Shortcut Hint ── */}
+      {!collapsed && (
+        <div style={{ padding: "0 0.625rem", marginBottom: 4 }}>
+          <button
+            onClick={() => {
+              // Trigger Cmd+K programmatically
+              document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+            }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "5px 8px",
+              fontSize: 11,
+              background: "var(--con-bg-elevated)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: "var(--con-radius-sm)",
+              color: "var(--con-text-disabled)",
+              cursor: "pointer",
+              fontFamily: "var(--con-font-primary)",
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--con-brand)";
+              e.currentTarget.style.color = "var(--con-text-secondary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--con-border-default)";
+              e.currentTarget.style.color = "var(--con-text-disabled)";
+            }}
+          >
+            <Search size={11} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, textAlign: "right" }}>تنقل سريع</span>
+            <kbd style={{
+              fontSize: 9,
+              padding: "1px 4px",
+              borderRadius: 3,
+              background: "var(--con-bg-surface-2, var(--con-bg-surface-1))",
+              border: "1px solid var(--con-border-default)",
+              fontFamily: "var(--con-font-mono)",
+            }}>⌘K</kbd>
+          </button>
+        </div>
+      )}
+
+      {/* ── Favorites Section ── */}
+      {favorites.length > 0 && (
+        <div style={{ padding: collapsed ? "0 0.25rem" : "0 0.375rem", marginBottom: 4 }}>
+          {!collapsed && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "4px 0.375rem",
+              marginBottom: 2,
+            }}>
+              <Star size={11} style={{ color: "var(--con-warning, #F59E0B)", flexShrink: 0 }} fill="var(--con-warning, #F59E0B)" />
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--con-warning, #F59E0B)",
+                letterSpacing: "0.02em",
+                textTransform: "uppercase",
+              }}>المفضلة</span>
+            </div>
+          )}
+          {enabledPages
+            .filter((p) => favorites.includes(p.id))
+            .map((item) => (
+              <NavLink
+                key={`fav-${item.path}`}
+                to={item.path}
+                className={({ isActive }) =>
+                  `con-nav-item${isActive ? " active" : ""}`
+                }
+                title={collapsed ? item.label : undefined}
+                style={{
+                  justifyContent: collapsed ? "center" : undefined,
+                  padding: collapsed ? "0.5rem" : "0.375rem 0.75rem 0.375rem 0.5rem",
+                  margin: "1px 0",
+                  fontSize: 13,
+                }}
+              >
+                <NavIcon name={item.icon} size={collapsed ? 18 : 15} />
+                {!collapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{ flex: 1, fontSize: 13 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+              </NavLink>
+            ))}
+          {!collapsed && (
+            <div style={{
+              height: 1,
+              background: "var(--con-border-default)",
+              margin: "6px 0.375rem 4px",
+            }} />
+          )}
         </div>
       )}
 

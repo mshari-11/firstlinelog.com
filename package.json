@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && mv dist/spa.html dist/index.html",
+    "build": "vite build && mv dist/spa.html dist/index.html && node scripts/sync-index-assets.js",
     "preview": "vite preview",
     "start": "serve dist -s -l ${PORT:-3000}"
   },

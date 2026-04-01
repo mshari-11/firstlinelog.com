@@ -2,7 +2,7 @@
  * صفحة تسجيل الدخول الموحدة — /unified-login
  */
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
 import {
@@ -35,6 +35,7 @@ const NAV_LINKS = [
 export default function UnifiedPortal() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [screen, setScreen] = useState<Screen>("login");
   const [loading, setLoading] = useState(false);
@@ -48,14 +49,15 @@ export default function UnifiedPortal() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetUserId, setResetUserId] = useState("");
 
-  // Reset to login screen on every mount (fixes stale OTP screen on revisit)
+  // Reset to login screen on every mount/navigation (fixes stale OTP screen)
   useEffect(() => {
     setScreen("login");
     setError("");
     setSuccess("");
     setOtp("");
+    setPassword("");
     setLoading(false);
-  }, []);
+  }, [location.key]);
 
   function go(s: Screen) {
     setError("");

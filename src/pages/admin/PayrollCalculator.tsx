@@ -132,7 +132,6 @@ interface DriverPayroll {
   total_additions: number;
   total_deductions: number;
   net_payout: number;
-  vat_amount?: number;
 }
 
 const PLATFORMS = [

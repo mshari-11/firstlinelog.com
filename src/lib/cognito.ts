@@ -336,7 +336,7 @@ export function cognitoForgotPassword(
         onFailure: (err) => {
           console.error(
             "forgotPassword onFailure — code:",
-            (err as any).code,
+            err.code,
             "msg:",
             err.message,
           );
@@ -371,7 +371,7 @@ export function cognitoConfirmPassword(
       onFailure: (err) => {
         console.error(
           "confirmPassword onFailure — code:",
-          (err as any).code,
+          err.code,
           "msg:",
           err.message,
         );

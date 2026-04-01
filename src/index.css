@@ -631,15 +631,14 @@ h@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght
 
 /* ── Main content area ── */
 .fll-console .con-main {
+  flex: 1;
   margin-inline-start: var(--sidebar-width, 260px);
-  width: calc(100vw - var(--sidebar-width, 260px));
   min-height: 100vh;
   background: var(--con-bg-app);
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  transition: margin-inline-start 0.3s cubic-bezier(0.22, 0.68, 0, 1),
-              width 0.3s cubic-bezier(0.22, 0.68, 0, 1);
+  transition: margin-inline-start 0.3s cubic-bezier(0.22, 0.68, 0, 1);
 }
 
 .fll-console .con-content {

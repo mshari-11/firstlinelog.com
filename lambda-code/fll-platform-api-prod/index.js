@@ -789,7 +789,7 @@ async function handleDriverApply(body, origin) {
   try {
     await sesClient.send(new SendEmailCommand({
       Source: SES_FROM,
-      Destination: { ToAddresses: ["m_shaikhi@yahoo.com"] },
+      Destination: { ToAddresses: ["m_shaikhi@yahoo.com", "A.ALZAMIL@FLL.SA"] },
       Message: {
         Subject: { Data: "طلب تسجيل جديد — " + full_name + " (" + app_ref + ")", Charset: "UTF-8" },
         Body: { Html: { Data: '<div dir="rtl" style="font-family:Arial;padding:20px;background:#08111b;color:#e5e7eb;border-radius:12px"><h2>طلب تسجيل مندوب جديد</h2><table style="font-size:14px"><tr><td style="color:#94a3b8;padding:4px 12px">رقم الطلب</td><td style="color:#2563eb;font-weight:700">' + app_ref + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الاسم</td><td>' + full_name + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الهوية</td><td style="font-family:monospace">' + national_id + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الجوال</td><td>' + phone + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">البريد</td><td>' + email + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">المدينة</td><td>' + (body.city || "—") + '</td></tr></table></div>', Charset: "UTF-8" } },

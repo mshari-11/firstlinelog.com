@@ -4,8 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map as MapIcon, MapPin, ArrowUpDown, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
-const NativeMap = Map;
+import { Map, MapPin, ArrowUpDown, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
@@ -52,7 +51,7 @@ export function OperationsMap() {
         if (!couriers || couriers.length === 0) return;
 
         // Group by city
-        const cityMap = new NativeMap<string, { active: number; orders: number }>();
+        const cityMap = new Map<string, { active: number; orders: number }>();
         for (const c of couriers) {
           const city = c.city || "غير محدد";
           const entry = cityMap.get(city) || { active: 0, orders: 0 };
@@ -98,7 +97,7 @@ export function OperationsMap() {
       id="operations-map"
       title="التوزيع التشغيلي"
       subtitle={`${totalActive} مندوب نشط · ${totalOrders} طلب اليوم`}
-      icon={MapIcon}
+      icon={Map}
       iconColor="var(--con-brand)"
       onDrilldown={() => navigate("/admin-panel/dispatch")}
       actions={

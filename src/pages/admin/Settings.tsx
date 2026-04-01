@@ -47,6 +47,7 @@ import {
   Terminal,
   Copy,
   Link2,
+  Trash2,
   Power,
   PlayCircle,
   PauseCircle,

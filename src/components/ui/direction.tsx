@@ -5,13 +5,11 @@ function DirectionProvider({
   dir,
   direction,
   children,
-}: {
-  dir?: "ltr" | "rtl";
-  direction?: "ltr" | "rtl";
-  children: React.ReactNode;
+}: React.ComponentProps<typeof Direction.DirectionProvider> & {
+  direction?: React.ComponentProps<typeof Direction.DirectionProvider>["dir"];
 }) {
   return (
-    <Direction.DirectionProvider dir={direction ?? dir ?? "rtl"}>
+    <Direction.DirectionProvider dir={direction ?? dir}>
       {children}
     </Direction.DirectionProvider>
   );

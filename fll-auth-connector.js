@@ -237,8 +237,7 @@
   const _alert = window.alert;
   window.alert = function (msg) {
     const p = window.location.pathname;
-    // Only intercept on /login (driver page). /unified-login is handled by React SPA.
-    if (p === "/login") {
+    if (p === "/login" || p === "/unified-login") {
       if (msg === "تم تسجيل الدخول بنجاح!") {
         doLogin(p);
         return;
@@ -349,7 +348,7 @@
     showToast("تم التحقق! جارٍ إرسال رمز التحقق...", "success", 3000);
     const SUPABASE_URL = "https://djebhztfewjfyyoortvv.supabase.co";
     const SUPABASE_ANON =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13";
     try {
       const otpRes = await fetch(
         `${SUPABASE_URL}/functions/v1/send-otp-email`,
@@ -491,7 +490,7 @@
       let verified = false;
       const SUPABASE_URL = "https://djebhztfewjfyyoortvv.supabase.co";
       const SUPABASE_ANON =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13";
       try {
         const r = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
           method: "POST",
@@ -604,10 +603,9 @@
   }
 
   // --- Direct form submit intercept (backup for when alert isn't triggered) ---
-  // NOTE: Only on /login (driver page). /unified-login is handled entirely by React SPA.
   function interceptLoginButton() {
     const p = window.location.pathname;
-    if (p !== "/login") return;
+    if (p !== "/login" && p !== "/unified-login") return;
     document.querySelectorAll("button").forEach(function (btn) {
       const t = (btn.textContent || "").trim();
       if (
@@ -692,11 +690,9 @@
   else initRegisterIntercept();
 
   // --- Forgot Password ---
-  // Only intercept on /login (driver page). /unified-login has its own React forgot-password flow.
   document.addEventListener(
     "click",
     (e) => {
-      if (window.location.pathname === "/unified-login") return;
       const el = e.target.closest("button,a");
       if (!el) return;
       if (el.textContent.trim().includes("نسيت كلمة المرور")) {
@@ -760,11 +756,10 @@
   }
 
   // --- Auto-redirect ---
-  // Only on /login (driver page). /unified-login auto-redirect is handled by React auth guard.
   (function () {
     const s = getSession(),
       p = window.location.pathname;
-    if (s && p === "/login") {
+    if (s && (p === "/login" || p === "/unified-login")) {
       const d = getRedirect(s.groups);
       if (d !== "/") window.location.href = d;
     }

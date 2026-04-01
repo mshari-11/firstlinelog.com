@@ -9,7 +9,8 @@
  */
 (function () {
   const p = location.pathname;
-  if (p !== "/unified-login" && p !== "/login") return;
+  // Only run on /login (driver login) — /unified-login is handled by React SPA + fll-auth-connector
+  if (p !== "/login") return;
 
   const API = "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 

@@ -5,13 +5,23 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { Lock, User, Eye, EyeOff, Mail } from "lucide-react";
-import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 import { cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
 import { sendOtp, verifyOtp } from "@/lib/otp-service";
 
-type Screen = "login" | "login-otp" | "forgot" | "forgot-otp" | "reset-password";
+type Screen =
+  | "login"
+  | "login-otp"
+  | "forgot"
+  | "forgot-otp"
+  | "reset-password";
 
 const NAV_LINKS = [
   { label: "الرئيسية", href: "/" },
@@ -38,16 +48,32 @@ export default function UnifiedPortal() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetUserId, setResetUserId] = useState("");
 
-  function go(s: Screen) { setError(""); setSuccess(""); setScreen(s); }
+  function go(s: Screen) {
+    setError("");
+    setSuccess("");
+    setScreen(s);
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) { setError("أدخل البريد الإلكتروني"); return; }
-    if (!password) { setError("أدخل كلمة المرور"); return; }
-    setError(""); setSuccess(""); setLoading(true);
+    if (!email.trim()) {
+      setError("أدخل البريد الإلكتروني");
+      return;
+    }
+    if (!password) {
+      setError("أدخل كلمة المرور");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
     const res = await signIn(email.trim(), password);
-    if (res.error) { setError(res.error); setLoading(false); return; }
+    if (res.error) {
+      setError(res.error);
+      setLoading(false);
+      return;
+    }
 
     // Try to send OTP for 2FA
     setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
@@ -75,47 +101,88 @@ export default function UnifiedPortal() {
 
   async function handleLoginOTPVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    setError(""); setSuccess(""); setLoading(true);
+    if (otp.length !== 6) {
+      setError("أدخل رمز التحقق الكامل (6 أرقام)");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
     const res = await verifyOtp(email.trim(), otp, "login");
     setLoading(false);
-    if (res.error) { setError(res.error); return; }
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
 
     setSuccess("تم التحقق بنجاح! جارٍ التوجيه...");
     setTimeout(() => navigate("/admin-panel/dashboard"), 1000);
   }
 
   async function handleLoginOTPResend() {
-    setError(""); setLoading(true);
+    setError("");
+    setLoading(true);
     const res = await sendOtp(email.trim(), "login");
     setLoading(false);
-    if (res.error) { setError(res.error); return; }
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
     setSuccess("تم إرسال رمز جديد إلى بريدك الإلكتروني");
     setOtp("");
   }
 
   async function handleForgotSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!resetEmail.trim()) { setError("أدخل البريد الإلكتروني"); return; }
-    setError(""); setSuccess(""); setLoading(true);
+    if (!resetEmail.trim()) {
+      setError("أدخل البريد الإلكتروني");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setLoading(true);
     const result = await cognitoForgotPassword(resetEmail.trim());
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
     go("forgot-otp");
   }
 
   async function handleForgotOTPVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (otp.length !== 6) { setError("أدخل رمز التحقق الكامل (6 أرقام)"); return; }
-    if (newPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
-    setError(""); setSuccess(""); setLoading(true);
-    const result = await cognitoConfirmPassword(resetEmail.trim(), otp, newPassword);
+    if (otp.length !== 6) {
+      setError("أدخل رمز التحقق الكامل (6 أرقام)");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    const result = await cognitoConfirmPassword(
+      resetEmail.trim(),
+      otp,
+      newPassword,
+    );
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     setSuccess("تم تحديث كلمة المرور بنجاح!");
-    setTimeout(() => { go("login"); setNewPassword(""); setOtp(""); setResetEmail(""); setResetUserId(""); }, 1500);
+    setTimeout(() => {
+      go("login");
+      setNewPassword("");
+      setOtp("");
+      setResetEmail("");
+      setResetUserId("");
+    }, 1500);
   }
 
   function handleOtpChange(index: number, val: string) {
@@ -131,25 +198,44 @@ export default function UnifiedPortal() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f9fb", fontFamily: "'IBM Plex Sans Arabic', sans-serif", direction: "rtl" }}>
-
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #0f2744 0%, #1e3a5f 30%, #334155 70%, #4b5563 100%)",
+        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+        direction: "rtl",
+      }}
+    >
       {/* ── Navigation Bar ── */}
-      <nav style={{
-        background: "#fff",
-        borderBottom: "1px solid #e5e7eb",
-        padding: "0 2rem",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: "64px",
-      }}>
+      <nav
+        style={{
+          background: "rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.15)",
+          padding: "0 2rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          height: "64px",
+          backdropFilter: "blur(12px)",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-          <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
+          <Link
+            to="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              textDecoration: "none",
+            }}
+          >
             <img
               src="/images/first_line_professional_english_1.png"
               alt="First Line Logistics"
               style={{ height: "40px", objectFit: "contain" }}
-              onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.webp"; }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/images/logo.webp";
+              }}
             />
           </Link>
           <div style={{ display: "flex", gap: "1.5rem" }}>
@@ -157,7 +243,12 @@ export default function UnifiedPortal() {
               <Link
                 key={link.href}
                 to={link.href}
-                style={{ fontSize: "14px", color: "#374151", textDecoration: "none", fontWeight: 500 }}
+                style={{
+                  fontSize: "14px",
+                  color: "rgba(255,255,255,0.9)",
+                  textDecoration: "none",
+                  fontWeight: 500,
+                }}
               >
                 {link.label}
               </Link>
@@ -165,66 +256,133 @@ export default function UnifiedPortal() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <Link to="/unified-login" style={{
-            padding: "6px 16px", borderRadius: "6px", fontSize: "13px", fontWeight: 600,
-            background: "#1e3a5f", color: "#fff", textDecoration: "none",
-            display: "flex", alignItems: "center", gap: "6px",
-          }}>
+          <Link
+            to="/unified-login"
+            style={{
+              padding: "6px 16px",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 600,
+              background: "rgba(255,255,255,0.2)",
+              color: "#fff",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
             <Lock size={13} /> للموظفين
           </Link>
-          <Link to="/login" style={{
-            padding: "6px 16px", borderRadius: "6px", fontSize: "13px", fontWeight: 500,
-            background: "#f3f4f6", color: "#374151", textDecoration: "none", border: "1px solid #d1d5db",
-            display: "flex", alignItems: "center", gap: "6px",
-          }}>
+          <Link
+            to="/login"
+            style={{
+              padding: "6px 16px",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "rgba(255,255,255,0.9)",
+              color: "#1e3a5f",
+              textDecoration: "none",
+              border: "1px solid rgba(255,255,255,0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
             <User size={13} /> نظام السائقين
           </Link>
         </div>
       </nav>
 
       {/* ── Page Content ── */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "3rem 1.5rem" }}>
-
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "3rem 1.5rem",
+        }}
+      >
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <img
             src="/images/first_line_professional_english_1.png"
             alt="First Line Logistics"
-            style={{ height: "80px", objectFit: "contain", marginBottom: "1rem" }}
-            onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.webp"; }}
+            style={{
+              height: "80px",
+              objectFit: "contain",
+              marginBottom: "1rem",
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/images/logo.webp";
+            }}
           />
-          <h1 style={{ fontSize: "18px", fontWeight: 700, color: "#1e3a5f", margin: "0 0 0.75rem", letterSpacing: "1px" }}>
+          <h1
+            style={{
+              fontSize: "18px",
+              fontWeight: 700,
+              color: "#ffffff",
+              margin: "0 0 0.75rem",
+              letterSpacing: "1px",
+            }}
+          >
             FIRST LINE LOGISTICS PORTAL
           </h1>
-          <div style={{
-            display: "inline-block", padding: "6px 20px", borderRadius: "8px",
-            border: "2px solid #e11d48", color: "#e11d48", fontSize: "14px", fontWeight: 700,
-          }}>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "6px 20px",
+              borderRadius: "8px",
+              border: "2px solid rgba(255,255,255,0.5)",
+              color: "rgba(255,255,255,0.9)",
+              fontSize: "14px",
+              fontWeight: 700,
+            }}
+          >
             النظام الإداري الداخلي
           </div>
         </div>
 
         {/* Card */}
-        <div style={{
-          width: "100%", maxWidth: "440px",
-          background: "#fff", borderRadius: "12px",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-          padding: "2rem",
-          overflow: "hidden",
-          wordBreak: "break-word",
-        }}>
-
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "440px",
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: "12px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+            padding: "2rem",
+            overflow: "hidden",
+            wordBreak: "break-word",
+            backdropFilter: "blur(12px)",
+          }}
+        >
           {/* ══ Login Screen ══ */}
           {screen === "login" && (
             <form onSubmit={handleLogin}>
               <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                <div style={{
-                  width: "40px", height: "40px", borderRadius: "50%", margin: "0 auto 0.75rem",
-                  background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    margin: "0 auto 0.75rem",
+                    background: "#f0f4f8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <User size={20} color="#64748b" />
                 </div>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    margin: "0 0 4px",
+                  }}
+                >
                   تسجيل الدخول
                 </h2>
                 <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
@@ -233,83 +391,191 @@ export default function UnifiedPortal() {
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#475569",
+                    marginBottom: "6px",
+                  }}
+                >
                   اسم المستخدم
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)}
-                    placeholder="M.Z@FLL.SA" autoComplete="email" autoFocus
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="M.Z@FLL.SA"
+                    autoComplete="email"
+                    autoFocus
                     style={{
-                      width: "100%", padding: "10px 14px 10px 40px", fontSize: "14px",
-                      background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
-                      color: "#1e293b", outline: "none", boxSizing: "border-box",
+                      width: "100%",
+                      padding: "10px 14px 10px 40px",
+                      fontSize: "14px",
+                      background: "#fff",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
                       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                     }}
                   />
-                  <User size={16} color="#94a3b8" style={{ position: "absolute", insetInlineStart: "12px", top: "50%", transform: "translateY(-50%)" }} />
+                  <User
+                    size={16}
+                    color="#94a3b8"
+                    style={{
+                      position: "absolute",
+                      insetInlineStart: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                    }}
+                  />
                 </div>
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#475569",
+                    marginBottom: "6px",
+                  }}
+                >
                   كلمة المرور
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
-                    type={showPass ? "text" : "password"} value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••" autoComplete="current-password"
+                    type={showPass ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
                     style={{
-                      width: "100%", padding: "10px 14px 10px 40px", fontSize: "14px",
-                      background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
-                      color: "#1e293b", outline: "none", boxSizing: "border-box",
+                      width: "100%",
+                      padding: "10px 14px 10px 40px",
+                      fontSize: "14px",
+                      background: "#fff",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      color: "#1e293b",
+                      outline: "none",
+                      boxSizing: "border-box",
                       fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                     }}
                   />
-                  <button type="button" onClick={() => setShowPass(!showPass)} style={{
-                    position: "absolute", insetInlineStart: "12px", top: "50%", transform: "translateY(-50%)",
-                    background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex",
-                  }}>
-                    {showPass ? <EyeOff size={16} color="#94a3b8" /> : <Eye size={16} color="#94a3b8" />}
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    style={{
+                      position: "absolute",
+                      insetInlineStart: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                    }}
+                  >
+                    {showPass ? (
+                      <EyeOff size={16} color="#94a3b8" />
+                    ) : (
+                      <Eye size={16} color="#94a3b8" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {error && error !== "null" && (
-                <div style={{
-                  padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca",
-                  borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem",
-                  display: "flex", alignItems: "center", gap: "8px",
-                }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#dc2626",
+                    marginBottom: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
                   <span style={{ fontSize: "16px" }}>&#9888;</span> {error}
                 </div>
               )}
               {success && (
-                <div style={{
-                  padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0",
-                  borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem",
-                }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#16a34a",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {success}
                 </div>
               )}
 
-              <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              }}>
-                {loading ? "جارٍ التحميل..." : <><Lock size={15} /> تسجيل الدخول</>}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  background: "#1e3a5f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.6 : 1,
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
+                {loading ? (
+                  "جارٍ التحميل..."
+                ) : (
+                  <>
+                    <Lock size={15} /> تسجيل الدخول
+                  </>
+                )}
               </button>
 
               <div style={{ marginTop: "1rem", textAlign: "center" }}>
-                <button type="button" onClick={() => { go("forgot"); setResetEmail(email); setOtp(""); }} style={{
-                  background: "none", border: "none", cursor: "pointer", fontSize: "13px",
-                  color: "#64748b", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                  display: "inline-flex", alignItems: "center", gap: "4px",
-                }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    go("forgot");
+                    setResetEmail(email);
+                    setOtp("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
                   <Lock size={12} /> نسيت كلمة المرور؟
                 </button>
               </div>
@@ -319,37 +585,96 @@ export default function UnifiedPortal() {
           {/* ══ Login OTP Verification ══ */}
           {screen === "login-otp" && (
             <form onSubmit={handleLoginOTPVerify}>
-              <button type="button" onClick={() => { go("login"); setOtp(""); }} style={{
-                background: "none", border: "none", cursor: "pointer", color: "#64748b",
-                fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
-                padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
+              <button
+                type="button"
+                onClick={() => {
+                  go("login");
+                  setOtp("");
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: 0,
+                  marginBottom: "1.25rem",
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}
+              >
                 &larr; رجوع لتسجيل الدخول
               </button>
               <div style={{ marginBottom: "1.25rem", textAlign: "center" }}>
-                <div style={{
-                  width: "48px", height: "48px", borderRadius: "50%", margin: "0 auto 0.75rem",
-                  background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center",
-                  border: "2px solid #bbf7d0",
-                }}>
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    margin: "0 auto 0.75rem",
+                    background: "#f0fdf4",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid #bbf7d0",
+                  }}
+                >
                   <Mail size={22} color="#16a34a" />
                 </div>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    margin: "0 0 4px",
+                  }}
+                >
                   التحقق من الهوية
                 </h2>
                 <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
-                  أدخل رمز التحقق المُرسل إلى <strong style={{ color: "#1e3a5f" }}>{email}</strong>
+                  أدخل رمز التحقق المُرسل إلى{" "}
+                  <strong style={{ color: "#1e3a5f" }}>{email}</strong>
                 </p>
-                <p style={{ fontSize: "11px", color: "#cbd5e1", margin: "4px 0 0" }}>
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: "#cbd5e1",
+                    margin: "4px 0 0",
+                  }}
+                >
                   المرسل: no-reply@fll.sa
                 </p>
               </div>
 
-              <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px", textAlign: "center" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "#475569",
+                  marginBottom: "6px",
+                  textAlign: "center",
+                }}
+              >
                 رمز التحقق (6 أرقام)
               </label>
-              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
-                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+              <div
+                dir="ltr"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                <InputOTP
+                  maxLength={6}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  value={otp}
+                  onChange={setOtp}
+                  autoFocus
+                >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -365,40 +690,85 @@ export default function UnifiedPortal() {
               </div>
 
               {error && error !== "null" && (
-                <div style={{
-                  padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca",
-                  borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem",
-                  display: "flex", alignItems: "center", gap: "8px",
-                }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#dc2626",
+                    marginBottom: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
                   <span style={{ fontSize: "16px" }}>&#9888;</span> {error}
                 </div>
               )}
               {success && (
-                <div style={{
-                  padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0",
-                  borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem",
-                }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#16a34a",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {success}
                 </div>
               )}
 
-              <button type="submit" disabled={loading || otp.length !== 6} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: (loading || otp.length !== 6) ? "not-allowed" : "pointer",
-                opacity: (loading || otp.length !== 6) ? 0.5 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              }}>
-                {loading ? "جارٍ التحقق..." : <><Lock size={15} /> تأكيد الدخول</>}
+              <button
+                type="submit"
+                disabled={loading || otp.length !== 6}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  background: "#1e3a5f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor:
+                    loading || otp.length !== 6 ? "not-allowed" : "pointer",
+                  opacity: loading || otp.length !== 6 ? 0.5 : 1,
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
+                {loading ? (
+                  "جارٍ التحقق..."
+                ) : (
+                  <>
+                    <Lock size={15} /> تأكيد الدخول
+                  </>
+                )}
               </button>
 
               <div style={{ marginTop: "1rem", textAlign: "center" }}>
-                <button type="button" onClick={handleLoginOTPResend} disabled={loading} style={{
-                  background: "none", border: "none", cursor: loading ? "not-allowed" : "pointer",
-                  fontSize: "13px", color: "#1e3a5f", fontWeight: 500,
-                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-                }}>
+                <button
+                  type="button"
+                  onClick={handleLoginOTPResend}
+                  disabled={loading}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    fontSize: "13px",
+                    color: "#1e3a5f",
+                    fontWeight: 500,
+                    fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  }}
+                >
                   لم يصلك الرمز؟ إعادة الإرسال
                 </button>
               </div>
@@ -408,15 +778,34 @@ export default function UnifiedPortal() {
           {/* ══ Forgot Password — Enter Email ══ */}
           {screen === "forgot" && (
             <form onSubmit={handleForgotSend}>
-              <button type="button" onClick={() => go("login")} style={{
-                background: "none", border: "none", cursor: "pointer", color: "#64748b",
-                fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
-                padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
+              <button
+                type="button"
+                onClick={() => go("login")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: 0,
+                  marginBottom: "1.25rem",
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}
+              >
                 &larr; رجوع لتسجيل الدخول
               </button>
               <div style={{ marginBottom: "1.25rem" }}>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    margin: "0 0 4px",
+                  }}
+                >
                   نسيت كلمة المرور
                 </h2>
                 <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
@@ -424,36 +813,85 @@ export default function UnifiedPortal() {
                 </p>
               </div>
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#475569",
+                    marginBottom: "6px",
+                  }}
+                >
                   البريد الإلكتروني
                 </label>
                 <input
-                  type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)}
-                  placeholder="employee@fll.sa" autoComplete="email" autoFocus
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="employee@fll.sa"
+                  autoComplete="email"
+                  autoFocus
                   style={{
-                    width: "100%", padding: "10px 14px", fontSize: "14px",
-                    background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
-                    color: "#1e293b", outline: "none", boxSizing: "border-box",
+                    width: "100%",
+                    padding: "10px 14px",
+                    fontSize: "14px",
+                    background: "#fff",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    color: "#1e293b",
+                    outline: "none",
+                    boxSizing: "border-box",
                     fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                   }}
                 />
               </div>
               {error && error !== "null" && (
-                <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#dc2626",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {error}
                 </div>
               )}
               {success && (
-                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#16a34a",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {success}
                 </div>
               )}
-              <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  background: "#1e3a5f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.6 : 1,
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}
+              >
                 {loading ? "جارٍ الإرسال..." : "إرسال رمز التحقق"}
               </button>
             </form>
@@ -462,15 +900,38 @@ export default function UnifiedPortal() {
           {/* ══ Forgot Password — OTP + New Password (combined) ══ */}
           {screen === "forgot-otp" && (
             <form onSubmit={handleForgotOTPVerify}>
-              <button type="button" onClick={() => { go("forgot"); setOtp(""); setNewPassword(""); }} style={{
-                background: "none", border: "none", cursor: "pointer", color: "#64748b",
-                fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
-                padding: 0, marginBottom: "1.25rem", fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
+              <button
+                type="button"
+                onClick={() => {
+                  go("forgot");
+                  setOtp("");
+                  setNewPassword("");
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: 0,
+                  marginBottom: "1.25rem",
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}
+              >
                 &larr; رجوع
               </button>
               <div style={{ marginBottom: "1.25rem", textAlign: "center" }}>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#1e293b",
+                    margin: "0 0 4px",
+                  }}
+                >
                   إعادة تعيين كلمة المرور
                 </h2>
                 <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
@@ -478,11 +939,32 @@ export default function UnifiedPortal() {
                 </p>
               </div>
 
-              <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "#475569",
+                  marginBottom: "6px",
+                }}
+              >
                 رمز التحقق
               </label>
-              <div dir="ltr" style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
-                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp} autoFocus>
+              <div
+                dir="ltr"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                <InputOTP
+                  maxLength={6}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  value={otp}
+                  onChange={setOtp}
+                  autoFocus
+                >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -498,38 +980,86 @@ export default function UnifiedPortal() {
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "#475569", marginBottom: "6px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#475569",
+                    marginBottom: "6px",
+                  }}
+                >
                   كلمة المرور الجديدة
                 </label>
                 <input
-                  type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                  placeholder="8 أحرف على الأقل، حرف كبير + رقم" autoComplete="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="8 أحرف على الأقل، حرف كبير + رقم"
+                  autoComplete="new-password"
                   style={{
-                    width: "100%", padding: "10px 14px", fontSize: "14px",
-                    background: "#fff", border: "1px solid #d1d5db", borderRadius: "8px",
-                    color: "#1e293b", outline: "none", boxSizing: "border-box",
+                    width: "100%",
+                    padding: "10px 14px",
+                    fontSize: "14px",
+                    background: "#fff",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "8px",
+                    color: "#1e293b",
+                    outline: "none",
+                    boxSizing: "border-box",
                     fontFamily: "'IBM Plex Sans Arabic', sans-serif",
                   }}
                 />
               </div>
 
               {error && error !== "null" && (
-                <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "13px", color: "#dc2626", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#dc2626",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {error}
                 </div>
               )}
               {success && (
-                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "13px", color: "#16a34a", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "8px",
+                    fontSize: "13px",
+                    color: "#16a34a",
+                    marginBottom: "1rem",
+                  }}
+                >
                   {success}
                 </div>
               )}
-              <button type="submit" disabled={loading || otp.length !== 6} style={{
-                width: "100%", padding: "12px", fontSize: "15px", fontWeight: 600,
-                background: "#1e3a5f", color: "#fff", border: "none", borderRadius: "8px",
-                cursor: (loading || otp.length !== 6) ? "not-allowed" : "pointer",
-                opacity: (loading || otp.length !== 6) ? 0.5 : 1,
-                fontFamily: "'IBM Plex Sans Arabic', sans-serif",
-              }}>
+              <button
+                type="submit"
+                disabled={loading || otp.length !== 6}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  background: "#1e3a5f",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor:
+                    loading || otp.length !== 6 ? "not-allowed" : "pointer",
+                  opacity: loading || otp.length !== 6 ? 0.5 : 1,
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                }}
+              >
                 {loading ? "جارٍ التحديث..." : "تحديث كلمة المرور"}
               </button>
             </form>
@@ -537,15 +1067,47 @@ export default function UnifiedPortal() {
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: "center", marginTop: "2rem", padding: "1.5rem", background: "#1e293b", borderRadius: "8px", width: "100%", maxWidth: "440px" }}>
-          <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#94a3b8" }}>هل تحتاج مساعدة؟</p>
-          <a href="mailto:Support@fll.sa" style={{ color: "#fff", textDecoration: "none", fontSize: "14px", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "2rem",
+            padding: "1.5rem",
+            background: "rgba(255,255,255,0.1)",
+            borderRadius: "8px",
+            width: "100%",
+            maxWidth: "440px",
+            border: "1px solid rgba(255,255,255,0.2)",
+          }}
+        >
+          <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#94a3b8" }}>
+            هل تحتاج مساعدة؟
+          </p>
+          <a
+            href="mailto:Support@fll.sa"
+            style={{
+              color: "#fff",
+              textDecoration: "none",
+              fontSize: "14px",
+              fontWeight: 500,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
             <Mail size={14} /> Support@fll.sa
           </a>
         </div>
 
-        <p style={{ textAlign: "center", fontSize: "11px", color: "#94a3b8", marginTop: "1rem" }}>
-          &copy; {new Date().getFullYear()} First Line Logistics — جميع الحقوق محفوظة
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "11px",
+            color: "rgba(255,255,255,0.6)",
+            marginTop: "1rem",
+          }}
+        >
+          &copy; {new Date().getFullYear()} First Line Logistics — جميع الحقوق
+          محفوظة
         </p>
       </div>
     </div>

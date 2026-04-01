@@ -500,7 +500,7 @@ export default function UnifiedPortal() {
                 </div>
               </div>
 
-              {error && error !== "null" && (
+              {error && error !== "null" && error !== "undefined" && String(error).toLowerCase() !== "null" && (
                 <div
                   style={{
                     padding: "10px 14px",
@@ -697,7 +697,7 @@ export default function UnifiedPortal() {
                 </InputOTP>
               </div>
 
-              {error && error !== "null" && (
+              {error && error !== "null" && error !== "undefined" && String(error).toLowerCase() !== "null" && (
                 <div
                   style={{
                     padding: "10px 14px",
@@ -853,7 +853,7 @@ export default function UnifiedPortal() {
                   }}
                 />
               </div>
-              {error && error !== "null" && (
+              {error && error !== "null" && error !== "undefined" && String(error).toLowerCase() !== "null" && (
                 <div
                   style={{
                     padding: "10px 14px",
@@ -1020,7 +1020,7 @@ export default function UnifiedPortal() {
                 />
               </div>
 
-              {error && error !== "null" && (
+              {error && error !== "null" && error !== "undefined" && String(error).toLowerCase() !== "null" && (
                 <div
                   style={{
                     padding: "10px 14px",

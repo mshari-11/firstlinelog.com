@@ -83,10 +83,10 @@ export function SystemHealth() {
 
   useEffect(() => {
     checkHealth();
-    // Re-check every 2 minutes
     const interval = setInterval(checkHealth, 120000);
     return () => clearInterval(interval);
-  }, [checkHealth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const allOnline = services.every((s) => s.status === "online");
   const overallStatus = allOnline ? "online" : services.some((s) => s.status === "offline") ? "offline" : "degraded";

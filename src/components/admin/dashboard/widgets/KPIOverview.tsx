@@ -29,7 +29,8 @@ export function KPIOverview() {
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const kpis: KPIItem[] = [
     {

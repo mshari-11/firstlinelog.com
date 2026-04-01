@@ -249,7 +249,7 @@ export default function App() {
               path="/admin/login"
               element={
                 <AdminAuthProvider>
-                  <UnifiedPortal />
+                  <UnifiedPortal key="admin-login" />
                 </AdminAuthProvider>
               }
             />
@@ -266,7 +266,7 @@ export default function App() {
               path="/unified-login"
               element={
                 <AdminAuthProvider>
-                  <UnifiedPortal />
+                  <UnifiedPortal key="unified-login" />
                 </AdminAuthProvider>
               }
             />

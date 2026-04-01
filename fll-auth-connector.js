@@ -237,7 +237,8 @@
   const _alert = window.alert;
   window.alert = function (msg) {
     const p = window.location.pathname;
-    if (p === "/login" || p === "/unified-login") {
+    // Only intercept on /login (driver page). /unified-login is handled by React SPA.
+    if (p === "/login") {
       if (msg === "تم تسجيل الدخول بنجاح!") {
         doLogin(p);
         return;
@@ -603,9 +604,10 @@
   }
 
   // --- Direct form submit intercept (backup for when alert isn't triggered) ---
+  // NOTE: Only on /login (driver page). /unified-login is handled entirely by React SPA.
   function interceptLoginButton() {
     const p = window.location.pathname;
-    if (p !== "/login" && p !== "/unified-login") return;
+    if (p !== "/login") return;
     document.querySelectorAll("button").forEach(function (btn) {
       const t = (btn.textContent || "").trim();
       if (
@@ -690,9 +692,11 @@
   else initRegisterIntercept();
 
   // --- Forgot Password ---
+  // Only intercept on /login (driver page). /unified-login has its own React forgot-password flow.
   document.addEventListener(
     "click",
     (e) => {
+      if (window.location.pathname === "/unified-login") return;
       const el = e.target.closest("button,a");
       if (!el) return;
       if (el.textContent.trim().includes("نسيت كلمة المرور")) {
@@ -756,10 +760,11 @@
   }
 
   // --- Auto-redirect ---
+  // Only on /login (driver page). /unified-login auto-redirect is handled by React auth guard.
   (function () {
     const s = getSession(),
       p = window.location.pathname;
-    if (s && (p === "/login" || p === "/unified-login")) {
+    if (s && p === "/login") {
       const d = getRedirect(s.groups);
       if (d !== "/") window.location.href = d;
     }

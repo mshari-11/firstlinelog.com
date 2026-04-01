@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, quote
 from urllib.request import Request, urlopen
 
 
-REGION = os.environ.get("AWS_REGION", "me-south-1")
+REGION = os.environ.get("AWS_REGION", "us-east-1")
 BUCKET = os.environ.get("KYC_BUCKET", "fll-kyc-documents-230811072086")
 FROM_EMAIL = os.environ.get("FROM_EMAIL", "FLL Platform <no-reply@fll.sa>")
 ADMIN_EMAILS = [

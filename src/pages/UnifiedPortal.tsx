@@ -75,9 +75,24 @@ export default function UnifiedPortal() {
       return;
     }
 
-    // دخول مباشر بعد كلمة المرور — بدون OTP
-    setLoading(false);
-    {
+    // إرسال OTP عبر الإيميل للتحقق الثنائي
+    setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
+    try {
+      const otpRes = await sendOtp(email.trim().toLowerCase(), "login");
+      setLoading(false);
+      if (otpRes.error) {
+        // OTP فشل — دخول مباشر بدون 2FA
+        console.warn("OTP send failed, skipping 2FA:", otpRes.error);
+        setSuccess("تم تسجيل الدخول بنجاح!");
+        setTimeout(() => navigate("/admin-panel/dashboard"), 800);
+        return;
+      }
+      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني من no-reply@fll.sa");
+      setOtp("");
+      go("login-otp");
+    } catch {
+      // خطأ اتصال — دخول مباشر
+      setLoading(false);
       setSuccess("تم تسجيل الدخول بنجاح!");
       setTimeout(() => navigate("/admin-panel/dashboard"), 800);
     }

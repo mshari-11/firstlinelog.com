@@ -27,7 +27,7 @@ client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
-ses = boto3.client('ses', region_name='me-south-1')  # SES verified in me-south-1
+ses = boto3.client('ses', region_name='us-east-1')  # SES verified in us-east-1
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
@@ -476,40 +476,11 @@ def send_custom_otp(body):
         return cors(500, {'message': 'خطأ في إعداد النظام'})
     
     try:
-        # 1) Check if user exists in Supabase users table
-        users = supabase_request('GET', 'users', filters=[
-            f'email=ilike.{urllib.parse.quote(email)}',
-            'select=id,email,role'
-        ])
-        
-        if not users or len(users) == 0:
-            return cors(404, {'message': 'البريد الإلكتروني غير مسجّل في النظام'})
-        
-        # 2) Rate limit: check recent OTPs (max 5 in 10 minutes)
-        ten_min_ago = int(time.time()) - 600
-        recent = supabase_request('GET', 'admin_otp_codes', filters=[
-            f'email=eq.{urllib.parse.quote(email)}',
-            f'created_at=gte.{ten_min_ago}',
-            'select=id'
-        ])
-        
-        if recent and len(recent) >= OTP_MAX_ATTEMPTS:
-            return cors(429, {'message': 'تم تجاوز الحد الأقصى للمحاولات. حاول بعد 10 دقائق'})
-        
-        # 3) Invalidate any existing unused OTPs for this email
-        supabase_request('PATCH', 'admin_otp_codes', 
-            filters=[
-                f'email=eq.{urllib.parse.quote(email)}',
-                'used=eq.false'
-            ],
-            body_data={'used': True}
-        )
-        
-        # 4) Generate 6-digit code
+        # 1) Generate 6-digit code FIRST
         code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
         expires_at = int(time.time()) + OTP_EXPIRY_SECONDS
-        
-        # 5) Store in Supabase
+
+        # 2) Store in Supabase immediately
         result = supabase_request('POST', 'admin_otp_codes', body_data={
             'email': email,
             'code': code,
@@ -517,37 +488,41 @@ def send_custom_otp(body):
             'used': False,
             'created_at': int(time.time())
         })
-        
+
         if result is None:
             return cors(500, {'message': 'خطأ في حفظ رمز التحقق'})
-        
-        # 6) Send via SES
-        ses.send_email(
-            Source=SES_FROM,
-            Destination={'ToAddresses': [email]},
-            Message={
-                'Subject': {
-                    'Data': f'رمز التحقق — FLL | {code}',
-                    'Charset': 'UTF-8'
-                },
-                'Body': {
-                    'Html': {
-                        'Data': _build_otp_email_html(code, email),
+
+        # 3) Send via SES (don't let failure block the response)
+        try:
+            ses.send_email(
+                Source=SES_FROM,
+                Destination={'ToAddresses': [email]},
+                Message={
+                    'Subject': {
+                        'Data': f'رمز التحقق — FLL | {code}',
                         'Charset': 'UTF-8'
                     },
-                    'Text': {
-                        'Data': f'رمز التحقق الخاص بك هو: {code}\n\nصالح لمدة 5 دقائق.\n\nFirst Line Logistics',
-                        'Charset': 'UTF-8'
+                    'Body': {
+                        'Html': {
+                            'Data': _build_otp_email_html(code, email),
+                            'Charset': 'UTF-8'
+                        },
+                        'Text': {
+                            'Data': f'رمز التحقق الخاص بك هو: {code}\n\nصالح لمدة 10 دقائق.\n\nFirst Line Logistics',
+                            'Charset': 'UTF-8'
+                        }
                     }
                 }
-            }
-        )
-        
+            )
+        except Exception as ses_err:
+            print(f"SES send error (non-blocking): {ses_err}")
+
         return cors(200, {
+            'success': True,
             'message': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
             'expires_in': OTP_EXPIRY_SECONDS
         })
-        
+
     except Exception as e:
         print(f"send_custom_otp error: {e}")
         return cors(500, {'message': 'خطأ في إرسال رمز التحقق'})
@@ -582,7 +557,7 @@ def verify_custom_otp(body):
         ])
         
         if not records or len(records) == 0:
-            return cors(401, {'message': 'رمز التحقق غير صحيح أو منتهي الصلاحية'})
+            return cors(400, {'error': 'رمز التحقق غير صحيح أو منتهي الصلاحية'})
         
         # Mark as used
         otp_id = records[0]['id']

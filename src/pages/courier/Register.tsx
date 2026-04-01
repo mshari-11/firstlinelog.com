@@ -29,6 +29,12 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { API_BASE } from "@/lib/api";
 
+// Fallback API base for driver onboarding (old REST API still works for /driver/* routes)
+const DRIVER_API_BASES = [
+  API_BASE,
+  "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
+];
+
 const CITIES = [
   "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر",
   "الظهران", "أبها", "تبوك", "القصيم", "حائل", "جيزان", "نجران", "الباحة",
@@ -545,30 +551,37 @@ export default function CourierRegister() {
   async function sendOtp() {
     if (otpCooldown > 0) return;
     setOtpSending(true);
-    try {
-      const res = await fetch(`${API_BASE}/driver/otp/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          full_name: form.full_name,
-          national_id: form.national_id,
-          phone: form.phone,
-          device_fingerprint: getDeviceFingerprint(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
-      } else {
-        setOtpSent(true);
-        setOtpCooldown(60);
-      }
-    } catch {
-      setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
-    } finally {
-      setOtpSending(false);
+    const payload = {
+      email: form.email,
+      full_name: form.full_name,
+      national_id: form.national_id,
+      phone: form.phone,
+      device_fingerprint: getDeviceFingerprint(),
+    };
+    for (const base of DRIVER_API_BASES) {
+      try {
+        const res = await fetch(`${base}/driver/otp/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15000),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          setOtpSent(true);
+          setOtpCooldown(60);
+          setOtpSending(false);
+          return;
+        }
+        if (res.status === 429 || res.status === 400) {
+          setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
+          setOtpSending(false);
+          return;
+        }
+      } catch { /* try next endpoint */ }
     }
+    setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
+    setOtpSending(false);
   }
 
   // ── Verify OTP ──────────────────────────────────────────────────────────────
@@ -578,24 +591,31 @@ export default function CourierRegister() {
       return;
     }
     setOtpVerifying(true);
-    try {
-      const res = await fetch(`${API_BASE}/driver/otp/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, code: form.otpCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
-      } else {
-        set("emailVerified", true);
-        submitApplication();
-      }
-    } catch {
-      setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
-    } finally {
-      setOtpVerifying(false);
+    const payload = { email: form.email, code: form.otpCode };
+    for (const base of DRIVER_API_BASES) {
+      try {
+        const res = await fetch(`${base}/driver/otp/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15000),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          set("emailVerified", true);
+          setOtpVerifying(false);
+          submitApplication();
+          return;
+        }
+        if (res.status === 400 || res.status === 429) {
+          setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
+          setOtpVerifying(false);
+          return;
+        }
+      } catch { /* try next endpoint */ }
     }
+    setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
+    setOtpVerifying(false);
   }
 
   // ── Step 4 validation ──────────────────────────────────────────────────────
@@ -643,17 +663,31 @@ export default function CourierRegister() {
         ip_address: null, // set by Lambda from event context
         user_agent: navigator.userAgent,
       };
-      const res = await fetch(`${API_BASE}/driver/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
-      } else {
-        setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
-        toast.success("تم إرسال طلب التسجيل بنجاح");
+      let submitted = false;
+      for (const base of DRIVER_API_BASES) {
+        try {
+          const res = await fetch(`${base}/driver/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(30000),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
+            toast.success("تم إرسال طلب التسجيل بنجاح");
+            submitted = true;
+            break;
+          }
+          if (res.status === 400 || res.status === 409 || res.status === 429) {
+            setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
+            submitted = true;
+            break;
+          }
+        } catch { /* try next endpoint */ }
+      }
+      if (!submitted) {
+        setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });
       }
     } catch {
       setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });

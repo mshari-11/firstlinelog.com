@@ -349,7 +349,7 @@
     showToast("تم التحقق! جارٍ إرسال رمز التحقق...", "success", 3000);
     const SUPABASE_URL = "https://djebhztfewjfyyoortvv.supabase.co";
     const SUPABASE_ANON =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8";
     try {
       const otpRes = await fetch(
         `${SUPABASE_URL}/functions/v1/send-otp-email`,
@@ -491,7 +491,7 @@
       let verified = false;
       const SUPABASE_URL = "https://djebhztfewjfyyoortvv.supabase.co";
       const SUPABASE_ANON =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NTY5MjcsImV4cCI6MjA1NTIzMjkyN30.NV_wew-RCC45IElUEHnXeQ_86cZdT13";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8";
       try {
         const r = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
           method: "POST",

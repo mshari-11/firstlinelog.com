@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build && mv dist/spa.html dist/index.html",
     "preview": "vite preview",
-    "start": "npm run build && serve dist -s -l 3000"
+    "start": "serve dist -s -l ${PORT:-3000}"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.700.0",

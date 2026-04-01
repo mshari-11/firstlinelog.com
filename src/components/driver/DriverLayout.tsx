@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const driverNavLinks = [
+const driverNavLinks: { name: string; path: string; icon: React.ElementType; end?: boolean; badge?: number }[] = [
   {
     name: "الرئيسية",
     path: ROUTE_PATHS.DRIVER,

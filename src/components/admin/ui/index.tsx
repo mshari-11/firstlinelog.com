@@ -838,7 +838,7 @@ export function Section({
   children,
   style,
 }: {
-  title: string;
+  title: string | React.ReactNode;
   children: React.ReactNode;
   style?: React.CSSProperties;
 }) {

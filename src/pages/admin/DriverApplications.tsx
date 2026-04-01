@@ -50,6 +50,7 @@ interface DriverApp {
   vehicle_plate?: string;
   face_similarity_score?: number;
   liveness_passed?: boolean;
+  email_verified?: boolean;
   status: AppStatus;
   admin_notes?: string;
   rejection_reason?: string;

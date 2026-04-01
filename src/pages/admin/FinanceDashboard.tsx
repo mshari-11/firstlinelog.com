@@ -411,6 +411,7 @@ export default function FinanceDashboard() {
         <ChartCard title="توزيع المصروفات" subtitle="حسب الفئة">
           <ResponsiveContainer width="100%" height={280}>
             <RechartsPie
+              {...({} as any)}
               data={mockExpenseData}
               cx="50%"
               cy="50%"

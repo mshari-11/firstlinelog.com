@@ -712,7 +712,7 @@ function loadConfig(): PageConfig[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PAGES;
     const saved: PageConfig[] = JSON.parse(raw);
-    const savedMap = new Map(saved.map((p) => [p.id, p]));
+    const savedMap = new globalThis.Map<string, PageConfig>(saved.map((p) => [p.id, p]));
     // Merge: keep user order/enabled customizations, ensure all defaults exist
     const merged = DEFAULT_PAGES.map((def) => {
       const s = savedMap.get(def.id);

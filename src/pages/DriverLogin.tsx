@@ -105,7 +105,7 @@ export default function DriverLogin() {
     toast.success("تم تسجيل الدخول بنجاح");
     go("success");
     setTimeout(() => {
-      navigate("/courier/portal");
+      navigate("/driver");
     }, 1200);
   }
 

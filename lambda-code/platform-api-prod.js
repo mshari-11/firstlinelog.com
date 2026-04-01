@@ -62,12 +62,14 @@ if(p[0]==="api")p.shift();
 // ── Lambda Proxy: forward /auth/* and /ai/* to dedicated Lambdas ─────────────
 const{LambdaClient,InvokeCommand}=require("@aws-sdk/client-lambda");
 const lambdaProxy=new LambdaClient({region:process.env.AWS_REGION||"us-east-1"});
-if(p[0]==="auth"||p[0]==="ai"){
-  const targetFn=p[0]==="auth"?"fll-auth-handler":"fll-ai-chatbot";
+if(p[0]==="auth"||p[0]==="ai"||(p[0]==="driver"&&(p[1]==="otp"||p[1]==="apply"||p[1]==="application-status"||p[1]==="applications"))){
+  const targetFn=p[0]==="auth"?"fll-auth-handler":p[0]==="ai"?"fll-ai-chatbot":"fll-driver-onboarding";
+  const targetRegion=targetFn==="fll-driver-onboarding"?"me-south-1":(process.env.AWS_REGION||"us-east-1");
+  const proxyClient=targetRegion===(process.env.AWS_REGION||"us-east-1")?lambdaProxy:new LambdaClient({region:targetRegion});
   // Ensure rawPath is set for downstream Lambda (HTTP API v2 format)
   const proxyEvent={...e,rawPath:rawPath,path:rawPath,httpMethod:m,requestContext:{...e.requestContext,http:{method:m,path:rawPath}}};
   try{
-    const invoke=await lambdaProxy.send(new InvokeCommand({FunctionName:targetFn,Payload:JSON.stringify(proxyEvent)}));
+    const invoke=await proxyClient.send(new InvokeCommand({FunctionName:targetFn,Payload:JSON.stringify(proxyEvent)}));
     const payload=JSON.parse(new TextDecoder().decode(invoke.Payload));
     return payload;
   }catch(err){return R(502,{error:"Proxy error: "+err.message,target:targetFn})}

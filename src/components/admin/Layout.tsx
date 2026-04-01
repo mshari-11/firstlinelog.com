@@ -8,6 +8,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { AdminSidebar } from "./Sidebar";
 import { AdminAiAssistant } from "./AiAssistant";
+import { CommandPalette } from "./CommandPalette";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock } from "lucide-react";
 import {
@@ -23,7 +24,14 @@ const routeNames: Record<string, string> = {
   dashboard: "لوحة التحكم",
   couriers: "المناديب",
   orders: "الطلبات",
+  complaints: "الشكاوى",
   finance: "الرواتب والمالية",
+  "finance-dashboard": "لوحة المالية",
+  revenue: "الإيرادات",
+  expenses: "المصروفات",
+  cashflow: "التدفقات النقدية",
+  "financial-reports": "التقارير المالية",
+  "ai-finance": "تحليل AI المالي",
   reports: "التقارير",
   vehicles: "المركبات",
   staff: "الأقسام والموظفين",
@@ -32,6 +40,7 @@ const routeNames: Record<string, string> = {
   reconciliation: "مطابقة مالية",
   "page-builder": "منشئ الصفحات",
   dispatch: "الخريطة والإرسال",
+  excel: "استيراد Excel",
   "driver-applications": "طلبات السائقين",
   kyc: "وثائق KYC",
   "driver-training": "تدريب السائقين",
@@ -41,6 +50,32 @@ const routeNames: Record<string, string> = {
   sla: "مراقبة مستويات الخدمة",
   marketplace: "تكاملات المنصات",
   "n8n-workflows": "سير العمل (n8n)",
+  approvals: "الاعتمادات",
+  "audit-log": "سجل التدقيق",
+  tasks: "المهام",
+  notifications: "الإشعارات",
+  attendance: "الحضور والانصراف",
+  fleet: "إدارة الأسطول",
+  "fleet-assignments": "تعيينات المركبات",
+  shipments: "الشحنات",
+  invoices: "الفواتير",
+  payouts: "إدارة الدفعات",
+  "email-logs": "سجل الإيميلات",
+  risk: "إدارة المخاطر",
+  reactivation: "إعادة التفعيل",
+  "ai-reports": "تقارير AI",
+  "accounting-components": "المكونات المحاسبية",
+  "payout-workflow": "سير عمل الدفع",
+  "payroll-calculator": "حاسبة الرواتب",
+  "help-guide": "الإرشادات",
+  "driver-classifications": "تصنيف السائقين",
+  "payroll-management": "إدارة الرواتب",
+  permissions: "إدارة الصلاحيات",
+  features: "Feature Toggles",
+  workflows: "بناء سير العمل",
+  audit: "لوحة التدقيق",
+  infrastructure: "البنية التحتية",
+  api: "إدارة API",
 };
 
 function LiveClock() {
@@ -156,6 +191,7 @@ export function AdminLayout() {
 
   return (
     <div className="fll-console" dir="rtl" style={{ display: "flex" }}>
+      <CommandPalette />
       <AdminSidebar />
       <main className="con-main">
         {/* Top Bar */}

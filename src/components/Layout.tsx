@@ -106,27 +106,27 @@ export function Layout({ children }: LayoutProps) {
                 </svg>
               </Button>
               <div className="absolute left-0 top-full mt-2 w-44 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-gray-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link
-                  to="/unified-login?role=admin"
+                <a
+                  href="/unified-login?role=admin"
                   className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors border-b border-white/5"
                 >
                   <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
                   دخول الإدارة
-                </Link>
-                <Link
-                  to="/unified-login?role=staff"
+                </a>
+                <a
+                  href="/unified-login?role=staff"
                   className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors border-b border-white/5"
                 >
                   <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
                   دخول الموظفين
-                </Link>
-                <Link
-                  to="/login?role=driver"
+                </a>
+                <a
+                  href="/login?role=driver"
                   className="flex items-center gap-2 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
                 >
                   <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
                   دخول المندوبين
-                </Link>
+                </a>
               </div>
             </div>
           </nav>

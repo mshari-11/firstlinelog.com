@@ -15,7 +15,8 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -30,7 +31,10 @@ Deno.serve(async (req: Request) => {
     if (!amount || amount <= 0) {
       return new Response(
         JSON.stringify({ error: "المبلغ مطلوب ويجب أن يكون أكبر من صفر" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -48,13 +52,16 @@ Deno.serve(async (req: Request) => {
         paymentIntentId: paymentIntent.id,
         status: paymentIntent.status,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (err: any) {
     console.error("stripe-setup error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message ?? "خطأ داخلي" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: err.message ?? "خطأ داخلي" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

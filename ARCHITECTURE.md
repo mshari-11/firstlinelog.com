@@ -54,12 +54,12 @@
 
 ### Hosting & Routing
 
-| Layer | Description |
-|-------|-------------|
-| **Domain** | `firstlinelog.com` on Vercel |
-| **Framework** | None (static output) |
-| **Build** | `vite build` → `dist/` with SPA fallback |
-| **Caching** | HTML: `no-cache, no-store` / Assets: Vercel default |
+| Layer         | Description                                         |
+| ------------- | --------------------------------------------------- |
+| **Domain**    | `firstlinelog.com` on Vercel                        |
+| **Framework** | None (static output)                                |
+| **Build**     | `vite build` → `dist/` with SPA fallback            |
+| **Caching**   | HTML: `no-cache, no-store` / Assets: Vercel default |
 
 ### Route Map
 
@@ -205,6 +205,7 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 ```
 
 #### fll-auth-api (Python)
+
 - **Purpose**: Authentication engine
 - **Auth**: AWS Cognito (User Pool: `me-south-1_aJtmQ0QrN`)
 - **Routes**: `/auth/login`, `/auth/register`, `/auth/verify`, `/auth/forgot`, `/auth/reset`, `/auth/resend`, `/auth/respond-mfa`, `/auth/me`, `/auth/send-otp`, `/auth/verify-custom-otp`
@@ -213,6 +214,7 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 - **Email**: AWS SES (`no-reply@fll.sa`) with Arabic HTML templates
 
 #### fll-otp-service (Python)
+
 - **Purpose**: Standalone OTP service
 - **Spec**: 6-digit codes, 10-minute expiry
 - **Rate Limits**: 5 sends/hour/email, 5 verify attempts/10min, IP-based limits
@@ -221,6 +223,7 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 - **Types**: login, register, reset_password, verify_email, driver_register, sensitive_action
 
 #### fll-driver-onboarding (Python)
+
 - **Purpose**: Driver application lifecycle
 - **Flow**: OTP verify → apply → document upload (S3) → liveness check → admin approve/reject
 - **Routes**: `/driver/otp/send`, `/driver/otp/verify`, `/driver/apply`, `/driver/applications/{id}/approve`, `/driver/applications/{id}/reject`, `/driver/application-status`
@@ -228,12 +231,14 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 - **Security**: Device fingerprinting, IP tracking, HMAC OTP, duplicate detection
 
 #### fll-kyc-upload (Python)
+
 - **Purpose**: KYC document upload
 - **Storage**: S3 bucket `fll-kyc-documents-230811072086`
 - **Docs**: National ID (front/back), selfie, driver license, bank certificate, vehicle docs
 - **Notifications**: SES email to `M.Z@FLL.SA`, `A.ALZAMIL@FLL.SA`
 
 #### fll-chatbot (Python)
+
 - **Purpose**: AI support chatbot (Arabic/Saudi dialect)
 - **AI**: AWS Bedrock (Claude Sonnet)
 - **Storage**: DynamoDB `fll-chat-history` (30-day TTL)
@@ -241,6 +246,7 @@ AI API:    https://51n1gng40f.execute-api.me-south-1.amazonaws.com
 - **Covers**: Finance, HR, operations, vehicle, complaint routing
 
 #### fll-contact-confirm (Python)
+
 - **Purpose**: Contact form email confirmation
 - **Email**: Sends acknowledgment to user via SES
 - **Contact**: 920014948, `support@fll.sa`

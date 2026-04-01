@@ -8,7 +8,14 @@
  */
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, Search, Filter, Download, ChevronDown } from "lucide-react";
+import {
+  X,
+  ChevronLeft,
+  Search,
+  Filter,
+  Download,
+  ChevronDown,
+} from "lucide-react";
 
 // ─── Transitions ──────────────────────────────────────────────────────────────
 const ease = [0.22, 0.68, 0, 1];
@@ -33,7 +40,12 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
       dir="rtl"
-      style={{ display: "flex", flexDirection: "column", gap: 20, padding: "1.5rem" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        padding: "1.5rem",
+      }}
       initial="initial"
       animate="animate"
       variants={stagger}
@@ -52,7 +64,13 @@ interface PageHeaderProps {
   iconColor?: string;
 }
 
-export function PageHeader({ icon: Icon, title, subtitle, actions, iconColor }: PageHeaderProps) {
+export function PageHeader({
+  icon: Icon,
+  title,
+  subtitle,
+  actions,
+  iconColor,
+}: PageHeaderProps) {
   return (
     <motion.div
       variants={fadeUp}
@@ -65,7 +83,14 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, iconColor }: 
       }}
     >
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 4,
+          }}
+        >
           <div
             style={{
               background: "var(--con-brand-subtle)",
@@ -76,7 +101,10 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, iconColor }: 
               justifyContent: "center",
             }}
           >
-            <Icon size={18} style={{ color: iconColor || "var(--con-brand)" }} />
+            <Icon
+              size={18}
+              style={{ color: iconColor || "var(--con-brand)" }}
+            />
           </div>
           <h1
             style={{
@@ -104,7 +132,11 @@ export function PageHeader({ icon: Icon, title, subtitle, actions, iconColor }: 
           </p>
         )}
       </div>
-      {actions && <div style={{ display: "flex", alignItems: "center", gap: 8 }}>{actions}</div>}
+      {actions && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {actions}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -121,7 +153,16 @@ interface KPICardProps {
   onClick?: () => void;
 }
 
-export function KPICard({ label, value, icon: Icon, accent = "var(--con-brand)", change, loading, mono = true, onClick }: KPICardProps) {
+export function KPICard({
+  label,
+  value,
+  icon: Icon,
+  accent = "var(--con-brand)",
+  change,
+  loading,
+  mono = true,
+  onClick,
+}: KPICardProps) {
   return (
     <motion.div
       variants={fadeUp}
@@ -130,7 +171,14 @@ export function KPICard({ label, value, icon: Icon, accent = "var(--con-brand)",
       onClick={onClick}
       whileHover={onClick ? { scale: 1.01 } : undefined}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 10,
+        }}
+      >
         <Icon size={15} style={{ color: accent }} />
         {change !== undefined && (
           <span
@@ -141,12 +189,16 @@ export function KPICard({ label, value, icon: Icon, accent = "var(--con-brand)",
               color: change >= 0 ? "var(--con-success)" : "var(--con-danger)",
             }}
           >
-            {change >= 0 ? "+" : ""}{change}%
+            {change >= 0 ? "+" : ""}
+            {change}%
           </span>
         )}
       </div>
       {loading ? (
-        <div className="con-skeleton" style={{ height: 22, width: "60%", borderRadius: 5, marginBottom: 6 }} />
+        <div
+          className="con-skeleton"
+          style={{ height: 22, width: "60%", borderRadius: 5, marginBottom: 6 }}
+        />
       ) : (
         <div
           className={mono ? "con-kpi-value" : undefined}
@@ -165,7 +217,13 @@ export function KPICard({ label, value, icon: Icon, accent = "var(--con-brand)",
           {value}
         </div>
       )}
-      <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: 4 }}>
+      <div
+        style={{
+          fontSize: "var(--con-text-caption)",
+          color: "var(--con-text-muted)",
+          marginTop: 4,
+        }}
+      >
         {label}
       </div>
     </motion.div>
@@ -173,7 +231,13 @@ export function KPICard({ label, value, icon: Icon, accent = "var(--con-brand)",
 }
 
 // ─── KPI Grid ─────────────────────────────────────────────────────────────────
-export function KPIGrid({ children, cols }: { children: React.ReactNode; cols?: string }) {
+export function KPIGrid({
+  children,
+  cols,
+}: {
+  children: React.ReactNode;
+  cols?: string;
+}) {
   return (
     <motion.div
       variants={fadeUp}
@@ -198,7 +262,14 @@ interface CardProps {
   style?: React.CSSProperties;
 }
 
-export function Card({ children, title, subtitle, actions, noPadding, style }: CardProps) {
+export function Card({
+  children,
+  title,
+  subtitle,
+  actions,
+  noPadding,
+  style,
+}: CardProps) {
   return (
     <motion.div
       variants={fadeUp}
@@ -234,15 +305,27 @@ export function Card({ children, title, subtitle, actions, noPadding, style }: C
               </h3>
             )}
             {subtitle && (
-              <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: "2px 0 0" }}>
+              <p
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                  margin: "2px 0 0",
+                }}
+              >
                 {subtitle}
               </p>
             )}
           </div>
-          {actions && <div style={{ display: "flex", alignItems: "center", gap: 6 }}>{actions}</div>}
+          {actions && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {actions}
+            </div>
+          )}
         </div>
       )}
-      <div style={noPadding ? undefined : { padding: "18px 20px" }}>{children}</div>
+      <div style={noPadding ? undefined : { padding: "18px 20px" }}>
+        {children}
+      </div>
     </motion.div>
   );
 }
@@ -256,9 +339,19 @@ interface ToolbarProps {
   actions?: React.ReactNode;
 }
 
-export function Toolbar({ search, onSearch, searchPlaceholder, children, actions }: ToolbarProps) {
+export function Toolbar({
+  search,
+  onSearch,
+  searchPlaceholder,
+  children,
+  actions,
+}: ToolbarProps) {
   return (
-    <motion.div variants={fadeUp} className="con-toolbar" style={{ flexWrap: "wrap" }}>
+    <motion.div
+      variants={fadeUp}
+      className="con-toolbar"
+      style={{ flexWrap: "wrap" }}
+    >
       {onSearch !== undefined && (
         <div style={{ position: "relative", flex: "1 1 200px", minWidth: 180 }}>
           <Search
@@ -282,7 +375,11 @@ export function Toolbar({ search, onSearch, searchPlaceholder, children, actions
         </div>
       )}
       {children}
-      {actions && <div style={{ marginRight: "auto", display: "flex", gap: 6 }}>{actions}</div>}
+      {actions && (
+        <div style={{ marginRight: "auto", display: "flex", gap: 6 }}>
+          {actions}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -357,8 +454,12 @@ export function Tabs({ items, active, onChange }: TabsProps) {
                   borderRadius: 100,
                   marginRight: 4,
                   fontFamily: "var(--con-font-mono)",
-                  background: isActive ? "var(--con-brand-subtle)" : "rgba(255,255,255,0.05)",
-                  color: isActive ? "var(--con-brand)" : "var(--con-text-muted)",
+                  background: isActive
+                    ? "var(--con-brand-subtle)"
+                    : "rgba(255,255,255,0.05)",
+                  color: isActive
+                    ? "var(--con-brand)"
+                    : "var(--con-text-muted)",
                 }}
               >
                 {tab.count}
@@ -395,12 +496,20 @@ interface TableProps {
   isEmpty?: boolean;
 }
 
-export function Table({ headers, children, emptyIcon: EmptyIcon, emptyText, isEmpty }: TableProps) {
+export function Table({
+  headers,
+  children,
+  emptyIcon: EmptyIcon,
+  emptyText,
+  isEmpty,
+}: TableProps) {
   if (isEmpty) {
     return (
       <div className="con-empty">
         {EmptyIcon && <EmptyIcon size={40} />}
-        <p style={{ fontSize: "var(--con-text-body)" }}>{emptyText || "لا توجد بيانات"}</p>
+        <p style={{ fontSize: "var(--con-text-body)" }}>
+          {emptyText || "لا توجد بيانات"}
+        </p>
       </div>
     );
   }
@@ -446,11 +555,30 @@ interface IconButtonProps {
   style?: React.CSSProperties;
 }
 
-export function IconButton({ icon: Icon, onClick, title, variant = "ghost", size = 14, style: customStyle }: IconButtonProps) {
+export function IconButton({
+  icon: Icon,
+  onClick,
+  title,
+  variant = "ghost",
+  size = 14,
+  style: customStyle,
+}: IconButtonProps) {
   const colors = {
-    ghost: { color: "var(--con-text-muted)", hover: "var(--con-text-primary)", bg: "rgba(255,255,255,0.04)" },
-    danger: { color: "var(--con-danger)", hover: "var(--con-danger)", bg: "var(--con-danger-subtle)" },
-    brand: { color: "var(--con-brand)", hover: "var(--con-brand)", bg: "var(--con-brand-subtle)" },
+    ghost: {
+      color: "var(--con-text-muted)",
+      hover: "var(--con-text-primary)",
+      bg: "rgba(255,255,255,0.04)",
+    },
+    danger: {
+      color: "var(--con-danger)",
+      hover: "var(--con-danger)",
+      bg: "var(--con-danger-subtle)",
+    },
+    brand: {
+      color: "var(--con-brand)",
+      hover: "var(--con-brand)",
+      bg: "var(--con-brand-subtle)",
+    },
   };
   const c = colors[variant];
   return (
@@ -495,7 +623,15 @@ interface ButtonProps {
   type?: "button" | "submit";
 }
 
-export function Button({ children, variant = "primary", icon: Icon, onClick, disabled, style, type = "button" }: ButtonProps) {
+export function Button({
+  children,
+  variant = "primary",
+  icon: Icon,
+  onClick,
+  disabled,
+  style,
+  type = "button",
+}: ButtonProps) {
   const cls = `con-btn-${variant}`;
   return (
     <button
@@ -525,14 +661,23 @@ interface ModalProps {
   actions?: React.ReactNode;
 }
 
-export function Modal({ open, onClose, title, width, children, actions }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  width,
+  children,
+  actions,
+}: ModalProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -550,7 +695,9 @@ export function Modal({ open, onClose, title, width, children, actions }: ModalP
             background: "rgba(0,0,0,0.6)",
             backdropFilter: "blur(4px)",
           }}
-          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -596,7 +743,9 @@ export function Modal({ open, onClose, title, width, children, actions }: ModalP
               </div>
             )}
             {/* Body */}
-            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>{children}</div>
+            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
+              {children}
+            </div>
             {/* Footer actions */}
             {actions && (
               <div
@@ -627,11 +776,24 @@ interface DetailFieldProps {
   mono?: boolean;
 }
 
-export function DetailField({ label, value, icon: Icon, mono }: DetailFieldProps) {
+export function DetailField({
+  label,
+  value,
+  icon: Icon,
+  mono,
+}: DetailFieldProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 500 }}>
-        {Icon && <Icon size={11} style={{ marginLeft: 4, verticalAlign: "middle" }} />}
+      <span
+        style={{
+          fontSize: "var(--con-text-caption)",
+          color: "var(--con-text-muted)",
+          fontWeight: 500,
+        }}
+      >
+        {Icon && (
+          <Icon size={11} style={{ marginLeft: 4, verticalAlign: "middle" }} />
+        )}
         {label}
       </span>
       <span
@@ -649,7 +811,13 @@ export function DetailField({ label, value, icon: Icon, mono }: DetailFieldProps
 }
 
 // ─── Detail Grid ──────────────────────────────────────────────────────────────
-export function DetailGrid({ children, cols = 2 }: { children: React.ReactNode; cols?: number }) {
+export function DetailGrid({
+  children,
+  cols = 2,
+}: {
+  children: React.ReactNode;
+  cols?: number;
+}) {
   return (
     <div
       style={{
@@ -665,7 +833,15 @@ export function DetailGrid({ children, cols = 2 }: { children: React.ReactNode; 
 }
 
 // ─── Section inside modal / page ──────────────────────────────────────────────
-export function Section({ title, children, style }: { title: string; children: React.ReactNode; style?: React.CSSProperties }) {
+export function Section({
+  title,
+  children,
+  style,
+}: {
+  title: string;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
   return (
     <div style={{ marginTop: 16, ...style }}>
       <h4
@@ -686,7 +862,13 @@ export function Section({ title, children, style }: { title: string; children: R
 }
 
 // ─── Status Indicator (live dot) ──────────────────────────────────────────────
-export function StatusIndicator({ label, status = "success" }: { label: string; status?: "success" | "warning" | "danger" }) {
+export function StatusIndicator({
+  label,
+  status = "success",
+}: {
+  label: string;
+  status?: "success" | "warning" | "danger";
+}) {
   const colors = {
     success: "var(--con-success)",
     warning: "var(--con-warning)",
@@ -713,13 +895,26 @@ export function StatusIndicator({ label, status = "success" }: { label: string; 
           animation: "pulse 2s infinite",
         }}
       />
-      <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>{label}</span>
+      <span
+        style={{
+          fontSize: "var(--con-text-caption)",
+          color: "var(--con-text-secondary)",
+        }}
+      >
+        {label}
+      </span>
     </div>
   );
 }
 
 // ─── Loading Skeleton Row ─────────────────────────────────────────────────────
-export function SkeletonRows({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+export function SkeletonRows({
+  rows = 5,
+  cols = 4,
+}: {
+  rows?: number;
+  cols?: number;
+}) {
   return (
     <>
       {Array.from({ length: rows }).map((_, r) => (
@@ -754,7 +949,16 @@ interface ConfirmProps {
   loading?: boolean;
 }
 
-export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel, variant = "danger", loading }: ConfirmProps) {
+export function ConfirmDialog({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel,
+  variant = "danger",
+  loading,
+}: ConfirmProps) {
   return (
     <Modal
       open={open}
@@ -776,7 +980,14 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, confir
         </>
       }
     >
-      <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", margin: 0, lineHeight: 1.7 }}>
+      <p
+        style={{
+          fontSize: "var(--con-text-body)",
+          color: "var(--con-text-secondary)",
+          margin: 0,
+          lineHeight: 1.7,
+        }}
+      >
         {message}
       </p>
     </Modal>
@@ -784,20 +995,50 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, confir
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-export function EmptyState({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description?: string;
+}) {
   return (
     <div className="con-empty" style={{ padding: "3rem 2rem" }}>
       <Icon size={44} />
-      <p style={{ fontSize: "var(--con-text-body)", fontWeight: 500, color: "var(--con-text-muted)" }}>{title}</p>
+      <p
+        style={{
+          fontSize: "var(--con-text-body)",
+          fontWeight: 500,
+          color: "var(--con-text-muted)",
+        }}
+      >
+        {title}
+      </p>
       {description && (
-        <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-disabled)", maxWidth: 280 }}>{description}</p>
+        <p
+          style={{
+            fontSize: "var(--con-text-caption)",
+            color: "var(--con-text-disabled)",
+            maxWidth: 280,
+          }}
+        >
+          {description}
+        </p>
       )}
     </div>
   );
 }
 
 // ─── Textarea ─────────────────────────────────────────────────────────────────
-export function TextArea({ value, onChange, placeholder, rows = 3, style }: {
+export function TextArea({
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+  style,
+}: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -811,7 +1052,12 @@ export function TextArea({ value, onChange, placeholder, rows = 3, style }: {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      style={{ width: "100%", resize: "vertical", fontFamily: "var(--con-font-primary)", ...style }}
+      style={{
+        width: "100%",
+        resize: "vertical",
+        fontFamily: "var(--con-font-primary)",
+        ...style,
+      }}
     />
   );
 }

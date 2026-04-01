@@ -1,159 +1,623 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الموارد البشرية - فيرست لاين لوجستيكس</title>
-<link rel="icon" href="/public/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="/fll-shared.js"></script>
-<style>
-:root{--navy:#0a1628;--navy-light:#152238;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(56,189,248,0.06) 0%,transparent 50%);pointer-events:none;z-index:0}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:#1c2d47;border-radius:3px}
-.top-bar{background:rgba(10,22,40,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);color:white;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
-.top-bar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
-.top-bar-nav{display:flex;gap:4px}
-.top-bar-nav a{color:rgba(255,255,255,.7);text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;transition:all .2s}
-.top-bar-nav a:hover{background:var(--glass);color:var(--text)}
-.top-bar-nav a.active{background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(167,139,250,0.1));color:var(--blue);box-shadow:inset 0 0 0 1px rgba(56,189,248,0.2)}
-.top-bar-actions{display:flex;align-items:center;gap:12px}
-.top-bar-actions button{background:var(--glass);border:1px solid var(--border);border:none;color:white;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer}
-.container{max-width:1400px;margin:0 auto;padding:24px;position:relative;z-index:1}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.page-title{font-size:24px;font-weight:700;color:white;display:flex;align-items:center;gap:10px}.page-sub{color:var(--muted);font-size:14px;margin-top:4px}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);border-right:4px solid var(--blue)}
-.stat.green{border-right-color:var(--green)}.stat.gold::before{background:linear-gradient(90deg,var(--gold),#fcd34d)}.stat.red::before{background:linear-gradient(90deg,var(--red),#f87171)}.stat.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
-.stat-label{font-size:12px;color:var(--muted);margin-bottom:4px}.stat-value{font-size:26px;font-weight:700;color:white}.stat-sub{font-size:11px;margin-top:2px}
-.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);backdrop-filter:blur(10px);margin-bottom:20px;overflow:hidden}
-.card-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.card-h h3{font-size:15px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}.card-b{padding:20px}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{padding:10px 12px;text-align:right;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text)}.tbl tr:hover td{background:rgba(56,189,248,0.03)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.tabs{display:flex;gap:2px;background:rgba(255,255,255,0.03);border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid var(--border);flex-wrap:wrap}
-.tab{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted)}.tab.active{background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(167,139,250,0.1));color:var(--blue);box-shadow:inset 0 0 0 1px rgba(56,189,248,0.2)}
-.dept-card{background:white;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
-.dept-card h4{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}.dept-card p{font-size:12px;color:var(--muted)}
-.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
-@media(max-width:768px){.grid-2{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
-</style>
-</head>
-<body>
-<div class="top-bar">
-  <h1>👥 الموارد البشرية</h1>
-  <div class="top-bar-nav">
-    <a href="/admin-dashboard.html"><i data-lucide="shield" style="width:16px;height:16px"></i> الإدارة</a>
-    <a href="/staff-finance.html"><i data-lucide="wallet" style="width:16px;height:16px"></i> المالية</a>
-    <a href="/staff-hr.html" class="active"><i data-lucide="users" style="width:16px;height:16px"></i> الموارد البشرية</a>
-    <a href="/staff-ops.html"><i data-lucide="package" style="width:16px;height:16px"></i> العمليات</a>
-    <a href="/staff-fleet.html"><i data-lucide="truck" style="width:16px;height:16px"></i> المركبات</a>
-  </div>
-  <div class="top-bar-actions"><span id="user-name" style="font-size:13px"></span><button onclick="logout()">خروج</button></div>
-</div>
-<div class="container">
-  <div class="page-header"><div><div class="page-title">إدارة الموارد البشرية</div><div class="page-sub" id="current-date"></div></div></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>الموارد البشرية - فيرست لاين لوجستيكس</title>
+    <link rel="icon" href="/public/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/fll-shared.js"></script>
+    <style>
+      :root {
+        --navy: #0a1628;
+        --navy-light: #152238;
+        --blue: #38bdf8;
+        --blue-deep: #0284c7;
+        --green: #22c55e;
+        --red: #ef4444;
+        --gold: #fbbf24;
+        --purple: #a78bfa;
+        --orange: #fb923c;
+        --cyan: #22d3ee;
+        --bg: #0e1a2e;
+        --card: rgba(21, 34, 56, 0.7);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --border: rgba(56, 189, 248, 0.1);
+        --glass: rgba(255, 255, 255, 0.04);
+        --radius: 14px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "IBM Plex Sans Arabic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          ellipse at 30% 20%,
+          rgba(56, 189, 248, 0.06) 0%,
+          transparent 50%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--navy);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1c2d47;
+        border-radius: 3px;
+      }
+      .top-bar {
+        background: rgba(10, 22, 40, 0.9);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .top-bar h1 {
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .top-bar-nav {
+        display: flex;
+        gap: 4px;
+      }
+      .top-bar-nav a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .top-bar-nav a:hover {
+        background: var(--glass);
+        color: var(--text);
+      }
+      .top-bar-nav a.active {
+        background: linear-gradient(
+          135deg,
+          rgba(56, 189, 248, 0.15),
+          rgba(167, 139, 250, 0.1)
+        );
+        color: var(--blue);
+        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2);
+      }
+      .top-bar-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .top-bar-actions button {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        position: relative;
+        z-index: 1;
+      }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .page-sub {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-right: 4px solid var(--blue);
+      }
+      .stat.green {
+        border-right-color: var(--green);
+      }
+      .stat.gold::before {
+        background: linear-gradient(90deg, var(--gold), #fcd34d);
+      }
+      .stat.red::before {
+        background: linear-gradient(90deg, var(--red), #f87171);
+      }
+      .stat.purple::before {
+        background: linear-gradient(90deg, var(--purple), #c4b5fd);
+      }
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: white;
+      }
+      .stat-sub {
+        font-size: 11px;
+        margin-top: 2px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+      .card-h {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-h h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-b {
+        padding: 20px;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .tbl th {
+        padding: 10px 12px;
+        text-align: right;
+        font-size: 11px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .tbl td {
+        padding: 10px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: var(--text);
+      }
+      .tbl tr:hover td {
+        background: rgba(56, 189, 248, 0.03);
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .tabs {
+        display: flex;
+        gap: 2px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .tab {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        color: var(--muted);
+      }
+      .tab.active {
+        background: linear-gradient(
+          135deg,
+          rgba(56, 189, 248, 0.15),
+          rgba(167, 139, 250, 0.1)
+        );
+        color: var(--blue);
+        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2);
+      }
+      .dept-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+      }
+      .dept-card h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 4px;
+      }
+      .dept-card p {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dept-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      @media (max-width: 768px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .stats-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <h1>👥 الموارد البشرية</h1>
+      <div class="top-bar-nav">
+        <a href="/admin-dashboard.html"
+          ><i data-lucide="shield" style="width: 16px; height: 16px"></i>
+          الإدارة</a
+        >
+        <a href="/staff-finance.html"
+          ><i data-lucide="wallet" style="width: 16px; height: 16px"></i>
+          المالية</a
+        >
+        <a href="/staff-hr.html" class="active"
+          ><i data-lucide="users" style="width: 16px; height: 16px"></i> الموارد
+          البشرية</a
+        >
+        <a href="/staff-ops.html"
+          ><i data-lucide="package" style="width: 16px; height: 16px"></i>
+          العمليات</a
+        >
+        <a href="/staff-fleet.html"
+          ><i data-lucide="truck" style="width: 16px; height: 16px"></i>
+          المركبات</a
+        >
+      </div>
+      <div class="top-bar-actions">
+        <span id="user-name" style="font-size: 13px"></span
+        ><button onclick="logout()">خروج</button>
+      </div>
+    </div>
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <div class="page-title">إدارة الموارد البشرية</div>
+          <div class="page-sub" id="current-date"></div>
+        </div>
+      </div>
 
-  <div class="stats-row">
-    <div class="stat"><div class="stat-label">الموظفين</div><div class="stat-value" id="s-staff">—</div></div>
-    <div class="stat green"><div class="stat-label">المناديب</div><div class="stat-value" id="s-couriers">—</div></div>
-    <div class="stat gold"><div class="stat-label">النشطين</div><div class="stat-value" id="s-active">—</div></div>
-    <div class="stat purple"><div class="stat-label">الأقسام</div><div class="stat-value" id="s-depts">—</div></div>
-  </div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">الموظفين</div>
+          <div class="stat-value" id="s-staff">—</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-label">المناديب</div>
+          <div class="stat-value" id="s-couriers">—</div>
+        </div>
+        <div class="stat gold">
+          <div class="stat-label">النشطين</div>
+          <div class="stat-value" id="s-active">—</div>
+        </div>
+        <div class="stat purple">
+          <div class="stat-label">الأقسام</div>
+          <div class="stat-value" id="s-depts">—</div>
+        </div>
+      </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('staff',this)">الموظفين</button>
-    <button class="tab" onclick="showTab('couriers',this)">المناديب</button>
-    <button class="tab" onclick="showTab('departments',this)">الأقسام</button>
-    <button class="tab" onclick="showTab('attendance',this)">الحضور والانصراف</button>
-    <button class="tab" onclick="showTab('tasks',this)">المهام</button>
-    <button class="tab" onclick="showTab('performance',this)">تقييم الأداء</button>
-  </div>
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('staff', this)">
+          الموظفين
+        </button>
+        <button class="tab" onclick="showTab('couriers', this)">
+          المناديب
+        </button>
+        <button class="tab" onclick="showTab('departments', this)">
+          الأقسام
+        </button>
+        <button class="tab" onclick="showTab('attendance', this)">
+          الحضور والانصراف
+        </button>
+        <button class="tab" onclick="showTab('tasks', this)">المهام</button>
+        <button class="tab" onclick="showTab('performance', this)">
+          تقييم الأداء
+        </button>
+      </div>
 
-  <div id="tab-staff">
-    <div class="card"><div class="card-h"><h3>جدول الموظفين</h3></div>
-    <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>البريد</th><th>القسم</th><th>المسمى الوظيفي</th><th>الجوال</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="staff-tbl"></tbody></table></div></div>
-  </div>
+      <div id="tab-staff">
+        <div class="card">
+          <div class="card-h"><h3>جدول الموظفين</h3></div>
+          <div class="card-b">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>البريد</th>
+                  <th>القسم</th>
+                  <th>المسمى الوظيفي</th>
+                  <th>الجوال</th>
+                  <th>الدور</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="staff-tbl"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-  <div id="tab-couriers" style="display:none">
-    <div class="card"><div class="card-h"><h3>جدول المناديب</h3></div>
-    <div class="card-b"><table class="tbl"><thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>المدينة</th><th>البنك</th><th>نوع التعاقد</th><th>تاريخ الالتحاق</th><th>الحالة</th></tr></thead><tbody id="couriers-tbl"></tbody></table></div></div>
-  </div>
+      <div id="tab-couriers" style="display: none">
+        <div class="card">
+          <div class="card-h"><h3>جدول المناديب</h3></div>
+          <div class="card-b">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>رقم الهوية</th>
+                  <th>الجوال</th>
+                  <th>المدينة</th>
+                  <th>البنك</th>
+                  <th>نوع التعاقد</th>
+                  <th>تاريخ الالتحاق</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="couriers-tbl"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-  <div id="tab-departments" style="display:none">
-    <div class="dept-grid" id="depts-grid"></div>
-  </div>
+      <div id="tab-departments" style="display: none">
+        <div class="dept-grid" id="depts-grid"></div>
+      </div>
 
-  <!-- ATTENDANCE TAB (NEW) -->
-  <div id="tab-attendance" style="display:none">
-    <div class="card"><div class="card-h"><h3>سجل الحضور والانصراف</h3></div>
-    <div class="card-b"><table class="tbl"><thead><tr><th>الموظف</th><th>القسم</th><th>التاريخ</th><th>وقت الدخول</th><th>وقت الخروج</th><th>الساعات</th><th>الحالة</th></tr></thead><tbody id="attendance-tbl"></tbody></table></div></div>
-  </div>
+      <!-- ATTENDANCE TAB (NEW) -->
+      <div id="tab-attendance" style="display: none">
+        <div class="card">
+          <div class="card-h"><h3>سجل الحضور والانصراف</h3></div>
+          <div class="card-b">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>القسم</th>
+                  <th>التاريخ</th>
+                  <th>وقت الدخول</th>
+                  <th>وقت الخروج</th>
+                  <th>الساعات</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-tbl"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-  <!-- TASKS TAB (NEW) -->
-  <div id="tab-tasks" style="display:none">
-    <div class="card"><div class="card-h"><h3>المهام الداخلية</h3></div>
-    <div class="card-b"><table class="tbl"><thead><tr><th>المهمة</th><th>من</th><th>إلى</th><th>القسم</th><th>الأولوية</th><th>الحالة</th><th>تاريخ الإنشاء</th></tr></thead><tbody id="tasks-tbl"></tbody></table></div></div>
-  </div>
+      <!-- TASKS TAB (NEW) -->
+      <div id="tab-tasks" style="display: none">
+        <div class="card">
+          <div class="card-h"><h3>المهام الداخلية</h3></div>
+          <div class="card-b">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>المهمة</th>
+                  <th>من</th>
+                  <th>إلى</th>
+                  <th>القسم</th>
+                  <th>الأولوية</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإنشاء</th>
+                </tr>
+              </thead>
+              <tbody id="tasks-tbl"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-  <!-- PERFORMANCE TAB (NEW) -->
-  <div id="tab-performance" style="display:none">
-    <div class="card"><div class="card-h"><h3>تقييم الأداء</h3></div>
-    <div class="card-b"><table class="tbl"><thead><tr><th>الموظف/المندوب</th><th>القسم</th><th>الفترة</th><th>التوصيلات</th><th>الشكاوى</th><th>التقييم</th><th>ملاحظات</th></tr></thead><tbody id="perf-tbl"></tbody></table></div></div>
-  </div>
-</div>
+      <!-- PERFORMANCE TAB (NEW) -->
+      <div id="tab-performance" style="display: none">
+        <div class="card">
+          <div class="card-h"><h3>تقييم الأداء</h3></div>
+          <div class="card-b">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الموظف/المندوب</th>
+                  <th>القسم</th>
+                  <th>الفترة</th>
+                  <th>التوصيلات</th>
+                  <th>الشكاوى</th>
+                  <th>التقييم</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="perf-tbl"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<script>
-const user=checkAuth();if(!user)throw'no auth';setUserInfo(user);const db=initSupabase();
-function showTab(n,btn){document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).style.display='block';if(btn)btn.classList.add('active');}
+    <script>
+      const user = checkAuth();
+      if (!user) throw "no auth";
+      setUserInfo(user);
+      const db = initSupabase();
+      function showTab(n, btn) {
+        document
+          .querySelectorAll('[id^="tab-"]')
+          .forEach((t) => (t.style.display = "none"));
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document.getElementById("tab-" + n).style.display = "block";
+        if (btn) btn.classList.add("active");
+      }
 
-async function loadAll(){
-  const {data:staff}=await db.from('staff_users').select('*');
-  const {data:couriers}=await db.from('couriers').select('*');
-  const {data:depts}=await db.from('departments').select('*');
+      async function loadAll() {
+        const { data: staff } = await db.from("staff_users").select("*");
+        const { data: couriers } = await db.from("couriers").select("*");
+        const { data: depts } = await db.from("departments").select("*");
 
-  document.getElementById('s-staff').textContent=(staff||[]).length;
-  document.getElementById('s-couriers').textContent=(couriers||[]).length;
-  document.getElementById('s-active').textContent=(couriers||[]).filter(c=>c.status==='active').length;
-  document.getElementById('s-depts').textContent=(depts||[]).length;
+        document.getElementById("s-staff").textContent = (staff || []).length;
+        document.getElementById("s-couriers").textContent = (
+          couriers || []
+        ).length;
+        document.getElementById("s-active").textContent = (
+          couriers || []
+        ).filter((c) => c.status === "active").length;
+        document.getElementById("s-depts").textContent = (depts || []).length;
 
-  if(staff) document.getElementById('staff-tbl').innerHTML=staff.map(s=>`<tr>
-    <td><strong>${s.name||'—'}</strong></td><td>${s.email||'—'}</td>
-    <td>${badge(s.department||'—','blue')}</td><td>${s.position_title||'—'}</td>
-    <td>${s.phone||'—'}</td><td>${badge(s.role||'—','purple')}</td>
-    <td>${s.is_active?badge('نشط','green'):badge('معطل','red')}</td></tr>`).join('');
+        if (staff)
+          document.getElementById("staff-tbl").innerHTML = staff
+            .map(
+              (s) => `<tr>
+    <td><strong>${s.name || "—"}</strong></td><td>${s.email || "—"}</td>
+    <td>${badge(s.department || "—", "blue")}</td><td>${s.position_title || "—"}</td>
+    <td>${s.phone || "—"}</td><td>${badge(s.role || "—", "purple")}</td>
+    <td>${s.is_active ? badge("نشط", "green") : badge("معطل", "red")}</td></tr>`,
+            )
+            .join("");
 
-  if(couriers) document.getElementById('couriers-tbl').innerHTML=couriers.map(c=>`<tr>
-    <td><strong>${c.full_name_ar||c.full_name}</strong></td><td>${c.national_id||'—'}</td>
-    <td>${c.phone||'—'}</td><td>${c.city||'—'}</td><td>${c.bank_name||'—'}</td>
-    <td>${c.contract_type||'—'}</td><td>${formatDate(c.join_date)}</td>
-    <td>${c.status==='active'?badge('نشط','green'):badge('غير نشط','red')}</td></tr>`).join('');
+        if (couriers)
+          document.getElementById("couriers-tbl").innerHTML = couriers
+            .map(
+              (c) => `<tr>
+    <td><strong>${c.full_name_ar || c.full_name}</strong></td><td>${c.national_id || "—"}</td>
+    <td>${c.phone || "—"}</td><td>${c.city || "—"}</td><td>${c.bank_name || "—"}</td>
+    <td>${c.contract_type || "—"}</td><td>${formatDate(c.join_date)}</td>
+    <td>${c.status === "active" ? badge("نشط", "green") : badge("غير نشط", "red")}</td></tr>`,
+            )
+            .join("");
 
-  if(depts) document.getElementById('depts-grid').innerHTML=depts.map(d=>`
-    <div class="dept-card"><h4>${d.name_ar||d.name}</h4><p>${d.description||d.name}</p>
-    <div style="margin-top:8px">${d.is_active?badge('مفعل','green'):badge('معطل','red')}</div></div>`).join('');
-}
-loadAll();
+        if (depts)
+          document.getElementById("depts-grid").innerHTML = depts
+            .map(
+              (d) => `
+    <div class="dept-card"><h4>${d.name_ar || d.name}</h4><p>${d.description || d.name}</p>
+    <div style="margin-top:8px">${d.is_active ? badge("مفعل", "green") : badge("معطل", "red")}</div></div>`,
+            )
+            .join("");
+      }
+      loadAll();
 
-// === NEW: Attendance, Tasks, Performance ===
-const _origHRLoad=loadAll;
-loadAll=async function(){await _origHRLoad();try{
-  // Attendance (sample data - will connect to real DB later)
-  const staff=await db.from('staff_users').select('full_name,department');
-  document.getElementById('attendance-tbl').innerHTML=(staff.data||[]).map(s=>{const h=Math.floor(Math.random()*3+6);return`<tr><td><strong>${s.full_name||'—'}</strong></td><td>${s.department||'—'}</td><td>${new Date().toLocaleDateString('ar-SA')}</td><td>08:00</td><td>${8+h}:00</td><td>${h} ساعات</td><td>${badge('حاضر','green')}</td></tr>`}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
+      // === NEW: Attendance, Tasks, Performance ===
+      const _origHRLoad = loadAll;
+      loadAll = async function () {
+        await _origHRLoad();
+        try {
+          // Attendance (sample data - will connect to real DB later)
+          const staff = await db
+            .from("staff_users")
+            .select("full_name,department");
+          document.getElementById("attendance-tbl").innerHTML =
+            (staff.data || [])
+              .map((s) => {
+                const h = Math.floor(Math.random() * 3 + 6);
+                return `<tr><td><strong>${s.full_name || "—"}</strong></td><td>${s.department || "—"}</td><td>${new Date().toLocaleDateString("ar-SA")}</td><td>08:00</td><td>${8 + h}:00</td><td>${h} ساعات</td><td>${badge("حاضر", "green")}</td></tr>`;
+              })
+              .join("") ||
+            '<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
 
-  // Tasks
-  document.getElementById('tasks-tbl').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام المهام قيد الإعداد — سيُربط مع جدول tasks في Supabase</td></tr>';
+          // Tasks
+          document.getElementById("tasks-tbl").innerHTML =
+            '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">نظام المهام قيد الإعداد — سيُربط مع جدول tasks في Supabase</td></tr>';
 
-  // Performance
-  const couriers=await db.from('couriers').select('full_name_ar,city,status');
-  const orders=await db.from('orders').select('courier_id,orders_count');
-  document.getElementById('perf-tbl').innerHTML=(couriers.data||[]).filter(c=>c.status==='active').map(c=>`<tr><td><strong>${c.full_name_ar||'—'}</strong></td><td>${c.city||'—'}</td><td>مارس 2026</td><td>—</td><td>—</td><td><span style="color:var(--gold)">★★★★☆</span></td><td>—</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
-}catch(e){console.error('HR v4:',e)}};loadAll();
-try{lucide.createIcons()}catch(e){}
-</script>
-</body></html>
+          // Performance
+          const couriers = await db
+            .from("couriers")
+            .select("full_name_ar,city,status");
+          const orders = await db
+            .from("orders")
+            .select("courier_id,orders_count");
+          document.getElementById("perf-tbl").innerHTML =
+            (couriers.data || [])
+              .filter((c) => c.status === "active")
+              .map(
+                (c) =>
+                  `<tr><td><strong>${c.full_name_ar || "—"}</strong></td><td>${c.city || "—"}</td><td>مارس 2026</td><td>—</td><td>—</td><td><span style="color:var(--gold)">★★★★☆</span></td><td>—</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد بيانات</td></tr>';
+        } catch (e) {
+          console.error("HR v4:", e);
+        }
+      };
+      loadAll();
+      try {
+        lucide.createIcons();
+      } catch (e) {}
+    </script>
+  </body>
+</html>

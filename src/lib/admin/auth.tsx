@@ -2,12 +2,31 @@
  * نظام التوثيق المركزي - Supabase Edge Functions
  * Authentication via Supabase login-password edge function
  */
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { cognitoSignIn, cognitoSignOut, getCognitoGroups, cognitoForgotPassword, cognitoConfirmPassword } from "@/lib/cognito";
-import { sendOtp as sendLambdaOtp, verifyOtp as verifyLambdaOtp } from "@/lib/otp-service";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import {
+  cognitoSignIn,
+  cognitoSignOut,
+  getCognitoGroups,
+  cognitoForgotPassword,
+  cognitoConfirmPassword,
+} from "@/lib/cognito";
+import {
+  sendOtp as sendLambdaOtp,
+  verifyOtp as verifyLambdaOtp,
+} from "@/lib/otp-service";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
-const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://djebhztfewjfyyoortvv.supabase.co";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 const SESSION_KEY = "fll_session";
 const USER_KEY = "fll_user";
 
@@ -43,7 +62,10 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithOtp: (email: string) => Promise<{ error?: string }>;
-  verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string; redirectUrl?: string }>;
+  verifyEmailOtp: (
+    email: string,
+    token: string,
+  ) => Promise<{ error?: string; redirectUrl?: string }>;
   signOut: () => Promise<void>;
   hasPermission: (key: keyof StaffPermissions) => boolean;
   getToken: () => Promise<string | null>;
@@ -113,7 +135,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await cognitoSignIn(email, password);
       if (result.error) {
-        return { error: result.error.includes("Incorrect") ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : result.error };
+        return {
+          error: result.error.includes("Incorrect")
+            ? "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+            : result.error,
+        };
       }
       if (!result.session) {
         return { error: "تعذّر إنشاء جلسة" };
@@ -123,17 +149,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userEmail = (payload["email"] as string) || email;
       const userName = (payload["name"] as string) || userEmail;
       const userSub = (payload["sub"] as string) || "";
-      const role = groups.includes("admin") || groups.includes("SystemAdmin") ? "admin" : groups.includes("staff") ? "staff" : "staff";
+      const role =
+        groups.includes("admin") || groups.includes("SystemAdmin")
+          ? "admin"
+          : groups.includes("staff")
+            ? "staff"
+            : "staff";
 
       const sessionData = {
         token: result.session.getAccessToken().getJwtToken(),
-        expires_at: new Date(result.session.getAccessToken().getExpiration() * 1000).toISOString(),
+        expires_at: new Date(
+          result.session.getAccessToken().getExpiration() * 1000,
+        ).toISOString(),
       };
       const userData = { id: userSub, email: userEmail, name: userName, role };
 
       localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
       localStorage.setItem(USER_KEY, JSON.stringify(userData));
-      setUser({ id: userSub, email: userEmail, full_name: userName, role: mapRole(role), cognito_groups: groups });
+      setUser({
+        id: userSub,
+        email: userEmail,
+        full_name: userName,
+        role: mapRole(role),
+        cognito_groups: groups,
+      });
       return {};
     } catch {
       return { error: "تعذّر الاتصال بالخادم. تأكد من اتصالك بالإنترنت." };
@@ -154,7 +193,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await verifyLambdaOtp(email, token, "login");
       if (result.error) {
-        return { error: result.error === "Failed to verify OTP" ? "رمز التحقق غير صحيح أو منتهي الصلاحية" : result.error };
+        return {
+          error:
+            result.error === "Failed to verify OTP"
+              ? "رمز التحقق غير صحيح أو منتهي الصلاحية"
+              : result.error,
+        };
       }
       return { redirectUrl: "/admin-panel/dashboard" };
     } catch {
@@ -163,7 +207,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function handleSignOut() {
-    try { cognitoSignOut(); } catch { /* ignore */ }
+    try {
+      cognitoSignOut();
+    } catch {
+      /* ignore */
+    }
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(USER_KEY);
     setUser(null);

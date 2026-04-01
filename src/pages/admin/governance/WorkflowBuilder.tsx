@@ -3,13 +3,34 @@
  * Configure approval chains with SLA timers
  */
 import { useState, useEffect } from "react";
-import { GitBranch, Plus, Play, Pause, Clock, Users, ArrowDown } from "lucide-react";
-import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Badge, Button } from "@/components/admin/ui";
-import { DEFAULT_WORKFLOWS, type WorkflowDefinition, type ApprovalStep } from "@/lib/admin/governance";
+import {
+  GitBranch,
+  Plus,
+  Play,
+  Pause,
+  Clock,
+  Users,
+  ArrowDown,
+} from "lucide-react";
+import {
+  PageWrapper,
+  PageHeader,
+  Card,
+  KPIGrid,
+  KPICard,
+  Badge,
+  Button,
+} from "@/components/admin/ui";
+import {
+  DEFAULT_WORKFLOWS,
+  type WorkflowDefinition,
+  type ApprovalStep,
+} from "@/lib/admin/governance";
 import { supabase } from "@/lib/supabase";
 
 export default function WorkflowBuilder() {
-  const [workflows, setWorkflows] = useState<WorkflowDefinition[]>(DEFAULT_WORKFLOWS);
+  const [workflows, setWorkflows] =
+    useState<WorkflowDefinition[]>(DEFAULT_WORKFLOWS);
 
   useEffect(() => {
     (async () => {
@@ -45,7 +66,9 @@ export default function WorkflowBuilder() {
   const active = workflows.filter((w) => w.isActive).length;
 
   const toggleActive = (id: string) => {
-    setWorkflows((prev) => prev.map((w) => (w.id === id ? { ...w, isActive: !w.isActive } : w)));
+    setWorkflows((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, isActive: !w.isActive } : w)),
+    );
   };
 
   return (
@@ -58,9 +81,24 @@ export default function WorkflowBuilder() {
       />
 
       <KPIGrid cols="repeat(3, 1fr)">
-        <KPICard label="إجمالي سير العمل" value={workflows.length} icon={GitBranch} accent="var(--con-brand)" />
-        <KPICard label="نشط" value={active} icon={Play} accent="var(--con-success)" />
-        <KPICard label="متوقف" value={workflows.length - active} icon={Pause} accent="var(--con-danger)" />
+        <KPICard
+          label="إجمالي سير العمل"
+          value={workflows.length}
+          icon={GitBranch}
+          accent="var(--con-brand)"
+        />
+        <KPICard
+          label="نشط"
+          value={active}
+          icon={Play}
+          accent="var(--con-success)"
+        />
+        <KPICard
+          label="متوقف"
+          value={workflows.length - active}
+          icon={Pause}
+          accent="var(--con-danger)"
+        />
       </KPIGrid>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -94,13 +132,33 @@ export default function WorkflowBuilder() {
               }}
             >
               <Clock size={14} style={{ color: "var(--con-warning)" }} />
-              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>
-                مهلة إجمالية: <strong style={{ color: "var(--con-text-primary)", fontFamily: "var(--con-font-mono)" }}>{wf.slaHours} ساعة</strong>
+              <span
+                style={{
+                  fontSize: "var(--con-text-body)",
+                  color: "var(--con-text-secondary)",
+                }}
+              >
+                مهلة إجمالية:{" "}
+                <strong
+                  style={{
+                    color: "var(--con-text-primary)",
+                    fontFamily: "var(--con-font-mono)",
+                  }}
+                >
+                  {wf.slaHours} ساعة
+                </strong>
               </span>
             </div>
 
             {/* Approval Chain */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
               {wf.approvalChain.map((step, idx) => (
                 <div key={idx} style={{ width: "100%" }}>
                   <div
@@ -114,7 +172,9 @@ export default function WorkflowBuilder() {
                       border: "1px solid var(--con-border-default)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
                       <div
                         style={{
                           width: 28,
@@ -134,32 +194,77 @@ export default function WorkflowBuilder() {
                         {idx + 1}
                       </div>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <Users size={13} style={{ color: "var(--con-text-muted)" }} />
-                          <span style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <Users
+                            size={13}
+                            style={{ color: "var(--con-text-muted)" }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "var(--con-text-body)",
+                              fontWeight: 600,
+                              color: "var(--con-text-primary)",
+                            }}
+                          >
                             {step.roleAr}
                           </span>
                         </div>
-                        <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+                        <span
+                          style={{
+                            fontSize: "var(--con-text-caption)",
+                            color: "var(--con-text-muted)",
+                          }}
+                        >
                           {step.role}
                         </span>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Clock size={12} style={{ color: "var(--con-warning)" }} />
-                      <span style={{ fontSize: "var(--con-text-caption)", fontFamily: "var(--con-font-mono)", color: "var(--con-warning)" }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <Clock
+                        size={12}
+                        style={{ color: "var(--con-warning)" }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "var(--con-text-caption)",
+                          fontFamily: "var(--con-font-mono)",
+                          color: "var(--con-warning)",
+                        }}
+                      >
                         {step.slaHours}h
                       </span>
                       {step.escalateTo && (
-                        <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+                        <span
+                          style={{
+                            fontSize: "var(--con-text-caption)",
+                            color: "var(--con-text-muted)",
+                          }}
+                        >
                           → تصعيد: {step.escalateTo}
                         </span>
                       )}
                     </div>
                   </div>
                   {idx < wf.approvalChain.length - 1 && (
-                    <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-                      <ArrowDown size={16} style={{ color: "var(--con-text-disabled)" }} />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        padding: "4px 0",
+                      }}
+                    >
+                      <ArrowDown
+                        size={16}
+                        style={{ color: "var(--con-text-disabled)" }}
+                      />
                     </div>
                   )}
                 </div>

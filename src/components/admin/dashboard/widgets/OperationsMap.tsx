@@ -16,12 +16,12 @@ interface CityMetric {
 }
 
 const mockCityData: CityMetric[] = [
-  { city: "الرياض",   activeCouriers: 14, todayOrders: 89, avgDeliveryMin: 32 },
-  { city: "جدة",      activeCouriers: 8,  todayOrders: 56, avgDeliveryMin: 38 },
-  { city: "الدمام",   activeCouriers: 5,  todayOrders: 34, avgDeliveryMin: 28 },
-  { city: "مكة",      activeCouriers: 4,  todayOrders: 28, avgDeliveryMin: 41 },
-  { city: "المدينة",  activeCouriers: 3,  todayOrders: 19, avgDeliveryMin: 35 },
-  { city: "أبها",     activeCouriers: 2,  todayOrders: 11, avgDeliveryMin: 45 },
+  { city: "الرياض", activeCouriers: 14, todayOrders: 89, avgDeliveryMin: 32 },
+  { city: "جدة", activeCouriers: 8, todayOrders: 56, avgDeliveryMin: 38 },
+  { city: "الدمام", activeCouriers: 5, todayOrders: 34, avgDeliveryMin: 28 },
+  { city: "مكة", activeCouriers: 4, todayOrders: 28, avgDeliveryMin: 41 },
+  { city: "المدينة", activeCouriers: 3, todayOrders: 19, avgDeliveryMin: 35 },
+  { city: "أبها", activeCouriers: 2, todayOrders: 11, avgDeliveryMin: 45 },
 ];
 
 export function OperationsMap() {
@@ -76,7 +76,9 @@ export function OperationsMap() {
           .slice(0, 8);
 
         if (live.length > 0) setCityData(live);
-      } catch { /* keep mock */ }
+      } catch {
+        /* keep mock */
+      }
     }
     fetchCityData();
   }, []);
@@ -104,10 +106,45 @@ export function OperationsMap() {
             borderBottom: "1px solid var(--con-border-default)",
           }}
         >
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</span>
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 600, textAlign: "center" }}>مناديب</span>
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 600, textAlign: "center" }}>طلبات</span>
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 600, textAlign: "center" }}>متوسط</span>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              fontWeight: 600,
+            }}
+          >
+            المدينة
+          </span>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            مناديب
+          </span>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            طلبات
+          </span>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            متوسط
+          </span>
         </div>
 
         {cityData.map((city) => (
@@ -123,17 +160,48 @@ export function OperationsMap() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <MapPin size={12} style={{ color: "var(--con-brand)" }} />
-              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-primary)", fontWeight: 500 }}>
+              <span
+                style={{
+                  fontSize: "var(--con-text-body)",
+                  color: "var(--con-text-primary)",
+                  fontWeight: 500,
+                }}
+              >
                 {city.city}
               </span>
             </div>
-            <span style={{ fontSize: "var(--con-text-body)", fontFamily: "var(--con-font-mono)", color: "var(--con-brand)", textAlign: "center", fontWeight: 600 }}>
+            <span
+              style={{
+                fontSize: "var(--con-text-body)",
+                fontFamily: "var(--con-font-mono)",
+                color: "var(--con-brand)",
+                textAlign: "center",
+                fontWeight: 600,
+              }}
+            >
               {city.activeCouriers}
             </span>
-            <span style={{ fontSize: "var(--con-text-body)", fontFamily: "var(--con-font-mono)", color: "var(--con-text-secondary)", textAlign: "center" }}>
+            <span
+              style={{
+                fontSize: "var(--con-text-body)",
+                fontFamily: "var(--con-font-mono)",
+                color: "var(--con-text-secondary)",
+                textAlign: "center",
+              }}
+            >
               {city.todayOrders}
             </span>
-            <span style={{ fontSize: "var(--con-text-body)", fontFamily: "var(--con-font-mono)", color: city.avgDeliveryMin > 40 ? "var(--con-warning)" : "var(--con-text-muted)", textAlign: "center" }}>
+            <span
+              style={{
+                fontSize: "var(--con-text-body)",
+                fontFamily: "var(--con-font-mono)",
+                color:
+                  city.avgDeliveryMin > 40
+                    ? "var(--con-warning)"
+                    : "var(--con-text-muted)",
+                textAlign: "center",
+              }}
+            >
               {city.avgDeliveryMin}د
             </span>
           </div>

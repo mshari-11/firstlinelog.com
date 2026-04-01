@@ -43,7 +43,15 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { PageWrapper, PageHeader, KPIGrid, KPICard, Card, Button, Badge } from "@/components/admin/ui";
+import {
+  PageWrapper,
+  PageHeader,
+  KPIGrid,
+  KPICard,
+  Card,
+  Button,
+  Badge,
+} from "@/components/admin/ui";
 
 export interface PageConfig {
   id: string;
@@ -99,57 +107,475 @@ function PageIcon({ name, size = 15 }: { name: string; size?: number }) {
 }
 
 const DEFAULT_PAGES: PageConfig[] = [
-  { id: "dashboard",          label: "الرئيسية",           path: "/admin-panel/dashboard",          group: "التشغيل",          icon: "LayoutDashboard", enabled: true,  order: 0,  isCore: true },
-  { id: "couriers",           label: "المناديب",            path: "/admin-panel/couriers",           group: "التشغيل",          icon: "Users",           enabled: true,  order: 1 },
-  { id: "orders",             label: "الطلبات",             path: "/admin-panel/orders",             group: "التشغيل",          icon: "ClipboardList",   enabled: true,  order: 2 },
-  { id: "complaints",         label: "الشكاوى",             path: "/admin-panel/complaints",         group: "التشغيل",          icon: "MessageSquare",   enabled: true,  order: 3 },
-  { id: "dispatch",           label: "الخريطة والإرسال",   path: "/admin-panel/dispatch",           group: "التشغيل",          icon: "Map",             enabled: true,  order: 4 },
-  { id: "finance-dashboard",  label: "لوحة المالية",       path: "/admin-panel/finance-dashboard",  group: "المالية والموارد", icon: "LayoutDashboard", enabled: true,  order: 5,  permission: "finance" },
-  { id: "revenue",            label: "الإيرادات",           path: "/admin-panel/revenue",            group: "المالية والموارد", icon: "TrendingUp",      enabled: true,  order: 6,  permission: "finance" },
-  { id: "expenses",           label: "المصروفات",           path: "/admin-panel/expenses",           group: "المالية والموارد", icon: "Receipt",         enabled: true,  order: 7,  permission: "finance" },
-  { id: "cashflow",           label: "التدفقات النقدية",   path: "/admin-panel/cashflow",           group: "المالية والموارد", icon: "ArrowRightLeft",  enabled: true,  order: 8,  permission: "finance" },
-  { id: "financial-reports",  label: "التقارير المالية",   path: "/admin-panel/financial-reports",  group: "المالية والموارد", icon: "FileText",        enabled: true,  order: 9,  permission: "finance" },
-  { id: "ai-finance",         label: "تحليل AI المالي",    path: "/admin-panel/ai-finance",         group: "المالية والموارد", icon: "Brain",           enabled: true,  order: 10, permission: "finance" },
-  { id: "finance",            label: "الرواتب والمالية",   path: "/admin-panel/finance",            group: "المالية والموارد", icon: "Wallet",          enabled: true,  order: 11, permission: "finance" },
-  { id: "wallet",             label: "محافظ السائقين",     path: "/admin-panel/wallet",             group: "المالية والموارد", icon: "Landmark",        enabled: true,  order: 12, permission: "finance" },
-  { id: "reconciliation",     label: "مطابقة مالية",       path: "/admin-panel/reconciliation",     group: "المالية والموارد", icon: "GitCompare",      enabled: true,  order: 13, permission: "finance" },
-  { id: "reports",            label: "التقارير",            path: "/admin-panel/reports",            group: "المالية والموارد", icon: "BarChart3",       enabled: true,  order: 14, permission: "reports" },
-  { id: "excel",              label: "استيراد Excel",      path: "/admin-panel/excel",              group: "المالية والموارد", icon: "FileSpreadsheet", enabled: true,  order: 15, permission: "excel" },
-  { id: "vehicles",           label: "المركبات",            path: "/admin-panel/vehicles",           group: "الأصول والموظفون", icon: "Car",             enabled: true,  order: 16 },
-  { id: "staff",              label: "الأقسام والموظفين",  path: "/admin-panel/staff",              group: "الموارد البشرية",  icon: "Building2",       enabled: true,  order: 17 },
-  { id: "shipments",           label: "الشحنات",             path: "/admin-panel/shipments",          group: "التشغيل",          icon: "Package",         enabled: false, order: 18, permission: "orders" },
-  { id: "invoices",            label: "الفواتير",             path: "/admin-panel/invoices",           group: "المالية والموارد", icon: "FileCheck",       enabled: true,  order: 19, permission: "finance" },
-  { id: "payouts",             label: "إدارة الدفعات",       path: "/admin-panel/payouts",            group: "المالية والموارد", icon: "CreditCard",      enabled: true,  order: 20, permission: "finance" },
-  { id: "fleet",               label: "إدارة الأسطول",       path: "/admin-panel/fleet",              group: "الأصول والموظفون", icon: "Truck",           enabled: true,  order: 21 },
-  { id: "fleet-assignments",   label: "تعيينات المركبات",    path: "/admin-panel/fleet-assignments",  group: "الأصول والموظفون", icon: "Link2",           enabled: true,  order: 22 },
-  { id: "attendance",          label: "الحضور والانصراف",    path: "/admin-panel/attendance",          group: "الموارد البشرية",  icon: "Clock",           enabled: true,  order: 23 },
-  { id: "approvals",           label: "الاعتمادات",           path: "/admin-panel/approvals",          group: "النظام",           icon: "CheckCircle2",    enabled: true,  order: 24 },
-  { id: "tasks",               label: "المهام",               path: "/admin-panel/tasks",              group: "النظام",           icon: "ListTodo",        enabled: true,  order: 25 },
-  { id: "notifications",       label: "الإشعارات",            path: "/admin-panel/notifications",      group: "النظام",           icon: "Bell",            enabled: true,  order: 26 },
-  { id: "audit-log",           label: "سجل التدقيق",         path: "/admin-panel/audit-log",          group: "النظام",           icon: "ScrollText",      enabled: true,  order: 27 },
-  { id: "email-logs",          label: "سجل الإيميلات",       path: "/admin-panel/email-logs",         group: "النظام",           icon: "Mail",            enabled: true,  order: 28 },
-  { id: "risk",                label: "إدارة المخاطر",       path: "/admin-panel/risk",               group: "النظام",           icon: "ShieldAlert",     enabled: true,  order: 29 },
-  { id: "reactivation",        label: "إعادة التفعيل",       path: "/admin-panel/reactivation",       group: "النظام",           icon: "UserCheck",       enabled: true,  order: 30 },
-  { id: "ai-reports",          label: "تقارير AI",           path: "/admin-panel/ai-reports",         group: "النظام",           icon: "Sparkles",        enabled: true,  order: 31, permission: "reports" },
-  { id: "settings",              label: "الإعدادات",           path: "/admin-panel/settings",               group: "النظام",            icon: "Settings2",       enabled: true,  order: 32, isCore: true },
-  { id: "pagebuilder",           label: "منشئ الصفحات",        path: "/admin-panel/page-builder",           group: "النظام",            icon: "LayoutDashboard", enabled: true,  order: 33, isCore: true },
+  {
+    id: "dashboard",
+    label: "الرئيسية",
+    path: "/admin-panel/dashboard",
+    group: "التشغيل",
+    icon: "LayoutDashboard",
+    enabled: true,
+    order: 0,
+    isCore: true,
+  },
+  {
+    id: "couriers",
+    label: "المناديب",
+    path: "/admin-panel/couriers",
+    group: "التشغيل",
+    icon: "Users",
+    enabled: true,
+    order: 1,
+  },
+  {
+    id: "orders",
+    label: "الطلبات",
+    path: "/admin-panel/orders",
+    group: "التشغيل",
+    icon: "ClipboardList",
+    enabled: true,
+    order: 2,
+  },
+  {
+    id: "complaints",
+    label: "الشكاوى",
+    path: "/admin-panel/complaints",
+    group: "التشغيل",
+    icon: "MessageSquare",
+    enabled: true,
+    order: 3,
+  },
+  {
+    id: "dispatch",
+    label: "الخريطة والإرسال",
+    path: "/admin-panel/dispatch",
+    group: "التشغيل",
+    icon: "Map",
+    enabled: true,
+    order: 4,
+  },
+  {
+    id: "finance-dashboard",
+    label: "لوحة المالية",
+    path: "/admin-panel/finance-dashboard",
+    group: "المالية والموارد",
+    icon: "LayoutDashboard",
+    enabled: true,
+    order: 5,
+    permission: "finance",
+  },
+  {
+    id: "revenue",
+    label: "الإيرادات",
+    path: "/admin-panel/revenue",
+    group: "المالية والموارد",
+    icon: "TrendingUp",
+    enabled: true,
+    order: 6,
+    permission: "finance",
+  },
+  {
+    id: "expenses",
+    label: "المصروفات",
+    path: "/admin-panel/expenses",
+    group: "المالية والموارد",
+    icon: "Receipt",
+    enabled: true,
+    order: 7,
+    permission: "finance",
+  },
+  {
+    id: "cashflow",
+    label: "التدفقات النقدية",
+    path: "/admin-panel/cashflow",
+    group: "المالية والموارد",
+    icon: "ArrowRightLeft",
+    enabled: true,
+    order: 8,
+    permission: "finance",
+  },
+  {
+    id: "financial-reports",
+    label: "التقارير المالية",
+    path: "/admin-panel/financial-reports",
+    group: "المالية والموارد",
+    icon: "FileText",
+    enabled: true,
+    order: 9,
+    permission: "finance",
+  },
+  {
+    id: "ai-finance",
+    label: "تحليل AI المالي",
+    path: "/admin-panel/ai-finance",
+    group: "المالية والموارد",
+    icon: "Brain",
+    enabled: true,
+    order: 10,
+    permission: "finance",
+  },
+  {
+    id: "finance",
+    label: "الرواتب والمالية",
+    path: "/admin-panel/finance",
+    group: "المالية والموارد",
+    icon: "Wallet",
+    enabled: true,
+    order: 11,
+    permission: "finance",
+  },
+  {
+    id: "wallet",
+    label: "محافظ السائقين",
+    path: "/admin-panel/wallet",
+    group: "المالية والموارد",
+    icon: "Landmark",
+    enabled: true,
+    order: 12,
+    permission: "finance",
+  },
+  {
+    id: "reconciliation",
+    label: "مطابقة مالية",
+    path: "/admin-panel/reconciliation",
+    group: "المالية والموارد",
+    icon: "GitCompare",
+    enabled: true,
+    order: 13,
+    permission: "finance",
+  },
+  {
+    id: "reports",
+    label: "التقارير",
+    path: "/admin-panel/reports",
+    group: "المالية والموارد",
+    icon: "BarChart3",
+    enabled: true,
+    order: 14,
+    permission: "reports",
+  },
+  {
+    id: "excel",
+    label: "استيراد Excel",
+    path: "/admin-panel/excel",
+    group: "المالية والموارد",
+    icon: "FileSpreadsheet",
+    enabled: true,
+    order: 15,
+    permission: "excel",
+  },
+  {
+    id: "vehicles",
+    label: "المركبات",
+    path: "/admin-panel/vehicles",
+    group: "الأصول والموظفون",
+    icon: "Car",
+    enabled: true,
+    order: 16,
+  },
+  {
+    id: "staff",
+    label: "الأقسام والموظفين",
+    path: "/admin-panel/staff",
+    group: "الموارد البشرية",
+    icon: "Building2",
+    enabled: true,
+    order: 17,
+  },
+  {
+    id: "shipments",
+    label: "الشحنات",
+    path: "/admin-panel/shipments",
+    group: "التشغيل",
+    icon: "Package",
+    enabled: false,
+    order: 18,
+    permission: "orders",
+  },
+  {
+    id: "invoices",
+    label: "الفواتير",
+    path: "/admin-panel/invoices",
+    group: "المالية والموارد",
+    icon: "FileCheck",
+    enabled: true,
+    order: 19,
+    permission: "finance",
+  },
+  {
+    id: "payouts",
+    label: "إدارة الدفعات",
+    path: "/admin-panel/payouts",
+    group: "المالية والموارد",
+    icon: "CreditCard",
+    enabled: true,
+    order: 20,
+    permission: "finance",
+  },
+  {
+    id: "fleet",
+    label: "إدارة الأسطول",
+    path: "/admin-panel/fleet",
+    group: "الأصول والموظفون",
+    icon: "Truck",
+    enabled: true,
+    order: 21,
+  },
+  {
+    id: "fleet-assignments",
+    label: "تعيينات المركبات",
+    path: "/admin-panel/fleet-assignments",
+    group: "الأصول والموظفون",
+    icon: "Link2",
+    enabled: true,
+    order: 22,
+  },
+  {
+    id: "attendance",
+    label: "الحضور والانصراف",
+    path: "/admin-panel/attendance",
+    group: "الموارد البشرية",
+    icon: "Clock",
+    enabled: true,
+    order: 23,
+  },
+  {
+    id: "approvals",
+    label: "الاعتمادات",
+    path: "/admin-panel/approvals",
+    group: "النظام",
+    icon: "CheckCircle2",
+    enabled: true,
+    order: 24,
+  },
+  {
+    id: "tasks",
+    label: "المهام",
+    path: "/admin-panel/tasks",
+    group: "النظام",
+    icon: "ListTodo",
+    enabled: true,
+    order: 25,
+  },
+  {
+    id: "notifications",
+    label: "الإشعارات",
+    path: "/admin-panel/notifications",
+    group: "النظام",
+    icon: "Bell",
+    enabled: true,
+    order: 26,
+  },
+  {
+    id: "audit-log",
+    label: "سجل التدقيق",
+    path: "/admin-panel/audit-log",
+    group: "النظام",
+    icon: "ScrollText",
+    enabled: true,
+    order: 27,
+  },
+  {
+    id: "email-logs",
+    label: "سجل الإيميلات",
+    path: "/admin-panel/email-logs",
+    group: "النظام",
+    icon: "Mail",
+    enabled: true,
+    order: 28,
+  },
+  {
+    id: "risk",
+    label: "إدارة المخاطر",
+    path: "/admin-panel/risk",
+    group: "النظام",
+    icon: "ShieldAlert",
+    enabled: true,
+    order: 29,
+  },
+  {
+    id: "reactivation",
+    label: "إعادة التفعيل",
+    path: "/admin-panel/reactivation",
+    group: "النظام",
+    icon: "UserCheck",
+    enabled: true,
+    order: 30,
+  },
+  {
+    id: "ai-reports",
+    label: "تقارير AI",
+    path: "/admin-panel/ai-reports",
+    group: "النظام",
+    icon: "Sparkles",
+    enabled: true,
+    order: 31,
+    permission: "reports",
+  },
+  {
+    id: "settings",
+    label: "الإعدادات",
+    path: "/admin-panel/settings",
+    group: "النظام",
+    icon: "Settings2",
+    enabled: true,
+    order: 32,
+    isCore: true,
+  },
+  {
+    id: "pagebuilder",
+    label: "منشئ الصفحات",
+    path: "/admin-panel/page-builder",
+    group: "النظام",
+    icon: "LayoutDashboard",
+    enabled: true,
+    order: 33,
+    isCore: true,
+  },
   // ── New feature pages ──
-  { id: "driver-applications",   label: "طلبات السائقين",      path: "/admin-panel/driver-applications",    group: "السائقون",          icon: "Users",           enabled: true,  order: 34 },
-  { id: "kyc",                   label: "وثائق KYC",           path: "/admin-panel/kyc",                    group: "السائقون",          icon: "Shield",          enabled: true,  order: 35 },
-  { id: "driver-training",       label: "تدريب السائقين",      path: "/admin-panel/driver-training",        group: "السائقون",          icon: "GraduationCap",   enabled: true,  order: 36 },
-  { id: "bank-alerts",           label: "تنبيهات بنكية",       path: "/admin-panel/bank-alerts",            group: "المالية والموارد", icon: "Landmark",        enabled: true,  order: 37, permission: "finance" },
-  { id: "finance-close",         label: "الإغلاق اليومي",      path: "/admin-panel/finance-close",          group: "المالية والموارد", icon: "Lock",            enabled: true,  order: 38, permission: "finance" },
-  { id: "monthly-report",        label: "التقرير الشهري",      path: "/admin-panel/monthly-report",         group: "المالية والموارد", icon: "FileText",        enabled: true,  order: 39, permission: "finance" },
-  { id: "sla",                   label: "مراقبة SLA",          path: "/admin-panel/sla",                    group: "التشغيل",           icon: "Target",          enabled: true,  order: 40 },
-  { id: "marketplace",           label: "تكاملات المنصات",     path: "/admin-panel/marketplace",            group: "التشغيل",           icon: "Plug",            enabled: true,  order: 41 },
-  { id: "n8n-workflows",         label: "سير العمل (n8n)",    path: "/admin-panel/n8n-workflows",          group: "النظام",            icon: "Zap",             enabled: true,  order: 42 },
-  { id: "accounting-components", label: "المكونات المحاسبية", path: "/admin-panel/accounting-components", group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 43, permission: "finance" },
-  { id: "payout-workflow",       label: "سير عمل الدفع",      path: "/admin-panel/payout-workflow",       group: "المالية والموارد", icon: "GitBranch",       enabled: true,  order: 44, permission: "finance" },
-  { id: "payroll-calculator",   label: "حاسبة الرواتب",      path: "/admin-panel/payroll-calculator",   group: "المالية والموارد", icon: "Calculator",      enabled: true,  order: 45, permission: "finance" },
-  { id: "help-guide",           label: "الإرشادات",           path: "/admin-panel/help-guide",           group: "النظام",            icon: "HelpCircle",      enabled: true,  order: 46, isCore: true },
+  {
+    id: "driver-applications",
+    label: "طلبات السائقين",
+    path: "/admin-panel/driver-applications",
+    group: "السائقون",
+    icon: "Users",
+    enabled: true,
+    order: 34,
+  },
+  {
+    id: "kyc",
+    label: "وثائق KYC",
+    path: "/admin-panel/kyc",
+    group: "السائقون",
+    icon: "Shield",
+    enabled: true,
+    order: 35,
+  },
+  {
+    id: "driver-training",
+    label: "تدريب السائقين",
+    path: "/admin-panel/driver-training",
+    group: "السائقون",
+    icon: "GraduationCap",
+    enabled: true,
+    order: 36,
+  },
+  {
+    id: "bank-alerts",
+    label: "تنبيهات بنكية",
+    path: "/admin-panel/bank-alerts",
+    group: "المالية والموارد",
+    icon: "Landmark",
+    enabled: true,
+    order: 37,
+    permission: "finance",
+  },
+  {
+    id: "finance-close",
+    label: "الإغلاق اليومي",
+    path: "/admin-panel/finance-close",
+    group: "المالية والموارد",
+    icon: "Lock",
+    enabled: true,
+    order: 38,
+    permission: "finance",
+  },
+  {
+    id: "monthly-report",
+    label: "التقرير الشهري",
+    path: "/admin-panel/monthly-report",
+    group: "المالية والموارد",
+    icon: "FileText",
+    enabled: true,
+    order: 39,
+    permission: "finance",
+  },
+  {
+    id: "sla",
+    label: "مراقبة SLA",
+    path: "/admin-panel/sla",
+    group: "التشغيل",
+    icon: "Target",
+    enabled: true,
+    order: 40,
+  },
+  {
+    id: "marketplace",
+    label: "تكاملات المنصات",
+    path: "/admin-panel/marketplace",
+    group: "التشغيل",
+    icon: "Plug",
+    enabled: true,
+    order: 41,
+  },
+  {
+    id: "n8n-workflows",
+    label: "سير العمل (n8n)",
+    path: "/admin-panel/n8n-workflows",
+    group: "النظام",
+    icon: "Zap",
+    enabled: true,
+    order: 42,
+  },
+  {
+    id: "accounting-components",
+    label: "المكونات المحاسبية",
+    path: "/admin-panel/accounting-components",
+    group: "المالية والموارد",
+    icon: "Calculator",
+    enabled: true,
+    order: 43,
+    permission: "finance",
+  },
+  {
+    id: "payout-workflow",
+    label: "سير عمل الدفع",
+    path: "/admin-panel/payout-workflow",
+    group: "المالية والموارد",
+    icon: "GitBranch",
+    enabled: true,
+    order: 44,
+    permission: "finance",
+  },
+  {
+    id: "payroll-calculator",
+    label: "حاسبة الرواتب",
+    path: "/admin-panel/payroll-calculator",
+    group: "المالية والموارد",
+    icon: "Calculator",
+    enabled: true,
+    order: 45,
+    permission: "finance",
+  },
+  {
+    id: "help-guide",
+    label: "الإرشادات",
+    path: "/admin-panel/help-guide",
+    group: "النظام",
+    icon: "HelpCircle",
+    enabled: true,
+    order: 46,
+    isCore: true,
+  },
   // ── الموارد البشرية (إضافات) ──
-  { id: "driver-classifications", label: "تصنيف السائقين",    path: "/admin-panel/driver-classifications", group: "الموارد البشرية", icon: "Users",           enabled: true,  order: 47 },
-  { id: "payroll-management",     label: "إدارة الرواتب",      path: "/admin-panel/payroll-management",     group: "الموارد البشرية", icon: "Wallet",          enabled: true,  order: 48, permission: "finance" },
+  {
+    id: "driver-classifications",
+    label: "تصنيف السائقين",
+    path: "/admin-panel/driver-classifications",
+    group: "الموارد البشرية",
+    icon: "Users",
+    enabled: true,
+    order: 47,
+  },
+  {
+    id: "payroll-management",
+    label: "إدارة الرواتب",
+    path: "/admin-panel/payroll-management",
+    group: "الموارد البشرية",
+    icon: "Wallet",
+    enabled: true,
+    order: 48,
+    permission: "finance",
+  },
 ];
 
 const STORAGE_KEY = "fll_page_config_v2";
@@ -188,12 +614,19 @@ interface DragState {
 export default function PageBuilder() {
   const [pages, setPages] = useState<PageConfig[]>(loadConfig);
   const [saved, setSaved] = useState(false);
-  const [drag, setDrag] = useState<DragState>({ dragIndex: null, overIndex: null });
+  const [drag, setDrag] = useState<DragState>({
+    dragIndex: null,
+    overIndex: null,
+  });
 
   const groups = Array.from(new Set(pages.map((p) => p.group)));
 
   function toggleEnabled(id: string) {
-    setPages((prev) => prev.map((p) => (p.id === id && !p.isCore ? { ...p, enabled: !p.enabled } : p)));
+    setPages((prev) =>
+      prev.map((p) =>
+        p.id === id && !p.isCore ? { ...p, enabled: !p.enabled } : p,
+      ),
+    );
     setSaved(false);
   }
 
@@ -233,7 +666,17 @@ export default function PageBuilder() {
     setPages(ordered);
     setSaved(true);
     if (supabase) {
-      supabase.from("page_builder_config").upsert(ordered.map((p) => ({ id: p.id, enabled: p.enabled, order: p.order })), { onConflict: "id" }).then(() => {});
+      supabase
+        .from("page_builder_config")
+        .upsert(
+          ordered.map((p) => ({
+            id: p.id,
+            enabled: p.enabled,
+            order: p.order,
+          })),
+          { onConflict: "id" },
+        )
+        .then(() => {});
     }
     setTimeout(() => setSaved(false), 2500);
   }
@@ -253,23 +696,55 @@ export default function PageBuilder() {
         subtitle="تحكّم في ترتيب الصفحات وتفعيلها داخل الشريط الجانبي"
         actions={
           <>
-            <Button variant="ghost" icon={RotateCcw} onClick={handleReset}>إعادة تعيين</Button>
-            <Button icon={saved ? CheckCircle2 : Save} onClick={handleSave}>{saved ? "تم الحفظ" : "حفظ التغييرات"}</Button>
+            <Button variant="ghost" icon={RotateCcw} onClick={handleReset}>
+              إعادة تعيين
+            </Button>
+            <Button icon={saved ? CheckCircle2 : Save} onClick={handleSave}>
+              {saved ? "تم الحفظ" : "حفظ التغييرات"}
+            </Button>
           </>
         }
       />
 
       <KPIGrid cols="repeat(3, minmax(0, 1fr))">
-        <KPICard label="إجمالي الصفحات" value={pages.length} icon={LayoutDashboard} accent="var(--con-brand)" />
-        <KPICard label="مفعّلة" value={pages.filter((p) => p.enabled).length} icon={Eye} accent="var(--con-success)" />
-        <KPICard label="معطّلة" value={pages.filter((p) => !p.enabled).length} icon={EyeOff} accent="var(--con-danger)" />
+        <KPICard
+          label="إجمالي الصفحات"
+          value={pages.length}
+          icon={LayoutDashboard}
+          accent="var(--con-brand)"
+        />
+        <KPICard
+          label="مفعّلة"
+          value={pages.filter((p) => p.enabled).length}
+          icon={Eye}
+          accent="var(--con-success)"
+        />
+        <KPICard
+          label="معطّلة"
+          value={pages.filter((p) => !p.enabled).length}
+          icon={EyeOff}
+          accent="var(--con-danger)"
+        />
       </KPIGrid>
 
       <Card>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", lineHeight: 1.6 }}>
-          <Info size={14} style={{ color: "var(--con-info)", flexShrink: 0, marginTop: 2 }} />
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            fontSize: "var(--con-text-caption)",
+            color: "var(--con-text-secondary)",
+            lineHeight: 1.6,
+          }}
+        >
+          <Info
+            size={14}
+            style={{ color: "var(--con-info)", flexShrink: 0, marginTop: 2 }}
+          />
           <span>
-            اسحب الصفوف لإعادة الترتيب. الصفحات الأساسية ({pages.filter((p) => p.isCore).length}) لا يمكن إيقافها. التغييرات تُحفظ في المتصفح وتُزامَن مع قاعدة البيانات عند الضغط على حفظ.
+            اسحب الصفوف لإعادة الترتيب. الصفحات الأساسية (
+            {pages.filter((p) => p.isCore).length}) لا يمكن إيقافها. التغييرات
+            تُحفظ في المتصفح وتُزامَن مع قاعدة البيانات عند الضغط على حفظ.
           </span>
         </div>
       </Card>
@@ -297,26 +772,92 @@ export default function PageBuilder() {
                       gap: "0.75rem",
                       padding: "0.9rem 1rem",
                       borderRadius: "var(--con-radius)",
-                      background: isDraggingThis ? "var(--con-bg-elevated)" : isOver ? "var(--con-brand-subtle)" : "var(--con-bg-surface-2)",
+                      background: isDraggingThis
+                        ? "var(--con-bg-elevated)"
+                        : isOver
+                          ? "var(--con-brand-subtle)"
+                          : "var(--con-bg-surface-2)",
                       border: `1px solid ${isOver ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
                       opacity: isDraggingThis ? 0.55 : 1,
                       transition: "all 0.15s",
                       cursor: "grab",
                     }}
                   >
-                    <GripVertical size={15} style={{ color: "var(--con-text-muted)", flexShrink: 0 }} />
-                    <div style={{ width: 34, height: 34, borderRadius: "var(--con-radius-sm)", background: page.enabled ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", border: `1px solid ${page.enabled ? "var(--con-border-brand)" : "var(--con-border-default)"}`, display: "flex", alignItems: "center", justifyContent: "center", color: page.enabled ? "var(--con-brand)" : "var(--con-text-muted)", flexShrink: 0 }}>
+                    <GripVertical
+                      size={15}
+                      style={{ color: "var(--con-text-muted)", flexShrink: 0 }}
+                    />
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "var(--con-radius-sm)",
+                        background: page.enabled
+                          ? "var(--con-brand-subtle)"
+                          : "var(--con-bg-elevated)",
+                        border: `1px solid ${page.enabled ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: page.enabled
+                          ? "var(--con-brand)"
+                          : "var(--con-text-muted)",
+                        flexShrink: 0,
+                      }}
+                    >
                       <PageIcon name={page.icon} size={14} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: page.enabled ? "var(--con-text-primary)" : "var(--con-text-muted)" }}>{page.label}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: page.enabled
+                              ? "var(--con-text-primary)"
+                              : "var(--con-text-muted)",
+                          }}
+                        >
+                          {page.label}
+                        </span>
                         {page.isCore && <Badge variant="muted">أساسي</Badge>}
-                        {page.permission && <Badge variant="brand">{page.permission}</Badge>}
+                        {page.permission && (
+                          <Badge variant="brand">{page.permission}</Badge>
+                        )}
                       </div>
-                      <p style={{ fontSize: 11, color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)", margin: "4px 0 0" }}>{page.path}</p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "var(--con-text-muted)",
+                          fontFamily: "var(--con-font-mono)",
+                          margin: "4px 0 0",
+                        }}
+                      >
+                        {page.path}
+                      </p>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--con-font-mono)", color: "var(--con-text-muted)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", borderRadius: 4, padding: "1px 6px", flexShrink: 0 }}>#{page.order + 1}</span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        fontFamily: "var(--con-font-mono)",
+                        color: "var(--con-text-muted)",
+                        background: "var(--con-bg-elevated)",
+                        border: "1px solid var(--con-border-default)",
+                        borderRadius: 4,
+                        padding: "1px 6px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      #{page.order + 1}
+                    </span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -324,12 +865,42 @@ export default function PageBuilder() {
                         toggleEnabled(page.id);
                       }}
                       disabled={page.isCore}
-                      title={page.isCore ? "صفحة أساسية لا يمكن إيقافها" : page.enabled ? "إيقاف الصفحة" : "تفعيل الصفحة"}
-                      style={{ background: "none", border: "none", cursor: page.isCore ? "not-allowed" : "pointer", display: "flex", alignItems: "center", padding: 2, color: page.isCore ? "var(--con-text-muted)" : page.enabled ? "var(--con-success)" : "var(--con-border-strong)", opacity: page.isCore ? 0.45 : 1 }}
+                      title={
+                        page.isCore
+                          ? "صفحة أساسية لا يمكن إيقافها"
+                          : page.enabled
+                            ? "إيقاف الصفحة"
+                            : "تفعيل الصفحة"
+                      }
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: page.isCore ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: 2,
+                        color: page.isCore
+                          ? "var(--con-text-muted)"
+                          : page.enabled
+                            ? "var(--con-success)"
+                            : "var(--con-border-strong)",
+                        opacity: page.isCore ? 0.45 : 1,
+                      }}
                     >
-                      {page.enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+                      {page.enabled ? (
+                        <ToggleRight size={22} />
+                      ) : (
+                        <ToggleLeft size={22} />
+                      )}
                     </button>
-                    <div style={{ color: page.enabled ? "var(--con-text-muted)" : "var(--con-border-strong)", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        color: page.enabled
+                          ? "var(--con-text-muted)"
+                          : "var(--con-border-strong)",
+                        flexShrink: 0,
+                      }}
+                    >
                       {page.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
                     </div>
                   </div>

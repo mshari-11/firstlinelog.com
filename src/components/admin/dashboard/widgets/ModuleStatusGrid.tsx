@@ -53,14 +53,22 @@ export function ModuleStatusGrid() {
                     borderRadius: "var(--con-radius-sm)",
                     fontSize: "var(--con-text-caption)",
                     fontWeight: 500,
-                    background: mod.enabled ? "var(--con-brand-subtle)" : "rgba(255,255,255,0.03)",
-                    color: mod.enabled ? "var(--con-brand)" : "var(--con-text-disabled)",
+                    background: mod.enabled
+                      ? "var(--con-brand-subtle)"
+                      : "rgba(255,255,255,0.03)",
+                    color: mod.enabled
+                      ? "var(--con-brand)"
+                      : "var(--con-text-disabled)",
                     border: `1px solid ${mod.enabled ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
                     cursor: "pointer",
                     transition: "all 0.15s",
                   }}
                 >
-                  {mod.enabled ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                  {mod.enabled ? (
+                    <CheckCircle size={10} />
+                  ) : (
+                    <XCircle size={10} />
+                  )}
                   {mod.labelAr}
                   {mod.badge && (
                     <span

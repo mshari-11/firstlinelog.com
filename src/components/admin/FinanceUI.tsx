@@ -2,7 +2,12 @@
  * مكونات مشتركة لصفحات المالية - Shared Finance UI Components
  * Unified KPI cards, chart wrappers, tables, badges, and page headers
  */
-import { ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 
 // ─── Chart Tooltip Style ─────────────────────────────────────────────────────
 export const chartTooltipStyle = {
@@ -28,21 +33,37 @@ export interface KPICardProps {
 }
 
 export function KPICard({
-  label, value, change, changeLabel, icon: Icon, accent, warning, loading, invertChange,
+  label,
+  value,
+  change,
+  changeLabel,
+  icon: Icon,
+  accent,
+  warning,
+  loading,
+  invertChange,
 }: KPICardProps) {
   const effectiveAccent = warning ? "var(--con-warning)" : accent;
 
   if (loading) {
     return (
-      <div style={{
-        background: "var(--con-bg-surface-1)",
-        border: "1px solid var(--con-border-default)",
-        borderRadius: 10,
-        padding: "18px 16px",
-        minHeight: 130,
-      }}>
-        <div className="con-skeleton" style={{ height: 14, width: "60%", marginBottom: 12 }} />
-        <div className="con-skeleton" style={{ height: 28, width: "80%", marginBottom: 12 }} />
+      <div
+        style={{
+          background: "var(--con-bg-surface-1)",
+          border: "1px solid var(--con-border-default)",
+          borderRadius: 10,
+          padding: "18px 16px",
+          minHeight: 130,
+        }}
+      >
+        <div
+          className="con-skeleton"
+          style={{ height: 14, width: "60%", marginBottom: 12 }}
+        />
+        <div
+          className="con-skeleton"
+          style={{ height: 28, width: "80%", marginBottom: 12 }}
+        />
         <div className="con-skeleton" style={{ height: 12, width: "40%" }} />
       </div>
     );
@@ -50,7 +71,8 @@ export function KPICard({
 
   const changeColor = (() => {
     if (change === undefined) return "";
-    if (invertChange) return change <= 0 ? "var(--con-success)" : "var(--con-warning)";
+    if (invertChange)
+      return change <= 0 ? "var(--con-success)" : "var(--con-warning)";
     return change >= 0 ? "var(--con-success)" : "var(--con-danger)";
   })();
 
@@ -64,33 +86,71 @@ export function KPICard({
         transition: "background 0.2s",
         cursor: "default",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--con-bg-surface-2)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = "var(--con-bg-surface-1)"; }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "var(--con-bg-surface-2)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "var(--con-bg-surface-1)";
+      }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 500 }}>
-          {label}
-        </span>
-        <div style={{
-          background: `${effectiveAccent}14`,
-          borderRadius: 8,
-          padding: "6px",
+      <div
+        style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-        }}>
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
+        <span
+          style={{
+            fontSize: "var(--con-text-caption)",
+            color: "var(--con-text-muted)",
+            fontWeight: 500,
+          }}
+        >
+          {label}
+        </span>
+        <div
+          style={{
+            background: `${effectiveAccent}14`,
+            borderRadius: 8,
+            padding: "6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Icon size={16} style={{ color: effectiveAccent }} />
         </div>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 8 }}>
+      <div
+        style={{
+          fontSize: 28,
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+          marginBottom: 8,
+        }}
+      >
         {value}
       </div>
       {change !== undefined && (
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "var(--con-text-caption)", color: changeColor }}>
-          {(invertChange ? change <= 0 : change >= 0)
-            ? <ArrowUpRight size={14} />
-            : <ArrowDownLeft size={14} />}
-          <span>{Math.abs(change)}%{changeLabel ? ` ${changeLabel}` : ""}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "var(--con-text-caption)",
+            color: changeColor,
+          }}
+        >
+          {(invertChange ? change <= 0 : change >= 0) ? (
+            <ArrowUpRight size={14} />
+          ) : (
+            <ArrowDownLeft size={14} />
+          )}
+          <span>
+            {Math.abs(change)}%{changeLabel ? ` ${changeLabel}` : ""}
+          </span>
         </div>
       )}
     </div>
@@ -98,20 +158,51 @@ export function KPICard({
 }
 
 // ─── Chart Card ──────────────────────────────────────────────────────────────
-export function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+export function ChartCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10,
-      padding: 20,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
+    <div
+      style={{
+        background: "var(--con-bg-surface-1)",
+        border: "1px solid var(--con-border-default)",
+        borderRadius: 10,
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 16,
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "var(--con-text-card-title)",
+            fontWeight: 600,
+            color: "var(--con-text-primary)",
+            margin: 0,
+          }}
+        >
           {title}
         </h3>
         {subtitle && (
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{subtitle}</span>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+            }}
+          >
+            {subtitle}
+          </span>
         )}
       </div>
       {children}
@@ -121,7 +212,10 @@ export function ChartCard({ title, subtitle, children }: { title: string; subtit
 
 // ─── Page Header ─────────────────────────────────────────────────────────────
 export function PageHeader({
-  icon: Icon, title, subtitle, actions,
+  icon: Icon,
+  title,
+  subtitle,
+  actions,
 }: {
   icon: React.ElementType;
   title: string;
@@ -129,24 +223,57 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 12,
+        marginBottom: 24,
+      }}
+    >
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <div style={{
-            background: "rgba(59,130,246,0.12)", borderRadius: 8, padding: 7,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 4,
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(59,130,246,0.12)",
+              borderRadius: 8,
+              padding: 7,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Icon size={18} style={{ color: "var(--con-brand)" }} />
           </div>
-          <h1 style={{
-            fontSize: "var(--con-text-page-title)", fontWeight: 700,
-            color: "var(--con-text-primary)", margin: 0,
-          }}>
+          <h1
+            style={{
+              fontSize: "var(--con-text-page-title)",
+              fontWeight: 700,
+              color: "var(--con-text-primary)",
+              margin: 0,
+            }}
+          >
             {title}
           </h1>
         </div>
         {subtitle && (
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>
+          <p
+            style={{
+              fontSize: "var(--con-text-body)",
+              color: "var(--con-text-muted)",
+              margin: 0,
+              paddingRight: 44,
+            }}
+          >
             {subtitle}
           </p>
         )}
@@ -157,13 +284,40 @@ export function PageHeader({
 }
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
-const statusColors: Record<string, { bg: string; color: string; border: string }> = {
-  completed: { bg: "rgba(34,197,94,0.12)", color: "var(--con-success)", border: "rgba(34,197,94,0.25)" },
-  paid:      { bg: "rgba(34,197,94,0.12)", color: "var(--con-success)", border: "rgba(34,197,94,0.25)" },
-  pending:   { bg: "rgba(217,119,6,0.12)", color: "var(--con-warning)", border: "rgba(217,119,6,0.25)" },
-  rejected:  { bg: "rgba(220,38,38,0.12)", color: "var(--con-danger)",  border: "rgba(220,38,38,0.25)" },
-  failed:    { bg: "rgba(220,38,38,0.12)", color: "var(--con-danger)",  border: "rgba(220,38,38,0.25)" },
-  approved:  { bg: "rgba(14,165,233,0.12)", color: "var(--con-info)",   border: "rgba(14,165,233,0.25)" },
+const statusColors: Record<
+  string,
+  { bg: string; color: string; border: string }
+> = {
+  completed: {
+    bg: "rgba(34,197,94,0.12)",
+    color: "var(--con-success)",
+    border: "rgba(34,197,94,0.25)",
+  },
+  paid: {
+    bg: "rgba(34,197,94,0.12)",
+    color: "var(--con-success)",
+    border: "rgba(34,197,94,0.25)",
+  },
+  pending: {
+    bg: "rgba(217,119,6,0.12)",
+    color: "var(--con-warning)",
+    border: "rgba(217,119,6,0.25)",
+  },
+  rejected: {
+    bg: "rgba(220,38,38,0.12)",
+    color: "var(--con-danger)",
+    border: "rgba(220,38,38,0.25)",
+  },
+  failed: {
+    bg: "rgba(220,38,38,0.12)",
+    color: "var(--con-danger)",
+    border: "rgba(220,38,38,0.25)",
+  },
+  approved: {
+    bg: "rgba(14,165,233,0.12)",
+    color: "var(--con-info)",
+    border: "rgba(14,165,233,0.25)",
+  },
 };
 
 const statusLabels: Record<string, string> = {
@@ -175,19 +329,27 @@ const statusLabels: Record<string, string> = {
   approved: "معتمد",
 };
 
-export function StatusBadge({ status, label }: { status: string; label?: string }) {
+export function StatusBadge({
+  status,
+  label,
+}: {
+  status: string;
+  label?: string;
+}) {
   const s = statusColors[status] || statusColors.pending;
   return (
-    <span style={{
-      padding: "3px 8px",
-      borderRadius: 4,
-      fontSize: "var(--con-text-caption)",
-      fontWeight: 600,
-      background: s.bg,
-      color: s.color,
-      border: `1px solid ${s.border}`,
-      whiteSpace: "nowrap",
-    }}>
+    <span
+      style={{
+        padding: "3px 8px",
+        borderRadius: 4,
+        fontSize: "var(--con-text-caption)",
+        fontWeight: 600,
+        background: s.bg,
+        color: s.color,
+        border: `1px solid ${s.border}`,
+        whiteSpace: "nowrap",
+      }}
+    >
       {label || statusLabels[status] || status}
     </span>
   );
@@ -203,7 +365,10 @@ export interface TableColumn {
 }
 
 export function DataTable({
-  title, columns, data, headerAction,
+  title,
+  columns,
+  data,
+  headerAction,
 }: {
   title: string;
   columns: TableColumn[];
@@ -211,18 +376,31 @@ export function DataTable({
   headerAction?: React.ReactNode;
 }) {
   return (
-    <div style={{
-      background: "var(--con-bg-surface-1)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 10,
-      overflow: "hidden",
-    }}>
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 20px",
-        borderBottom: "1px solid var(--con-border-default)",
-      }}>
-        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
+    <div
+      style={{
+        background: "var(--con-bg-surface-1)",
+        border: "1px solid var(--con-border-default)",
+        borderRadius: 10,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 20px",
+          borderBottom: "1px solid var(--con-border-default)",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "var(--con-text-card-title)",
+            fontWeight: 600,
+            color: "var(--con-text-primary)",
+            margin: 0,
+          }}
+        >
           {title}
         </h3>
         {headerAction}
@@ -230,15 +408,23 @@ export function DataTable({
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)" }}>
+            <tr
+              style={{
+                background: "var(--con-bg-surface-2)",
+                borderBottom: "1px solid var(--con-border-default)",
+              }}
+            >
               {columns.map((col) => (
-                <th key={col.key} style={{
-                  padding: "12px 16px",
-                  textAlign: col.align || "right",
-                  color: "var(--con-text-muted)",
-                  fontSize: "var(--con-text-caption)",
-                  fontWeight: 600,
-                }}>
+                <th
+                  key={col.key}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: col.align || "right",
+                    color: "var(--con-text-muted)",
+                    fontSize: "var(--con-text-caption)",
+                    fontWeight: 600,
+                  }}
+                >
                   {col.label}
                 </th>
               ))}
@@ -246,15 +432,24 @@ export function DataTable({
           </thead>
           <tbody>
             {data.map((row, idx) => (
-              <tr key={idx} style={{ borderBottom: "1px solid var(--con-border-default)", height: 52 }}>
+              <tr
+                key={idx}
+                style={{
+                  borderBottom: "1px solid var(--con-border-default)",
+                  height: 52,
+                }}
+              >
                 {columns.map((col) => (
-                  <td key={col.key} style={{
-                    padding: "12px 16px",
-                    textAlign: col.align || "right",
-                    color: "var(--con-text-primary)",
-                    fontSize: "var(--con-text-body)",
-                    fontFamily: col.mono ? "var(--con-font-mono)" : undefined,
-                  }}>
+                  <td
+                    key={col.key}
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: col.align || "right",
+                      color: "var(--con-text-primary)",
+                      fontSize: "var(--con-text-body)",
+                      fontFamily: col.mono ? "var(--con-font-mono)" : undefined,
+                    }}
+                  >
                     {col.render ? col.render(row[col.key], row) : row[col.key]}
                   </td>
                 ))}
@@ -268,16 +463,34 @@ export function DataTable({
 }
 
 // ─── Metric Row ──────────────────────────────────────────────────────────────
-export function MetricRow({ label, value, accent }: { label: string; value: string; accent: string }) {
+export function MetricRow({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+}) {
   return (
-    <div style={{
-      display: "flex",
-      justifyContent: "space-between",
-      padding: "12px 0",
-      borderBottom: "1px solid var(--con-border-default)",
-    }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "12px 0",
+        borderBottom: "1px solid var(--con-border-default)",
+      }}
+    >
       <span style={{ color: "var(--con-text-muted)" }}>{label}</span>
-      <span style={{ color: accent, fontWeight: 600, fontFamily: "var(--con-font-mono)" }}>{value}</span>
+      <span
+        style={{
+          color: accent,
+          fontWeight: 600,
+          fontFamily: "var(--con-font-mono)",
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }

@@ -6,7 +6,11 @@
       "type": "shell",
       "command": "npm run dev",
       "group": { "kind": "build", "isDefault": true },
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev"
+      },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -22,14 +26,22 @@
       "label": "🌐 Vercel — Preview Deploy",
       "type": "shell",
       "command": "vercel",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "deploy" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "deploy"
+      },
       "problemMatcher": []
     },
     {
       "label": "🌐 Vercel — Production Deploy",
       "type": "shell",
       "command": "vercel --prod",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "deploy" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "deploy"
+      },
       "problemMatcher": []
     },
     {
@@ -43,7 +55,11 @@
       "label": "🌐 Vercel — Logs",
       "type": "shell",
       "command": "vercel logs --follow",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "logs" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "logs"
+      },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -51,7 +67,11 @@
       "label": "📦 Git — Push to Main",
       "type": "shell",
       "command": "git add -A && git commit -m \"${input:commitMessage}\" && git push origin main",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "git" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "git"
+      },
       "problemMatcher": []
     },
     {
@@ -65,7 +85,11 @@
       "label": "🤖 Claude Code — Start",
       "type": "shell",
       "command": "claude",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "ai" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "ai"
+      },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -73,7 +97,11 @@
       "label": "🤖 Claude Code — Continue",
       "type": "shell",
       "command": "claude -c",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "ai" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "ai"
+      },
       "isBackground": true,
       "problemMatcher": []
     },
@@ -88,7 +116,11 @@
       "label": "☁️ AWS — Lambda Logs (last 5min)",
       "type": "shell",
       "command": "aws logs filter-log-events --log-group-name /aws/lambda/${input:lambdaName} --region me-south-1 --start-time ${input:logMinutes} --output text",
-      "presentation": { "reveal": "always", "panel": "dedicated", "group": "logs" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "logs"
+      },
       "problemMatcher": []
     },
     {

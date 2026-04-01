@@ -17,53 +17,110 @@
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  User, Mail, Phone, CreditCard, Building2, MapPin, ChevronRight, ChevronLeft,
-  Camera, Upload, CheckCircle2, Clock, AlertTriangle, Eye, EyeOff,
-  Car, Bike, FileText, Shield, RefreshCw, X, Check, Loader2,
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  Building2,
+  MapPin,
+  ChevronRight,
+  ChevronLeft,
+  Camera,
+  Upload,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  Car,
+  Bike,
+  FileText,
+  Shield,
+  RefreshCw,
+  X,
+  Check,
+  Loader2,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { API_BASE } from "@/lib/api";
 
-// Supabase edge functions for OTP (primary), Lambda API as fallback
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const EDGE_OTP_SEND = `${SUPABASE_URL}/functions/v1/send-otp-email`;
-const EDGE_OTP_VERIFY = `${SUPABASE_URL}/functions/v1/verify-email-otp`;
-
-// Fallback API bases for /driver/apply
-const DRIVER_API_BASES = [
-  API_BASE,
-  "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
-];
-
 const CITIES = [
-  "الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر",
-  "الظهران", "أبها", "تبوك", "القصيم", "حائل", "جيزان", "نجران", "الباحة",
-  "الجوف", "عرعر", "الطائف", "ينبع", "الجبيل",
+  "الرياض",
+  "جدة",
+  "مكة المكرمة",
+  "المدينة المنورة",
+  "الدمام",
+  "الخبر",
+  "الظهران",
+  "أبها",
+  "تبوك",
+  "القصيم",
+  "حائل",
+  "جيزان",
+  "نجران",
+  "الباحة",
+  "الجوف",
+  "عرعر",
+  "الطائف",
+  "ينبع",
+  "الجبيل",
 ];
 
-const PLATFORMS = ["جاهز", "هنقرستيشن", "طلبات", "نون", "كريم", "كيتا", "ذا شيفز", "إكسبريس"];
+const PLATFORMS = [
+  "جاهز",
+  "هنقرستيشن",
+  "طلبات",
+  "نون",
+  "كريم",
+  "كيتا",
+  "ذا شيفز",
+  "إكسبريس",
+];
 
 const BANKS = [
-  "البنك الأهلي السعودي", "بنك الراجحي", "بنك الرياض", "البنك السعودي الفرنسي",
-  "البنك السعودي للاستثمار", "بنك البلاد", "بنك الجزيرة", "مصرف الإنماء",
-  "البنك العربي الوطني", "بنك سامبا",
+  "البنك الأهلي السعودي",
+  "بنك الراجحي",
+  "بنك الرياض",
+  "البنك السعودي الفرنسي",
+  "البنك السعودي للاستثمار",
+  "بنك البلاد",
+  "بنك الجزيرة",
+  "مصرف الإنماء",
+  "البنك العربي الوطني",
+  "بنك سامبا",
 ];
 
 const VEHICLE_BRANDS = [
-  "تويوتا", "هيونداي", "كيا", "هوندا", "ميتسوبيشي", "نيسان", "يامها", "هوندا (دراجة)",
-  "سوزوكي", "كاواساكي", "شيفروليه", "فورد", "بي إم دبليو", "مرسيدس",
+  "تويوتا",
+  "هيونداي",
+  "كيا",
+  "هوندا",
+  "ميتسوبيشي",
+  "نيسان",
+  "يامها",
+  "هوندا (دراجة)",
+  "سوزوكي",
+  "كاواساكي",
+  "شيفروليه",
+  "فورد",
+  "بي إم دبليو",
+  "مرسيدس",
 ];
 
 const CONTRACT_TYPES: { value: string; label: string; desc: string }[] = [
-  { value: "freelance",  label: "مستقل",   desc: "دوام مرن حسب الطلب" },
-  { value: "part_time",  label: "جزئي",    desc: "ساعات محددة يومياً" },
-  { value: "full_time",  label: "كامل",    desc: "دوام كامل 8 ساعات" },
+  { value: "freelance", label: "مستقل", desc: "دوام مرن حسب الطلب" },
+  { value: "part_time", label: "جزئي", desc: "ساعات محددة يومياً" },
+  { value: "full_time", label: "كامل", desc: "دوام كامل 8 ساعات" },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -110,15 +167,40 @@ interface FormData {
 }
 
 const EMPTY_FORM: FormData = {
-  full_name: "", national_id: "", nationality: "سعودي", city: "", phone: "",
-  email: "", platform_app: "", contract_type: "", bank_name: "", bank_account: "",
-  iban: "", stc_bank_phone: "", captchaAnswer: "", otpCode: "", emailVerified: false,
-  selfieDataUrl: "", livenessComplete: false, livenessScore: 0,
-  doc_national_id: null, doc_national_id_back: null, doc_driver_license: null, doc_bank_cert: null,
-  has_vehicle: false, vehicle_type: "", vehicle_brand: "", vehicle_model: "",
-  vehicle_year: "", vehicle_plate: "", vehicle_color: "",
-  doc_vehicle_front: null, doc_vehicle_back: null, doc_vehicle_side: null,
-  doc_vehicle_reg: null, doc_vehicle_insurance: null,
+  full_name: "",
+  national_id: "",
+  nationality: "سعودي",
+  city: "",
+  phone: "",
+  email: "",
+  platform_app: "",
+  contract_type: "",
+  bank_name: "",
+  bank_account: "",
+  iban: "",
+  stc_bank_phone: "",
+  captchaAnswer: "",
+  otpCode: "",
+  emailVerified: false,
+  selfieDataUrl: "",
+  livenessComplete: false,
+  livenessScore: 0,
+  doc_national_id: null,
+  doc_national_id_back: null,
+  doc_driver_license: null,
+  doc_bank_cert: null,
+  has_vehicle: false,
+  vehicle_type: "",
+  vehicle_brand: "",
+  vehicle_model: "",
+  vehicle_year: "",
+  vehicle_plate: "",
+  vehicle_color: "",
+  doc_vehicle_front: null,
+  doc_vehicle_back: null,
+  doc_vehicle_side: null,
+  doc_vehicle_reg: null,
+  doc_vehicle_insurance: null,
 };
 
 // ─── Device fingerprint (lightweight, no external lib) ────────────────────────
@@ -147,7 +229,8 @@ function generateCaptcha() {
   if (op === "+") answer = a + b;
   else if (op === "-") answer = Math.max(a, b) - Math.min(a, b);
   else answer = a * b;
-  const q = op === "-" ? `${Math.max(a, b)} - ${Math.min(a, b)}` : `${a} ${op} ${b}`;
+  const q =
+    op === "-" ? `${Math.max(a, b)} - ${Math.min(a, b)}` : `${a} ${op} ${b}`;
   return { question: `ما ناتج: ${q} ؟`, answer: String(answer) };
 }
 
@@ -177,14 +260,19 @@ function compressImage(file: File): Promise<string> {
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      if (!ctx) {
+        reject(new Error("Canvas not supported"));
+        return;
+      }
       ctx.drawImage(img, 0, 0, w, h);
       const dataUrl = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
       resolve(dataUrl.split(",")[1]);
     };
     img.onerror = reject;
     const reader = new FileReader();
-    reader.onload = () => { img.src = reader.result as string; };
+    reader.onload = () => {
+      img.src = reader.result as string;
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -206,31 +294,80 @@ const STEPS = [
 
 function StepBar({ current }: { current: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: "2rem", overflowX: "auto", padding: "0.5rem 0" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        marginBottom: "2rem",
+        overflowX: "auto",
+        padding: "0.5rem 0",
+      }}
+    >
       {STEPS.map((s, i) => (
-        <div key={s.num} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : undefined }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem", minWidth: "56px" }}>
-            <div style={{
-              width: "32px", height: "32px", borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "13px", fontWeight: 700,
-              background: s.num < current ? "#16a34a" : s.num === current ? "#2563eb" : "#1e293b",
-              color: s.num <= current ? "#fff" : "#64748b",
-              border: s.num === current ? "2px solid #3b82f6" : "2px solid transparent",
-              transition: "all 0.3s",
-            }}>
+        <div
+          key={s.num}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flex: i < STEPS.length - 1 ? 1 : undefined,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.25rem",
+              minWidth: "56px",
+            }}
+          >
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "13px",
+                fontWeight: 700,
+                background:
+                  s.num < current
+                    ? "#16a34a"
+                    : s.num === current
+                      ? "#2563eb"
+                      : "#1e293b",
+                color: s.num <= current ? "#fff" : "#64748b",
+                border:
+                  s.num === current
+                    ? "2px solid #3b82f6"
+                    : "2px solid transparent",
+                transition: "all 0.3s",
+              }}
+            >
               {s.num < current ? <Check size={14} /> : s.num}
             </div>
-            <span style={{ fontSize: "10px", color: s.num === current ? "#93c5fd" : "#475569", whiteSpace: "nowrap" }}>
+            <span
+              style={{
+                fontSize: "10px",
+                color: s.num === current ? "#93c5fd" : "#475569",
+                whiteSpace: "nowrap",
+              }}
+            >
               {s.label}
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div style={{
-              flex: 1, height: "2px", marginBottom: "18px",
-              background: s.num < current ? "#16a34a" : "#1e293b",
-              transition: "background 0.3s",
-            }} />
+            <div
+              style={{
+                flex: 1,
+                height: "2px",
+                marginBottom: "18px",
+                background: s.num < current ? "#16a34a" : "#1e293b",
+                transition: "background 0.3s",
+              }}
+            />
           )}
         </div>
       ))}
@@ -239,18 +376,43 @@ function StepBar({ current }: { current: number }) {
 }
 
 // ─── Field wrapper ─────────────────────────────────────────────────────────────
-function Field({ label, icon: Icon, error, children }: {
-  label: string; icon?: React.ElementType; error?: string; children: React.ReactNode;
+function Field({
+  label,
+  icon: Icon,
+  error,
+  children,
+}: {
+  label: string;
+  icon?: React.ElementType;
+  error?: string;
+  children: React.ReactNode;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-      <label style={{ fontSize: "13px", fontWeight: 600, color: "#cbd5e1", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+      <label
+        style={{
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "#cbd5e1",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.375rem",
+        }}
+      >
         {Icon && <Icon size={13} style={{ color: "#60a5fa" }} />}
         {label}
       </label>
       {children}
       {error && (
-        <span style={{ fontSize: "11px", color: "#f87171", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            color: "#f87171",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+          }}
+        >
           <AlertTriangle size={11} /> {error}
         </span>
       )}
@@ -260,10 +422,15 @@ function Field({ label, icon: Icon, error, children }: {
 
 // ─── Input style ──────────────────────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "0.625rem 0.875rem",
-  background: "#0f2744", border: "1px solid #1e3a5f",
-  borderRadius: "8px", color: "#e2e8f0", fontSize: "14px",
-  outline: "none", boxSizing: "border-box",
+  width: "100%",
+  padding: "0.625rem 0.875rem",
+  background: "#0f2744",
+  border: "1px solid #1e3a5f",
+  borderRadius: "8px",
+  color: "#e2e8f0",
+  fontSize: "14px",
+  outline: "none",
+  boxSizing: "border-box",
   fontFamily: "'IBM Plex Sans Arabic', sans-serif",
   transition: "border-color 0.15s",
 };
@@ -272,9 +439,14 @@ const selectStyle: React.CSSProperties = { ...inputStyle, cursor: "pointer" };
 
 // ─── File upload zone ─────────────────────────────────────────────────────────
 function FileZone({
-  label, accept = "image/*,.pdf", value, onChange, hint,
+  label,
+  accept = "image/*,.pdf",
+  value,
+  onChange,
+  hint,
 }: {
-  label: string; accept?: string;
+  label: string;
+  accept?: string;
   value: { data: string; name: string } | null;
   onChange: (v: { data: string; name: string } | null) => void;
   hint?: string;
@@ -284,7 +456,10 @@ function FileZone({
 
   async function handle(file: File | undefined) {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("الحد الأقصى للملف 5 ميجابايت"); return; }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("الحد الأقصى للملف 5 ميجابايت");
+      return;
+    }
     const data = await fileToBase64(file);
     onChange({ data, name: file.name });
   }
@@ -292,26 +467,55 @@ function FileZone({
   return (
     <div
       onClick={() => ref.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
       onDragLeave={() => setDragging(false)}
-      onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files[0]); }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        handle(e.dataTransfer.files[0]);
+      }}
       style={{
         border: `2px dashed ${value ? "#22c55e" : dragging ? "#3b82f6" : "#1e3a5f"}`,
-        borderRadius: "10px", padding: "1rem", cursor: "pointer",
+        borderRadius: "10px",
+        padding: "1rem",
+        cursor: "pointer",
         background: value ? "#052e16" : dragging ? "#0f2744" : "#081524",
-        textAlign: "center", transition: "all 0.2s",
-        display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
+        textAlign: "center",
+        transition: "all 0.2s",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "0.5rem",
       }}
     >
-      <input ref={ref} type="file" accept={accept} style={{ display: "none" }}
-        onChange={(e) => handle(e.target.files?.[0])} />
+      <input
+        ref={ref}
+        type="file"
+        accept={accept}
+        style={{ display: "none" }}
+        onChange={(e) => handle(e.target.files?.[0])}
+      />
       {value ? (
         <>
           <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
-          <span style={{ fontSize: "12px", color: "#86efac" }}>{value.name}</span>
+          <span style={{ fontSize: "12px", color: "#86efac" }}>
+            {value.name}
+          </span>
           <button
-            onClick={(e) => { e.stopPropagation(); onChange(null); }}
-            style={{ fontSize: "11px", color: "#f87171", background: "none", border: "none", cursor: "pointer" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(null);
+            }}
+            style={{
+              fontSize: "11px",
+              color: "#f87171",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
           >
             <X size={11} style={{ display: "inline", marginLeft: 2 }} /> إزالة
           </button>
@@ -320,7 +524,9 @@ function FileZone({
         <>
           <Upload size={18} style={{ color: "#475569" }} />
           <span style={{ fontSize: "12px", color: "#64748b" }}>{label}</span>
-          {hint && <span style={{ fontSize: "11px", color: "#334155" }}>{hint}</span>}
+          {hint && (
+            <span style={{ fontSize: "11px", color: "#334155" }}>{hint}</span>
+          )}
         </>
       )}
     </div>
@@ -330,9 +536,9 @@ function FileZone({
 // ─── Camera + Liveness Step ───────────────────────────────────────────────────
 const LIVENESS_STEPS = [
   { id: "look_right", label: "انظر يميناً →", duration: 2500 },
-  { id: "look_left",  label: "← انظر يساراً",  duration: 2500 },
-  { id: "blink",      label: "ارمش مرتين",       duration: 2000 },
-  { id: "smile",      label: "ابتسم",            duration: 2000 },
+  { id: "look_left", label: "← انظر يساراً", duration: 2500 },
+  { id: "blink", label: "ارمش مرتين", duration: 2000 },
+  { id: "smile", label: "ابتسم", duration: 2000 },
 ];
 
 function CameraCapture({
@@ -352,16 +558,24 @@ function CameraCapture({
     async function startCamera() {
       try {
         const s = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
         });
         setStream(s);
         if (videoRef.current) videoRef.current.srcObject = s;
       } catch {
-        setCameraError("تعذّر الوصول إلى الكاميرا. يرجى السماح بالوصول في إعدادات المتصفح.");
+        setCameraError(
+          "تعذّر الوصول إلى الكاميرا. يرجى السماح بالوصول في إعدادات المتصفح.",
+        );
       }
     }
     startCamera();
-    return () => { stream?.getTracks().forEach((t) => t.stop()); };
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -375,7 +589,10 @@ function CameraCapture({
       await new Promise<void>((resolve) => {
         const interval = setInterval(() => {
           setLivenessTimer(Math.ceil((dur - (Date.now() - start)) / 1000));
-          if (Date.now() - start >= dur) { clearInterval(interval); resolve(); }
+          if (Date.now() - start >= dur) {
+            clearInterval(interval);
+            resolve();
+          }
         }, 100);
       });
     }
@@ -411,50 +628,131 @@ function CameraCapture({
   if (captured) {
     return (
       <div style={{ textAlign: "center" }}>
-        <img src={captured} alt="selfie" style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "50%", border: "3px solid #22c55e" }} />
-        <p style={{ fontSize: "13px", color: "#86efac", marginTop: "0.75rem" }}>تم التقاط الصورة بنجاح</p>
+        <img
+          src={captured}
+          alt="selfie"
+          style={{
+            width: "200px",
+            height: "200px",
+            objectFit: "cover",
+            borderRadius: "50%",
+            border: "3px solid #22c55e",
+          }}
+        />
+        <p style={{ fontSize: "13px", color: "#86efac", marginTop: "0.75rem" }}>
+          تم التقاط الصورة بنجاح
+        </p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-      <div style={{ position: "relative", borderRadius: "12px", overflow: "hidden", border: "2px solid #1e3a5f" }}>
-        <video ref={videoRef} autoPlay playsInline muted
-          style={{ width: "320px", height: "240px", display: "block", transform: "scaleX(-1)" }} />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "1rem",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          borderRadius: "12px",
+          overflow: "hidden",
+          border: "2px solid #1e3a5f",
+        }}
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            width: "320px",
+            height: "240px",
+            display: "block",
+            transform: "scaleX(-1)",
+          }}
+        />
         {/* Oval overlay */}
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          pointerEvents: "none",
-        }}>
-          <div style={{
-            width: "160px", height: "200px",
-            border: `3px solid ${livenessStep === 4 ? "#22c55e" : livenessStep >= 0 ? "#3b82f6" : "#64748b"}`,
-            borderRadius: "50%", opacity: 0.7,
-          }} />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              width: "160px",
+              height: "200px",
+              border: `3px solid ${livenessStep === 4 ? "#22c55e" : livenessStep >= 0 ? "#3b82f6" : "#64748b"}`,
+              borderRadius: "50%",
+              opacity: 0.7,
+            }}
+          />
         </div>
         {/* Liveness instruction overlay */}
         {livenessStep >= 0 && livenessStep < 4 && (
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            background: "rgba(0,0,0,0.7)", padding: "0.5rem",
-            textAlign: "center",
-          }}>
-            <p style={{ color: "#fff", fontSize: "13px", fontWeight: 700, margin: 0 }}>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: "rgba(0,0,0,0.7)",
+              padding: "0.5rem",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                color: "#fff",
+                fontSize: "13px",
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
               {LIVENESS_STEPS[livenessStep].label}
             </p>
-            <p style={{ color: "#93c5fd", fontSize: "11px", margin: "0.25rem 0 0" }}>
+            <p
+              style={{
+                color: "#93c5fd",
+                fontSize: "11px",
+                margin: "0.25rem 0 0",
+              }}
+            >
               {livenessTimer} ثانية
             </p>
           </div>
         )}
         {livenessStep === 4 && (
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            background: "rgba(5,46,22,0.9)", padding: "0.5rem", textAlign: "center",
-          }}>
-            <p style={{ color: "#86efac", fontSize: "13px", fontWeight: 700, margin: 0 }}>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: "rgba(5,46,22,0.9)",
+              padding: "0.5rem",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                color: "#86efac",
+                fontSize: "13px",
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
               <Check size={13} style={{ display: "inline", marginLeft: 4 }} />
               تم التحقق الحيوي بنجاح
             </p>
@@ -465,15 +763,26 @@ function CameraCapture({
 
       {livenessStep === -1 && (
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.75rem" }}>
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#64748b",
+              marginBottom: "0.75rem",
+            }}
+          >
             سيتم طلب منك تنفيذ 4 حركات بسيطة للتحقق من أنك شخص حقيقي
           </p>
           <button
             onClick={startLiveness}
             style={{
-              background: "#1d4ed8", color: "#fff", border: "none",
-              borderRadius: "8px", padding: "0.625rem 1.5rem",
-              fontSize: "13px", fontWeight: 600, cursor: "pointer",
+              background: "#1d4ed8",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "0.625rem 1.5rem",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
             }}
           >
             <Shield size={13} style={{ display: "inline", marginLeft: 6 }} />
@@ -486,9 +795,14 @@ function CameraCapture({
         <button
           onClick={capturePhoto}
           style={{
-            background: "#15803d", color: "#fff", border: "none",
-            borderRadius: "8px", padding: "0.625rem 1.5rem",
-            fontSize: "13px", fontWeight: 600, cursor: "pointer",
+            background: "#15803d",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            padding: "0.625rem 1.5rem",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
           }}
         >
           <Camera size={13} style={{ display: "inline", marginLeft: 6 }} />
@@ -503,7 +817,9 @@ function CameraCapture({
 export default function CourierRegister() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData | "captcha" | "general", string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormData | "captcha" | "general", string>>
+  >({});
   const [captcha, setCaptcha] = useState(generateCaptcha);
   const [captchaAge, setCaptchaAge] = useState(0);
   const [otpSending, setOtpSending] = useState(false);
@@ -521,7 +837,10 @@ export default function CourierRegister() {
       setCaptchaAge(0);
     }, 30_000);
     const ageInterval = setInterval(() => setCaptchaAge((a) => a + 1), 1000);
-    return () => { clearInterval(interval); clearInterval(ageInterval); };
+    return () => {
+      clearInterval(interval);
+      clearInterval(ageInterval);
+    };
   }, []);
 
   // OTP cooldown countdown
@@ -531,24 +850,34 @@ export default function CourierRegister() {
     return () => clearTimeout(t);
   }, [otpCooldown]);
 
-  const set = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
-  }, []);
+  const set = useCallback(
+    <K extends keyof FormData>(key: K, value: FormData[K]) => {
+      setForm((prev) => ({ ...prev, [key]: value }));
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    },
+    [],
+  );
 
   // ── Step 1 validation ──────────────────────────────────────────────────────
   function validateStep1(): boolean {
     const e: typeof errors = {};
-    if (!form.full_name.trim() || form.full_name.trim().length < 6) e.full_name = "الاسم الكامل مطلوب (6 أحرف على الأقل)";
-    if (!/^\d{10}$/.test(form.national_id)) e.national_id = "رقم الهوية يجب أن يكون 10 أرقام";
+    if (!form.full_name.trim() || form.full_name.trim().length < 6)
+      e.full_name = "الاسم الكامل مطلوب (6 أحرف على الأقل)";
+    if (!/^\d{10}$/.test(form.national_id))
+      e.national_id = "رقم الهوية يجب أن يكون 10 أرقام";
     if (!form.city) e.city = "اختر مدينة العمل";
-    if (!/^5\d{8}$/.test(form.phone)) e.phone = "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "بريد إلكتروني غير صحيح";
+    if (!/^5\d{8}$/.test(form.phone))
+      e.phone = "رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      e.email = "بريد إلكتروني غير صحيح";
     if (!form.contract_type) e.contract_type = "اختر نوع التعاقد";
     if (!form.bank_name) e.bank_name = "اختر اسم البنك";
-    if (!form.iban || !/^SA\d{22}$/.test(form.iban)) e.iban = "رقم IBAN غير صحيح (يبدأ بـ SA ويتكون من 24 خانة)";
-    if (!form.stc_bank_phone || !/^5\d{8}$/.test(form.stc_bank_phone)) e.stc_bank_phone = "رقم STC Bank مطلوب (9 أرقام تبدأ بـ 5)";
-    if (form.captchaAnswer.trim() !== captcha.answer) e.captcha = "إجابة CAPTCHA غير صحيحة";
+    if (!form.iban || !/^SA\d{22}$/.test(form.iban))
+      e.iban = "رقم IBAN غير صحيح (يبدأ بـ SA ويتكون من 24 خانة)";
+    if (!form.stc_bank_phone || !/^5\d{8}$/.test(form.stc_bank_phone))
+      e.stc_bank_phone = "رقم STC Bank مطلوب (9 أرقام تبدأ بـ 5)";
+    if (form.captchaAnswer.trim() !== captcha.answer)
+      e.captcha = "إجابة CAPTCHA غير صحيحة";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -558,18 +887,23 @@ export default function CourierRegister() {
     if (otpCooldown > 0) return;
     setOtpSending(true);
     try {
-      const res = await fetch(EDGE_OTP_SEND, {
+      const res = await fetch(`${API_BASE}/driver/otp/send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
-        body: JSON.stringify({ email: form.email, full_name: form.full_name }),
-        signal: AbortSignal.timeout(15000),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          full_name: form.full_name,
+          national_id: form.national_id,
+          phone: form.phone,
+          device_fingerprint: getDeviceFingerprint(),
+        }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
+      } else {
         setOtpSent(true);
         setOtpCooldown(60);
-      } else {
-        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
       }
     } catch {
       setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
@@ -586,18 +920,19 @@ export default function CourierRegister() {
     }
     setOtpVerifying(true);
     try {
-      const res = await fetch(EDGE_OTP_VERIFY, {
+      const res = await fetch(`${API_BASE}/driver/otp/verify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, code: form.otpCode }),
-        signal: AbortSignal.timeout(15000),
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({
+          otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية",
+        });
+      } else {
         set("emailVerified", true);
         submitApplication();
-      } else {
-        setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
       }
     } catch {
       setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
@@ -610,7 +945,8 @@ export default function CourierRegister() {
   function validateStep4(): boolean {
     const e: typeof errors = {};
     if (!form.doc_national_id) e.doc_national_id = "صورة الهوية الوطنية مطلوبة";
-    if (!form.doc_national_id_back) e.doc_national_id_back = "صورة الهوية (الظهر) مطلوبة";
+    if (!form.doc_national_id_back)
+      e.doc_national_id_back = "صورة الهوية (الظهر) مطلوبة";
     if (!form.doc_driver_license) e.doc_driver_license = "رخصة القيادة مطلوبة";
     if (!form.doc_bank_cert) e.doc_bank_cert = "شهادة الحساب البنكي مطلوبة";
     setErrors(e);
@@ -625,9 +961,11 @@ export default function CourierRegister() {
     if (!form.vehicle_brand) e.vehicle_brand = "اختر الماركة";
     if (!form.vehicle_model.trim()) e.vehicle_model = "أدخل موديل المركبة";
     if (!form.vehicle_plate.trim()) e.vehicle_plate = "أدخل رقم اللوحة";
-    if (!form.doc_vehicle_front) e.doc_vehicle_front = "صورة المركبة أمامية مطلوبة";
+    if (!form.doc_vehicle_front)
+      e.doc_vehicle_front = "صورة المركبة أمامية مطلوبة";
     if (!form.doc_vehicle_reg) e.doc_vehicle_reg = "استمارة المركبة مطلوبة";
-    if (!form.doc_vehicle_insurance) e.doc_vehicle_insurance = "وثيقة التأمين مطلوبة";
+    if (!form.doc_vehicle_insurance)
+      e.doc_vehicle_insurance = "وثيقة التأمين مطلوبة";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -640,7 +978,9 @@ export default function CourierRegister() {
       return;
     }
     if (!form.livenessComplete || !form.selfieDataUrl) {
-      setErrors({ general: "التحقق الحيوي والصورة الشخصية مطلوبان قبل الإرسال" });
+      setErrors({
+        general: "التحقق الحيوي والصورة الشخصية مطلوبان قبل الإرسال",
+      });
       return;
     }
     setSubmitting(true);
@@ -651,31 +991,20 @@ export default function CourierRegister() {
         ip_address: null, // set by Lambda from event context
         user_agent: navigator.userAgent,
       };
-      let submitted = false;
-      for (const base of DRIVER_API_BASES) {
-        try {
-          const res = await fetch(`${base}/driver/apply`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(30000),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (res.ok) {
-            setSubmitted({ appRef: data.app_ref || "APP-" + Date.now().toString(36).toUpperCase() });
-            toast.success("تم إرسال طلب التسجيل بنجاح");
-            submitted = true;
-            break;
-          }
-          if (res.status === 400 || res.status === 409 || res.status === 429) {
-            setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
-            submitted = true;
-            break;
-          }
-        } catch { /* try next endpoint */ }
-      }
-      if (!submitted) {
-        setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });
+      const res = await fetch(`${API_BASE}/driver/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الطلب" });
+      } else {
+        setSubmitted({
+          appRef:
+            data.app_ref || "APP-" + Date.now().toString(36).toUpperCase(),
+        });
+        toast.success("تم إرسال طلب التسجيل بنجاح");
       }
     } catch {
       setErrors({ general: "تعذّر إرسال الطلب حالياً. حاول مرة أخرى." });
@@ -690,38 +1019,89 @@ export default function CourierRegister() {
       <div style={pageWrap}>
         <div style={cardStyle}>
           <div style={{ textAlign: "center", padding: "2rem" }}>
-            <div style={{
-              width: "72px", height: "72px", borderRadius: "50%",
-              background: "#052e16", border: "3px solid #22c55e",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 1.5rem",
-            }}>
+            <div
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                background: "#052e16",
+                border: "3px solid #22c55e",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 1.5rem",
+              }}
+            >
               <CheckCircle2 size={36} style={{ color: "#22c55e" }} />
             </div>
-            <h2 style={{ color: "#e2e8f0", fontSize: "20px", fontWeight: 700, marginBottom: "0.5rem" }}>
+            <h2
+              style={{
+                color: "#e2e8f0",
+                fontSize: "20px",
+                fontWeight: 700,
+                marginBottom: "0.5rem",
+              }}
+            >
               تم إرسال طلبك بنجاح
             </h2>
-            <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "1.5rem" }}>
+            <p
+              style={{
+                color: "#94a3b8",
+                fontSize: "14px",
+                marginBottom: "1.5rem",
+              }}
+            >
               سيتم مراجعة طلبك من قِبل الإدارة وإخطارك على بريدك الإلكتروني
             </p>
-            <div style={{
-              background: "#0f2744", borderRadius: "10px", padding: "1rem 1.5rem",
-              border: "1px solid #1e3a5f", marginBottom: "1.5rem",
-            }}>
-              <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>رقم الطلب</p>
-              <p style={{ fontFamily: "monospace", fontSize: "18px", fontWeight: 700, color: "#60a5fa" }}>
+            <div
+              style={{
+                background: "#0f2744",
+                borderRadius: "10px",
+                padding: "1rem 1.5rem",
+                border: "1px solid #1e3a5f",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  marginBottom: "0.25rem",
+                }}
+              >
+                رقم الطلب
+              </p>
+              <p
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: "#60a5fa",
+                }}
+              >
                 {submitted.appRef}
               </p>
             </div>
-            <p style={{ fontSize: "12px", color: "#475569", marginBottom: "1rem" }}>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "#475569",
+                marginBottom: "1rem",
+              }}
+            >
               احتفظ برقم الطلب لمتابعة حالته على:
             </p>
             <a
               href={`/application-status?ref=${submitted.appRef}`}
               style={{
-                display: "inline-block", background: "#1d4ed8", color: "#fff",
-                textDecoration: "none", borderRadius: "8px",
-                padding: "0.625rem 1.5rem", fontSize: "13px", fontWeight: 600,
+                display: "inline-block",
+                background: "#1d4ed8",
+                color: "#fff",
+                textDecoration: "none",
+                borderRadius: "8px",
+                padding: "0.625rem 1.5rem",
+                fontSize: "13px",
+                fontWeight: 600,
               }}
             >
               متابعة حالة الطلب
@@ -737,17 +1117,31 @@ export default function CourierRegister() {
     <div style={pageWrap} dir="rtl">
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "0.75rem",
-          marginBottom: "0.75rem",
-        }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            marginBottom: "0.75rem",
+          }}
+        >
           <img
             src="/images/first_line_professional_english_1.png"
-            alt="FLL" style={{ height: "40px", objectFit: "contain" }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            alt="FLL"
+            style={{ height: "40px", objectFit: "contain" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
           />
         </div>
-        <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#e2e8f0", marginBottom: "0.375rem" }}>
+        <h1
+          style={{
+            fontSize: "22px",
+            fontWeight: 700,
+            color: "#e2e8f0",
+            marginBottom: "0.375rem",
+          }}
+        >
           نظام تسجيل المناديب
         </h1>
         <p style={{ fontSize: "13px", color: "#64748b" }}>
@@ -764,25 +1158,62 @@ export default function CourierRegister() {
             <h3 style={stepTitle}>البيانات الشخصية والمالية</h3>
 
             <div style={grid2}>
-              <Field label="الاسم الكامل" icon={User} error={errors.full_name as string}>
-                <input style={inputStyle} placeholder="محمد عبدالله السالم" value={form.full_name}
-                  onChange={(e) => set("full_name", e.target.value)} />
+              <Field
+                label="الاسم الكامل"
+                icon={User}
+                error={errors.full_name as string}
+              >
+                <input
+                  style={inputStyle}
+                  placeholder="محمد عبدالله السالم"
+                  value={form.full_name}
+                  onChange={(e) => set("full_name", e.target.value)}
+                />
               </Field>
-              <Field label="رقم الهوية الوطنية" icon={CreditCard} error={errors.national_id as string}>
-                <input style={inputStyle} placeholder="1234567890" value={form.national_id}
-                  onChange={(e) => set("national_id", e.target.value.replace(/\D/g, "").slice(0, 10))} />
+              <Field
+                label="رقم الهوية الوطنية"
+                icon={CreditCard}
+                error={errors.national_id as string}
+              >
+                <input
+                  style={inputStyle}
+                  placeholder="1234567890"
+                  value={form.national_id}
+                  onChange={(e) =>
+                    set(
+                      "national_id",
+                      e.target.value.replace(/\D/g, "").slice(0, 10),
+                    )
+                  }
+                />
               </Field>
             </div>
 
             <div style={grid2}>
-              <Field label="مدينة العمل" icon={MapPin} error={errors.city as string}>
-                <select style={selectStyle} value={form.city} onChange={(e) => set("city", e.target.value)}>
+              <Field
+                label="مدينة العمل"
+                icon={MapPin}
+                error={errors.city as string}
+              >
+                <select
+                  style={selectStyle}
+                  value={form.city}
+                  onChange={(e) => set("city", e.target.value)}
+                >
                   <option value="">اختر المدينة</option>
-                  {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="الجنسية" icon={User}>
-                <select style={selectStyle} value={form.nationality} onChange={(e) => set("nationality", e.target.value)}>
+                <select
+                  style={selectStyle}
+                  value={form.nationality}
+                  onChange={(e) => set("nationality", e.target.value)}
+                >
                   <option value="سعودي">سعودي</option>
                   <option value="مقيم">مقيم</option>
                 </select>
@@ -790,63 +1221,171 @@ export default function CourierRegister() {
             </div>
 
             <div style={grid2}>
-              <Field label="رقم الجوال" icon={Phone} error={errors.phone as string}>
+              <Field
+                label="رقم الجوال"
+                icon={Phone}
+                error={errors.phone as string}
+              >
                 <div style={{ display: "flex", gap: "0.375rem" }}>
-                  <span style={{ ...inputStyle, width: "auto", flexShrink: 0, color: "#94a3b8", fontSize: "13px" }}>+966</span>
-                  <input style={{ ...inputStyle, flex: 1 }} placeholder="512345678" value={form.phone}
-                    onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 9))} />
+                  <span
+                    style={{
+                      ...inputStyle,
+                      width: "auto",
+                      flexShrink: 0,
+                      color: "#94a3b8",
+                      fontSize: "13px",
+                    }}
+                  >
+                    +966
+                  </span>
+                  <input
+                    style={{ ...inputStyle, flex: 1 }}
+                    placeholder="512345678"
+                    value={form.phone}
+                    onChange={(e) =>
+                      set(
+                        "phone",
+                        e.target.value.replace(/\D/g, "").slice(0, 9),
+                      )
+                    }
+                  />
                 </div>
               </Field>
-              <Field label="البريد الإلكتروني" icon={Mail} error={errors.email as string}>
-                <input style={inputStyle} type="email" placeholder="example@email.com" value={form.email}
-                  onChange={(e) => set("email", e.target.value)} />
+              <Field
+                label="البريد الإلكتروني"
+                icon={Mail}
+                error={errors.email as string}
+              >
+                <input
+                  style={inputStyle}
+                  type="email"
+                  placeholder="example@email.com"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                />
               </Field>
             </div>
 
             <div style={grid2}>
               <Field label="التطبيق الذي تعمل به" icon={Building2}>
-                <select style={selectStyle} value={form.platform_app} onChange={(e) => set("platform_app", e.target.value)}>
+                <select
+                  style={selectStyle}
+                  value={form.platform_app}
+                  onChange={(e) => set("platform_app", e.target.value)}
+                >
                   <option value="">اختر التطبيق</option>
-                  {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                  {PLATFORMS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
                 </select>
               </Field>
-              <Field label="نوع التعاقد" icon={FileText} error={errors.contract_type as string}>
-                <select style={selectStyle} value={form.contract_type} onChange={(e) => set("contract_type", e.target.value)}>
+              <Field
+                label="نوع التعاقد"
+                icon={FileText}
+                error={errors.contract_type as string}
+              >
+                <select
+                  style={selectStyle}
+                  value={form.contract_type}
+                  onChange={(e) => set("contract_type", e.target.value)}
+                >
                   <option value="">اختر نوع التعاقد</option>
                   {CONTRACT_TYPES.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label} — {c.desc}</option>
+                    <option key={c.value} value={c.value}>
+                      {c.label} — {c.desc}
+                    </option>
                   ))}
                 </select>
               </Field>
             </div>
 
             {/* Bank info */}
-            <div style={{ borderTop: "1px solid #1e3a5f", paddingTop: "1rem", marginTop: "0.5rem" }}>
-              <p style={{ fontSize: "12px", color: "#60a5fa", fontWeight: 600, marginBottom: "0.75rem" }}>
+            <div
+              style={{
+                borderTop: "1px solid #1e3a5f",
+                paddingTop: "1rem",
+                marginTop: "0.5rem",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#60a5fa",
+                  fontWeight: 600,
+                  marginBottom: "0.75rem",
+                }}
+              >
                 المعلومات البنكية
               </p>
               <div style={grid2}>
-                <Field label="اسم البنك" icon={Building2} error={errors.bank_name as string}>
-                  <select style={selectStyle} value={form.bank_name} onChange={(e) => set("bank_name", e.target.value)}>
+                <Field
+                  label="اسم البنك"
+                  icon={Building2}
+                  error={errors.bank_name as string}
+                >
+                  <select
+                    style={selectStyle}
+                    value={form.bank_name}
+                    onChange={(e) => set("bank_name", e.target.value)}
+                  >
                     <option value="">اختر البنك</option>
-                    {BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
+                    {BANKS.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
                   </select>
                 </Field>
-                <Field label="رقم IBAN" icon={CreditCard} error={errors.iban as string}>
-                  <input style={inputStyle} placeholder="SA0000000000000000000000" value={form.iban}
-                    onChange={(e) => set("iban", e.target.value.toUpperCase().slice(0, 24))}
-                    dir="ltr" />
+                <Field
+                  label="رقم IBAN"
+                  icon={CreditCard}
+                  error={errors.iban as string}
+                >
+                  <input
+                    style={inputStyle}
+                    placeholder="SA0000000000000000000000"
+                    value={form.iban}
+                    onChange={(e) =>
+                      set("iban", e.target.value.toUpperCase().slice(0, 24))
+                    }
+                    dir="ltr"
+                  />
                 </Field>
               </div>
-              <Field label="رقم STC Bank (للتحويلات)" icon={Phone} error={errors.stc_bank_phone as string}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }} dir="ltr">
-                  <span style={{
-                    padding: "8px 10px", fontSize: "13px", fontWeight: 600,
-                    background: "#0f2744", border: "1px solid #1e3a5f", borderRadius: "6px 0 0 6px",
-                    color: "#60a5fa", fontFamily: "monospace", whiteSpace: "nowrap",
-                  }}>966+</span>
+              <Field
+                label="رقم STC Bank (للتحويلات)"
+                icon={Phone}
+                error={errors.stc_bank_phone as string}
+              >
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  dir="ltr"
+                >
+                  <span
+                    style={{
+                      padding: "8px 10px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      background: "#0f2744",
+                      border: "1px solid #1e3a5f",
+                      borderRadius: "6px 0 0 6px",
+                      color: "#60a5fa",
+                      fontFamily: "monospace",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    966+
+                  </span>
                   <input
-                    style={{ ...inputStyle, borderRadius: "0 6px 6px 0", flex: 1, fontFamily: "monospace", letterSpacing: "1px" }}
+                    style={{
+                      ...inputStyle,
+                      borderRadius: "0 6px 6px 0",
+                      flex: 1,
+                      fontFamily: "monospace",
+                      letterSpacing: "1px",
+                    }}
                     placeholder="5XXXXXXXX"
                     value={form.stc_bank_phone}
                     onChange={(e) => {
@@ -857,28 +1396,87 @@ export default function CourierRegister() {
                     maxLength={9}
                   />
                 </div>
-                <p style={{ fontSize: "10px", color: "#475569", margin: "4px 0 0", textAlign: "left" }}>
-                  الرقم المسجل في STC Bank — سيُستخدم لتحويل المستحقات: <span style={{ fontFamily: "monospace", color: "#60a5fa" }}>966{form.stc_bank_phone || "5XXXXXXXX"}</span>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    color: "#475569",
+                    margin: "4px 0 0",
+                    textAlign: "left",
+                  }}
+                >
+                  الرقم المسجل في STC Bank — سيُستخدم لتحويل المستحقات:{" "}
+                  <span style={{ fontFamily: "monospace", color: "#60a5fa" }}>
+                    966{form.stc_bank_phone || "5XXXXXXXX"}
+                  </span>
                 </p>
               </Field>
             </div>
 
             {/* CAPTCHA */}
-            <div style={{ background: "#081524", borderRadius: "10px", padding: "1rem", border: "1px solid #1e3a5f", marginTop: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#93c5fd" }}>
-                  <Shield size={13} style={{ display: "inline", marginLeft: 4 }} />
+            <div
+              style={{
+                background: "#081524",
+                borderRadius: "10px",
+                padding: "1rem",
+                border: "1px solid #1e3a5f",
+                marginTop: "0.5rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#93c5fd",
+                  }}
+                >
+                  <Shield
+                    size={13}
+                    style={{ display: "inline", marginLeft: 4 }}
+                  />
                   التحقق الأمني
                 </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                  <span style={{ fontSize: "11px", color: "#475569" }}>يتجدد بعد {30 - captchaAge}ث</span>
-                  <button onClick={() => { setCaptcha(generateCaptcha()); setCaptchaAge(0); }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#60a5fa" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                  }}
+                >
+                  <span style={{ fontSize: "11px", color: "#475569" }}>
+                    يتجدد بعد {30 - captchaAge}ث
+                  </span>
+                  <button
+                    onClick={() => {
+                      setCaptcha(generateCaptcha());
+                      setCaptchaAge(0);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#60a5fa",
+                    }}
+                  >
                     <RefreshCw size={13} />
                   </button>
                 </div>
               </div>
-              <p style={{ fontSize: "16px", fontWeight: 700, color: "#e2e8f0", marginBottom: "0.625rem" }}>
+              <p
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  color: "#e2e8f0",
+                  marginBottom: "0.625rem",
+                }}
+              >
                 {captcha.question}
               </p>
               <input
@@ -888,18 +1486,36 @@ export default function CourierRegister() {
                 onChange={(e) => set("captchaAnswer", e.target.value)}
               />
               {errors.captcha && (
-                <p style={{ fontSize: "11px", color: "#f87171", marginTop: "0.375rem" }}>
-                  <AlertTriangle size={11} style={{ display: "inline", marginLeft: 2 }} />
+                <p
+                  style={{
+                    fontSize: "11px",
+                    color: "#f87171",
+                    marginTop: "0.375rem",
+                  }}
+                >
+                  <AlertTriangle
+                    size={11}
+                    style={{ display: "inline", marginLeft: 2 }}
+                  />
                   {errors.captcha}
                 </p>
               )}
             </div>
 
-            {errors.general && <p style={{ fontSize: "12px", color: "#f87171" }}>{errors.general}</p>}
+            {errors.general && (
+              <p style={{ fontSize: "12px", color: "#f87171" }}>
+                {errors.general}
+              </p>
+            )}
 
             <div style={navRow}>
               <div />
-              <button style={btnPrimary} onClick={() => { if (validateStep1()) setStep(2); }}>
+              <button
+                style={btnPrimary}
+                onClick={() => {
+                  if (validateStep1()) setStep(2);
+                }}
+              >
                 التالي <ChevronLeft size={15} />
               </button>
             </div>
@@ -910,11 +1526,24 @@ export default function CourierRegister() {
         {step === 2 && (
           <div style={stepContent}>
             <h3 style={stepTitle}>التحقق الحيوي والصورة الشخصية</h3>
-            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "1rem" }}>
-              يرجى اتباع التعليمات على الشاشة. هذا يضمن أنك شخص حقيقي ويمنع التزوير.
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#64748b",
+                marginBottom: "1rem",
+              }}
+            >
+              يرجى اتباع التعليمات على الشاشة. هذا يضمن أنك شخص حقيقي ويمنع
+              التزوير.
             </p>
 
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "1rem",
+              }}
+            >
               <CameraCapture
                 onCapture={(dataUrl, score) => {
                   set("selfieDataUrl", dataUrl);
@@ -925,9 +1554,21 @@ export default function CourierRegister() {
             </div>
 
             {form.livenessComplete && form.selfieDataUrl && (
-              <div style={{ background: "#052e16", border: "1px solid #16a34a", borderRadius: "8px", padding: "0.75rem", textAlign: "center", marginBottom: "0.75rem" }}>
+              <div
+                style={{
+                  background: "#052e16",
+                  border: "1px solid #16a34a",
+                  borderRadius: "8px",
+                  padding: "0.75rem",
+                  textAlign: "center",
+                  marginBottom: "0.75rem",
+                }}
+              >
                 <p style={{ fontSize: "12px", color: "#86efac" }}>
-                  <CheckCircle2 size={13} style={{ display: "inline", marginLeft: 4 }} />
+                  <CheckCircle2
+                    size={13}
+                    style={{ display: "inline", marginLeft: 4 }}
+                  />
                   تم التحقق الحيوي بنجاح — درجة التشابه المتوقعة:{" "}
                   <strong>{form.livenessScore}%</strong>
                 </p>
@@ -939,7 +1580,10 @@ export default function CourierRegister() {
                 <ChevronRight size={15} /> رجوع
               </button>
               <button
-                style={{ ...btnPrimary, opacity: form.livenessComplete ? 1 : 0.4 }}
+                style={{
+                  ...btnPrimary,
+                  opacity: form.livenessComplete ? 1 : 0.4,
+                }}
                 disabled={!form.livenessComplete}
                 onClick={() => setStep(3)}
               >
@@ -953,29 +1597,66 @@ export default function CourierRegister() {
         {step === 3 && (
           <div style={stepContent}>
             <h3 style={stepTitle}>رفع الوثائق الرسمية</h3>
-            <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "1rem" }}>
+            <p
+              style={{
+                fontSize: "12px",
+                color: "#64748b",
+                marginBottom: "1rem",
+              }}
+            >
               الحد الأقصى لكل ملف 5 ميجابايت — صيغ مقبولة: JPG، PNG، PDF
             </p>
 
             <div style={grid2}>
-              <Field label="الهوية الوطنية (وجه)" icon={CreditCard} error={errors.doc_national_id as string}>
-                <FileZone label="اضغط لرفع صورة الهوية" value={form.doc_national_id}
-                  onChange={(v) => set("doc_national_id", v)} hint="الوجه الأمامي" />
+              <Field
+                label="الهوية الوطنية (وجه)"
+                icon={CreditCard}
+                error={errors.doc_national_id as string}
+              >
+                <FileZone
+                  label="اضغط لرفع صورة الهوية"
+                  value={form.doc_national_id}
+                  onChange={(v) => set("doc_national_id", v)}
+                  hint="الوجه الأمامي"
+                />
               </Field>
-              <Field label="الهوية الوطنية (ظهر)" icon={CreditCard} error={errors.doc_national_id_back as string}>
-                <FileZone label="اضغط لرفع صورة الهوية" value={form.doc_national_id_back}
-                  onChange={(v) => set("doc_national_id_back", v)} hint="الوجه الخلفي" />
+              <Field
+                label="الهوية الوطنية (ظهر)"
+                icon={CreditCard}
+                error={errors.doc_national_id_back as string}
+              >
+                <FileZone
+                  label="اضغط لرفع صورة الهوية"
+                  value={form.doc_national_id_back}
+                  onChange={(v) => set("doc_national_id_back", v)}
+                  hint="الوجه الخلفي"
+                />
               </Field>
             </div>
 
             <div style={grid2}>
-              <Field label="رخصة القيادة" icon={Car} error={errors.doc_driver_license as string}>
-                <FileZone label="اضغط لرفع رخصة القيادة" value={form.doc_driver_license}
-                  onChange={(v) => set("doc_driver_license", v)} />
+              <Field
+                label="رخصة القيادة"
+                icon={Car}
+                error={errors.doc_driver_license as string}
+              >
+                <FileZone
+                  label="اضغط لرفع رخصة القيادة"
+                  value={form.doc_driver_license}
+                  onChange={(v) => set("doc_driver_license", v)}
+                />
               </Field>
-              <Field label="شهادة الحساب البنكي" icon={Building2} error={errors.doc_bank_cert as string}>
-                <FileZone label="اضغط لرفع الشهادة البنكية" value={form.doc_bank_cert}
-                  onChange={(v) => set("doc_bank_cert", v)} hint="صورة أو PDF" />
+              <Field
+                label="شهادة الحساب البنكي"
+                icon={Building2}
+                error={errors.doc_bank_cert as string}
+              >
+                <FileZone
+                  label="اضغط لرفع الشهادة البنكية"
+                  value={form.doc_bank_cert}
+                  onChange={(v) => set("doc_bank_cert", v)}
+                  hint="صورة أو PDF"
+                />
               </Field>
             </div>
 
@@ -983,7 +1664,12 @@ export default function CourierRegister() {
               <button style={btnSecondary} onClick={() => setStep(2)}>
                 <ChevronRight size={15} /> رجوع
               </button>
-              <button style={btnPrimary} onClick={() => { if (validateStep4()) setStep(4); }}>
+              <button
+                style={btnPrimary}
+                onClick={() => {
+                  if (validateStep4()) setStep(4);
+                }}
+              >
                 التالي <ChevronLeft size={15} />
               </button>
             </div>
@@ -996,23 +1682,39 @@ export default function CourierRegister() {
             <h3 style={stepTitle}>معلومات المركبة</h3>
 
             {/* Vehicle toggle */}
-            <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                marginBottom: "1.25rem",
+              }}
+            >
               {[
-                { value: false, icon: X,    label: "ليس لدي مركبة" },
-                { value: true,  icon: Car,  label: "لدي مركبة" },
+                { value: false, icon: X, label: "ليس لدي مركبة" },
+                { value: true, icon: Car, label: "لدي مركبة" },
               ].map((opt) => (
                 <button
                   key={String(opt.value)}
                   onClick={() => set("has_vehicle", opt.value)}
                   style={{
-                    flex: 1, padding: "0.75rem",
-                    borderRadius: "10px", border: "2px solid",
-                    cursor: "pointer", transition: "all 0.2s",
-                    borderColor: form.has_vehicle === opt.value ? "#2563eb" : "#1e3a5f",
-                    background: form.has_vehicle === opt.value ? "#0f2744" : "#081524",
-                    color: form.has_vehicle === opt.value ? "#93c5fd" : "#475569",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-                    fontSize: "13px", fontWeight: 600,
+                    flex: 1,
+                    padding: "0.75rem",
+                    borderRadius: "10px",
+                    border: "2px solid",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    borderColor:
+                      form.has_vehicle === opt.value ? "#2563eb" : "#1e3a5f",
+                    background:
+                      form.has_vehicle === opt.value ? "#0f2744" : "#081524",
+                    color:
+                      form.has_vehicle === opt.value ? "#93c5fd" : "#475569",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    fontSize: "13px",
+                    fontWeight: 600,
                   }}
                 >
                   <opt.icon size={16} /> {opt.label}
@@ -1023,109 +1725,254 @@ export default function CourierRegister() {
             {form.has_vehicle && (
               <>
                 <div style={grid2}>
-                  <Field label="نوع المركبة" icon={Car} error={errors.vehicle_type as string}>
-                    <RadioGroup value={form.vehicle_type} onValueChange={(val) => set("vehicle_type", val)} style={{ display: "flex", gap: "0.5rem" }}>
+                  <Field
+                    label="نوع المركبة"
+                    icon={Car}
+                    error={errors.vehicle_type as string}
+                  >
+                    <RadioGroup
+                      value={form.vehicle_type}
+                      onValueChange={(val) => set("vehicle_type", val)}
+                      style={{ display: "flex", gap: "0.5rem" }}
+                    >
                       {[
                         { value: "bike", icon: Bike, label: "دراجة" },
-                        { value: "car",  icon: Car,  label: "سيارة" },
-                        { value: "van",  icon: Car,  label: "ون" },
+                        { value: "car", icon: Car, label: "سيارة" },
+                        { value: "van", icon: Car, label: "ون" },
                       ].map((t) => (
-                        <label key={t.value}
+                        <label
+                          key={t.value}
                           style={{
-                            flex: 1, padding: "0.5rem 0.25rem",
-                            borderRadius: "8px", border: "1px solid",
+                            flex: 1,
+                            padding: "0.5rem 0.25rem",
+                            borderRadius: "8px",
+                            border: "1px solid",
                             cursor: "pointer",
-                            borderColor: form.vehicle_type === t.value ? "#2563eb" : "#1e3a5f",
-                            background: form.vehicle_type === t.value ? "#0f2744" : "#081524",
-                            color: form.vehicle_type === t.value ? "#93c5fd" : "#475569",
-                            fontSize: "12px", fontWeight: 600,
-                            display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem",
-                          }}>
+                            borderColor:
+                              form.vehicle_type === t.value
+                                ? "#2563eb"
+                                : "#1e3a5f",
+                            background:
+                              form.vehicle_type === t.value
+                                ? "#0f2744"
+                                : "#081524",
+                            color:
+                              form.vehicle_type === t.value
+                                ? "#93c5fd"
+                                : "#475569",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                          }}
+                        >
                           <RadioGroupItem value={t.value} className="sr-only" />
                           <t.icon size={14} /> {t.label}
                         </label>
                       ))}
                     </RadioGroup>
                   </Field>
-                  <Field label="ماركة المركبة" error={errors.vehicle_brand as string}>
-                    <select style={selectStyle} value={form.vehicle_brand} onChange={(e) => set("vehicle_brand", e.target.value)}>
+                  <Field
+                    label="ماركة المركبة"
+                    error={errors.vehicle_brand as string}
+                  >
+                    <select
+                      style={selectStyle}
+                      value={form.vehicle_brand}
+                      onChange={(e) => set("vehicle_brand", e.target.value)}
+                    >
                       <option value="">اختر الماركة</option>
-                      {VEHICLE_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+                      {VEHICLE_BRANDS.map((b) => (
+                        <option key={b} value={b}>
+                          {b}
+                        </option>
+                      ))}
                     </select>
                   </Field>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: "0.75rem",
+                  }}
+                >
                   <Field label="الموديل" error={errors.vehicle_model as string}>
-                    <input style={inputStyle} placeholder="كامري" value={form.vehicle_model}
-                      onChange={(e) => set("vehicle_model", e.target.value)} />
+                    <input
+                      style={inputStyle}
+                      placeholder="كامري"
+                      value={form.vehicle_model}
+                      onChange={(e) => set("vehicle_model", e.target.value)}
+                    />
                   </Field>
                   <Field label="سنة الصنع">
-                    <input style={inputStyle} placeholder="2022" type="number" min={2000} max={2026}
-                      value={form.vehicle_year} onChange={(e) => set("vehicle_year", e.target.value)} />
+                    <input
+                      style={inputStyle}
+                      placeholder="2022"
+                      type="number"
+                      min={2000}
+                      max={2026}
+                      value={form.vehicle_year}
+                      onChange={(e) => set("vehicle_year", e.target.value)}
+                    />
                   </Field>
                   <Field label="اللون">
-                    <input style={inputStyle} placeholder="أبيض" value={form.vehicle_color}
-                      onChange={(e) => set("vehicle_color", e.target.value)} />
+                    <input
+                      style={inputStyle}
+                      placeholder="أبيض"
+                      value={form.vehicle_color}
+                      onChange={(e) => set("vehicle_color", e.target.value)}
+                    />
                   </Field>
                 </div>
 
-                <Field label="رقم اللوحة" error={errors.vehicle_plate as string}>
-                  <input style={{ ...inputStyle, maxWidth: "200px", textAlign: "center", letterSpacing: "0.15rem", fontFamily: "monospace" }}
-                    placeholder="أ ب ج 1234" value={form.vehicle_plate}
-                    onChange={(e) => set("vehicle_plate", e.target.value.toUpperCase())} />
+                <Field
+                  label="رقم اللوحة"
+                  error={errors.vehicle_plate as string}
+                >
+                  <input
+                    style={{
+                      ...inputStyle,
+                      maxWidth: "200px",
+                      textAlign: "center",
+                      letterSpacing: "0.15rem",
+                      fontFamily: "monospace",
+                    }}
+                    placeholder="أ ب ج 1234"
+                    value={form.vehicle_plate}
+                    onChange={(e) =>
+                      set("vehicle_plate", e.target.value.toUpperCase())
+                    }
+                  />
                 </Field>
 
                 <div style={grid2}>
-                  <Field label="صورة المركبة أمامية" error={errors.doc_vehicle_front as string}>
-                    <FileZone label="صورة أمامية" value={form.doc_vehicle_front}
-                      onChange={(v) => set("doc_vehicle_front", v)} />
+                  <Field
+                    label="صورة المركبة أمامية"
+                    error={errors.doc_vehicle_front as string}
+                  >
+                    <FileZone
+                      label="صورة أمامية"
+                      value={form.doc_vehicle_front}
+                      onChange={(v) => set("doc_vehicle_front", v)}
+                    />
                   </Field>
                   <Field label="صورة المركبة خلفية">
-                    <FileZone label="صورة خلفية" value={form.doc_vehicle_back}
-                      onChange={(v) => set("doc_vehicle_back", v)} />
+                    <FileZone
+                      label="صورة خلفية"
+                      value={form.doc_vehicle_back}
+                      onChange={(v) => set("doc_vehicle_back", v)}
+                    />
                   </Field>
                 </div>
                 <div style={grid2}>
                   <Field label="صورة المركبة جانبية">
-                    <FileZone label="صورة جانبية" value={form.doc_vehicle_side}
-                      onChange={(v) => set("doc_vehicle_side", v)} />
+                    <FileZone
+                      label="صورة جانبية"
+                      value={form.doc_vehicle_side}
+                      onChange={(v) => set("doc_vehicle_side", v)}
+                    />
                   </Field>
-                  <Field label="استمارة المركبة" error={errors.doc_vehicle_reg as string}>
-                    <FileZone label="رفع الاستمارة" value={form.doc_vehicle_reg}
-                      onChange={(v) => set("doc_vehicle_reg", v)} />
+                  <Field
+                    label="استمارة المركبة"
+                    error={errors.doc_vehicle_reg as string}
+                  >
+                    <FileZone
+                      label="رفع الاستمارة"
+                      value={form.doc_vehicle_reg}
+                      onChange={(v) => set("doc_vehicle_reg", v)}
+                    />
                   </Field>
                 </div>
-                <Field label="وثيقة التأمين" error={errors.doc_vehicle_insurance as string}>
-                  <FileZone label="رفع وثيقة التأمين" value={form.doc_vehicle_insurance}
-                    onChange={(v) => set("doc_vehicle_insurance", v)} />
+                <Field
+                  label="وثيقة التأمين"
+                  error={errors.doc_vehicle_insurance as string}
+                >
+                  <FileZone
+                    label="رفع وثيقة التأمين"
+                    value={form.doc_vehicle_insurance}
+                    onChange={(v) => set("doc_vehicle_insurance", v)}
+                  />
                 </Field>
               </>
             )}
 
             {/* Summary */}
-            <div style={{ background: "#081524", borderRadius: "10px", padding: "1rem", border: "1px solid #1e3a5f", marginTop: "0.5rem" }}>
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#93c5fd", marginBottom: "0.5rem" }}>ملخص الطلب</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <div
+              style={{
+                background: "#081524",
+                borderRadius: "10px",
+                padding: "1rem",
+                border: "1px solid #1e3a5f",
+                marginTop: "0.5rem",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#93c5fd",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                ملخص الطلب
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.25rem",
+                }}
+              >
                 {[
-                  { l: "الاسم",        v: form.full_name },
-                  { l: "الهوية",       v: form.national_id },
-                  { l: "المدينة",      v: form.city },
-                  { l: "البريد",       v: form.email },
-                  { l: "التحقق الحيوي", v: form.livenessComplete ? "مكتمل ✓" : "غير مكتمل" },
-                  { l: "وثائق الهوية", v: form.doc_national_id ? "مرفوعة ✓" : "غير مرفوعة" },
+                  { l: "الاسم", v: form.full_name },
+                  { l: "الهوية", v: form.national_id },
+                  { l: "المدينة", v: form.city },
+                  { l: "البريد", v: form.email },
+                  {
+                    l: "التحقق الحيوي",
+                    v: form.livenessComplete ? "مكتمل ✓" : "غير مكتمل",
+                  },
+                  {
+                    l: "وثائق الهوية",
+                    v: form.doc_national_id ? "مرفوعة ✓" : "غير مرفوعة",
+                  },
                 ].map((r) => (
-                  <div key={r.l} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <div
+                    key={r.l}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "12px",
+                    }}
+                  >
                     <span style={{ color: "#475569" }}>{r.l}</span>
-                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>{r.v || "—"}</span>
+                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>
+                      {r.v || "—"}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
             {errors.general && (
-              <div style={{ background: "#450a0a", border: "1px solid #b91c1c", borderRadius: "8px", padding: "0.75rem", fontSize: "12px", color: "#fca5a5" }}>
-                <AlertTriangle size={13} style={{ display: "inline", marginLeft: 4 }} />
+              <div
+                style={{
+                  background: "#450a0a",
+                  border: "1px solid #b91c1c",
+                  borderRadius: "8px",
+                  padding: "0.75rem",
+                  fontSize: "12px",
+                  color: "#fca5a5",
+                }}
+              >
+                <AlertTriangle
+                  size={13}
+                  style={{ display: "inline", marginLeft: 4 }}
+                />
                 {errors.general}
               </div>
             )}
@@ -1134,7 +1981,12 @@ export default function CourierRegister() {
               <button style={btnSecondary} onClick={() => setStep(3)}>
                 <ChevronRight size={15} /> رجوع
               </button>
-              <button style={btnPrimary} onClick={() => { if (validateStep5()) setStep(5); }}>
+              <button
+                style={btnPrimary}
+                onClick={() => {
+                  if (validateStep5()) setStep(5);
+                }}
+              >
                 التالي <ChevronLeft size={15} />
               </button>
             </div>
@@ -1145,26 +1997,70 @@ export default function CourierRegister() {
         {step === 5 && (
           <div style={stepContent}>
             <h3 style={stepTitle}>التحقق من البريد وإرسال الطلب</h3>
-            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "1.5rem" }}>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#64748b",
+                marginBottom: "1.5rem",
+              }}
+            >
               سيتم إرسال رمز تحقق مكون من 6 أرقام إلى{" "}
               <strong style={{ color: "#60a5fa" }}>{form.email}</strong>
             </p>
 
             {/* Summary */}
-            <div style={{ background: "#081524", borderRadius: "10px", padding: "1rem", border: "1px solid #1e3a5f", marginBottom: "1rem" }}>
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#93c5fd", marginBottom: "0.5rem" }}>ملخص الطلب</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <div
+              style={{
+                background: "#081524",
+                borderRadius: "10px",
+                padding: "1rem",
+                border: "1px solid #1e3a5f",
+                marginBottom: "1rem",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#93c5fd",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                ملخص الطلب
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.25rem",
+                }}
+              >
                 {[
-                  { l: "الاسم",        v: form.full_name },
-                  { l: "الهوية",       v: form.national_id },
-                  { l: "المدينة",      v: form.city },
-                  { l: "البريد",       v: form.email },
-                  { l: "التحقق الحيوي", v: form.livenessComplete ? "مكتمل ✓" : "غير مكتمل" },
-                  { l: "وثائق الهوية", v: form.doc_national_id ? "مرفوعة ✓" : "غير مرفوعة" },
+                  { l: "الاسم", v: form.full_name },
+                  { l: "الهوية", v: form.national_id },
+                  { l: "المدينة", v: form.city },
+                  { l: "البريد", v: form.email },
+                  {
+                    l: "التحقق الحيوي",
+                    v: form.livenessComplete ? "مكتمل ✓" : "غير مكتمل",
+                  },
+                  {
+                    l: "وثائق الهوية",
+                    v: form.doc_national_id ? "مرفوعة ✓" : "غير مرفوعة",
+                  },
                 ].map((r) => (
-                  <div key={r.l} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <div
+                    key={r.l}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "12px",
+                    }}
+                  >
                     <span style={{ color: "#475569" }}>{r.l}</span>
-                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>{r.v || "—"}</span>
+                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>
+                      {r.v || "—"}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1173,35 +2069,78 @@ export default function CourierRegister() {
             {!otpSent ? (
               <div style={{ textAlign: "center" }}>
                 <button
-                  style={{ ...btnPrimary, fontSize: "14px", padding: "0.75rem 2rem" }}
+                  style={{
+                    ...btnPrimary,
+                    fontSize: "14px",
+                    padding: "0.75rem 2rem",
+                  }}
                   onClick={sendOtp}
                   disabled={otpSending}
                 >
-                  {otpSending ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الإرسال...</> : <>
-                    <Mail size={15} style={{ display: "inline", marginLeft: 6 }} />
-                    إرسال رمز التحقق
-                  </>}
+                  {otpSending ? (
+                    <>
+                      <Loader2
+                        size={15}
+                        style={{ animation: "spin 1s linear infinite" }}
+                      />{" "}
+                      جارٍ الإرسال...
+                    </>
+                  ) : (
+                    <>
+                      <Mail
+                        size={15}
+                        style={{ display: "inline", marginLeft: 6 }}
+                      />
+                      إرسال رمز التحقق
+                    </>
+                  )}
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
                 <div style={{ textAlign: "center" }}>
-                  <div style={{
-                    width: "56px", height: "56px", borderRadius: "50%",
-                    background: "#0d2244", border: "2px solid #1d4ed8",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 0.75rem",
-                  }}>
+                  <div
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "50%",
+                      background: "#0d2244",
+                      border: "2px solid #1d4ed8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 0.75rem",
+                    }}
+                  >
                     <Mail size={24} style={{ color: "#60a5fa" }} />
                   </div>
                   <p style={{ fontSize: "13px", color: "#94a3b8" }}>
-                    تم إرسال الرمز. تحقق من بريدك الإلكتروني (قد يكون في مجلد الرسائل غير المرغوب فيها).
+                    تم إرسال الرمز. تحقق من بريدك الإلكتروني (قد يكون في مجلد
+                    الرسائل غير المرغوب فيها).
                   </p>
                 </div>
 
-                <Field label="رمز التحقق (6 أرقام)" icon={Shield} error={errors.otpCode as string}>
-                  <div dir="ltr" style={{ display: "flex", justifyContent: "center" }}>
-                    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={form.otpCode} onChange={(val) => set("otpCode", val)}>
+                <Field
+                  label="رمز التحقق (6 أرقام)"
+                  icon={Shield}
+                  error={errors.otpCode as string}
+                >
+                  <div
+                    dir="ltr"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
+                    <InputOTP
+                      maxLength={6}
+                      pattern={REGEXP_ONLY_DIGITS}
+                      value={form.otpCode}
+                      onChange={(val) => set("otpCode", val)}
+                    >
                       <InputOTPGroup>
                         <InputOTPSlot index={0} />
                         <InputOTPSlot index={1} />
@@ -1221,19 +2160,48 @@ export default function CourierRegister() {
                   <button style={btnSecondary} onClick={() => setStep(4)}>
                     <ChevronRight size={15} /> رجوع
                   </button>
-                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "0.5rem",
+                      alignItems: "center",
+                    }}
+                  >
                     {otpCooldown > 0 ? (
                       <span style={{ fontSize: "12px", color: "#475569" }}>
-                        <Clock size={12} style={{ display: "inline", marginLeft: 4 }} />
+                        <Clock
+                          size={12}
+                          style={{ display: "inline", marginLeft: 4 }}
+                        />
                         إعادة الإرسال بعد {otpCooldown}ث
                       </span>
                     ) : (
-                      <button style={{ ...btnSecondary, fontSize: "12px" }} onClick={sendOtp} disabled={otpSending}>
+                      <button
+                        style={{ ...btnSecondary, fontSize: "12px" }}
+                        onClick={sendOtp}
+                        disabled={otpSending}
+                      >
                         <RefreshCw size={12} /> إعادة الإرسال
                       </button>
                     )}
-                    <button style={{ ...btnPrimary, background: "#15803d" }} onClick={verifyOtp} disabled={otpVerifying || submitting}>
-                      {(otpVerifying || submitting) ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> جارٍ التحقق...</> : <><CheckCircle2 size={15} /> تحقق وأرسل الطلب</>}
+                    <button
+                      style={{ ...btnPrimary, background: "#15803d" }}
+                      onClick={verifyOtp}
+                      disabled={otpVerifying || submitting}
+                    >
+                      {otpVerifying || submitting ? (
+                        <>
+                          <Loader2
+                            size={15}
+                            style={{ animation: "spin 1s linear infinite" }}
+                          />{" "}
+                          جارٍ التحقق...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={15} /> تحقق وأرسل الطلب
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1249,8 +2217,21 @@ export default function CourierRegister() {
             )}
 
             {errors.general && (
-              <div style={{ background: "#450a0a", border: "1px solid #b91c1c", borderRadius: "8px", padding: "0.75rem", fontSize: "12px", color: "#fca5a5", marginTop: "0.75rem" }}>
-                <AlertTriangle size={13} style={{ display: "inline", marginLeft: 4 }} />
+              <div
+                style={{
+                  background: "#450a0a",
+                  border: "1px solid #b91c1c",
+                  borderRadius: "8px",
+                  padding: "0.75rem",
+                  fontSize: "12px",
+                  color: "#fca5a5",
+                  marginTop: "0.75rem",
+                }}
+              >
+                <AlertTriangle
+                  size={13}
+                  style={{ display: "inline", marginLeft: 4 }}
+                />
                 {errors.general}
               </div>
             )}
@@ -1260,9 +2241,19 @@ export default function CourierRegister() {
         )}
       </div>
 
-      <p style={{ textAlign: "center", marginTop: "1rem", fontSize: "12px", color: "#334155" }}>
+      <p
+        style={{
+          textAlign: "center",
+          marginTop: "1rem",
+          fontSize: "12px",
+          color: "#334155",
+        }}
+      >
         لديك طلب مسبق؟{" "}
-        <a href="/application-status" style={{ color: "#60a5fa", textDecoration: "none" }}>
+        <a
+          href="/application-status"
+          style={{ color: "#60a5fa", textDecoration: "none" }}
+        >
           تتبع حالة طلبك
         </a>
       </p>
@@ -1322,17 +2313,30 @@ const navRow: React.CSSProperties = {
 };
 
 const btnPrimary: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: "0.375rem",
-  background: "#1d4ed8", color: "#fff", border: "none",
-  borderRadius: "8px", padding: "0.625rem 1.25rem",
-  fontSize: "13px", fontWeight: 600, cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.375rem",
+  background: "#1d4ed8",
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  padding: "0.625rem 1.25rem",
+  fontSize: "13px",
+  fontWeight: 600,
+  cursor: "pointer",
   transition: "background 0.15s",
 };
 
 const btnSecondary: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: "0.375rem",
-  background: "#0f2744", color: "#94a3b8",
-  border: "1px solid #1e3a5f", borderRadius: "8px",
-  padding: "0.625rem 1rem", fontSize: "13px",
-  fontWeight: 600, cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.375rem",
+  background: "#0f2744",
+  color: "#94a3b8",
+  border: "1px solid #1e3a5f",
+  borderRadius: "8px",
+  padding: "0.625rem 1rem",
+  fontSize: "13px",
+  fontWeight: 600,
+  cursor: "pointer",
 };

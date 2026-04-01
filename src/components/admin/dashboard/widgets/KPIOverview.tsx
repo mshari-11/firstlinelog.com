@@ -4,12 +4,23 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Users, Package, DollarSign, AlertCircle,
-  Bike, Clock, TrendingUp, TrendingDown, ShieldAlert,
+  Users,
+  Package,
+  DollarSign,
+  AlertCircle,
+  Bike,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  ShieldAlert,
 } from "lucide-react";
 import { useDashboardStore } from "@/stores/useDashboardStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 
 interface KPIItem {
@@ -119,7 +130,14 @@ export function KPIOverview() {
             onClick={() => navigate(kpi.link)}
             style={{ cursor: "pointer" }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
               <kpi.icon size={15} style={{ color: kpi.accent }} />
               {kpi.change !== undefined && (
                 <div
@@ -129,10 +147,17 @@ export function KPIOverview() {
                     gap: 3,
                     fontSize: "var(--con-text-caption)",
                     fontWeight: 600,
-                    color: kpi.change > 0 ? "var(--con-success)" : "var(--con-danger)",
+                    color:
+                      kpi.change > 0
+                        ? "var(--con-success)"
+                        : "var(--con-danger)",
                   }}
                 >
-                  {kpi.change > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                  {kpi.change > 0 ? (
+                    <TrendingUp size={12} />
+                  ) : (
+                    <TrendingDown size={12} />
+                  )}
                   {Math.abs(kpi.change)}%
                 </div>
               )}
@@ -157,7 +182,10 @@ export function KPIOverview() {
               {kpi.label}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info size={11} style={{ color: "var(--con-text-muted)", cursor: "help" }} />
+                  <Info
+                    size={11}
+                    style={{ color: "var(--con-text-muted)", cursor: "help" }}
+                  />
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
                   <p style={{ fontSize: 12, maxWidth: 200 }}>{kpi.tip}</p>

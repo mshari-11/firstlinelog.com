@@ -44,7 +44,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const stats = [
@@ -95,11 +99,46 @@ const stats = [
 ];
 
 const recentOrders = [
-  { id: "FLL-10847", customer: "مطاعم البيك", driver: "أحمد محمد", status: "delivered", time: "منذ 5 دقائق", city: "جدة" },
-  { id: "FLL-10846", customer: "هنقرستيشن", driver: "خالد علي", status: "in_transit", time: "منذ 12 دقيقة", city: "الرياض" },
-  { id: "FLL-10845", customer: "جاهز", driver: "سعد ناصر", status: "picked_up", time: "منذ 18 دقيقة", city: "جدة" },
-  { id: "FLL-10844", customer: "مرسول", driver: "فهد أحمد", status: "pending", time: "منذ 25 دقيقة", city: "الدمام" },
-  { id: "FLL-10843", customer: "نون فود", driver: "عمر سعيد", status: "delivered", time: "منذ 30 دقيقة", city: "مكة" },
+  {
+    id: "FLL-10847",
+    customer: "مطاعم البيك",
+    driver: "أحمد محمد",
+    status: "delivered",
+    time: "منذ 5 دقائق",
+    city: "جدة",
+  },
+  {
+    id: "FLL-10846",
+    customer: "هنقرستيشن",
+    driver: "خالد علي",
+    status: "in_transit",
+    time: "منذ 12 دقيقة",
+    city: "الرياض",
+  },
+  {
+    id: "FLL-10845",
+    customer: "جاهز",
+    driver: "سعد ناصر",
+    status: "picked_up",
+    time: "منذ 18 دقيقة",
+    city: "جدة",
+  },
+  {
+    id: "FLL-10844",
+    customer: "مرسول",
+    driver: "فهد أحمد",
+    status: "pending",
+    time: "منذ 25 دقيقة",
+    city: "الدمام",
+  },
+  {
+    id: "FLL-10843",
+    customer: "نون فود",
+    driver: "عمر سعيد",
+    status: "delivered",
+    time: "منذ 30 دقيقة",
+    city: "مكة",
+  },
 ];
 
 const topCities = [
@@ -110,7 +149,13 @@ const topCities = [
   { name: "المدينة", orders: 1247, percentage: 10 },
 ];
 
-const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusMap: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   delivered: { label: "تم التسليم", variant: "default" },
   in_transit: { label: "في الطريق", variant: "secondary" },
   picked_up: { label: "تم الاستلام", variant: "outline" },
@@ -148,21 +193,36 @@ interface QuickAction {
   color: string;
 }
 
-function QuickActionGroup({ title, actions, navigate }: { title: string; actions: QuickAction[]; navigate: (p: string) => void }) {
+function QuickActionGroup({
+  title,
+  actions,
+  navigate,
+}: {
+  title: string;
+  actions: QuickAction[];
+  navigate: (p: string) => void;
+}) {
   return (
     <div>
-      <p className="text-xs font-semibold text-muted-foreground mb-2">{title}</p>
+      <p className="text-xs font-semibold text-muted-foreground mb-2">
+        {title}
+      </p>
       <div className="flex flex-wrap gap-2">
-        {actions.map(a => (
+        {actions.map((a) => (
           <button
             key={a.path + a.label}
             onClick={() => navigate(a.path)}
             className="group flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background hover:bg-muted/60 hover:border-primary/30 transition-all text-sm"
           >
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: a.color + "18" }}>
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center"
+              style={{ background: a.color + "18" }}
+            >
               <a.icon className="w-3.5 h-3.5" style={{ color: a.color }} />
             </div>
-            <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground whitespace-nowrap">{a.label}</span>
+            <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground whitespace-nowrap">
+              {a.label}
+            </span>
           </button>
         ))}
       </div>
@@ -180,16 +240,34 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
       {/* العنوان */}
-      <motion.div variants={item} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <motion.div
+        variants={item}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-bold">لوحة التحكم</h1>
-          <p className="text-muted-foreground text-sm mt-1">نظرة عامة على العمليات اليومية</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            نظرة عامة على العمليات اليومية
+          </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-2">
           <Calendar className="w-4 h-4" />
-          <span>اليوم: {new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
+          <span>
+            اليوم:{" "}
+            {new Date().toLocaleDateString("ar-SA", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
         </div>
       </motion.div>
 
@@ -207,14 +285,24 @@ export default function AdminDashboard() {
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`flex items-center gap-1 text-xs font-bold ${stat.trend === "up" ? "text-emerald-600" : "text-amber-600"}`}>
-                      {stat.trend === "up" ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                    <div
+                      className={`flex items-center gap-1 text-xs font-bold ${stat.trend === "up" ? "text-emerald-600" : "text-amber-600"}`}
+                    >
+                      {stat.trend === "up" ? (
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      ) : (
+                        <ArrowDownRight className="w-3.5 h-3.5" />
+                      )}
                       {stat.change}
                     </div>
-                    {stat.link && <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/50 rotate-180" />}
+                    {stat.link && (
+                      <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/50 rotate-180" />
+                    )}
                   </div>
                 </div>
-                <p className="text-2xl font-bold tracking-tight font-mono">{stat.value}</p>
+                <p className="text-2xl font-bold tracking-tight font-mono">
+                  {stat.value}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                   {stat.title}
                   {stat.tip && (
@@ -245,49 +333,194 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* التشغيل */}
-            <QuickActionGroup title="التشغيل" actions={[
-              { label: "طلب جديد", icon: Plus, path: "/admin-panel/orders", color: "#3b82f6" },
-              { label: "إضافة مندوب", icon: Users, path: "/admin-panel/couriers", color: "#10b981" },
-              { label: "تسجيل شكوى", icon: MessageSquare, path: "/admin-panel/complaints", color: "#f59e0b" },
-              { label: "إرسال شحنة", icon: Package, path: "/admin-panel/shipments", color: "#8b5cf6" },
-              { label: "خريطة الإرسال", icon: Map, path: "/admin-panel/dispatch", color: "#06b6d4" },
-              { label: "مراقبة SLA", icon: Target, path: "/admin-panel/sla", color: "#ec4899" },
-              { label: "تكاملات المنصات", icon: Plug, path: "/admin-panel/marketplace", color: "#6366f1" },
-            ]} navigate={navigate} />
+            <QuickActionGroup
+              title="التشغيل"
+              actions={[
+                {
+                  label: "طلب جديد",
+                  icon: Plus,
+                  path: "/admin-panel/orders",
+                  color: "#3b82f6",
+                },
+                {
+                  label: "إضافة مندوب",
+                  icon: Users,
+                  path: "/admin-panel/couriers",
+                  color: "#10b981",
+                },
+                {
+                  label: "تسجيل شكوى",
+                  icon: MessageSquare,
+                  path: "/admin-panel/complaints",
+                  color: "#f59e0b",
+                },
+                {
+                  label: "إرسال شحنة",
+                  icon: Package,
+                  path: "/admin-panel/shipments",
+                  color: "#8b5cf6",
+                },
+                {
+                  label: "خريطة الإرسال",
+                  icon: Map,
+                  path: "/admin-panel/dispatch",
+                  color: "#06b6d4",
+                },
+                {
+                  label: "مراقبة SLA",
+                  icon: Target,
+                  path: "/admin-panel/sla",
+                  color: "#ec4899",
+                },
+                {
+                  label: "تكاملات المنصات",
+                  icon: Plug,
+                  path: "/admin-panel/marketplace",
+                  color: "#6366f1",
+                },
+              ]}
+              navigate={navigate}
+            />
 
             {/* المالية */}
-            <QuickActionGroup title="المالية والموارد" actions={[
-              { label: "إنشاء دفعة", icon: CreditCard, path: "/admin-panel/payouts", color: "#10b981" },
-              { label: "لوحة المالية", icon: Wallet, path: "/admin-panel/finance-dashboard", color: "#3b82f6" },
-              { label: "تحليل AI", icon: Brain, path: "/admin-panel/ai-finance", color: "#8b5cf6" },
-              { label: "تقرير مالي", icon: BarChart3, path: "/admin-panel/financial-reports", color: "#f59e0b" },
-              { label: "استيراد Excel", icon: FileSpreadsheet, path: "/admin-panel/excel", color: "#22c55e" },
-              { label: "الفواتير", icon: ClipboardList, path: "/admin-panel/invoices", color: "#06b6d4" },
-            ]} navigate={navigate} />
+            <QuickActionGroup
+              title="المالية والموارد"
+              actions={[
+                {
+                  label: "إنشاء دفعة",
+                  icon: CreditCard,
+                  path: "/admin-panel/payouts",
+                  color: "#10b981",
+                },
+                {
+                  label: "لوحة المالية",
+                  icon: Wallet,
+                  path: "/admin-panel/finance-dashboard",
+                  color: "#3b82f6",
+                },
+                {
+                  label: "تحليل AI",
+                  icon: Brain,
+                  path: "/admin-panel/ai-finance",
+                  color: "#8b5cf6",
+                },
+                {
+                  label: "تقرير مالي",
+                  icon: BarChart3,
+                  path: "/admin-panel/financial-reports",
+                  color: "#f59e0b",
+                },
+                {
+                  label: "استيراد Excel",
+                  icon: FileSpreadsheet,
+                  path: "/admin-panel/excel",
+                  color: "#22c55e",
+                },
+                {
+                  label: "الفواتير",
+                  icon: ClipboardList,
+                  path: "/admin-panel/invoices",
+                  color: "#06b6d4",
+                },
+              ]}
+              navigate={navigate}
+            />
 
             {/* الأصول والموظفون */}
-            <QuickActionGroup title="الأصول والموظفون" actions={[
-              { label: "إضافة مركبة", icon: Car, path: "/admin-panel/vehicles", color: "#3b82f6" },
-              { label: "إدارة الموظفين", icon: Building2, path: "/admin-panel/staff", color: "#10b981" },
-              { label: "إدارة الأسطول", icon: Truck, path: "/admin-panel/fleet", color: "#f59e0b" },
-              { label: "الحضور", icon: Clock, path: "/admin-panel/attendance", color: "#8b5cf6" },
-            ]} navigate={navigate} />
+            <QuickActionGroup
+              title="الأصول والموظفون"
+              actions={[
+                {
+                  label: "إضافة مركبة",
+                  icon: Car,
+                  path: "/admin-panel/vehicles",
+                  color: "#3b82f6",
+                },
+                {
+                  label: "إدارة الموظفين",
+                  icon: Building2,
+                  path: "/admin-panel/staff",
+                  color: "#10b981",
+                },
+                {
+                  label: "إدارة الأسطول",
+                  icon: Truck,
+                  path: "/admin-panel/fleet",
+                  color: "#f59e0b",
+                },
+                {
+                  label: "الحضور",
+                  icon: Clock,
+                  path: "/admin-panel/attendance",
+                  color: "#8b5cf6",
+                },
+              ]}
+              navigate={navigate}
+            />
 
             {/* النظام */}
-            <QuickActionGroup title="النظام" actions={[
-              { label: "الاعتمادات", icon: CheckCircle2, path: "/admin-panel/approvals", color: "#10b981" },
-              { label: "الإشعارات", icon: Bell, path: "/admin-panel/notifications", color: "#f59e0b" },
-              { label: "سجل التدقيق", icon: ScrollText, path: "/admin-panel/audit-log", color: "#6366f1" },
-              { label: "سجل الإيميلات", icon: Mail, path: "/admin-panel/email-logs", color: "#06b6d4" },
-              { label: "الإعدادات", icon: Settings2, path: "/admin-panel/settings", color: "#64748b" },
-            ]} navigate={navigate} />
+            <QuickActionGroup
+              title="النظام"
+              actions={[
+                {
+                  label: "الاعتمادات",
+                  icon: CheckCircle2,
+                  path: "/admin-panel/approvals",
+                  color: "#10b981",
+                },
+                {
+                  label: "الإشعارات",
+                  icon: Bell,
+                  path: "/admin-panel/notifications",
+                  color: "#f59e0b",
+                },
+                {
+                  label: "سجل التدقيق",
+                  icon: ScrollText,
+                  path: "/admin-panel/audit-log",
+                  color: "#6366f1",
+                },
+                {
+                  label: "سجل الإيميلات",
+                  icon: Mail,
+                  path: "/admin-panel/email-logs",
+                  color: "#06b6d4",
+                },
+                {
+                  label: "الإعدادات",
+                  icon: Settings2,
+                  path: "/admin-panel/settings",
+                  color: "#64748b",
+                },
+              ]}
+              navigate={navigate}
+            />
 
             {/* السائقون */}
-            <QuickActionGroup title="السائقون" actions={[
-              { label: "طلبات التسجيل", icon: UserCheck, path: "/admin-panel/driver-applications", color: "#3b82f6" },
-              { label: "وثائق KYC", icon: Shield, path: "/admin-panel/kyc", color: "#f59e0b" },
-              { label: "التدريب", icon: GraduationCap, path: "/admin-panel/driver-training", color: "#10b981" },
-            ]} navigate={navigate} />
+            <QuickActionGroup
+              title="السائقون"
+              actions={[
+                {
+                  label: "طلبات التسجيل",
+                  icon: UserCheck,
+                  path: "/admin-panel/driver-applications",
+                  color: "#3b82f6",
+                },
+                {
+                  label: "وثائق KYC",
+                  icon: Shield,
+                  path: "/admin-panel/kyc",
+                  color: "#f59e0b",
+                },
+                {
+                  label: "التدريب",
+                  icon: GraduationCap,
+                  path: "/admin-panel/driver-training",
+                  color: "#10b981",
+                },
+              ]}
+              navigate={navigate}
+            />
           </CardContent>
         </Card>
       </motion.div>
@@ -321,30 +554,44 @@ export default function AdminDashboard() {
                     <OrderSkeleton />
                     <OrderSkeleton />
                   </>
-                ) : recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Truck className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-muted-foreground">{order.id}</span>
-                        <Badge variant={statusMap[order.status].variant} className="text-[10px] px-2">
-                          {statusMap[order.status].label}
-                        </Badge>
+                ) : (
+                  recentOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Truck className="w-5 h-5 text-primary" />
                       </div>
-                      <p className="text-sm font-medium mt-1 truncate">{order.customer}</p>
-                    </div>
-                    <div className="text-left hidden sm:block">
-                      <p className="text-sm font-medium">{order.driver}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        {order.city}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-muted-foreground">
+                            {order.id}
+                          </span>
+                          <Badge
+                            variant={statusMap[order.status].variant}
+                            className="text-[10px] px-2"
+                          >
+                            {statusMap[order.status].label}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium mt-1 truncate">
+                          {order.customer}
+                        </p>
                       </div>
+                      <div className="text-left hidden sm:block">
+                        <p className="text-sm font-medium">{order.driver}</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="w-3 h-3" />
+                          {order.city}
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {order.time}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{order.time}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -354,14 +601,18 @@ export default function AdminDashboard() {
         <motion.div variants={item}>
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-bold">التوزيع حسب المدينة</CardTitle>
+              <CardTitle className="text-base font-bold">
+                التوزيع حسب المدينة
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               {topCities.map((city) => (
                 <div key={city.name} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{city.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{city.orders.toLocaleString("ar-SA")} طلب</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {city.orders.toLocaleString("ar-SA")} طلب
+                    </span>
                   </div>
                   <Progress value={city.percentage} className="h-2" />
                 </div>

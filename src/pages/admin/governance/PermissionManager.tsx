@@ -3,13 +3,49 @@
  * CRUD for roles, module permissions, action granularity, data-scope
  */
 import { useState, useEffect } from "react";
-import { Shield, Plus, Edit2, Trash2, Save, ChevronDown, ChevronUp } from "lucide-react";
-import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Toolbar, Badge, Button, Modal, Select } from "@/components/admin/ui";
-import { SYSTEM_ROLES, type EnhancedRole, type PermissionAction, type ModulePermission } from "@/lib/admin/permissions";
-import { DEFAULT_MODULES, GROUP_LABELS, type ModuleGroup } from "@/lib/admin/moduleRegistry";
+import {
+  Shield,
+  Plus,
+  Edit2,
+  Trash2,
+  Save,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import {
+  PageWrapper,
+  PageHeader,
+  Card,
+  KPIGrid,
+  KPICard,
+  Toolbar,
+  Badge,
+  Button,
+  Modal,
+  Select,
+} from "@/components/admin/ui";
+import {
+  SYSTEM_ROLES,
+  type EnhancedRole,
+  type PermissionAction,
+  type ModulePermission,
+} from "@/lib/admin/permissions";
+import {
+  DEFAULT_MODULES,
+  GROUP_LABELS,
+  type ModuleGroup,
+} from "@/lib/admin/moduleRegistry";
 import { supabase } from "@/lib/supabase";
 
-const ALL_ACTIONS: PermissionAction[] = ["view", "create", "edit", "delete", "approve", "export", "configure"];
+const ALL_ACTIONS: PermissionAction[] = [
+  "view",
+  "create",
+  "edit",
+  "delete",
+  "approve",
+  "export",
+  "configure",
+];
 const ACTION_LABELS: Record<PermissionAction, string> = {
   view: "عرض",
   create: "إنشاء",
@@ -39,7 +75,7 @@ export default function PermissionManager() {
           const existing = roleMap.get(row.role_name) || [];
           const actions: PermissionAction[] = Array.isArray(row.actions)
             ? (row.actions as string[]).filter((a): a is PermissionAction =>
-                ALL_ACTIONS.includes(a as PermissionAction)
+                ALL_ACTIONS.includes(a as PermissionAction),
               )
             : [];
           if (actions.length > 0) {
@@ -55,7 +91,7 @@ export default function PermissionManager() {
             const dbModules = roleMap.get(r.name);
             if (!dbModules) return r;
             return { ...r, modules: dbModules };
-          })
+          }),
         );
       } catch {
         // silent — keep fallback SYSTEM_ROLES
@@ -63,7 +99,9 @@ export default function PermissionManager() {
     })();
   }, []);
   const [selectedRole, setSelectedRole] = useState<string>(roles[0]?.id || "");
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["operations"]));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(["operations"]),
+  );
 
   const currentRole = roles.find((r) => r.id === selectedRole);
 
@@ -88,13 +126,19 @@ export default function PermissionManager() {
             : [...existing.actions, action];
           return {
             ...r,
-            modules: newActions.length === 0
-              ? r.modules.filter((m) => m.moduleId !== moduleId)
-              : r.modules.map((m) => (m.moduleId === moduleId ? { ...m, actions: newActions } : m)),
+            modules:
+              newActions.length === 0
+                ? r.modules.filter((m) => m.moduleId !== moduleId)
+                : r.modules.map((m) =>
+                    m.moduleId === moduleId ? { ...m, actions: newActions } : m,
+                  ),
           };
         }
-        return { ...r, modules: [...r.modules, { moduleId, actions: [action] }] };
-      })
+        return {
+          ...r,
+          modules: [...r.modules, { moduleId, actions: [action] }],
+        };
+      }),
     );
   };
 
@@ -106,12 +150,15 @@ export default function PermissionManager() {
   };
 
   // Group modules
-  const groupedModules = DEFAULT_MODULES.reduce((acc, m) => {
-    const g = m.group;
-    if (!acc[g]) acc[g] = [];
-    acc[g].push(m);
-    return acc;
-  }, {} as Record<string, typeof DEFAULT_MODULES>);
+  const groupedModules = DEFAULT_MODULES.reduce(
+    (acc, m) => {
+      const g = m.group;
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(m);
+      return acc;
+    },
+    {} as Record<string, typeof DEFAULT_MODULES>,
+  );
 
   return (
     <PageWrapper>
@@ -123,14 +170,41 @@ export default function PermissionManager() {
       />
 
       <KPIGrid cols="repeat(4, 1fr)">
-        <KPICard label="الأدوار" value={roles.length} icon={Shield} accent="var(--con-brand)" />
-        <KPICard label="أدوار النظام" value={roles.filter((r) => r.isSystem).length} icon={Shield} accent="var(--con-info)" />
-        <KPICard label="أدوار مخصصة" value={roles.filter((r) => !r.isSystem).length} icon={Shield} accent="var(--con-success)" />
-        <KPICard label="إجمالي الوحدات" value={DEFAULT_MODULES.length} icon={Shield} accent="var(--con-warning)" />
+        <KPICard
+          label="الأدوار"
+          value={roles.length}
+          icon={Shield}
+          accent="var(--con-brand)"
+        />
+        <KPICard
+          label="أدوار النظام"
+          value={roles.filter((r) => r.isSystem).length}
+          icon={Shield}
+          accent="var(--con-info)"
+        />
+        <KPICard
+          label="أدوار مخصصة"
+          value={roles.filter((r) => !r.isSystem).length}
+          icon={Shield}
+          accent="var(--con-success)"
+        />
+        <KPICard
+          label="إجمالي الوحدات"
+          value={DEFAULT_MODULES.length}
+          icon={Shield}
+          accent="var(--con-warning)"
+        />
       </KPIGrid>
 
       {/* Role Selector */}
-      <Card title="اختر الدور" actions={<Button variant="ghost" icon={Plus}>إضافة دور</Button>}>
+      <Card
+        title="اختر الدور"
+        actions={
+          <Button variant="ghost" icon={Plus}>
+            إضافة دور
+          </Button>
+        }
+      >
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {roles.map((role) => (
             <button
@@ -140,8 +214,14 @@ export default function PermissionManager() {
                 padding: "8px 16px",
                 borderRadius: "var(--con-radius)",
                 border: `1px solid ${selectedRole === role.id ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
-                background: selectedRole === role.id ? "var(--con-brand-subtle)" : "var(--con-bg-surface-2)",
-                color: selectedRole === role.id ? "var(--con-brand)" : "var(--con-text-secondary)",
+                background:
+                  selectedRole === role.id
+                    ? "var(--con-brand-subtle)"
+                    : "var(--con-bg-surface-2)",
+                color:
+                  selectedRole === role.id
+                    ? "var(--con-brand)"
+                    : "var(--con-text-secondary)",
                 cursor: "pointer",
                 fontSize: "var(--con-text-body)",
                 fontWeight: 500,
@@ -151,7 +231,15 @@ export default function PermissionManager() {
             >
               {role.nameAr}
               {role.isSystem && (
-                <span style={{ fontSize: 10, color: "var(--con-text-muted)", marginRight: 6 }}>(نظام)</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--con-text-muted)",
+                    marginRight: 6,
+                  }}
+                >
+                  (نظام)
+                </span>
               )}
             </button>
           ))}
@@ -162,7 +250,11 @@ export default function PermissionManager() {
       {currentRole && (
         <Card
           title={`صلاحيات: ${currentRole.nameAr}`}
-          subtitle={currentRole.isSystem ? "دور نظام — صلاحيات كاملة تلقائياً" : "اضغط على الإجراء لتفعيله أو تعطيله"}
+          subtitle={
+            currentRole.isSystem
+              ? "دور نظام — صلاحيات كاملة تلقائياً"
+              : "اضغط على الإجراء لتفعيله أو تعطيله"
+          }
         >
           {currentRole.isSystem && (
             <div
@@ -176,7 +268,8 @@ export default function PermissionManager() {
                 color: "var(--con-brand)",
               }}
             >
-              هذا دور نظام — يملك صلاحيات كاملة على جميع الوحدات تلقائياً ولا يمكن تعديله.
+              هذا دور نظام — يملك صلاحيات كاملة على جميع الوحدات تلقائياً ولا
+              يمكن تعديله.
             </div>
           )}
 
@@ -201,12 +294,26 @@ export default function PermissionManager() {
                     fontFamily: "var(--con-font-primary)",
                   }}
                 >
-                  <span>{GROUP_LABELS[group as ModuleGroup] || group} ({modules.length})</span>
-                  {expandedGroups.has(group) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <span>
+                    {GROUP_LABELS[group as ModuleGroup] || group} (
+                    {modules.length})
+                  </span>
+                  {expandedGroups.has(group) ? (
+                    <ChevronUp size={14} />
+                  ) : (
+                    <ChevronDown size={14} />
+                  )}
                 </button>
 
                 {expandedGroups.has(group) && (
-                  <div style={{ padding: "8px 0", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div
+                    style={{
+                      padding: "8px 0",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
                     {modules.map((mod) => (
                       <div
                         key={mod.id}
@@ -219,7 +326,13 @@ export default function PermissionManager() {
                           border: "1px solid var(--con-border-default)",
                         }}
                       >
-                        <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-primary)", fontWeight: 500 }}>
+                        <span
+                          style={{
+                            fontSize: "var(--con-text-body)",
+                            color: "var(--con-text-primary)",
+                            fontWeight: 500,
+                          }}
+                        >
                           {mod.labelAr}
                         </span>
                         <div style={{ display: "flex", gap: 3 }}>
@@ -236,9 +349,15 @@ export default function PermissionManager() {
                                   fontSize: 10,
                                   fontWeight: 600,
                                   border: `1px solid ${active ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
-                                  background: active ? "var(--con-brand-subtle)" : "transparent",
-                                  color: active ? "var(--con-brand)" : "var(--con-text-disabled)",
-                                  cursor: currentRole.isSystem ? "not-allowed" : "pointer",
+                                  background: active
+                                    ? "var(--con-brand-subtle)"
+                                    : "transparent",
+                                  color: active
+                                    ? "var(--con-brand)"
+                                    : "var(--con-text-disabled)",
+                                  cursor: currentRole.isSystem
+                                    ? "not-allowed"
+                                    : "pointer",
                                   fontFamily: "var(--con-font-primary)",
                                   transition: "all 0.15s",
                                   opacity: currentRole.isSystem ? 0.5 : 1,

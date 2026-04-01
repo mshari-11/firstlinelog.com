@@ -1,12 +1,14 @@
 # FirstLine Logistics — Project Context
 
 ## Stack
+
 - **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS v4 + shadcn/ui (Radix)
 - **Backend**: Supabase (Auth + DB + Edge Functions) + AWS Lambda + SES
 - **Hosting**: Vercel (static + rewrites)
 - **Repo**: github.com/mshari-11/firstlinelog.com
 
 ## Architecture
+
 - Static public site: `/index.html` (root)
 - React SPA: `/spa.html` → builds to `/dist/`
 - Vercel rewrites admin/courier/login routes to `/dist/index`
@@ -15,6 +17,7 @@
 - AWS SES for emails
 
 ## Key Paths
+
 - `/src/` — React SPA source
 - `/src/lib/supabase.ts` — Supabase client
 - `/src/lib/admin/auth.tsx` — Admin auth context
@@ -25,6 +28,7 @@
 - `/vite.config.ts` — Vite config with SPA fallback
 
 ## Commands
+
 - `npm run dev` — Start dev server
 - `npm run build` — Build for production
 - `vercel` — Deploy to Vercel
@@ -34,10 +38,12 @@
 - `git push origin main` — Push to GitHub
 
 ## Environment Variables (required in .env.local)
+
 - `VITE_SUPABASE_URL` — Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` — Supabase anon key
 
 ## Infrastructure (updated 2026-03-28)
+
 - **Lambda Functions**: 16 (Python 3.12 + Node.js 18.x) in `/lambda-code/`
 - **Supabase Edge Functions**: 35 in `/supabase/functions/`
 - **API Gateways**: 2 (HTTP API `k8d4arcxu4` ⚠️ BROKEN + REST API `qihrv9osed` OK)
@@ -51,6 +57,7 @@
 - **Legacy HTML**: 9 files → 301 redirects to SPA routes via vercel.json
 
 ## Conventions
+
 - Arabic RTL UI throughout — `dir="rtl"` on root containers
 - Path alias: `@/` → `./src/`
 - Admin pages use inline styles with `--con-*` CSS variables (NOT Tailwind classes)
@@ -62,22 +69,26 @@
 - After completing any feature: `npm run build` → `git commit` → `git push origin main` (Vercel auto-deploys)
 
 ## Service Worker Warning
+
 - `sw.js` at root intercepts GET requests — SPA routes EXCLUDED (network-only)
 - Cache version: `fll-v2` — bump when changing SW behavior
 - Never cache: `/admin*`, `/unified-login`, `/login`, `/courier*`, `/dist/`
 
 ## OTP System — LOCKED (DO NOT MODIFY)
+
 ⚠️ **CRITICAL: These files and configurations are LOCKED. DO NOT change, remove, or refactor them.**
 ⚠️ **Any modification to OTP flow MUST be approved by the project owner first.**
 
 ### Protected Files (NEVER modify without explicit permission):
+
 - `src/lib/otp-service.ts` — OTP send/verify with dual fallback (API Gateway → Supabase Edge)
 - `src/lib/admin/auth.tsx` — Auth context, signIn, signOut, hasPermission
 - `src/lib/cognito.ts` — Cognito SDK wrapper (Pool: us-east-1_qHMox2NTB, Client: 4rqqpv12h8pco73oice3emavus)
 - `lambda-code/fll-auth-api/app.py` — Auth Lambda (12 routes, SES OTP, Cognito auth)
-- `lambda-code/platform-api-prod.js` — Proxy logic for /auth/* → fll-auth-handler
+- `lambda-code/platform-api-prod.js` — Proxy logic for /auth/\* → fll-auth-handler
 
 ### OTP Configuration (LOCKED):
+
 - Lambda: `fll-auth-handler` (Python 3.12, us-east-1)
 - IAM Role: `fll-lambda-execution-role` (SES + Cognito permissions)
 - SES: `no-reply@fll.sa` via me-south-1 (verified domain)
@@ -87,23 +98,27 @@
 - Component: `input-otp` (shadcn) — `src/components/ui/input-otp.tsx`
 
 ### Pages using OTP (all working, DO NOT break):
+
 - `/unified-login` — Admin/Staff login (password → OTP → dashboard)
 - `/login` — Driver login (password → OTP → portal)
 - `/forgot-password` — Password reset (email → OTP → new password)
 - `/courier/register` — New courier registration (email → OTP → verify → submit)
 
 ### Cognito Groups (LOCKED):
+
 - `admin` group → role=admin → sees all 47 sidebar pages
 - `staff` group → role=staff → sees pages based on permissions
 - `owner` group → role=owner → sees all pages
 
 ## Finance Engine (March 2026)
+
 - `finance.accounting_components` — additions/deductions rules (CRUD page)
 - `finance.payout_run_stages` — 5-stage approval (Finance→Ops→Fleet→HR→Final)
 - STC Bank Excel: Lambda `fll-generate-stc-excel`, 3 columns (Reference, Phone 966+, Amount)
 - `stc_bank_phone_local` (9 digits starting with 5) → auto `stc_bank_phone_int` (966XXXXXXXXX)
 
 ## Control Tower Dashboard
+
 - Zone layout: Executive (KPIs) → Operational (Charts+Alerts) → Finance → Infrastructure
 - 11 widgets, each self-contained — `src/components/admin/dashboard/widgets/`
 - Stores: `useDashboardStore`, `useModuleRegistry`, `useNotificationStore`, `usePayoutWorkflowStore`
@@ -113,6 +128,7 @@
 ## AWS Account (230811072086)
 
 ### Primary Region: us-east-1 (Virginia) — migrated 2026-03-31
+
 - **Platform API**: `https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com`
   - Lambda: `fll-platform-api-prod` (Node.js 18.x)
   - 39 DynamoDB tables (PAY_PER_REQUEST)
@@ -124,6 +140,7 @@
   - Drivers client: `ttlbr78d29vu4hrt7gh5mekqe`
 
 ### Legacy Region: me-south-1 (Bahrain) — ⚠️ unstable, do not use for new services
+
 - SES production: 50k/day, identities: fll.sa, noreply@fll.sa
 - S3 Buckets: 17
 - EventBridge rules: 10 (SLA hourly, backup daily, payout weekly)

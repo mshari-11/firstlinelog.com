@@ -13,17 +13,45 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/lib/supabase";
 import { Combobox } from "@/components/ui/combobox";
 import {
-  MapPin, Truck, Package, Clock, CheckCircle2, XCircle,
-  AlertTriangle, Search, RefreshCw, Radio, ChevronRight,
-  Navigation, Phone, Star, Layers, Filter, Zap, Inbox,
-  Plus, X, Save,
+  MapPin,
+  Truck,
+  Package,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Search,
+  RefreshCw,
+  Radio,
+  ChevronRight,
+  Navigation,
+  Phone,
+  Star,
+  Layers,
+  Filter,
+  Zap,
+  Inbox,
+  Plus,
+  X,
+  Save,
 } from "lucide-react";
-import { Empty, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DriverStatus = "available" | "busy" | "offline";
-type OrderStatus = "pending" | "assigned" | "pickup" | "delivering" | "delivered" | "cancelled";
+type OrderStatus =
+  | "pending"
+  | "assigned"
+  | "pickup"
+  | "delivering"
+  | "delivered"
+  | "cancelled";
 
 interface Driver {
   id: string;
@@ -57,10 +85,16 @@ function normalizeDriver(raw: any): Driver {
     name: raw.name || raw.fullName || raw.full_name || "سائق",
     phone: raw.phone || raw.mobile || "",
     rating: Number(raw.rating || 4.5),
-    status: raw.status === "offline" ? "offline" : raw.status === "busy" || raw.status === "on_delivery" ? "busy" : "available",
+    status:
+      raw.status === "offline"
+        ? "offline"
+        : raw.status === "busy" || raw.status === "on_delivery"
+          ? "busy"
+          : "available",
     lat: Number(raw.lat ?? raw.latitude ?? 24.7136),
     lng: Number(raw.lng ?? raw.longitude ?? 46.6753),
-    vehicle: raw.vehicle || raw.vehicleType || raw.vehicle_type || "دراجة نارية",
+    vehicle:
+      raw.vehicle || raw.vehicleType || raw.vehicle_type || "دراجة نارية",
     activeOrderId: raw.activeOrderId || raw.active_order_id,
   };
 }
@@ -86,74 +120,233 @@ import { API_BASE } from "@/lib/api";
 
 // ─── Mock data fallback (Riyadh area) ─────────────────────────────────────────
 const MOCK_DRIVERS: Driver[] = [
-  { id: "D01", name: "محمد العتيبي",   phone: "0501234567", rating: 4.8, status: "available",  lat: 24.7136, lng: 46.6753, vehicle: "دراجة نارية" },
-  { id: "D02", name: "خالد الزهراني",  phone: "0512345678", rating: 4.5, status: "busy",       lat: 24.7250, lng: 46.6900, vehicle: "سيارة",       activeOrderId: "O02" },
-  { id: "D03", name: "سعد الدوسري",    phone: "0523456789", rating: 4.9, status: "available",  lat: 24.6980, lng: 46.7100, vehicle: "دراجة نارية" },
-  { id: "D04", name: "فهد القحطاني",   phone: "0534567890", rating: 4.2, status: "offline",    lat: 24.7400, lng: 46.6500, vehicle: "سيارة" },
-  { id: "D05", name: "عبدالله الشمري", phone: "0545678901", rating: 4.7, status: "available",  lat: 24.7050, lng: 46.6600, vehicle: "دراجة نارية" },
+  {
+    id: "D01",
+    name: "محمد العتيبي",
+    phone: "0501234567",
+    rating: 4.8,
+    status: "available",
+    lat: 24.7136,
+    lng: 46.6753,
+    vehicle: "دراجة نارية",
+  },
+  {
+    id: "D02",
+    name: "خالد الزهراني",
+    phone: "0512345678",
+    rating: 4.5,
+    status: "busy",
+    lat: 24.725,
+    lng: 46.69,
+    vehicle: "سيارة",
+    activeOrderId: "O02",
+  },
+  {
+    id: "D03",
+    name: "سعد الدوسري",
+    phone: "0523456789",
+    rating: 4.9,
+    status: "available",
+    lat: 24.698,
+    lng: 46.71,
+    vehicle: "دراجة نارية",
+  },
+  {
+    id: "D04",
+    name: "فهد القحطاني",
+    phone: "0534567890",
+    rating: 4.2,
+    status: "offline",
+    lat: 24.74,
+    lng: 46.65,
+    vehicle: "سيارة",
+  },
+  {
+    id: "D05",
+    name: "عبدالله الشمري",
+    phone: "0545678901",
+    rating: 4.7,
+    status: "available",
+    lat: 24.705,
+    lng: 46.66,
+    vehicle: "دراجة نارية",
+  },
 ];
 
 const MOCK_ORDERS: Order[] = [
-  { id: "O01", customer: "أحمد محمد",    address: "حي النزهة، شارع الأمير سلطان", platform: "جاهز",          amount: 45.00,  status: "pending",    lat: 24.7190, lng: 46.6820, createdAt: "14:22" },
-  { id: "O02", customer: "سارة العلي",   address: "حي الملقا، طريق أنس بن مالك",  platform: "هنقرستيشن",   amount: 32.50,  status: "assigned",   lat: 24.7260, lng: 46.6950, createdAt: "14:18", assignedDriverId: "D02", estimatedTime: 12 },
-  { id: "O03", customer: "فيصل الغامدي", address: "حي العليا، شارع التخصصي",       platform: "طلبات",        amount: 78.00,  status: "delivering", lat: 24.6900, lng: 46.7200, createdAt: "14:05", assignedDriverId: "D02", estimatedTime: 7 },
-  { id: "O04", customer: "نورة الحربي",  address: "حي الياسمين، شارع التحلية",     platform: "نون",          amount: 55.25,  status: "pending",    lat: 24.7380, lng: 46.6580, createdAt: "14:30" },
-  { id: "O05", customer: "ماجد الرشيدي", address: "حي الروضة، شارع الإمام الترمذي", platform: "جاهز",        amount: 91.00,  status: "delivered",  lat: 24.7070, lng: 46.6640, createdAt: "13:55", assignedDriverId: "D01" },
+  {
+    id: "O01",
+    customer: "أحمد محمد",
+    address: "حي النزهة، شارع الأمير سلطان",
+    platform: "جاهز",
+    amount: 45.0,
+    status: "pending",
+    lat: 24.719,
+    lng: 46.682,
+    createdAt: "14:22",
+  },
+  {
+    id: "O02",
+    customer: "سارة العلي",
+    address: "حي الملقا، طريق أنس بن مالك",
+    platform: "هنقرستيشن",
+    amount: 32.5,
+    status: "assigned",
+    lat: 24.726,
+    lng: 46.695,
+    createdAt: "14:18",
+    assignedDriverId: "D02",
+    estimatedTime: 12,
+  },
+  {
+    id: "O03",
+    customer: "فيصل الغامدي",
+    address: "حي العليا، شارع التخصصي",
+    platform: "طلبات",
+    amount: 78.0,
+    status: "delivering",
+    lat: 24.69,
+    lng: 46.72,
+    createdAt: "14:05",
+    assignedDriverId: "D02",
+    estimatedTime: 7,
+  },
+  {
+    id: "O04",
+    customer: "نورة الحربي",
+    address: "حي الياسمين، شارع التحلية",
+    platform: "نون",
+    amount: 55.25,
+    status: "pending",
+    lat: 24.738,
+    lng: 46.658,
+    createdAt: "14:30",
+  },
+  {
+    id: "O05",
+    customer: "ماجد الرشيدي",
+    address: "حي الروضة، شارع الإمام الترمذي",
+    platform: "جاهز",
+    amount: 91.0,
+    status: "delivered",
+    lat: 24.707,
+    lng: 46.664,
+    createdAt: "13:55",
+    assignedDriverId: "D01",
+  },
 ];
 
 // ─── Status configs ───────────────────────────────────────────────────────────
-const DRIVER_STATUS_CONFIG: Record<DriverStatus, { label: string; color: string; dot: string }> = {
-  available: { label: "متاح",   color: "var(--con-success)",         dot: "#16A34A" },
-  busy:      { label: "مشغول",  color: "var(--con-warning)",         dot: "#D97706" },
-  offline:   { label: "غير متصل", color: "var(--con-text-muted)",   dot: "#7E8CA2" },
+const DRIVER_STATUS_CONFIG: Record<
+  DriverStatus,
+  { label: string; color: string; dot: string }
+> = {
+  available: { label: "متاح", color: "var(--con-success)", dot: "#16A34A" },
+  busy: { label: "مشغول", color: "var(--con-warning)", dot: "#D97706" },
+  offline: {
+    label: "غير متصل",
+    color: "var(--con-text-muted)",
+    dot: "#7E8CA2",
+  },
 };
 
-const ORDER_STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: JSX.Element }> = {
-  pending:    { label: "بانتظار إسناد",  color: "var(--con-warning)", icon: <Clock size={13} /> },
-  assigned:   { label: "تم الإسناد",     color: "var(--con-info)",    icon: <Truck size={13} /> },
-  pickup:     { label: "في الاستلام",    color: "var(--con-brand)",   icon: <Package size={13} /> },
-  delivering: { label: "جارٍ التوصيل",  color: "var(--con-brand)",   icon: <Navigation size={13} /> },
-  delivered:  { label: "تم التوصيل",    color: "var(--con-success)", icon: <CheckCircle2 size={13} /> },
-  cancelled:  { label: "ملغي",           color: "var(--con-danger)",  icon: <XCircle size={13} /> },
+const ORDER_STATUS_CONFIG: Record<
+  OrderStatus,
+  { label: string; color: string; icon: JSX.Element }
+> = {
+  pending: {
+    label: "بانتظار إسناد",
+    color: "var(--con-warning)",
+    icon: <Clock size={13} />,
+  },
+  assigned: {
+    label: "تم الإسناد",
+    color: "var(--con-info)",
+    icon: <Truck size={13} />,
+  },
+  pickup: {
+    label: "في الاستلام",
+    color: "var(--con-brand)",
+    icon: <Package size={13} />,
+  },
+  delivering: {
+    label: "جارٍ التوصيل",
+    color: "var(--con-brand)",
+    icon: <Navigation size={13} />,
+  },
+  delivered: {
+    label: "تم التوصيل",
+    color: "var(--con-success)",
+    icon: <CheckCircle2 size={13} />,
+  },
+  cancelled: {
+    label: "ملغي",
+    color: "var(--con-danger)",
+    icon: <XCircle size={13} />,
+  },
 };
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
 // ─── Driver pin SVG ───────────────────────────────────────────────────────────
-function DriverPin({ status, selected }: { status: DriverStatus; selected: boolean }) {
+function DriverPin({
+  status,
+  selected,
+}: {
+  status: DriverStatus;
+  selected: boolean;
+}) {
   const color = DRIVER_STATUS_CONFIG[status].dot;
   return (
-    <div style={{
-      width: selected ? "36px" : "30px",
-      height: selected ? "36px" : "30px",
-      borderRadius: "50%",
-      background: color,
-      border: `2px solid ${selected ? "#fff" : "rgba(255,255,255,0.5)"}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      cursor: "pointer",
-      boxShadow: selected ? `0 0 0 4px ${color}55` : "0 2px 6px rgba(0,0,0,0.4)",
-      transition: "all 0.2s",
-    }}>
+    <div
+      style={{
+        width: selected ? "36px" : "30px",
+        height: selected ? "36px" : "30px",
+        borderRadius: "50%",
+        background: color,
+        border: `2px solid ${selected ? "#fff" : "rgba(255,255,255,0.5)"}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        boxShadow: selected
+          ? `0 0 0 4px ${color}55`
+          : "0 2px 6px rgba(0,0,0,0.4)",
+        transition: "all 0.2s",
+      }}
+    >
       <Truck size={selected ? 16 : 13} color="#fff" />
     </div>
   );
 }
 
-function OrderPin({ status, selected }: { status: OrderStatus; selected: boolean }) {
+function OrderPin({
+  status,
+  selected,
+}: {
+  status: OrderStatus;
+  selected: boolean;
+}) {
   const isPending = status === "pending";
   return (
-    <div style={{
-      width: selected ? "28px" : "22px",
-      height: selected ? "28px" : "22px",
-      borderRadius: "50%",
-      background: isPending ? "var(--con-warning)" : "var(--con-brand)",
-      border: `2px solid ${selected ? "#fff" : "rgba(255,255,255,0.5)"}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      cursor: "pointer",
-      boxShadow: selected ? "0 0 0 3px rgba(59,130,246,0.4)" : "0 2px 4px rgba(0,0,0,0.3)",
-      transition: "all 0.2s",
-      animation: isPending ? "pulse 2s infinite" : "none",
-    }}>
+    <div
+      style={{
+        width: selected ? "28px" : "22px",
+        height: selected ? "28px" : "22px",
+        borderRadius: "50%",
+        background: isPending ? "var(--con-warning)" : "var(--con-brand)",
+        border: `2px solid ${selected ? "#fff" : "rgba(255,255,255,0.5)"}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        boxShadow: selected
+          ? "0 0 0 3px rgba(59,130,246,0.4)"
+          : "0 2px 4px rgba(0,0,0,0.3)",
+        transition: "all 0.2s",
+        animation: isPending ? "pulse 2s infinite" : "none",
+      }}
+    >
       <Package size={selected ? 13 : 10} color="#fff" />
     </div>
   );
@@ -175,13 +368,26 @@ export default function Dispatch() {
   const [showOrders, setShowOrders] = useState(true);
 
   // Dispatch task modal
-  const emptyDispatchForm = { orderId: "", pickupLocation: "", deliveryLocation: "", priority: "normal" as "normal" | "urgent" };
+  const emptyDispatchForm = {
+    orderId: "",
+    pickupLocation: "",
+    deliveryLocation: "",
+    priority: "normal" as "normal" | "urgent",
+  };
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchForm, setDispatchForm] = useState(emptyDispatchForm);
 
-  function openDispatchModal() { setDispatchForm(emptyDispatchForm); setShowDispatchModal(true); }
+  function openDispatchModal() {
+    setDispatchForm(emptyDispatchForm);
+    setShowDispatchModal(true);
+  }
   function handleSaveDispatch() {
-    if (!dispatchForm.orderId.trim() || !dispatchForm.pickupLocation.trim() || !dispatchForm.deliveryLocation.trim()) return;
+    if (
+      !dispatchForm.orderId.trim() ||
+      !dispatchForm.pickupLocation.trim() ||
+      !dispatchForm.deliveryLocation.trim()
+    )
+      return;
     const newOrder: Order = {
       id: dispatchForm.orderId,
       customer: "عميل جديد",
@@ -191,9 +397,12 @@ export default function Dispatch() {
       status: "pending",
       lat: 24.7136 + (Math.random() - 0.5) * 0.04,
       lng: 46.6753 + (Math.random() - 0.5) * 0.04,
-      createdAt: new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+      createdAt: new Date().toLocaleTimeString("ar-SA", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
-    setOrders(prev => [newOrder, ...prev]);
+    setOrders((prev) => [newOrder, ...prev]);
     setShowDispatchModal(false);
   }
 
@@ -218,8 +427,15 @@ export default function Dispatch() {
         if (cancelled) return;
 
         // Normalise — API may return { drivers: [...] } or [...]
-        const rawDrivers = Array.isArray(driversData) ? driversData : (driversData.items ?? driversData.drivers ?? driversData.data ?? []);
-        const rawOrders = Array.isArray(ordersData) ? ordersData : (ordersData.items ?? ordersData.orders ?? ordersData.data ?? []);
+        const rawDrivers = Array.isArray(driversData)
+          ? driversData
+          : (driversData.items ??
+            driversData.drivers ??
+            driversData.data ??
+            []);
+        const rawOrders = Array.isArray(ordersData)
+          ? ordersData
+          : (ordersData.items ?? ordersData.orders ?? ordersData.data ?? []);
 
         // Merge with Supabase live driver locations if available
         let liveLocations: any[] = [];
@@ -231,39 +447,61 @@ export default function Dispatch() {
           liveLocations = live || [];
         }
 
-        const liveMap = new globalThis.Map(liveLocations.map((loc) => [String(loc.driver_id), loc]));
+        const liveMap = new globalThis.Map(
+          liveLocations.map((loc) => [String(loc.driver_id), loc]),
+        );
         const mergedDrivers = rawDrivers.map((raw: any) => {
           const driver = normalizeDriver(raw);
           const live = liveMap.get(String(driver.id));
-          return live ? {
-            ...driver,
-            lat: Number(live.latitude),
-            lng: Number(live.longitude),
-            status: driver.status === "offline" ? "available" : driver.status,
-          } : driver;
+          return live
+            ? {
+                ...driver,
+                lat: Number(live.latitude),
+                lng: Number(live.longitude),
+                status:
+                  driver.status === "offline" ? "available" : driver.status,
+              }
+            : driver;
         });
 
         if (mergedDrivers.length > 0) setDrivers(mergedDrivers);
-        if (rawOrders.length > 0) setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
+        if (rawOrders.length > 0)
+          setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
         if (!cancelled) setApiError(null);
       } catch {
-        if (!cancelled) setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
+        if (!cancelled)
+          setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
       } finally {
         if (!cancelled) setLoadingData(false);
       }
     }
 
     fetchData();
+<<<<<<< Updated upstream
     // Refresh every 60 seconds
     const interval = setInterval(fetchData, 60_000);
     return () => { cancelled = true; clearInterval(interval); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+=======
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [refreshTick]);
+>>>>>>> Stashed changes
 
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;
   const pending = orders.filter((o) => o.status === "pending").length;
-  const delivering = orders.filter((o) => o.status === "delivering" || o.status === "assigned" || o.status === "pickup").length;
+  const delivering = orders.filter(
+    (o) =>
+      o.status === "delivering" ||
+      o.status === "assigned" ||
+      o.status === "pickup",
+  ).length;
 
   const flyTo = useCallback((lat: number, lng: number) => {
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 14, duration: 800 });
@@ -280,14 +518,25 @@ export default function Dispatch() {
     } catch {
       setApiError("تعذّر إسناد الطلب — تم التحديث محلياً فقط");
     }
-    setOrders((prev) => prev.map((o) => o.id === orderId
-      ? { ...o, status: "assigned", assignedDriverId: driverId, estimatedTime: Math.floor(Math.random() * 15) + 5 }
-      : o
-    ));
-    setDrivers((prev) => prev.map((d) => d.id === driverId
-      ? { ...d, status: "busy", activeOrderId: orderId }
-      : d
-    ));
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              status: "assigned",
+              assignedDriverId: driverId,
+              estimatedTime: Math.floor(Math.random() * 15) + 5,
+            }
+          : o,
+      ),
+    );
+    setDrivers((prev) =>
+      prev.map((d) =>
+        d.id === driverId
+          ? { ...d, status: "busy", activeOrderId: orderId }
+          : d,
+      ),
+    );
     setSelectedOrder(null);
   }
 
@@ -302,20 +551,28 @@ export default function Dispatch() {
     } catch {
       setApiError("تعذّر تحديث الحالة — تم التحديث محلياً فقط");
     }
-    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status } : o));
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status } : o)),
+    );
     if (status === "delivered" || status === "cancelled") {
       const order = orders.find((o) => o.id === orderId);
       if (order?.assignedDriverId) {
-        setDrivers((prev) => prev.map((d) => d.id === order.assignedDriverId
-          ? { ...d, status: "available", activeOrderId: undefined }
-          : d
-        ));
+        setDrivers((prev) =>
+          prev.map((d) =>
+            d.id === order.assignedDriverId
+              ? { ...d, status: "available", activeOrderId: undefined }
+              : d,
+          ),
+        );
       }
     }
   }
 
   const filteredOrders = orders.filter((o) => {
-    const matchSearch = !orderSearch || o.id.toLowerCase().includes(orderSearch.toLowerCase()) || o.customer.includes(orderSearch);
+    const matchSearch =
+      !orderSearch ||
+      o.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.customer.includes(orderSearch);
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -323,49 +580,129 @@ export default function Dispatch() {
   const noToken = !MAPBOX_TOKEN;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 64px)",
+        overflow: "hidden",
+      }}
+    >
       {/* CSS for pulse animation */}
       <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0.6)} 50%{box-shadow:0 0 0 8px rgba(217,119,6,0)} }`}</style>
 
       {/* API error / loading banner */}
       {loadingData && (
-        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", fontSize: "12px", color: "var(--con-text-muted)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} />
+        <div
+          style={{
+            padding: "0.375rem 1.25rem",
+            background: "var(--con-bg-surface-2)",
+            borderBottom: "1px solid var(--con-border-default)",
+            fontSize: "12px",
+            color: "var(--con-text-muted)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          <RefreshCw
+            size={12}
+            style={{ animation: "spin 1s linear infinite" }}
+          />
           جارٍ تحميل بيانات السائقين والطلبات...
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
       {!loadingData && apiError && (
-        <div style={{ padding: "0.375rem 1.25rem", background: "var(--con-warning-subtle,#fef3c7)", borderBottom: "1px solid var(--con-warning)", fontSize: "12px", color: "var(--con-warning)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div
+          style={{
+            padding: "0.375rem 1.25rem",
+            background: "var(--con-warning-subtle,#fef3c7)",
+            borderBottom: "1px solid var(--con-warning)",
+            fontSize: "12px",
+            color: "var(--con-warning)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
           <AlertTriangle size={12} />
           {apiError}
         </div>
       )}
 
       {/* ── Top KPI bar ── */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "1rem",
-        padding: "0.625rem 1.25rem",
-        background: "var(--con-bg-surface-2)",
-        borderBottom: "1px solid var(--con-border-default)",
-        flexShrink: 0,
-        flexWrap: "wrap",
-      }}>
-        <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", marginLeft: "0.5rem" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          padding: "0.625rem 1.25rem",
+          background: "var(--con-bg-surface-2)",
+          borderBottom: "1px solid var(--con-border-default)",
+          flexShrink: 0,
+          flexWrap: "wrap",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "14px",
+            fontWeight: 700,
+            color: "var(--con-text-primary)",
+            marginLeft: "0.5rem",
+          }}
+        >
           لوحة الإرسال المباشر
         </h1>
-        <div style={{ display: "flex", gap: "0.75rem", flex: 1, flexWrap: "wrap" }}>
+        <div
+          style={{ display: "flex", gap: "0.75rem", flex: 1, flexWrap: "wrap" }}
+        >
           {[
-            { label: "متاح للإرسال",   value: available,    color: "var(--con-success)", icon: <Truck size={13} /> },
-            { label: "طلبات معلّقة",   value: pending,      color: "var(--con-warning)", icon: <Clock size={13} /> },
-            { label: "جارٍ التوصيل",   value: delivering,   color: "var(--con-brand)",   icon: <Navigation size={13} /> },
-            { label: "إجمالي الطلبات", value: orders.length, color: "var(--con-text-secondary)", icon: <Package size={13} /> },
+            {
+              label: "متاح للإرسال",
+              value: available,
+              color: "var(--con-success)",
+              icon: <Truck size={13} />,
+            },
+            {
+              label: "طلبات معلّقة",
+              value: pending,
+              color: "var(--con-warning)",
+              icon: <Clock size={13} />,
+            },
+            {
+              label: "جارٍ التوصيل",
+              value: delivering,
+              color: "var(--con-brand)",
+              icon: <Navigation size={13} />,
+            },
+            {
+              label: "إجمالي الطلبات",
+              value: orders.length,
+              color: "var(--con-text-secondary)",
+              icon: <Package size={13} />,
+            },
           ].map((k) => (
-            <div key={k.label} style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            <div
+              key={k.label}
+              style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}
+            >
               <span style={{ color: k.color }}>{k.icon}</span>
-              <span style={{ fontFamily: "var(--con-font-mono)", fontSize: "14px", fontWeight: 700, color: k.color }}>{k.value}</span>
-              <span style={{ fontSize: "11px", color: "var(--con-text-muted)" }}>{k.label}</span>
+              <span
+                style={{
+                  fontFamily: "var(--con-font-mono)",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: k.color,
+                }}
+              >
+                {k.value}
+              </span>
+              <span
+                style={{ fontSize: "11px", color: "var(--con-text-muted)" }}
+              >
+                {k.label}
+              </span>
             </div>
           ))}
         </div>
@@ -375,10 +712,17 @@ export default function Dispatch() {
           <button
             onClick={openDispatchModal}
             style={{
-              display: "flex", alignItems: "center", gap: "0.375rem",
-              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
-              fontSize: "12px", fontWeight: 600, border: "none",
-              cursor: "pointer", background: "var(--con-brand)", color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+              background: "var(--con-brand)",
+              color: "#fff",
             }}
           >
             <Plus size={12} /> إنشاء مهمة إرسال
@@ -386,11 +730,18 @@ export default function Dispatch() {
           <button
             onClick={() => setRefreshTick((v) => v + 1)}
             style={{
-              display: "flex", alignItems: "center", gap: "0.375rem",
-              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
-              fontSize: "12px", fontWeight: 500, border: "1px solid var(--con-border-default)",
-              cursor: "pointer", transition: "all 0.15s",
-              background: "transparent", color: "var(--con-text-muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 500,
+              border: "1px solid var(--con-border-default)",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              background: "transparent",
+              color: "var(--con-text-muted)",
             }}
           >
             <RefreshCw size={12} /> تحديث
@@ -398,13 +749,25 @@ export default function Dispatch() {
           <button
             onClick={() => setShowDrivers(!showDrivers)}
             style={{
-              display: "flex", alignItems: "center", gap: "0.375rem",
-              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
-              fontSize: "12px", fontWeight: 500, border: "1px solid",
-              cursor: "pointer", transition: "all 0.15s",
-              borderColor: showDrivers ? "var(--con-success)" : "var(--con-border-default)",
-              background: showDrivers ? "var(--con-success-subtle)" : "transparent",
-              color: showDrivers ? "var(--con-success)" : "var(--con-text-muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 500,
+              border: "1px solid",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              borderColor: showDrivers
+                ? "var(--con-success)"
+                : "var(--con-border-default)",
+              background: showDrivers
+                ? "var(--con-success-subtle)"
+                : "transparent",
+              color: showDrivers
+                ? "var(--con-success)"
+                : "var(--con-text-muted)",
             }}
           >
             <Truck size={12} /> السائقون
@@ -412,12 +775,22 @@ export default function Dispatch() {
           <button
             onClick={() => setShowOrders(!showOrders)}
             style={{
-              display: "flex", alignItems: "center", gap: "0.375rem",
-              padding: "0.3rem 0.625rem", borderRadius: "var(--con-radius-sm)",
-              fontSize: "12px", fontWeight: 500, border: "1px solid",
-              cursor: "pointer", transition: "all 0.15s",
-              borderColor: showOrders ? "var(--con-brand)" : "var(--con-border-default)",
-              background: showOrders ? "var(--con-brand-subtle)" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 500,
+              border: "1px solid",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              borderColor: showOrders
+                ? "var(--con-brand)"
+                : "var(--con-border-default)",
+              background: showOrders
+                ? "var(--con-brand-subtle)"
+                : "transparent",
               color: showOrders ? "var(--con-brand)" : "var(--con-text-muted)",
             }}
           >
@@ -428,53 +801,123 @@ export default function Dispatch() {
 
       {/* ── Main content: map + side panel ── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-
         {/* ── Map area ── */}
         <div style={{ flex: 1, position: "relative" }}>
           {noToken ? (
             // Placeholder when no Mapbox token
-            <div style={{
-              width: "100%", height: "100%",
-              background: "var(--con-bg-surface-1)",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              gap: "0.75rem",
-            }}>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "var(--con-bg-surface-1)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.75rem",
+              }}
+            >
               <MapPin size={32} style={{ color: "var(--con-text-muted)" }} />
-              <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--con-text-secondary)" }}>
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: "var(--con-text-secondary)",
+                }}
+              >
                 الخريطة التفاعلية
               </p>
-              <p style={{ fontSize: "12px", color: "var(--con-text-muted)", textAlign: "center", maxWidth: "320px", lineHeight: 1.6 }}>
-                أضف <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-brand)" }}>VITE_MAPBOX_TOKEN</span> في ملف{" "}
-                <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-brand)" }}>.env</span>{" "}
-                لتفعيل خريطة Mapbox التفاعلية. بيانات السائقين والطلبات جاهزة للعرض.
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--con-text-muted)",
+                  textAlign: "center",
+                  maxWidth: "320px",
+                  lineHeight: 1.6,
+                }}
+              >
+                أضف{" "}
+                <span
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-brand)",
+                  }}
+                >
+                  VITE_MAPBOX_TOKEN
+                </span>{" "}
+                في ملف{" "}
+                <span
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-brand)",
+                  }}
+                >
+                  .env
+                </span>{" "}
+                لتفعيل خريطة Mapbox التفاعلية. بيانات السائقين والطلبات جاهزة
+                للعرض.
               </p>
-              <div style={{
-                padding: "0.75rem 1rem",
-                background: "var(--con-bg-elevated)",
-                border: "1px solid var(--con-border-strong)",
-                borderRadius: "var(--con-radius)",
-                fontFamily: "var(--con-font-mono)",
-                fontSize: "12px",
-                color: "var(--con-brand)",
-                marginTop: "0.25rem",
-              }}>
+              <div
+                style={{
+                  padding: "0.75rem 1rem",
+                  background: "var(--con-bg-elevated)",
+                  border: "1px solid var(--con-border-strong)",
+                  borderRadius: "var(--con-radius)",
+                  fontFamily: "var(--con-font-mono)",
+                  fontSize: "12px",
+                  color: "var(--con-brand)",
+                  marginTop: "0.25rem",
+                }}
+              >
                 VITE_MAPBOX_TOKEN=pk.eyJ1...
               </div>
               {/* Show driver/order summary cards as fallback */}
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem", flexWrap: "wrap", justifyContent: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.75rem",
+                  marginTop: "0.5rem",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
                 {drivers.map((d) => (
-                  <div key={d.id} onClick={() => setSelectedDriver(d === selectedDriver ? null : d)}
+                  <div
+                    key={d.id}
+                    onClick={() =>
+                      setSelectedDriver(d === selectedDriver ? null : d)
+                    }
                     style={{
                       padding: "0.5rem 0.75rem",
-                      background: selectedDriver?.id === d.id ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)",
+                      background:
+                        selectedDriver?.id === d.id
+                          ? "var(--con-brand-subtle)"
+                          : "var(--con-bg-elevated)",
                       border: `1px solid ${selectedDriver?.id === d.id ? "var(--con-brand-border)" : "var(--con-border-default)"}`,
                       borderRadius: "var(--con-radius)",
                       cursor: "pointer",
-                      display: "flex", alignItems: "center", gap: "0.5rem",
-                    }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: DRIVER_STATUS_CONFIG[d.status].dot, flexShrink: 0 }} />
-                    <span style={{ fontSize: "12px", color: "var(--con-text-primary)" }}>{d.name}</span>
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: DRIVER_STATUS_CONFIG[d.status].dot,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--con-text-primary)",
+                      }}
+                    >
+                      {d.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -482,7 +925,11 @@ export default function Dispatch() {
           ) : (
             <Map
               ref={mapRef}
-              initialViewState={{ longitude: 46.6753, latitude: 24.7136, zoom: 12 }}
+              initialViewState={{
+                longitude: 46.6753,
+                latitude: 24.7136,
+                zoom: 12,
+              }}
               style={{ width: "100%", height: "100%" }}
               mapStyle="mapbox://styles/mapbox/dark-v11"
               mapboxAccessToken={MAPBOX_TOKEN}
@@ -490,33 +937,99 @@ export default function Dispatch() {
               <NavigationControl position="bottom-left" />
 
               {/* Driver markers */}
-              {showDrivers && drivers.map((driver) => (
-                <Marker key={driver.id} longitude={driver.lng} latitude={driver.lat} anchor="center"
-                  onClick={(e) => { e.originalEvent.stopPropagation(); setSelectedDriver(driver === selectedDriver ? null : driver); flyTo(driver.lat, driver.lng); }}
-                >
-                  <DriverPin status={driver.status} selected={selectedDriver?.id === driver.id} />
-                </Marker>
-              ))}
+              {showDrivers &&
+                drivers.map((driver) => (
+                  <Marker
+                    key={driver.id}
+                    longitude={driver.lng}
+                    latitude={driver.lat}
+                    anchor="center"
+                    onClick={(e) => {
+                      e.originalEvent.stopPropagation();
+                      setSelectedDriver(
+                        driver === selectedDriver ? null : driver,
+                      );
+                      flyTo(driver.lat, driver.lng);
+                    }}
+                  >
+                    <DriverPin
+                      status={driver.status}
+                      selected={selectedDriver?.id === driver.id}
+                    />
+                  </Marker>
+                ))}
 
               {/* Order markers */}
-              {showOrders && orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled").map((order) => (
-                <Marker key={order.id} longitude={order.lng} latitude={order.lat} anchor="center"
-                  onClick={(e) => { e.originalEvent.stopPropagation(); setSelectedOrder(order === selectedOrder ? null : order); flyTo(order.lat, order.lng); }}
-                >
-                  <OrderPin status={order.status} selected={selectedOrder?.id === order.id} />
-                </Marker>
-              ))}
+              {showOrders &&
+                orders
+                  .filter(
+                    (o) => o.status !== "delivered" && o.status !== "cancelled",
+                  )
+                  .map((order) => (
+                    <Marker
+                      key={order.id}
+                      longitude={order.lng}
+                      latitude={order.lat}
+                      anchor="center"
+                      onClick={(e) => {
+                        e.originalEvent.stopPropagation();
+                        setSelectedOrder(
+                          order === selectedOrder ? null : order,
+                        );
+                        flyTo(order.lat, order.lng);
+                      }}
+                    >
+                      <OrderPin
+                        status={order.status}
+                        selected={selectedOrder?.id === order.id}
+                      />
+                    </Marker>
+                  ))}
 
               {/* Driver popup */}
               {selectedDriver && (
-                <Popup longitude={selectedDriver.lng} latitude={selectedDriver.lat}
-                  anchor="top" onClose={() => setSelectedDriver(null)}
+                <Popup
+                  longitude={selectedDriver.lng}
+                  latitude={selectedDriver.lat}
+                  anchor="top"
+                  onClose={() => setSelectedDriver(null)}
                   style={{ background: "var(--con-bg-elevated)" }}
                 >
-                  <div style={{ padding: "0.5rem", minWidth: "160px", background: "var(--con-bg-elevated)", borderRadius: "6px" }}>
-                    <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.25rem" }}>{selectedDriver.name}</p>
-                    <p style={{ fontSize: "11px", color: "var(--con-text-muted)" }}>{selectedDriver.vehicle}</p>
-                    <span style={{ fontSize: "11px", color: DRIVER_STATUS_CONFIG[selectedDriver.status].color }}>{DRIVER_STATUS_CONFIG[selectedDriver.status].label}</span>
+                  <div
+                    style={{
+                      padding: "0.5rem",
+                      minWidth: "160px",
+                      background: "var(--con-bg-elevated)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "var(--con-text-primary)",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {selectedDriver.name}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--con-text-muted)",
+                      }}
+                    >
+                      {selectedDriver.vehicle}
+                    </p>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color:
+                          DRIVER_STATUS_CONFIG[selectedDriver.status].color,
+                      }}
+                    >
+                      {DRIVER_STATUS_CONFIG[selectedDriver.status].label}
+                    </span>
                   </div>
                 </Popup>
               )}
@@ -525,30 +1038,63 @@ export default function Dispatch() {
         </div>
 
         {/* ── Right side panel ── */}
-        <div style={{
-          width: "340px",
-          background: "var(--con-bg-surface-1)",
-          borderLeft: "1px solid var(--con-border-default)",
-          display: "flex", flexDirection: "column",
-          overflow: "hidden",
-          flexShrink: 0,
-        }}>
-
+        <div
+          style={{
+            width: "340px",
+            background: "var(--con-bg-surface-1)",
+            borderLeft: "1px solid var(--con-border-default)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
+        >
           {/* Panel header */}
-          <div style={{ padding: "0.875rem 1rem", borderBottom: "1px solid var(--con-border-default)" }}>
+          <div
+            style={{
+              padding: "0.875rem 1rem",
+              borderBottom: "1px solid var(--con-border-default)",
+            }}
+          >
             <div style={{ position: "relative", marginBottom: "0.5rem" }}>
-              <Search size={13} style={{ position: "absolute", insetInlineEnd: "0.625rem", top: "50%", transform: "translateY(-50%)", color: "var(--con-text-muted)" }} />
+              <Search
+                size={13}
+                style={{
+                  position: "absolute",
+                  insetInlineEnd: "0.625rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--con-text-muted)",
+                }}
+              />
               <input
                 className="con-input"
                 placeholder="بحث برقم الطلب أو العميل..."
                 value={orderSearch}
                 onChange={(e) => setOrderSearch(e.target.value)}
-                style={{ width: "100%", paddingInlineEnd: "2rem", fontSize: "12px" }}
+                style={{
+                  width: "100%",
+                  paddingInlineEnd: "2rem",
+                  fontSize: "12px",
+                }}
               />
             </div>
-            <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }} role="group">
-              {(["all", "pending", "assigned", "delivering", "delivered"] as const).map((s) => (
-                <button key={s} onClick={() => setStatusFilter(s)}
+            <div
+              style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}
+              role="group"
+            >
+              {(
+                [
+                  "all",
+                  "pending",
+                  "assigned",
+                  "delivering",
+                  "delivered",
+                ] as const
+              ).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all cursor-pointer ${statusFilter === s ? "border-[var(--con-brand)] bg-[var(--con-brand-subtle)] text-[var(--con-brand)]" : "border-[var(--con-border-default)] bg-transparent text-[var(--con-text-muted)] hover:border-[var(--con-brand)] hover:text-[var(--con-brand)]"}`}
                 >
                   {s === "all" ? "الكل" : ORDER_STATUS_CONFIG[s].label}
@@ -561,14 +1107,20 @@ export default function Dispatch() {
           <div style={{ flex: 1, overflowY: "auto" }}>
             {filteredOrders.length === 0 ? (
               <Empty className="py-8">
-                <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+                <EmptyMedia variant="icon">
+                  <Inbox />
+                </EmptyMedia>
                 <EmptyTitle>لا توجد طلبات</EmptyTitle>
-                <EmptyDescription>لا توجد طلبات تطابق معايير البحث</EmptyDescription>
+                <EmptyDescription>
+                  لا توجد طلبات تطابق معايير البحث
+                </EmptyDescription>
               </Empty>
             ) : (
               filteredOrders.map((order) => {
                 const statusCfg = ORDER_STATUS_CONFIG[order.status];
-                const assignedDriver = drivers.find((d) => d.id === order.assignedDriverId);
+                const assignedDriver = drivers.find(
+                  (d) => d.id === order.assignedDriverId,
+                );
                 const isSelected = selectedOrder?.id === order.id;
 
                 return (
@@ -582,53 +1134,136 @@ export default function Dispatch() {
                       padding: "0.75rem 1rem",
                       borderBottom: "1px solid var(--con-border-default)",
                       cursor: "pointer",
-                      background: isSelected ? "var(--con-brand-subtle)" : "transparent",
-                      borderLeft: isSelected ? "2px solid var(--con-brand)" : "2px solid transparent",
+                      background: isSelected
+                        ? "var(--con-brand-subtle)"
+                        : "transparent",
+                      borderLeft: isSelected
+                        ? "2px solid var(--con-brand)"
+                        : "2px solid transparent",
                       transition: "background 0.1s",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        marginBottom: "0.375rem",
+                      }}
+                    >
                       <div>
-                        <span style={{ fontFamily: "var(--con-font-mono)", fontSize: "11px", color: "var(--con-brand)", fontWeight: 600 }}>
+                        <span
+                          style={{
+                            fontFamily: "var(--con-font-mono)",
+                            fontSize: "11px",
+                            color: "var(--con-brand)",
+                            fontWeight: 600,
+                          }}
+                        >
                           {order.id}
                         </span>
-                        <span style={{ fontSize: "11px", color: "var(--con-text-muted)", marginRight: "0.5rem" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--con-text-muted)",
+                            marginRight: "0.5rem",
+                          }}
+                        >
                           {order.platform}
                         </span>
                       </div>
-                      <span style={{
-                        display: "inline-flex", alignItems: "center", gap: "0.25rem",
-                        fontSize: "11px", fontWeight: 500,
-                        color: statusCfg.color,
-                        background: `${statusCfg.color}18`,
-                        padding: "1px 6px", borderRadius: "100px",
-                      }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          color: statusCfg.color,
+                          background: `${statusCfg.color}18`,
+                          padding: "1px 6px",
+                          borderRadius: "100px",
+                        }}
+                      >
                         {statusCfg.icon}
                         {statusCfg.label}
                       </span>
                     </div>
 
-                    <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "0.2rem" }}>
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "var(--con-text-primary)",
+                        marginBottom: "0.2rem",
+                      }}
+                    >
                       {order.customer}
                     </p>
-                    <p style={{ fontSize: "11px", color: "var(--con-text-muted)", marginBottom: "0.375rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--con-text-muted)",
+                        marginBottom: "0.375rem",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {order.address}
                     </p>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontFamily: "var(--con-font-mono)", fontSize: "12px", fontWeight: 600, color: "var(--con-success)" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--con-font-mono)",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "var(--con-success)",
+                        }}
+                      >
                         {order.amount.toFixed(2)} ر.س
                       </span>
                       {assignedDriver ? (
-                        <span style={{ fontSize: "11px", color: "var(--con-text-secondary)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--con-text-secondary)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                          }}
+                        >
                           <Truck size={11} /> {assignedDriver.name}
                           {order.estimatedTime && (
-                            <span style={{ color: "var(--con-brand)", fontFamily: "var(--con-font-mono)" }}> ~{order.estimatedTime}د</span>
+                            <span
+                              style={{
+                                color: "var(--con-brand)",
+                                fontFamily: "var(--con-font-mono)",
+                              }}
+                            >
+                              {" "}
+                              ~{order.estimatedTime}د
+                            </span>
                           )}
                         </span>
                       ) : (
-                        <span style={{ fontSize: "11px", color: "var(--con-warning)" }}>
-                          <Clock size={11} style={{ display: "inline", marginLeft: "3px" }} />
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--con-warning)",
+                          }}
+                        >
+                          <Clock
+                            size={11}
+                            style={{ display: "inline", marginLeft: "3px" }}
+                          />
                           {order.createdAt}
                         </span>
                       )}
@@ -636,22 +1271,44 @@ export default function Dispatch() {
 
                     {/* Expanded: assign + status actions */}
                     {isSelected && (
-                      <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--con-border-default)" }}>
-
+                      <div
+                        style={{
+                          marginTop: "0.75rem",
+                          paddingTop: "0.75rem",
+                          borderTop: "1px solid var(--con-border-default)",
+                        }}
+                      >
                         {/* Assign driver (only if pending) */}
                         {order.status === "pending" && (
                           <div>
-                            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--con-text-muted)", marginBottom: "0.375rem" }}>
+                            <p
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 600,
+                                color: "var(--con-text-muted)",
+                                marginBottom: "0.375rem",
+                              }}
+                            >
                               إسناد إلى سائق:
                             </p>
-                            {drivers.filter((d) => d.status === "available").length === 0 ? (
-                              <p style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>لا يوجد سائق متاح حالياً</p>
+                            {drivers.filter((d) => d.status === "available")
+                              .length === 0 ? (
+                              <p
+                                style={{
+                                  fontSize: "12px",
+                                  color: "var(--con-text-muted)",
+                                }}
+                              >
+                                لا يوجد سائق متاح حالياً
+                              </p>
                             ) : (
                               <Combobox
-                                options={drivers.filter((d) => d.status === "available").map((d) => ({
-                                  value: d.id,
-                                  label: `${d.name} — ${d.vehicle} (${d.rating})`,
-                                }))}
+                                options={drivers
+                                  .filter((d) => d.status === "available")
+                                  .map((d) => ({
+                                    value: d.id,
+                                    label: `${d.name} — ${d.vehicle} (${d.rating})`,
+                                  }))}
                                 placeholder="اختر سائق..."
                                 searchPlaceholder="ابحث عن سائق..."
                                 emptyMessage="لا يوجد سائق مطابق"
@@ -664,32 +1321,79 @@ export default function Dispatch() {
                         )}
 
                         {/* Status update buttons */}
-                        {order.status !== "pending" && order.status !== "delivered" && order.status !== "cancelled" && (
-                          <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
-                            {order.status === "assigned" && (
-                              <button onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, "pickup"); }}
-                                className="con-btn-primary" style={{ fontSize: "11px", padding: "0.3rem 0.625rem", flex: 1 }}>
-                                <Package size={12} /> في الاستلام
+                        {order.status !== "pending" &&
+                          order.status !== "delivered" &&
+                          order.status !== "cancelled" && (
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "0.375rem",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {order.status === "assigned" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "pickup");
+                                  }}
+                                  className="con-btn-primary"
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "0.3rem 0.625rem",
+                                    flex: 1,
+                                  }}
+                                >
+                                  <Package size={12} /> في الاستلام
+                                </button>
+                              )}
+                              {order.status === "pickup" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "delivering");
+                                  }}
+                                  className="con-btn-primary"
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "0.3rem 0.625rem",
+                                    flex: 1,
+                                  }}
+                                >
+                                  <Navigation size={12} /> بدء التوصيل
+                                </button>
+                              )}
+                              {order.status === "delivering" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "delivered");
+                                  }}
+                                  className="con-btn-primary"
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "0.3rem 0.625rem",
+                                    flex: 1,
+                                  }}
+                                >
+                                  <CheckCircle2 size={12} /> تم التوصيل
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderStatus(order.id, "cancelled");
+                                }}
+                                className="con-btn-danger"
+                                style={{
+                                  fontSize: "11px",
+                                  padding: "0.3rem 0.625rem",
+                                }}
+                              >
+                                <XCircle size={12} />
                               </button>
-                            )}
-                            {order.status === "pickup" && (
-                              <button onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, "delivering"); }}
-                                className="con-btn-primary" style={{ fontSize: "11px", padding: "0.3rem 0.625rem", flex: 1 }}>
-                                <Navigation size={12} /> بدء التوصيل
-                              </button>
-                            )}
-                            {order.status === "delivering" && (
-                              <button onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, "delivered"); }}
-                                className="con-btn-primary" style={{ fontSize: "11px", padding: "0.3rem 0.625rem", flex: 1 }}>
-                                <CheckCircle2 size={12} /> تم التوصيل
-                              </button>
-                            )}
-                            <button onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, "cancelled"); }}
-                              className="con-btn-danger" style={{ fontSize: "11px", padding: "0.3rem 0.625rem" }}>
-                              <XCircle size={12} />
-                            </button>
-                          </div>
-                        )}
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -699,34 +1403,87 @@ export default function Dispatch() {
           </div>
 
           {/* Driver availability footer */}
-          <div style={{
-            padding: "0.75rem 1rem",
-            borderTop: "1px solid var(--con-border-default)",
-            background: "var(--con-bg-surface-2)",
-          }}>
-            <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--con-text-muted)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              padding: "0.75rem 1rem",
+              borderTop: "1px solid var(--con-border-default)",
+              background: "var(--con-bg-surface-2)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "var(--con-text-muted)",
+                marginBottom: "0.5rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
               حالة السائقين
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.25rem",
+              }}
+            >
               {drivers.map((d) => (
                 <div
                   key={d.id}
-                  onClick={() => { setSelectedDriver(d === selectedDriver ? null : d); flyTo(d.lat, d.lng); }}
+                  onClick={() => {
+                    setSelectedDriver(d === selectedDriver ? null : d);
+                    flyTo(d.lat, d.lng);
+                  }}
                   style={{
-                    display: "flex", alignItems: "center", gap: "0.5rem",
-                    padding: "0.3rem 0.375rem", borderRadius: "var(--con-radius-sm)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    padding: "0.3rem 0.375rem",
+                    borderRadius: "var(--con-radius-sm)",
                     cursor: "pointer",
-                    background: selectedDriver?.id === d.id ? "var(--con-bg-elevated)" : "transparent",
+                    background:
+                      selectedDriver?.id === d.id
+                        ? "var(--con-bg-elevated)"
+                        : "transparent",
                     transition: "background 0.1s",
                   }}
                 >
-                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: DRIVER_STATUS_CONFIG[d.status].dot, flexShrink: 0 }} />
-                  <span style={{ flex: 1, fontSize: "12px", color: "var(--con-text-primary)" }}>{d.name}</span>
-                  <span style={{ fontSize: "11px", color: DRIVER_STATUS_CONFIG[d.status].color }}>
+                  <div
+                    style={{
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      background: DRIVER_STATUS_CONFIG[d.status].dot,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: "12px",
+                      color: "var(--con-text-primary)",
+                    }}
+                  >
+                    {d.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: DRIVER_STATUS_CONFIG[d.status].color,
+                    }}
+                  >
                     {DRIVER_STATUS_CONFIG[d.status].label}
                   </span>
                   {d.activeOrderId && (
-                    <span style={{ fontFamily: "var(--con-font-mono)", fontSize: "10px", color: "var(--con-brand)" }}>
+                    <span
+                      style={{
+                        fontFamily: "var(--con-font-mono)",
+                        fontSize: "10px",
+                        color: "var(--con-brand)",
+                      }}
+                    >
                       {d.activeOrderId}
                     </span>
                   )}
@@ -739,36 +1496,206 @@ export default function Dispatch() {
 
       {/* Dispatch Task Modal */}
       {showDispatchModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowDispatchModal(false)}>
-          <div dir="rtl" onClick={e => e.stopPropagation()} style={{ background: "var(--con-bg-surface-1, #fff)", border: "1px solid var(--con-border-default)", borderRadius: 12, padding: 24, width: 420, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>إنشاء مهمة إرسال</h2>
-              <button onClick={() => setShowDispatchModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--con-text-muted)" }}><X size={18} /></button>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setShowDispatchModal(false)}
+        >
+          <div
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--con-bg-surface-1, #fff)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 12,
+              padding: 24,
+              width: 420,
+              maxWidth: "90vw",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: 0,
+                }}
+              >
+                إنشاء مهمة إرسال
+              </h2>
+              <button
+                onClick={() => setShowDispatchModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--con-text-muted)",
+                }}
+              >
+                <X size={18} />
+              </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>رقم الطلب</label>
-                <input className="con-input" value={dispatchForm.orderId} onChange={e => setDispatchForm(f => ({ ...f, orderId: e.target.value }))} placeholder="مثال: ORD-1234" style={{ width: "100%", fontSize: 12 }} />
+                <label
+                  style={{
+                    fontSize: 12,
+                    color: "var(--con-text-secondary)",
+                    marginBottom: 4,
+                    display: "block",
+                  }}
+                >
+                  رقم الطلب
+                </label>
+                <input
+                  className="con-input"
+                  value={dispatchForm.orderId}
+                  onChange={(e) =>
+                    setDispatchForm((f) => ({ ...f, orderId: e.target.value }))
+                  }
+                  placeholder="مثال: ORD-1234"
+                  style={{ width: "100%", fontSize: 12 }}
+                />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>موقع الاستلام</label>
-                <input className="con-input" value={dispatchForm.pickupLocation} onChange={e => setDispatchForm(f => ({ ...f, pickupLocation: e.target.value }))} placeholder="عنوان الاستلام" style={{ width: "100%", fontSize: 12 }} />
+                <label
+                  style={{
+                    fontSize: 12,
+                    color: "var(--con-text-secondary)",
+                    marginBottom: 4,
+                    display: "block",
+                  }}
+                >
+                  موقع الاستلام
+                </label>
+                <input
+                  className="con-input"
+                  value={dispatchForm.pickupLocation}
+                  onChange={(e) =>
+                    setDispatchForm((f) => ({
+                      ...f,
+                      pickupLocation: e.target.value,
+                    }))
+                  }
+                  placeholder="عنوان الاستلام"
+                  style={{ width: "100%", fontSize: 12 }}
+                />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>موقع التسليم</label>
-                <input className="con-input" value={dispatchForm.deliveryLocation} onChange={e => setDispatchForm(f => ({ ...f, deliveryLocation: e.target.value }))} placeholder="عنوان التسليم" style={{ width: "100%", fontSize: 12 }} />
+                <label
+                  style={{
+                    fontSize: 12,
+                    color: "var(--con-text-secondary)",
+                    marginBottom: 4,
+                    display: "block",
+                  }}
+                >
+                  موقع التسليم
+                </label>
+                <input
+                  className="con-input"
+                  value={dispatchForm.deliveryLocation}
+                  onChange={(e) =>
+                    setDispatchForm((f) => ({
+                      ...f,
+                      deliveryLocation: e.target.value,
+                    }))
+                  }
+                  placeholder="عنوان التسليم"
+                  style={{ width: "100%", fontSize: 12 }}
+                />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-secondary)", marginBottom: 4, display: "block" }}>الأولوية</label>
-                <select value={dispatchForm.priority} onChange={e => setDispatchForm(f => ({ ...f, priority: e.target.value as "normal" | "urgent" }))} style={{ width: "100%", padding: "6px 10px", borderRadius: 7, border: "1px solid var(--con-border-default)", fontSize: 12, background: "var(--con-bg-surface-2)", color: "var(--con-text-primary)" }}>
+                <label
+                  style={{
+                    fontSize: 12,
+                    color: "var(--con-text-secondary)",
+                    marginBottom: 4,
+                    display: "block",
+                  }}
+                >
+                  الأولوية
+                </label>
+                <select
+                  value={dispatchForm.priority}
+                  onChange={(e) =>
+                    setDispatchForm((f) => ({
+                      ...f,
+                      priority: e.target.value as "normal" | "urgent",
+                    }))
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "6px 10px",
+                    borderRadius: 7,
+                    border: "1px solid var(--con-border-default)",
+                    fontSize: 12,
+                    background: "var(--con-bg-surface-2)",
+                    color: "var(--con-text-primary)",
+                  }}
+                >
                   <option value="normal">عادي</option>
                   <option value="urgent">عاجل</option>
                 </select>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-start" }}>
-              <button onClick={handleSaveDispatch} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 7, background: "var(--con-brand)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Save size={14} />إنشاء</button>
-              <button onClick={() => setShowDispatchModal(false)} style={{ padding: "8px 20px", borderRadius: 7, background: "var(--con-bg-surface-2)", color: "var(--con-text-secondary)", border: "1px solid var(--con-border-default)", fontSize: 13, cursor: "pointer" }}>إلغاء</button>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginTop: 16,
+                justifyContent: "flex-start",
+              }}
+            >
+              <button
+                onClick={handleSaveDispatch}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 20px",
+                  borderRadius: 7,
+                  background: "var(--con-brand)",
+                  color: "#fff",
+                  border: "none",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                <Save size={14} />
+                إنشاء
+              </button>
+              <button
+                onClick={() => setShowDispatchModal(false)}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: 7,
+                  background: "var(--con-bg-surface-2)",
+                  color: "var(--con-text-secondary)",
+                  border: "1px solid var(--con-border-default)",
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                إلغاء
+              </button>
             </div>
           </div>
         </div>

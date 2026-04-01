@@ -6,12 +6,24 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
-  FileText, Download, Filter, Calendar, TrendingUp,
-  TrendingDown, BarChart3, PieChart, AlertCircle, Printer,
+  FileText,
+  Download,
+  Filter,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  PieChart,
+  AlertCircle,
+  Printer,
 } from "lucide-react";
 
 // ─── Report Types ─────────────────────────────────────────────────────────────
-type ReportType = "income-statement" | "pl-report" | "revenue-analysis" | "city-performance";
+type ReportType =
+  | "income-statement"
+  | "pl-report"
+  | "revenue-analysis"
+  | "city-performance";
 
 interface ReportData {
   title: string;
@@ -25,7 +37,16 @@ const incomeStatement: ReportData = {
   period: "فبراير 2026",
   generatedAt: new Date().toLocaleString("ar-SA"),
   data: {
-    revenue: { total: 218000, platforms: { jahez: 76300, maroul: 47520, noon: 33320, sahib: 34480, other: 26380 } },
+    revenue: {
+      total: 218000,
+      platforms: {
+        jahez: 76300,
+        maroul: 47520,
+        noon: 33320,
+        sahib: 34480,
+        other: 26380,
+      },
+    },
     expenses: {
       driverPayments: 76300,
       platformFees: 21720,
@@ -158,7 +179,16 @@ interface ReportSectionProps {
 function ReportSection({ title, children }: ReportSectionProps) {
   return (
     <div style={{ marginBottom: 24 }}>
-      <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 16px 0", paddingBottom: 12, borderBottom: "2px solid var(--con-border-default)" }}>
+      <h3
+        style={{
+          fontSize: "var(--con-text-card-title)",
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+          margin: "0 0 16px 0",
+          paddingBottom: 12,
+          borderBottom: "2px solid var(--con-border-default)",
+        }}
+      >
         {title}
       </h3>
       {children}
@@ -167,7 +197,13 @@ function ReportSection({ title, children }: ReportSectionProps) {
 }
 
 // ─── Report Card ──────────────────────────────────────────────────────────────
-function ReportCard({ report, onSelect }: { report: ReportData; onSelect: (r: ReportData) => void }) {
+function ReportCard({
+  report,
+  onSelect,
+}: {
+  report: ReportData;
+  onSelect: (r: ReportData) => void;
+}) {
   return (
     <div
       onClick={() => onSelect(report)}
@@ -188,13 +224,34 @@ function ReportCard({ report, onSelect }: { report: ReportData; onSelect: (r: Re
         e.currentTarget.style.borderColor = "var(--con-border-default)";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 12,
+        }}
+      >
         <FileText size={24} style={{ color: "var(--con-brand)" }} />
         <div>
-          <h3 style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
+          <h3
+            style={{
+              fontSize: "var(--con-text-body)",
+              fontWeight: 600,
+              color: "var(--con-text-primary)",
+              margin: 0,
+            }}
+          >
             {report.title}
           </h3>
-          <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 4, marginTop: 0 }}>
+          <p
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              margin: 4,
+              marginTop: 0,
+            }}
+          >
             {report.period}
           </p>
         </div>
@@ -270,58 +327,116 @@ function IncomeStatementView({ data }: { data: any }) {
   return (
     <div>
       <ReportSection title="الإيرادات">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-          {Object.entries(data.revenue.platforms).map(([key, value]: [string, any]) => (
-            <div key={key} style={{
-              background: "var(--con-bg-surface-2)",
-              padding: "12px",
-              borderRadius: 8,
-              textAlign: "center",
-            }}>
-              <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4 }}>
-                {key}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {Object.entries(data.revenue.platforms).map(
+            ([key, value]: [string, any]) => (
+              <div
+                key={key}
+                style={{
+                  background: "var(--con-bg-surface-2)",
+                  padding: "12px",
+                  borderRadius: 8,
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "var(--con-text-caption)",
+                    color: "var(--con-text-muted)",
+                    marginBottom: 4,
+                  }}
+                >
+                  {key}
+                </div>
+                <div
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "var(--con-success)",
+                  }}
+                >
+                  {(value / 1000).toFixed(1)}ك ر.س
+                </div>
               </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--con-success)" }}>
-                {(value / 1000).toFixed(1)}ك ر.س
-              </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </ReportSection>
 
       <ReportSection title="المصروفات">
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <tbody>
-            {Object.entries(data.expenses).map(([key, value]: [string, any]) => (
-              <tr key={key} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                <td style={{ color: "var(--con-text-primary)" }}>
-                  {key === "driverPayments" ? "رواتب السائقين" :
-                   key === "platformFees" ? "رسوم المنصة" :
-                   key === "fuelMaintenance" ? "الوقود والصيانة" :
-                   key === "insurance" ? "التأمين" :
-                   key === "admin" ? "إداري" : "أخرى"}
-                </td>
-                <td style={{ textAlign: "start", color: "var(--con-danger)", fontWeight: 600, fontFamily: "var(--con-font-mono)" }}>
-                  -{(value / 1000).toFixed(1)}ك ر.س
-                </td>
-              </tr>
-            ))}
+            {Object.entries(data.expenses).map(
+              ([key, value]: [string, any]) => (
+                <tr
+                  key={key}
+                  style={{
+                    borderBottom: "1px solid var(--con-border-default)",
+                    height: 44,
+                  }}
+                >
+                  <td style={{ color: "var(--con-text-primary)" }}>
+                    {key === "driverPayments"
+                      ? "رواتب السائقين"
+                      : key === "platformFees"
+                        ? "رسوم المنصة"
+                        : key === "fuelMaintenance"
+                          ? "الوقود والصيانة"
+                          : key === "insurance"
+                            ? "التأمين"
+                            : key === "admin"
+                              ? "إداري"
+                              : "أخرى"}
+                  </td>
+                  <td
+                    style={{
+                      textAlign: "start",
+                      color: "var(--con-danger)",
+                      fontWeight: 600,
+                      fontFamily: "var(--con-font-mono)",
+                    }}
+                  >
+                    -{(value / 1000).toFixed(1)}ك ر.س
+                  </td>
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </ReportSection>
 
       <ReportSection title="الدخل الصافي">
-        <div style={{
-          background: "var(--con-brand-subtle)",
-          border: "1px solid rgba(59,130,246,0.25)",
-          borderRadius: 8,
-          padding: "16px",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 8 }}>
+        <div
+          style={{
+            background: "var(--con-brand-subtle)",
+            border: "1px solid rgba(59,130,246,0.25)",
+            borderRadius: 8,
+            padding: "16px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              marginBottom: 8,
+            }}
+          >
             صافي الدخل
           </div>
-          <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--con-brand)" }}>
+          <div
+            style={{
+              fontSize: "32px",
+              fontWeight: 700,
+              color: "var(--con-brand)",
+            }}
+          >
             {(data.netIncome / 1000).toFixed(1)}ك ر.س
           </div>
         </div>
@@ -334,31 +449,81 @@ function IncomeStatementView({ data }: { data: any }) {
 function PLView({ data }: { data: any }) {
   const metrics = [
     { label: "الإيرادات", value: data.revenue, color: "var(--con-success)" },
-    { label: "تكلفة البضائع المبيعة", value: -data.cogs, color: "var(--con-danger)" },
-    { label: "الربح الإجمالي", value: data.grossProfit, color: "var(--con-info)" },
-    { label: "الهامش الإجمالي", value: data.grossMargin, color: "var(--con-info)", isPercent: true },
-    { label: "مصروفات التشغيل", value: -data.operatingExpenses, color: "var(--con-danger)" },
-    { label: "دخل التشغيل", value: data.operatingIncome, color: "var(--con-brand)" },
-    { label: "هامش التشغيل", value: data.operatingMargin, color: "var(--con-brand)", isPercent: true },
+    {
+      label: "تكلفة البضائع المبيعة",
+      value: -data.cogs,
+      color: "var(--con-danger)",
+    },
+    {
+      label: "الربح الإجمالي",
+      value: data.grossProfit,
+      color: "var(--con-info)",
+    },
+    {
+      label: "الهامش الإجمالي",
+      value: data.grossMargin,
+      color: "var(--con-info)",
+      isPercent: true,
+    },
+    {
+      label: "مصروفات التشغيل",
+      value: -data.operatingExpenses,
+      color: "var(--con-danger)",
+    },
+    {
+      label: "دخل التشغيل",
+      value: data.operatingIncome,
+      color: "var(--con-brand)",
+    },
+    {
+      label: "هامش التشغيل",
+      value: data.operatingMargin,
+      color: "var(--con-brand)",
+      isPercent: true,
+    },
     { label: "صافي الدخل", value: data.netIncome, color: "var(--con-success)" },
-    { label: "هامش الربح الصافي", value: data.netMargin, color: "var(--con-success)", isPercent: true },
+    {
+      label: "هامش الربح الصافي",
+      value: data.netMargin,
+      color: "var(--con-success)",
+      isPercent: true,
+    },
   ];
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: 12,
+        }}
+      >
         {metrics.map((metric) => (
-          <div key={metric.label} style={{
-            background: "var(--con-bg-surface-2)",
-            padding: "16px",
-            borderRadius: 8,
-            borderLeft: `4px solid ${metric.color}`,
-          }}>
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 6 }}>
+          <div
+            key={metric.label}
+            style={{
+              background: "var(--con-bg-surface-2)",
+              padding: "16px",
+              borderRadius: 8,
+              borderLeft: `4px solid ${metric.color}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                marginBottom: 6,
+              }}
+            >
               {metric.label}
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: metric.color }}>
-              {metric.isPercent ? metric.value : `${(metric.value / 1000).toFixed(1)}ك ر.س`}
+            <div
+              style={{ fontSize: "22px", fontWeight: 700, color: metric.color }}
+            >
+              {metric.isPercent
+                ? metric.value
+                : `${(metric.value / 1000).toFixed(1)}ك ر.س`}
             </div>
           </div>
         ))}
@@ -374,30 +539,105 @@ function RevenueAnalysisView({ data }: { data: any }) {
       <ReportSection title="الإيرادات حسب المنصة">
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المنصة</th>
-              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
-              <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النسبة</th>
-              <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النمو</th>
+            <tr
+              style={{
+                background: "var(--con-bg-surface-2)",
+                borderBottom: "1px solid var(--con-border-default)",
+                height: 44,
+              }}
+            >
+              <th
+                style={{
+                  textAlign: "start",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                المنصة
+              </th>
+              <th
+                style={{
+                  textAlign: "start",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                الإيرادات
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                النسبة
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                النمو
+              </th>
             </tr>
           </thead>
           <tbody>
             {data.byPlatform.map((p: any) => (
-              <tr key={p.name} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                <td style={{ padding: "12px 16px", color: "var(--con-text-primary)" }}>{p.name}</td>
-                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
+              <tr
+                key={p.name}
+                style={{
+                  borderBottom: "1px solid var(--con-border-default)",
+                  height: 44,
+                }}
+              >
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "var(--con-text-primary)",
+                  }}
+                >
+                  {p.name}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "var(--con-success)",
+                    fontWeight: 600,
+                    fontFamily: "var(--con-font-mono)",
+                    textAlign: "start",
+                  }}
+                >
                   {(p.revenue / 1000).toFixed(1)}ك ر.س
                 </td>
-                <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    color: "var(--con-text-muted)",
+                  }}
+                >
                   {p.percentage}%
                 </td>
-                <td style={{
-                  padding: "12px 16px",
-                  textAlign: "center",
-                  color: p.growth >= 0 ? "var(--con-success)" : "var(--con-danger)",
-                  fontWeight: 600,
-                }}>
-                  {p.growth >= 0 ? "+" : ""}{p.growth}%
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    color:
+                      p.growth >= 0
+                        ? "var(--con-success)"
+                        : "var(--con-danger)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {p.growth >= 0 ? "+" : ""}
+                  {p.growth}%
                 </td>
               </tr>
             ))}
@@ -408,24 +648,99 @@ function RevenueAnalysisView({ data }: { data: any }) {
       <ReportSection title="الإيرادات حسب المدينة">
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
-              <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
-              <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الطلبات</th>
-              <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النسبة</th>
+            <tr
+              style={{
+                background: "var(--con-bg-surface-2)",
+                borderBottom: "1px solid var(--con-border-default)",
+                height: 44,
+              }}
+            >
+              <th
+                style={{
+                  textAlign: "start",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                المدينة
+              </th>
+              <th
+                style={{
+                  textAlign: "start",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                الإيرادات
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                الطلبات
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "12px 16px",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 600,
+                }}
+              >
+                النسبة
+              </th>
             </tr>
           </thead>
           <tbody>
             {data.byCity.map((c: any) => (
-              <tr key={c.city} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                <td style={{ padding: "12px 16px", color: "var(--con-text-primary)" }}>{c.city}</td>
-                <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
+              <tr
+                key={c.city}
+                style={{
+                  borderBottom: "1px solid var(--con-border-default)",
+                  height: 44,
+                }}
+              >
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "var(--con-text-primary)",
+                  }}
+                >
+                  {c.city}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "var(--con-success)",
+                    fontWeight: 600,
+                    fontFamily: "var(--con-font-mono)",
+                    textAlign: "start",
+                  }}
+                >
                   {(c.revenue / 1000).toFixed(1)}ك ر.س
                 </td>
-                <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    color: "var(--con-text-muted)",
+                  }}
+                >
                   {c.orders}
                 </td>
-                <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    color: "var(--con-text-muted)",
+                  }}
+                >
                   {c.percentage}%
                 </td>
               </tr>
@@ -445,38 +760,144 @@ function CityPerformanceView({ data }: { data: any }) {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "var(--con-bg-surface-2)", borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المدينة</th>
-                <th style={{ textAlign: "start", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الإيرادات</th>
-                <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>الطلبات</th>
-                <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>متوسط الطلب</th>
-                <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>المناديب</th>
-                <th style={{ textAlign: "center", padding: "12px 16px", color: "var(--con-text-muted)", fontWeight: 600 }}>النمو</th>
+              <tr
+                style={{
+                  background: "var(--con-bg-surface-2)",
+                  borderBottom: "1px solid var(--con-border-default)",
+                  height: 44,
+                }}
+              >
+                <th
+                  style={{
+                    textAlign: "start",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  المدينة
+                </th>
+                <th
+                  style={{
+                    textAlign: "start",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  الإيرادات
+                </th>
+                <th
+                  style={{
+                    textAlign: "center",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  الطلبات
+                </th>
+                <th
+                  style={{
+                    textAlign: "center",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  متوسط الطلب
+                </th>
+                <th
+                  style={{
+                    textAlign: "center",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  المناديب
+                </th>
+                <th
+                  style={{
+                    textAlign: "center",
+                    padding: "12px 16px",
+                    color: "var(--con-text-muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  النمو
+                </th>
               </tr>
             </thead>
             <tbody>
               {data.cities.map((city: any) => (
-                <tr key={city.name} style={{ borderBottom: "1px solid var(--con-border-default)", height: 44 }}>
-                  <td style={{ padding: "12px 16px", color: "var(--con-text-primary)", fontWeight: 600 }}>{city.name}</td>
-                  <td style={{ padding: "12px 16px", color: "var(--con-success)", fontWeight: 600, fontFamily: "var(--con-font-mono)", textAlign: "start" }}>
+                <tr
+                  key={city.name}
+                  style={{
+                    borderBottom: "1px solid var(--con-border-default)",
+                    height: 44,
+                  }}
+                >
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      color: "var(--con-text-primary)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {city.name}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      color: "var(--con-success)",
+                      fontWeight: 600,
+                      fontFamily: "var(--con-font-mono)",
+                      textAlign: "start",
+                    }}
+                  >
                     {(city.revenue / 1000).toFixed(1)}ك ر.س
                   </td>
-                  <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: "center",
+                      color: "var(--con-text-muted)",
+                    }}
+                  >
                     {city.orders}
                   </td>
-                  <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: "center",
+                      color: "var(--con-text-muted)",
+                    }}
+                  >
                     {city.avgOrder.toFixed(0)} ر.س
                   </td>
-                  <td style={{ padding: "12px 16px", textAlign: "center", color: "var(--con-text-muted)" }}>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: "center",
+                      color: "var(--con-text-muted)",
+                    }}
+                  >
                     {city.couriers}
                   </td>
-                  <td style={{
-                    padding: "12px 16px",
-                    textAlign: "center",
-                    color: city.growth >= 0 ? "var(--con-success)" : "var(--con-danger)",
-                    fontWeight: 600,
-                  }}>
-                    {city.growth >= 0 ? "+" : ""}{city.growth}%
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: "center",
+                      color:
+                        city.growth >= 0
+                          ? "var(--con-success)"
+                          : "var(--con-danger)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {city.growth >= 0 ? "+" : ""}
+                    {city.growth}%
                   </td>
                 </tr>
               ))}
@@ -501,39 +922,109 @@ export default function FinancialReports() {
   ];
 
   return (
-    <div dir="rtl" style={{ padding: "20px 24px", background: "var(--con-bg-default)", minHeight: "100vh" }}>
+    <div
+      dir="rtl"
+      style={{
+        padding: "20px 24px",
+        background: "var(--con-bg-default)",
+        minHeight: "100vh",
+      }}
+    >
       {!selectedReport ? (
         <>
           {/* Header */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: "32px", fontWeight: 700, color: "var(--con-text-primary)", margin: 0, marginBottom: 4 }}>
+            <h1
+              style={{
+                fontSize: "32px",
+                fontWeight: 700,
+                color: "var(--con-text-primary)",
+                margin: 0,
+                marginBottom: 4,
+              }}
+            >
               التقارير المالية
             </h1>
-            <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+            <p
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                margin: 0,
+              }}
+            >
               بيانات وتقارير مالية شاملة للعمليات والإيرادات والمصروفات
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => window.print()} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: 8, color: "var(--con-text-primary)", fontSize: "var(--con-text-caption)", fontWeight: 600, cursor: "pointer" }}><Printer size={14} /> طباعة</button>
+            <button
+              onClick={() => window.print()}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 14px",
+                background: "var(--con-bg-surface-1)",
+                border: "1px solid var(--con-border-default)",
+                borderRadius: 8,
+                color: "var(--con-text-primary)",
+                fontSize: "var(--con-text-caption)",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <Printer size={14} /> طباعة
+            </button>
           </div>
 
           {/* Reports Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
             {reports.map((report) => (
-              <ReportCard key={report.title} report={report} onSelect={setSelectedReport} />
+              <ReportCard
+                key={report.title}
+                report={report}
+                onSelect={setSelectedReport}
+              />
             ))}
           </div>
         </>
       ) : (
         <>
           {/* Report Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 28,
+            }}
+          >
             <div>
-              <h1 style={{ fontSize: "32px", fontWeight: 700, color: "var(--con-text-primary)", margin: 0, marginBottom: 4 }}>
+              <h1
+                style={{
+                  fontSize: "32px",
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: 0,
+                  marginBottom: 4,
+                }}
+              >
                 {selectedReport.title}
               </h1>
-              <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
-                {selectedReport.period} • تم الإنشاء في {selectedReport.generatedAt}
+              <p
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                  margin: 0,
+                }}
+              >
+                {selectedReport.period} • تم الإنشاء في{" "}
+                {selectedReport.generatedAt}
               </p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -613,16 +1104,26 @@ export default function FinancialReports() {
           </div>
 
           {/* Report Content */}
-          <div style={{
-            background: "var(--con-bg-surface-1)",
-            border: "1px solid var(--con-border-default)",
-            borderRadius: 10,
-            padding: "24px",
-          }}>
-            {selectedReport.title === "بيان الدخل" && <IncomeStatementView data={selectedReport.data} />}
-            {selectedReport.title === "تقرير الأرباح والخسائر" && <PLView data={selectedReport.data} />}
-            {selectedReport.title === "تحليل الإيرادات" && <RevenueAnalysisView data={selectedReport.data} />}
-            {selectedReport.title === "تقرير أداء المدن" && <CityPerformanceView data={selectedReport.data} />}
+          <div
+            style={{
+              background: "var(--con-bg-surface-1)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 10,
+              padding: "24px",
+            }}
+          >
+            {selectedReport.title === "بيان الدخل" && (
+              <IncomeStatementView data={selectedReport.data} />
+            )}
+            {selectedReport.title === "تقرير الأرباح والخسائر" && (
+              <PLView data={selectedReport.data} />
+            )}
+            {selectedReport.title === "تحليل الإيرادات" && (
+              <RevenueAnalysisView data={selectedReport.data} />
+            )}
+            {selectedReport.title === "تقرير أداء المدن" && (
+              <CityPerformanceView data={selectedReport.data} />
+            )}
           </div>
         </>
       )}

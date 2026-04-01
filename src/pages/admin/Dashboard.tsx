@@ -72,8 +72,18 @@ export default function ControlTower() {
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {lastRefresh && (
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)" }}>
-                آخر تحديث: {new Date(lastRefresh).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                  fontFamily: "var(--con-font-mono)",
+                }}
+              >
+                آخر تحديث:{" "}
+                {new Date(lastRefresh).toLocaleTimeString("ar-SA", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             )}
             <button
@@ -116,7 +126,12 @@ export default function ControlTower() {
                   animation: "pulse 2s infinite",
                 }}
               />
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)" }}>
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-secondary)",
+                }}
+              >
                 النظام يعمل
               </span>
             </div>
@@ -129,7 +144,9 @@ export default function ControlTower() {
          ═══════════════════════════════════════════════════════════════════════ */}
       <WidgetZone zone="executive" gap={14}>
         <KPIOverview />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}
+        >
           <SystemHealth />
           <div
             style={{
@@ -157,7 +174,9 @@ export default function ControlTower() {
       {/* ═══════════════════════════════════════════════════════════════════════
          ZONE B: Operational Control — Charts, Alerts, Activity, Approvals
          ═══════════════════════════════════════════════════════════════════════ */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14 }}>
+      <div
+        style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14 }}
+      >
         {/* Left Column — Main operational data */}
         <WidgetZone zone="main" gap={14}>
           <ChartsPanel />

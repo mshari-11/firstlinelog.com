@@ -3,7 +3,13 @@
  */
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, LogIn, UserPlus, LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  LogIn,
+  UserPlus,
+  LucideIcon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -66,11 +72,16 @@ export default function ServicePageLayout({
       >
         {heroImage && (
           <div className="absolute inset-0 z-0">
-            <img src={heroImage} alt={title} className="w-full h-full object-cover opacity-15" />
+            <img
+              src={heroImage}
+              alt={title}
+              className="w-full h-full object-cover opacity-15"
+            />
             <div
               className="absolute inset-0"
               style={{
-                background: "linear-gradient(to bottom, oklch(0.08 0.06 220 / 0.7), oklch(0.08 0.06 220))",
+                background:
+                  "linear-gradient(to bottom, oklch(0.08 0.06 220 / 0.7), oklch(0.08 0.06 220))",
               }}
             />
           </div>
@@ -87,10 +98,15 @@ export default function ServicePageLayout({
             {/* Badge */}
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: `color-mix(in oklch, ${accentColor} 15%, transparent)` }}
+              style={{
+                background: `color-mix(in oklch, ${accentColor} 15%, transparent)`,
+              }}
             >
               <Icon className="w-5 h-5" style={{ color: accentColor }} />
-              <span className="text-sm font-medium" style={{ color: accentColor }}>
+              <span
+                className="text-sm font-medium"
+                style={{ color: accentColor }}
+              >
                 {subtitle}
               </span>
             </div>
@@ -111,7 +127,12 @@ export default function ServicePageLayout({
             {/* أزرار الدخول */}
             <div className="flex flex-wrap gap-4 mt-10">
               {adminPath && (
-                <Button asChild size="lg" className="gap-2 px-8" style={{ background: accentColor }}>
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 px-8"
+                  style={{ background: accentColor }}
+                >
                   <Link to={adminPath}>
                     <LogIn className="w-5 h-5" />
                     دخول لوحة الإدارة
@@ -154,10 +175,16 @@ export default function ServicePageLayout({
                   transition={{ delay: i * 0.1 }}
                   className="text-center py-4"
                 >
-                  <p className="text-2xl md:text-3xl font-bold" style={{ color: accentColor }}>
+                  <p
+                    className="text-2xl md:text-3xl font-bold"
+                    style={{ color: accentColor }}
+                  >
                     {stat.value}
                   </p>
-                  <p className="text-sm mt-1" style={{ color: "oklch(0.55 0.04 210)" }}>
+                  <p
+                    className="text-sm mt-1"
+                    style={{ color: "oklch(0.55 0.04 210)" }}
+                  >
                     {stat.label}
                   </p>
                 </motion.div>
@@ -199,9 +226,14 @@ export default function ServicePageLayout({
               >
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: `color-mix(in oklch, ${accentColor} 15%, transparent)` }}
+                  style={{
+                    background: `color-mix(in oklch, ${accentColor} 15%, transparent)`,
+                  }}
                 >
-                  <feature.icon className="w-6 h-6" style={{ color: accentColor }} />
+                  <feature.icon
+                    className="w-6 h-6"
+                    style={{ color: accentColor }}
+                  />
                 </div>
                 <h3
                   className="text-lg font-semibold mb-3"
@@ -209,7 +241,10 @@ export default function ServicePageLayout({
                 >
                   {feature.title}
                 </h3>
-                <p className="leading-relaxed text-sm" style={{ color: "oklch(0.55 0.04 210)" }}>
+                <p
+                  className="leading-relaxed text-sm"
+                  style={{ color: "oklch(0.55 0.04 210)" }}
+                >
                   {feature.description}
                 </p>
               </motion.div>
@@ -272,7 +307,10 @@ export default function ServicePageLayout({
       {/* زر العودة */}
       <section
         className="py-8"
-        style={{ background: "oklch(0.10 0.06 220)", borderTop: "1px solid oklch(0.20 0.05 210 / 0.3)" }}
+        style={{
+          background: "oklch(0.10 0.06 220)",
+          borderTop: "1px solid oklch(0.20 0.05 210 / 0.3)",
+        }}
       >
         <div className="container mx-auto px-4 flex justify-center">
           <Button

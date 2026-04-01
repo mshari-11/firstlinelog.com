@@ -18,7 +18,7 @@
 (Admin Dashboard)  (Courier Dashboard)
 ```
 
-## Admin Panel Routes (/admin-panel/*)
+## Admin Panel Routes (/admin-panel/\*)
 
 ```
 /admin-panel

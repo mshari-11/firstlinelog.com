@@ -2,8 +2,18 @@
  * صفحة خدمة الشكاوى والطلبات
  */
 import {
-  MessageSquare, AlertCircle, CheckCircle2, Clock, Search, BarChart3,
-  Users, ClipboardList, Car, DollarSign, FileSpreadsheet, Shield
+  MessageSquare,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Search,
+  BarChart3,
+  Users,
+  ClipboardList,
+  Car,
+  DollarSign,
+  FileSpreadsheet,
+  Shield,
 } from "lucide-react";
 import ServicePageLayout from "./ServicePageLayout";
 
@@ -25,42 +35,78 @@ export default function ComplaintsService() {
       features={[
         {
           title: "استقبال الشكاوى",
-          description: "قنوات متعددة لاستقبال الشكاوى: النظام المباشر، البريد، الهاتف، والمنصات.",
+          description:
+            "قنوات متعددة لاستقبال الشكاوى: النظام المباشر، البريد، الهاتف، والمنصات.",
           icon: AlertCircle,
         },
         {
           title: "تصنيف تلقائي",
-          description: "تصنيف ذكي للشكاوى حسب النوع والأولوية مع توجيه للقسم المختص.",
+          description:
+            "تصنيف ذكي للشكاوى حسب النوع والأولوية مع توجيه للقسم المختص.",
           icon: Search,
         },
         {
           title: "تتبع الحالة",
-          description: "تتبع كل شكوى من لحظة الاستلام حتى الإغلاق مع تحديثات مستمرة.",
+          description:
+            "تتبع كل شكوى من لحظة الاستلام حتى الإغلاق مع تحديثات مستمرة.",
           icon: Clock,
         },
         {
           title: "الحل والإغلاق",
-          description: "إجراءات واضحة للحل مع تأكيد رضا المشتكي قبل إغلاق البلاغ.",
+          description:
+            "إجراءات واضحة للحل مع تأكيد رضا المشتكي قبل إغلاق البلاغ.",
           icon: CheckCircle2,
         },
         {
           title: "تقارير الجودة",
-          description: "تقارير دورية عن أنواع الشكاوى المتكررة وخطط التحسين المتبعة.",
+          description:
+            "تقارير دورية عن أنواع الشكاوى المتكررة وخطط التحسين المتبعة.",
           icon: BarChart3,
         },
         {
           title: "ضمان الجودة",
-          description: "معايير جودة واضحة (SLA) لأوقات الرد والحل مع مراقبة مستمرة.",
+          description:
+            "معايير جودة واضحة (SLA) لأوقات الرد والحل مع مراقبة مستمرة.",
           icon: Shield,
         },
       ]}
       relatedLinks={[
-        { label: "المناديب", path: "/services/couriers", icon: Users, color: "oklch(0.65 0.18 200)" },
-        { label: "الطلبات", path: "/services/orders", icon: ClipboardList, color: "oklch(0.70 0.15 150)" },
-        { label: "المركبات", path: "/services/vehicles", icon: Car, color: "oklch(0.65 0.15 50)" },
-        { label: "المالية", path: "/services/finance", icon: DollarSign, color: "oklch(0.70 0.15 130)" },
-        { label: "Excel", path: "/services/excel", icon: FileSpreadsheet, color: "oklch(0.60 0.15 160)" },
-        { label: "لوحة التحكم", path: "/services/dashboard", icon: BarChart3, color: "oklch(0.65 0.18 200)" },
+        {
+          label: "المناديب",
+          path: "/services/couriers",
+          icon: Users,
+          color: "oklch(0.65 0.18 200)",
+        },
+        {
+          label: "الطلبات",
+          path: "/services/orders",
+          icon: ClipboardList,
+          color: "oklch(0.70 0.15 150)",
+        },
+        {
+          label: "المركبات",
+          path: "/services/vehicles",
+          icon: Car,
+          color: "oklch(0.65 0.15 50)",
+        },
+        {
+          label: "المالية",
+          path: "/services/finance",
+          icon: DollarSign,
+          color: "oklch(0.70 0.15 130)",
+        },
+        {
+          label: "Excel",
+          path: "/services/excel",
+          icon: FileSpreadsheet,
+          color: "oklch(0.60 0.15 160)",
+        },
+        {
+          label: "لوحة التحكم",
+          path: "/services/dashboard",
+          icon: BarChart3,
+          color: "oklch(0.65 0.18 200)",
+        },
       ]}
     />
   );

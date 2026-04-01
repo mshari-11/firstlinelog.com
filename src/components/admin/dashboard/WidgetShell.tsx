@@ -69,13 +69,23 @@ export function WidgetShell({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "12px 16px",
-          borderBottom: collapsed ? "none" : "1px solid var(--con-border-default)",
+          borderBottom: collapsed
+            ? "none"
+            : "1px solid var(--con-border-default)",
           cursor: "pointer",
           userSelect: "none",
         }}
         onClick={() => toggleWidgetCollapse(id)}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
           {Icon && (
             <div
               style={{
@@ -107,14 +117,23 @@ export function WidgetShell({
               {title}
             </h3>
             {subtitle && (
-              <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                  margin: 0,
+                }}
+              >
                 {subtitle}
               </p>
             )}
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={(e) => e.stopPropagation()}>
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 4 }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {actions}
           {onRefresh && (
             <button
@@ -130,7 +149,14 @@ export function WidgetShell({
                 display: "flex",
               }}
             >
-              <RefreshCw size={13} style={{ animation: refreshing ? "spin 0.6s linear infinite" : undefined }} />
+              <RefreshCw
+                size={13}
+                style={{
+                  animation: refreshing
+                    ? "spin 0.6s linear infinite"
+                    : undefined,
+                }}
+              />
             </button>
           )}
           {(drilldownLink || onDrilldown) && (
@@ -178,7 +204,14 @@ export function WidgetShell({
           >
             {error ? (
               <div style={{ padding: 20, textAlign: "center" }}>
-                <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-danger)" }}>{error}</p>
+                <p
+                  style={{
+                    fontSize: "var(--con-text-body)",
+                    color: "var(--con-danger)",
+                  }}
+                >
+                  {error}
+                </p>
                 {onRefresh && (
                   <button
                     onClick={handleRefresh}
@@ -201,12 +234,19 @@ export function WidgetShell({
                   <div
                     key={i}
                     className="con-skeleton"
-                    style={{ height: 14, width: `${60 + i * 10}%`, borderRadius: 4, marginBottom: 10 }}
+                    style={{
+                      height: 14,
+                      width: `${60 + i * 10}%`,
+                      borderRadius: 4,
+                      marginBottom: 10,
+                    }}
                   />
                 ))}
               </div>
             ) : (
-              <div style={noPadding ? undefined : { padding: "14px 16px" }}>{children}</div>
+              <div style={noPadding ? undefined : { padding: "14px 16px" }}>
+                {children}
+              </div>
             )}
           </motion.div>
         )}

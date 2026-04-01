@@ -20,7 +20,13 @@ import {
   RefreshCw,
   Wallet,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -138,13 +144,21 @@ export default function DriverEntitlements() {
       e.maintenance_deduction +
       e.insurance_deduction +
       e.other_deductions,
-    0
+    0,
   );
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       {/* العنوان */}
-      <motion.div variants={item} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <motion.div
+        variants={item}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <BadgeDollarSign className="w-6 h-6 text-emerald-600" />
@@ -175,7 +189,9 @@ export default function DriverEntitlements() {
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-red-800 text-sm mb-1">تنبيه: مشكلة في الحساب البنكي</p>
+                <p className="font-bold text-red-800 text-sm mb-1">
+                  تنبيه: مشكلة في الحساب البنكي
+                </p>
                 <p className="text-red-700 text-sm">{notif.message}</p>
                 <div className="flex items-center gap-3 mt-3">
                   <a
@@ -215,8 +231,12 @@ export default function DriverEntitlements() {
                 <div className="p-2 rounded-lg bg-emerald-50 w-fit mb-3">
                   <Wallet className="w-4 h-4 text-emerald-600" />
                 </div>
-                <p className="text-xl font-bold font-mono text-emerald-600">{formatCurrency(totalPaid)}</p>
-                <p className="text-xs text-muted-foreground mt-1">إجمالي المستحقات المصروفة</p>
+                <p className="text-xl font-bold font-mono text-emerald-600">
+                  {formatCurrency(totalPaid)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  إجمالي المستحقات المصروفة
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -226,8 +246,12 @@ export default function DriverEntitlements() {
                 <div className="p-2 rounded-lg bg-blue-50 w-fit mb-3">
                   <TrendingDown className="w-4 h-4 text-blue-600" />
                 </div>
-                <p className="text-xl font-bold font-mono">{formatCurrency(totalDeductions)}</p>
-                <p className="text-xs text-muted-foreground mt-1">إجمالي الاستقطاعات</p>
+                <p className="text-xl font-bold font-mono">
+                  {formatCurrency(totalDeductions)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  إجمالي الاستقطاعات
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -237,8 +261,12 @@ export default function DriverEntitlements() {
                 <div className="p-2 rounded-lg bg-purple-50 w-fit mb-3">
                   <CheckCircle2 className="w-4 h-4 text-purple-600" />
                 </div>
-                <p className="text-xl font-bold font-mono">{entitlements.length}</p>
-                <p className="text-xs text-muted-foreground mt-1">عدد الدفعات المصروفة</p>
+                <p className="text-xl font-bold font-mono">
+                  {entitlements.length}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  عدد الدفعات المصروفة
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -250,7 +278,9 @@ export default function DriverEntitlements() {
         <div className="flex items-center justify-center py-20">
           <div className="text-center space-y-4">
             <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-muted-foreground text-sm">جاري تحميل المستحقات...</p>
+            <p className="text-muted-foreground text-sm">
+              جاري تحميل المستحقات...
+            </p>
           </div>
         </div>
       ) : entitlements.length === 0 ? (
@@ -261,9 +291,12 @@ export default function DriverEntitlements() {
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
                   <Clock className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold">لا توجد مستحقات مصروفة بعد</h3>
+                <h3 className="text-lg font-semibold">
+                  لا توجد مستحقات مصروفة بعد
+                </h3>
                 <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                  ستظهر مستحقاتك هنا بعد أن يقوم قسم المالية بصرفها وإرسال التفاصيل إليك.
+                  ستظهر مستحقاتك هنا بعد أن يقوم قسم المالية بصرفها وإرسال
+                  التفاصيل إليك.
                 </p>
                 <div className="pt-2">
                   <a
@@ -306,7 +339,8 @@ export default function DriverEntitlements() {
                           </div>
                           <div>
                             <CardTitle className="text-base font-bold">
-                              {ent.month_label || `مستحقات - ${formatDate(ent.paid_at)}`}
+                              {ent.month_label ||
+                                `مستحقات - ${formatDate(ent.paid_at)}`}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-1 mt-0.5">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -349,9 +383,13 @@ export default function DriverEntitlements() {
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
                                 <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                <span className="font-medium">إجمالي المبلغ</span>
+                                <span className="font-medium">
+                                  إجمالي المبلغ
+                                </span>
                               </div>
-                              <span className="font-mono font-bold">{formatCurrency(ent.gross_amount)}</span>
+                              <span className="font-mono font-bold">
+                                {formatCurrency(ent.gross_amount)}
+                              </span>
                             </div>
 
                             {/* الاستقطاعات */}
@@ -362,22 +400,40 @@ export default function DriverEntitlements() {
                               </p>
 
                               {ent.platform_deductions > 0 && (
-                                <DeductionRow label="عمولة المنصة" amount={ent.platform_deductions} />
+                                <DeductionRow
+                                  label="عمولة المنصة"
+                                  amount={ent.platform_deductions}
+                                />
                               )}
                               {ent.vehicle_deduction > 0 && (
-                                <DeductionRow label="استقطاع المركبة" amount={ent.vehicle_deduction} />
+                                <DeductionRow
+                                  label="استقطاع المركبة"
+                                  amount={ent.vehicle_deduction}
+                                />
                               )}
                               {ent.absence_deduction > 0 && (
-                                <DeductionRow label="استقطاع الغياب" amount={ent.absence_deduction} />
+                                <DeductionRow
+                                  label="استقطاع الغياب"
+                                  amount={ent.absence_deduction}
+                                />
                               )}
                               {ent.maintenance_deduction > 0 && (
-                                <DeductionRow label="صيانة" amount={ent.maintenance_deduction} />
+                                <DeductionRow
+                                  label="صيانة"
+                                  amount={ent.maintenance_deduction}
+                                />
                               )}
                               {ent.insurance_deduction > 0 && (
-                                <DeductionRow label="تأمين" amount={ent.insurance_deduction} />
+                                <DeductionRow
+                                  label="تأمين"
+                                  amount={ent.insurance_deduction}
+                                />
                               )}
                               {ent.other_deductions > 0 && (
-                                <DeductionRow label="استقطاعات أخرى" amount={ent.other_deductions} />
+                                <DeductionRow
+                                  label="استقطاعات أخرى"
+                                  amount={ent.other_deductions}
+                                />
                               )}
 
                               {totalDeductionsForRecord === 0 && (
@@ -397,7 +453,9 @@ export default function DriverEntitlements() {
 
                             {/* صافي المستحق */}
                             <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
-                              <span className="font-bold text-sm text-emerald-800">صافي المستحق</span>
+                              <span className="font-bold text-sm text-emerald-800">
+                                صافي المستحق
+                              </span>
                               <span className="font-mono font-bold text-emerald-700 text-lg">
                                 {formatCurrency(ent.net_amount)}
                               </span>
@@ -433,7 +491,10 @@ export default function DriverEntitlements() {
                 <p className="text-sm font-medium">للاستفسار عن مستحقاتك</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   تواصل مع قسم المالية أو الدعم على:{" "}
-                  <a href="mailto:support@fll.sa" className="text-emerald-600 hover:underline font-medium">
+                  <a
+                    href="mailto:support@fll.sa"
+                    className="text-emerald-600 hover:underline font-medium"
+                  >
                     support@fll.sa
                   </a>
                 </p>
@@ -450,7 +511,9 @@ function DeductionRow({ label, amount }: { label: string; amount: number }) {
   return (
     <div className="flex items-center justify-between text-xs">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-red-500">- {amount.toLocaleString("ar-SA")} ر.س</span>
+      <span className="font-mono text-red-500">
+        - {amount.toLocaleString("ar-SA")} ر.س
+      </span>
     </div>
   );
 }

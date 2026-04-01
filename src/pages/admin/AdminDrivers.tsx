@@ -40,30 +40,132 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Combobox } from "@/components/ui/combobox";
 import {
-  Pagination, PaginationContent, PaginationItem,
-  PaginationLink, PaginationNext, PaginationPrevious,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 
 const driversData = [
-  { id: "DRV-001", name: "أحمد محمد الغامدي", phone: "05XXXXXXX1", city: "جدة", platform: "هنقرستيشن", status: "active", rating: 4.8, orders: 1247, joinDate: "2024-03" },
-  { id: "DRV-002", name: "خالد علي القحطاني", phone: "05XXXXXXX2", city: "الرياض", platform: "جاهز", status: "active", rating: 4.9, orders: 982, joinDate: "2024-05" },
-  { id: "DRV-003", name: "سعد ناصر العتيبي", phone: "05XXXXXXX3", city: "جدة", platform: "مرسول", status: "inactive", rating: 4.5, orders: 654, joinDate: "2024-07" },
-  { id: "DRV-004", name: "فهد أحمد الشهري", phone: "05XXXXXXX4", city: "الدمام", platform: "نون فود", status: "active", rating: 4.7, orders: 1580, joinDate: "2023-11" },
-  { id: "DRV-005", name: "عمر سعيد الحربي", phone: "05XXXXXXX5", city: "مكة", platform: "هنقرستيشن", status: "suspended", rating: 3.9, orders: 320, joinDate: "2025-01" },
-  { id: "DRV-006", name: "محمد يوسف الزهراني", phone: "05XXXXXXX6", city: "الرياض", platform: "جاهز", status: "active", rating: 4.6, orders: 890, joinDate: "2024-08" },
-  { id: "DRV-007", name: "عبدالله سالم المالكي", phone: "05XXXXXXX7", city: "المدينة", platform: "مرسول", status: "active", rating: 4.8, orders: 1120, joinDate: "2024-01" },
-  { id: "DRV-008", name: "ياسر حسن الدوسري", phone: "05XXXXXXX8", city: "جدة", platform: "هنقرستيشن", status: "pending", rating: 0, orders: 0, joinDate: "2026-02" },
+  {
+    id: "DRV-001",
+    name: "أحمد محمد الغامدي",
+    phone: "05XXXXXXX1",
+    city: "جدة",
+    platform: "هنقرستيشن",
+    status: "active",
+    rating: 4.8,
+    orders: 1247,
+    joinDate: "2024-03",
+  },
+  {
+    id: "DRV-002",
+    name: "خالد علي القحطاني",
+    phone: "05XXXXXXX2",
+    city: "الرياض",
+    platform: "جاهز",
+    status: "active",
+    rating: 4.9,
+    orders: 982,
+    joinDate: "2024-05",
+  },
+  {
+    id: "DRV-003",
+    name: "سعد ناصر العتيبي",
+    phone: "05XXXXXXX3",
+    city: "جدة",
+    platform: "مرسول",
+    status: "inactive",
+    rating: 4.5,
+    orders: 654,
+    joinDate: "2024-07",
+  },
+  {
+    id: "DRV-004",
+    name: "فهد أحمد الشهري",
+    phone: "05XXXXXXX4",
+    city: "الدمام",
+    platform: "نون فود",
+    status: "active",
+    rating: 4.7,
+    orders: 1580,
+    joinDate: "2023-11",
+  },
+  {
+    id: "DRV-005",
+    name: "عمر سعيد الحربي",
+    phone: "05XXXXXXX5",
+    city: "مكة",
+    platform: "هنقرستيشن",
+    status: "suspended",
+    rating: 3.9,
+    orders: 320,
+    joinDate: "2025-01",
+  },
+  {
+    id: "DRV-006",
+    name: "محمد يوسف الزهراني",
+    phone: "05XXXXXXX6",
+    city: "الرياض",
+    platform: "جاهز",
+    status: "active",
+    rating: 4.6,
+    orders: 890,
+    joinDate: "2024-08",
+  },
+  {
+    id: "DRV-007",
+    name: "عبدالله سالم المالكي",
+    phone: "05XXXXXXX7",
+    city: "المدينة",
+    platform: "مرسول",
+    status: "active",
+    rating: 4.8,
+    orders: 1120,
+    joinDate: "2024-01",
+  },
+  {
+    id: "DRV-008",
+    name: "ياسر حسن الدوسري",
+    phone: "05XXXXXXX8",
+    city: "جدة",
+    platform: "هنقرستيشن",
+    status: "pending",
+    rating: 0,
+    orders: 0,
+    joinDate: "2026-02",
+  },
 ];
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: typeof CheckCircle2;
+  }
+> = {
   active: { label: "نشط", variant: "default", icon: CheckCircle2 },
   inactive: { label: "غير نشط", variant: "secondary", icon: XCircle },
   suspended: { label: "موقوف", variant: "destructive", icon: XCircle },
@@ -71,10 +173,34 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 const summaryStats = [
-  { label: "إجمالي السائقين", value: "2,847", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-  { label: "نشط الآن", value: "2,120", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "قيد المراجعة", value: "83", icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-  { label: "موقوف", value: "45", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+  {
+    label: "إجمالي السائقين",
+    value: "2,847",
+    icon: Users,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+  },
+  {
+    label: "نشط الآن",
+    value: "2,120",
+    icon: CheckCircle2,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+  },
+  {
+    label: "قيد المراجعة",
+    value: "83",
+    icon: Clock,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  {
+    label: "موقوف",
+    value: "45",
+    icon: XCircle,
+    color: "text-red-600",
+    bg: "bg-red-50",
+  },
 ];
 
 const PAGE_SIZE = 5;
@@ -85,24 +211,39 @@ export default function AdminDrivers() {
   const [cityFilter, setCityFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  const cityOptions = [...new Set(driversData.map(d => d.city))].map(c => ({ value: c, label: c }));
+  const cityOptions = [...new Set(driversData.map((d) => d.city))].map((c) => ({
+    value: c,
+    label: c,
+  }));
 
   const allFiltered = driversData.filter((d) => {
-    const matchSearch = d.name.includes(search) || d.id.includes(search) || d.city.includes(search);
+    const matchSearch =
+      d.name.includes(search) ||
+      d.id.includes(search) ||
+      d.city.includes(search);
     const matchStatus = statusFilter === "all" || d.status === statusFilter;
     const matchCity = !cityFilter || d.city === cityFilter;
     return matchSearch && matchStatus && matchCity;
   });
   const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
-  const filteredDrivers = allFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const filteredDrivers = allFiltered.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       {/* العنوان */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">إدارة السائقين</h1>
-          <p className="text-muted-foreground text-sm mt-1">عرض وإدارة جميع قادة المركبات المسجلين</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            عرض وإدارة جميع قادة المركبات المسجلين
+          </p>
         </div>
         <div className="flex gap-2">
           <DropdownMenu>
@@ -114,9 +255,18 @@ export default function AdminDrivers() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem><FileSpreadsheet className="w-3.5 h-3.5 ml-2" />تصدير Excel</DropdownMenuItem>
-              <DropdownMenuItem><FileText className="w-3.5 h-3.5 ml-2" />تصدير PDF</DropdownMenuItem>
-              <DropdownMenuItem><Download className="w-3.5 h-3.5 ml-2" />تصدير CSV</DropdownMenuItem>
+              <DropdownMenuItem>
+                <FileSpreadsheet className="w-3.5 h-3.5 ml-2" />
+                تصدير Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <FileText className="w-3.5 h-3.5 ml-2" />
+                تصدير PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Download className="w-3.5 h-3.5 ml-2" />
+                تصدير CSV
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm">
@@ -157,7 +307,14 @@ export default function AdminDrivers() {
               />
             </div>
             <div className="w-40">
-              <Combobox options={cityOptions} value={cityFilter} onValueChange={setCityFilter} placeholder="كل المدن" searchPlaceholder="ابحث..." emptyMessage="لا توجد" />
+              <Combobox
+                options={cityOptions}
+                value={cityFilter}
+                onValueChange={setCityFilter}
+                placeholder="كل المدن"
+                searchPlaceholder="ابحث..."
+                emptyMessage="لا توجد"
+              />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -168,11 +325,21 @@ export default function AdminDrivers() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setStatusFilter("all")}>الكل</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("active")}>نشط</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>غير نشط</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("suspended")}>موقوف</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("pending")}>قيد المراجعة</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                  الكل
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("active")}>
+                  نشط
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>
+                  غير نشط
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("suspended")}>
+                  موقوف
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("pending")}>
+                  قيد المراجعة
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -202,12 +369,17 @@ export default function AdminDrivers() {
                             <div className="flex items-center gap-3 cursor-pointer">
                               <Avatar className="w-9 h-9">
                                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                                  {driver.name.split(" ")[0][0]}{driver.name.split(" ")[1]?.[0] || ""}
+                                  {driver.name.split(" ")[0][0]}
+                                  {driver.name.split(" ")[1]?.[0] || ""}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="font-medium text-sm hover:underline">{driver.name}</p>
-                                <p className="text-xs text-muted-foreground font-mono">{driver.id}</p>
+                                <p className="font-medium text-sm hover:underline">
+                                  {driver.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground font-mono">
+                                  {driver.id}
+                                </p>
                               </div>
                             </div>
                           </HoverCardTrigger>
@@ -215,19 +387,34 @@ export default function AdminDrivers() {
                             <div className="flex gap-3">
                               <Avatar className="w-10 h-10">
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                                  {driver.name.split(" ")[0][0]}{driver.name.split(" ")[1]?.[0] || ""}
+                                  {driver.name.split(" ")[0][0]}
+                                  {driver.name.split(" ")[1]?.[0] || ""}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="space-y-1 flex-1">
-                                <p className="text-sm font-semibold">{driver.name}</p>
-                                <p className="text-xs text-muted-foreground">{driver.phone}</p>
+                                <p className="text-sm font-semibold">
+                                  {driver.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {driver.phone}
+                                </p>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{driver.city}</span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {driver.city}
+                                  </span>
                                   <span>{driver.platform}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs pt-1">
-                                  {driver.rating > 0 && <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-amber-500" />{driver.rating}</span>}
-                                  <span className="font-mono">{driver.orders.toLocaleString("ar-SA")} طلب</span>
+                                  {driver.rating > 0 && (
+                                    <span className="flex items-center gap-1">
+                                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                      {driver.rating}
+                                    </span>
+                                  )}
+                                  <span className="font-mono">
+                                    {driver.orders.toLocaleString("ar-SA")} طلب
+                                  </span>
                                   <span>منذ {driver.joinDate}</span>
                                 </div>
                               </div>
@@ -241,20 +428,31 @@ export default function AdminDrivers() {
                           {driver.city}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{driver.platform}</TableCell>
+                      <TableCell className="text-sm">
+                        {driver.platform}
+                      </TableCell>
                       <TableCell>
                         {driver.rating > 0 ? (
                           <div className="flex items-center gap-1">
                             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            <span className="text-sm font-mono font-medium">{driver.rating}</span>
+                            <span className="text-sm font-mono font-medium">
+                              {driver.rating}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell className="font-mono text-sm">{driver.orders.toLocaleString("ar-SA")}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {driver.orders.toLocaleString("ar-SA")}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant={status.variant} className="text-[10px] gap-1">
+                        <Badge
+                          variant={status.variant}
+                          className="text-[10px] gap-1"
+                        >
                           <status.icon className="w-3 h-3" />
                           {status.label}
                         </Badge>
@@ -262,7 +460,11 @@ export default function AdminDrivers() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -271,18 +473,31 @@ export default function AdminDrivers() {
                             <DropdownMenuItem>تعديل البيانات</DropdownMenuItem>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-500" onSelect={(e) => e.preventDefault()}>إيقاف السائق</DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-500"
+                                  onSelect={(e) => e.preventDefault()}
+                                >
+                                  إيقاف السائق
+                                </DropdownMenuItem>
                               </AlertDialogTrigger>
                               <AlertDialogContent dir="rtl">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>إيقاف السائق {driver.name}؟</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    إيقاف السائق {driver.name}؟
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    سيتم إيقاف السائق عن استقبال الطلبات. يمكنك إعادة تفعيله لاحقاً.
+                                    سيتم إيقاف السائق عن استقبال الطلبات. يمكنك
+                                    إعادة تفعيله لاحقاً.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter className="gap-2">
                                   <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => toast.success(`تم إيقاف ${driver.name}`)}>
+                                  <AlertDialogAction
+                                    className="bg-red-600 hover:bg-red-700"
+                                    onClick={() =>
+                                      toast.success(`تم إيقاف ${driver.name}`)
+                                    }
+                                  >
                                     إيقاف
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -300,22 +515,44 @@ export default function AdminDrivers() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <span className="text-xs text-muted-foreground">
-                عرض {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, allFiltered.length)} من {allFiltered.length}
+                عرض {(page - 1) * PAGE_SIZE + 1}-
+                {Math.min(page * PAGE_SIZE, allFiltered.length)} من{" "}
+                {allFiltered.length}
               </span>
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                    <PaginationPrevious
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className={
+                        page <= 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                   {Array.from({ length: totalPages }, (_, i) => (
                     <PaginationItem key={i}>
-                      <PaginationLink onClick={() => setPage(i + 1)} isActive={page === i + 1} className="cursor-pointer">
+                      <PaginationLink
+                        onClick={() => setPage(i + 1)}
+                        isActive={page === i + 1}
+                        className="cursor-pointer"
+                      >
                         {i + 1}
                       </PaginationLink>
                     </PaginationItem>
                   ))}
                   <PaginationItem>
-                    <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                    <PaginationNext
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className={
+                        page >= totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>

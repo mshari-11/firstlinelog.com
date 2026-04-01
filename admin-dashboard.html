@@ -1,613 +1,2913 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة الإدارة - فيرست لاين لوجستيكس</title>
-<link rel="icon" href="/public/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-:root{--navy:#0a1628;--navy-light:#152238;--navy-mid:#1c2d47;--blue:#38bdf8;--blue-deep:#0284c7;--green:#22c55e;--red:#ef4444;--gold:#fbbf24;--purple:#a78bfa;--orange:#fb923c;--cyan:#22d3ee;--bg:#0e1a2e;--card:rgba(21,34,56,0.7);--text:#e2e8f0;--muted:#94a3b8;--border:rgba(56,189,248,0.1);--glass:rgba(255,255,255,0.04);--radius:14px}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
-body::before{content:'';position:fixed;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 20%,rgba(56,189,248,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(167,139,250,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy)}::-webkit-scrollbar-thumb{background:var(--navy-mid);border-radius:3px}
-.sidebar{width:250px;background:linear-gradient(180deg,var(--navy) 0%,#0c1525 100%);min-height:100vh;position:fixed;right:0;top:0;z-index:100;overflow-y:auto;border-left:1px solid var(--border)}
-.sidebar-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.sidebar-logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:white;box-shadow:0 4px 15px rgba(56,189,248,0.3)}
-.sidebar-header h2{font-size:14px;font-weight:700;color:white}.sidebar-header span{font-size:10px;color:var(--muted);display:block;margin-top:2px}
-.nav-section{padding:18px 20px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(148,163,184,0.5);font-weight:600}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer;border-radius:10px;margin:2px 10px;transition:all .25s}
-.nav-item:hover{background:var(--glass);color:var(--text)}.nav-item.active{background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(167,139,250,0.1));color:var(--blue);font-weight:600;box-shadow:inset 0 0 0 1px rgba(56,189,248,0.2)}
-.nav-item i{width:18px;height:18px;flex-shrink:0;opacity:.7}.nav-item.active i{opacity:1}
-.nav-badge{font-size:10px;padding:2px 7px;border-radius:10px;margin-right:auto;font-weight:700}
-.nav-badge.red{background:rgba(239,68,68,0.2);color:#fca5a5}.nav-badge.blue{background:rgba(56,189,248,0.2);color:#7dd3fc}.nav-badge.gold{background:rgba(251,191,36,0.2);color:#fde68a}
-.main{margin-right:250px;flex:1;min-height:100vh;position:relative;z-index:1}
-.top-bar{background:rgba(10,22,40,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
-.top-bar-title{font-size:17px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
-.top-bar-sub{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:3px}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;box-shadow:0 0 8px rgba(34,197,94,0.5)}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
-.portal-tabs{display:flex;gap:2px;background:rgba(255,255,255,0.05);border-radius:10px;padding:3px;border:1px solid var(--border)}
-.portal-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;font-family:inherit;color:var(--muted);transition:all .2s}
-.portal-tab.active{background:linear-gradient(135deg,rgba(56,189,248,0.2),rgba(167,139,250,0.15));color:white}
-.btn{padding:8px 16px;border-radius:10px;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .25s}
-.btn-primary{background:linear-gradient(135deg,var(--blue-deep),#7c3aed);color:white;box-shadow:0 4px 15px rgba(2,132,199,0.3)}.btn-primary:hover{transform:translateY(-1px)}
-.btn-outline{background:var(--glass);border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:rgba(255,255,255,0.08)}
-.btn-green{background:linear-gradient(135deg,#059669,#10b981);color:white}.btn-sm{padding:4px 10px;font-size:11px;border-radius:8px}
-.content{padding:24px 28px}.section{display:none}.section.active{display:block}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
-.page-title{font-size:22px;font-weight:700;color:white;display:flex;align-items:center;gap:10px}.page-sub{color:var(--muted);font-size:12px;margin-top:4px}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
-.stat-card{background:var(--card);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--border);position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:transform .2s,box-shadow .2s}
-.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
-.stat-card::before{content:'';position:absolute;top:0;right:0;width:100%;height:3px;border-radius:var(--radius) var(--radius) 0 0}
-.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}.stat-card.green::before{background:linear-gradient(90deg,var(--green),#34d399)}.stat-card.red::before{background:linear-gradient(90deg,var(--red),#f87171)}.stat-card.gold::before{background:linear-gradient(90deg,var(--gold),#fcd34d)}.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),#fdba74)}
-.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
-.stat-icon.blue{background:rgba(56,189,248,0.1);color:var(--blue)}.stat-icon.green{background:rgba(34,197,94,0.1);color:var(--green)}.stat-icon.red{background:rgba(239,68,68,0.1);color:var(--red)}.stat-icon.gold{background:rgba(251,191,36,0.1);color:var(--gold)}.stat-icon.purple{background:rgba(167,139,250,0.1);color:var(--purple)}.stat-icon.orange{background:rgba(249,115,22,0.1);color:var(--orange)}
-.stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.stat-value{font-size:28px;font-weight:700;color:white;margin:4px 0;line-height:1.1}.stat-sub{font-size:11px;color:var(--muted)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;backdrop-filter:blur(10px)}
-.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.card-title{font-size:14px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}.card-body{padding:18px 20px}
-.table-wrapper{overflow-x:auto}.table{width:100%;border-collapse:collapse}
-.table th{padding:10px 12px;text-align:right;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.table td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text)}.table tr:hover td{background:rgba(56,189,248,0.03)}
-.badge{padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;display:inline-block}
-.badge-green{background:rgba(34,197,94,0.15);color:#86efac}.badge-red{background:rgba(239,68,68,0.15);color:#fca5a5}.badge-yellow{background:rgba(251,191,36,0.15);color:#fde68a}.badge-blue{background:rgba(56,189,248,0.15);color:#7dd3fc}.badge-purple{background:rgba(167,139,250,0.15);color:#c4b5fd}.badge-orange{background:rgba(249,115,22,0.15);color:#fdba74}
-.chart-container{position:relative;height:260px}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,22,40,0.7);backdrop-filter:blur(8px);z-index:1000;justify-content:center;align-items:center}.modal-overlay.active{display:flex}
-.modal{background:var(--navy-light);border:1px solid var(--border);border-radius:18px;width:90%;max-width:580px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.5)}
-.modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.modal-header h3{font-size:16px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
-.modal-body{padding:20px 24px}.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
-.form-group{margin-bottom:14px}.form-label{display:block;font-size:11px;font-weight:600;color:var(--blue);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--navy);color:var(--text)}
-.form-input:focus,.form-select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(56,189,248,0.1)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 8px 30px rgba(0,0,0,.4);border:1px solid var(--border)}.toast.show{transform:translateX(-50%) translateY(0)}.toast.success{background:rgba(5,150,105,0.9);color:white}.toast.error{background:rgba(220,38,38,0.9);color:white}
-.review-section{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}.review-section h4{font-size:13px;color:white;margin-bottom:8px;font-weight:700}
-.review-flag{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;margin:2px}.review-flag.error{background:rgba(239,68,68,0.15);color:#fca5a5}.review-flag.warn{background:rgba(251,191,36,0.15);color:#fde68a}.review-flag.ok{background:rgba(34,197,94,0.15);color:#86efac}
-.integration-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--glass);transition:all .2s}.integration-card:hover{background:rgba(255,255,255,0.06)}.integration-status{margin-right:auto}
-.integ-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--glass)}
-.notif-item{display:flex;gap:12px;padding:14px;border-bottom:1px solid var(--border);align-items:flex-start;cursor:pointer;transition:background .2s}.notif-item:hover{background:rgba(56,189,248,0.03)}
-.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:6px;box-shadow:0 0 6px rgba(56,189,248,0.4)}.notif-dot.read{background:var(--navy-mid);box-shadow:none}
-.audit-entry{padding:12px;border-bottom:1px solid var(--border);font-size:13px}.audit-time{color:var(--muted);font-size:11px}
-.ai-chat-fab{position:fixed;bottom:24px;left:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--blue-deep),#7c3aed);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;box-shadow:0 6px 25px rgba(2,132,199,0.4);transition:all .3s}.ai-chat-fab:hover{transform:scale(1.1)}.ai-chat-fab i{color:white}
-.ai-panel{position:fixed;bottom:90px;left:24px;width:380px;max-height:500px;background:var(--navy-light);border:1px solid var(--border);border-radius:18px;z-index:200;display:none;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}.ai-panel.open{display:flex}
-.ai-panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(2,132,199,0.15),rgba(124,58,237,0.1))}.ai-panel-header h3{font-size:14px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
-.model-tag{font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(167,139,250,0.2);color:var(--purple);font-weight:600}
-.ai-messages{flex:1;overflow-y:auto;padding:16px;max-height:340px;display:flex;flex-direction:column;gap:12px}
-.ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6}.ai-msg.user{background:rgba(56,189,248,0.15);align-self:flex-end;border-bottom-left-radius:4px}.ai-msg.bot{background:var(--glass);border:1px solid var(--border);align-self:flex-start;border-bottom-right-radius:4px}.ai-msg.bot.loading{color:var(--muted);font-style:italic}
-.ai-input-bar{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}.ai-input-bar input{flex:1;background:var(--navy);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-family:inherit;font-size:13px;color:var(--text)}.ai-input-bar input:focus{outline:none;border-color:var(--blue)}.ai-input-bar button{background:linear-gradient(135deg,var(--blue-deep),#7c3aed);border:none;border-radius:10px;padding:9px 14px;cursor:pointer;color:white;font-weight:600;font-family:inherit;font-size:13px}
-@media(max-width:768px){.sidebar{width:60px}.main{margin-right:60px}.sidebar-header div,.nav-item span:not(.nav-badge){display:none}.nav-section{display:none}.form-row{grid-template-columns:1fr}.grid-2,.grid-3{grid-template-columns:1fr}.ai-panel{width:calc(100% - 48px)}}
-</style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوحة الإدارة - فيرست لاين لوجستيكس</title>
+    <link rel="icon" href="/public/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --navy: #0a1628;
+        --navy-light: #152238;
+        --navy-mid: #1c2d47;
+        --blue: #38bdf8;
+        --blue-deep: #0284c7;
+        --green: #22c55e;
+        --red: #ef4444;
+        --gold: #fbbf24;
+        --purple: #a78bfa;
+        --orange: #fb923c;
+        --cyan: #22d3ee;
+        --bg: #0e1a2e;
+        --card: rgba(21, 34, 56, 0.7);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --border: rgba(56, 189, 248, 0.1);
+        --glass: rgba(255, 255, 255, 0.04);
+        --radius: 14px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "IBM Plex Sans Arabic", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background:
+          radial-gradient(
+            ellipse at 20% 20%,
+            rgba(56, 189, 248, 0.06) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 80% 80%,
+            rgba(167, 139, 250, 0.04) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--navy);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--navy-mid);
+        border-radius: 3px;
+      }
+      .sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, var(--navy) 0%, #0c1525 100%);
+        min-height: 100vh;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 100;
+        overflow-y: auto;
+        border-left: 1px solid var(--border);
+      }
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .sidebar-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--blue), var(--purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+      }
+      .sidebar-header h2 {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+      }
+      .sidebar-header span {
+        font-size: 10px;
+        color: var(--muted);
+        display: block;
+        margin-top: 2px;
+      }
+      .nav-section {
+        padding: 18px 20px 6px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(148, 163, 184, 0.5);
+        font-weight: 600;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 16px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 10px;
+        margin: 2px 10px;
+        transition: all 0.25s;
+      }
+      .nav-item:hover {
+        background: var(--glass);
+        color: var(--text);
+      }
+      .nav-item.active {
+        background: linear-gradient(
+          135deg,
+          rgba(56, 189, 248, 0.15),
+          rgba(167, 139, 250, 0.1)
+        );
+        color: var(--blue);
+        font-weight: 600;
+        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2);
+      }
+      .nav-item i {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        opacity: 0.7;
+      }
+      .nav-item.active i {
+        opacity: 1;
+      }
+      .nav-badge {
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        margin-right: auto;
+        font-weight: 700;
+      }
+      .nav-badge.red {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+      }
+      .nav-badge.blue {
+        background: rgba(56, 189, 248, 0.2);
+        color: #7dd3fc;
+      }
+      .nav-badge.gold {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fde68a;
+      }
+      .main {
+        margin-right: 250px;
+        flex: 1;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+      .top-bar {
+        background: rgba(10, 22, 40, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .top-bar-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .top-bar-sub {
+        font-size: 11px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 3px;
+      }
+      .live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        display: inline-block;
+        animation: pulse 2s infinite;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.85);
+        }
+      }
+      .portal-tabs {
+        display: flex;
+        gap: 2px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 3px;
+        border: 1px solid var(--border);
+      }
+      .portal-tab {
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        color: var(--muted);
+        transition: all 0.2s;
+      }
+      .portal-tab.active {
+        background: linear-gradient(
+          135deg,
+          rgba(56, 189, 248, 0.2),
+          rgba(167, 139, 250, 0.15)
+        );
+        color: white;
+      }
+      .btn {
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: none;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.25s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--blue-deep), #7c3aed);
+        color: white;
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+      }
+      .btn-outline {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .btn-green {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+      }
+      .btn-sm {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-radius: 8px;
+      }
+      .content {
+        padding: 24px 28px;
+      }
+      .section {
+        display: none;
+      }
+      .section.active {
+        display: block;
+      }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .page-sub {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+      .stat-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 3px;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      .stat-card.blue::before {
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+      }
+      .stat-card.green::before {
+        background: linear-gradient(90deg, var(--green), #34d399);
+      }
+      .stat-card.red::before {
+        background: linear-gradient(90deg, var(--red), #f87171);
+      }
+      .stat-card.gold::before {
+        background: linear-gradient(90deg, var(--gold), #fcd34d);
+      }
+      .stat-card.purple::before {
+        background: linear-gradient(90deg, var(--purple), #c4b5fd);
+      }
+      .stat-card.orange::before {
+        background: linear-gradient(90deg, var(--orange), #fdba74);
+      }
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+      }
+      .stat-icon.blue {
+        background: rgba(56, 189, 248, 0.1);
+        color: var(--blue);
+      }
+      .stat-icon.green {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--green);
+      }
+      .stat-icon.red {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--red);
+      }
+      .stat-icon.gold {
+        background: rgba(251, 191, 36, 0.1);
+        color: var(--gold);
+      }
+      .stat-icon.purple {
+        background: rgba(167, 139, 250, 0.1);
+        color: var(--purple);
+      }
+      .stat-icon.orange {
+        background: rgba(249, 115, 22, 0.1);
+        color: var(--orange);
+      }
+      .stat-label {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: white;
+        margin: 4px 0;
+        line-height: 1.1;
+      }
+      .stat-sub {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        margin-bottom: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-body {
+        padding: 18px 20px;
+      }
+      .table-wrapper {
+        overflow-x: auto;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th {
+        padding: 10px 12px;
+        text-align: right;
+        font-size: 11px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .table td {
+        padding: 10px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: var(--text);
+      }
+      .table tr:hover td {
+        background: rgba(56, 189, 248, 0.03);
+      }
+      .badge {
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+      }
+      .badge-green {
+        background: rgba(34, 197, 94, 0.15);
+        color: #86efac;
+      }
+      .badge-red {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+      }
+      .badge-yellow {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fde68a;
+      }
+      .badge-blue {
+        background: rgba(56, 189, 248, 0.15);
+        color: #7dd3fc;
+      }
+      .badge-purple {
+        background: rgba(167, 139, 250, 0.15);
+        color: #c4b5fd;
+      }
+      .badge-orange {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fdba74;
+      }
+      .chart-container {
+        position: relative;
+        height: 260px;
+      }
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 22, 40, 0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+      .modal {
+        background: var(--navy-light);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        width: 90%;
+        max-width: 580px;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      }
+      .modal-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--muted);
+      }
+      .modal-body {
+        padding: 20px 24px;
+      }
+      .modal-footer {
+        padding: 14px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+      }
+      .form-group {
+        margin-bottom: 14px;
+      }
+      .form-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--blue);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+      .form-input,
+      .form-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 13px;
+        background: var(--navy);
+        color: var(--text);
+      }
+      .form-input:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .filter-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        z-index: 2000;
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border);
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.success {
+        background: rgba(5, 150, 105, 0.9);
+        color: white;
+      }
+      .toast.error {
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+      }
+      .review-section {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+      .review-section h4 {
+        font-size: 13px;
+        color: white;
+        margin-bottom: 8px;
+        font-weight: 700;
+      }
+      .review-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        margin: 2px;
+      }
+      .review-flag.error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+      }
+      .review-flag.warn {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fde68a;
+      }
+      .review-flag.ok {
+        background: rgba(34, 197, 94, 0.15);
+        color: #86efac;
+      }
+      .integration-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: var(--glass);
+        transition: all 0.2s;
+      }
+      .integration-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .integration-status {
+        margin-right: auto;
+      }
+      .integ-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--glass);
+      }
+      .notif-item {
+        display: flex;
+        gap: 12px;
+        padding: 14px;
+        border-bottom: 1px solid var(--border);
+        align-items: flex-start;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .notif-item:hover {
+        background: rgba(56, 189, 248, 0.03);
+      }
+      .notif-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+        flex-shrink: 0;
+        margin-top: 6px;
+        box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+      }
+      .notif-dot.read {
+        background: var(--navy-mid);
+        box-shadow: none;
+      }
+      .audit-entry {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+      }
+      .audit-time {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .ai-chat-fab {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--blue-deep), #7c3aed);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        box-shadow: 0 6px 25px rgba(2, 132, 199, 0.4);
+        transition: all 0.3s;
+      }
+      .ai-chat-fab:hover {
+        transform: scale(1.1);
+      }
+      .ai-chat-fab i {
+        color: white;
+      }
+      .ai-panel {
+        position: fixed;
+        bottom: 90px;
+        left: 24px;
+        width: 380px;
+        max-height: 500px;
+        background: var(--navy-light);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        z-index: 200;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+      }
+      .ai-panel.open {
+        display: flex;
+      }
+      .ai-panel-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          rgba(2, 132, 199, 0.15),
+          rgba(124, 58, 237, 0.1)
+        );
+      }
+      .ai-panel-header h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .model-tag {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(167, 139, 250, 0.2);
+        color: var(--purple);
+        font-weight: 600;
+      }
+      .ai-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        max-height: 340px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .ai-msg {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .ai-msg.user {
+        background: rgba(56, 189, 248, 0.15);
+        align-self: flex-end;
+        border-bottom-left-radius: 4px;
+      }
+      .ai-msg.bot {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        align-self: flex-start;
+        border-bottom-right-radius: 4px;
+      }
+      .ai-msg.bot.loading {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .ai-input-bar {
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+      }
+      .ai-input-bar input {
+        flex: 1;
+        background: var(--navy);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-family: inherit;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .ai-input-bar input:focus {
+        outline: none;
+        border-color: var(--blue);
+      }
+      .ai-input-bar button {
+        background: linear-gradient(135deg, var(--blue-deep), #7c3aed);
+        border: none;
+        border-radius: 10px;
+        padding: 9px 14px;
+        cursor: pointer;
+        color: white;
+        font-weight: 600;
+        font-family: inherit;
+        font-size: 13px;
+      }
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+        .main {
+          margin-right: 60px;
+        }
+        .sidebar-header div,
+        .nav-item span:not(.nav-badge) {
+          display: none;
+        }
+        .nav-section {
+          display: none;
+        }
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .ai-panel {
+          width: calc(100% - 48px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="ai-chat-fab" id="ai-fab" onclick="toggleAI()">
+      <i data-lucide="bot" style="width: 26px; height: 26px"></i>
+    </button>
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-header">
+        <h3>
+          <i
+            data-lucide="sparkles"
+            style="width: 18px; height: 18px; color: var(--purple)"
+          ></i>
+          مساعد FLL الذكي <span class="model-tag">Claude Haiku</span>
+        </h3>
+        <button
+          style="
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+          "
+          onclick="toggleAI()"
+        >
+          <i data-lucide="x" style="width: 18px; height: 18px"></i>
+        </button>
+      </div>
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-msg bot">
+          مرحباً! أنا مساعد FLL الذكي. اسألني عن المناديب، الشكاوى، المالية، أو
+          أي شي يخص العمليات
+        </div>
+      </div>
+      <div class="ai-input-bar">
+        <input
+          type="text"
+          id="ai-input"
+          placeholder="اكتب سؤالك..."
+          onkeydown="if (event.key === 'Enter') sendAI();"
+        />
+        <button onclick="sendAI()">إرسال</button>
+      </div>
+    </div>
 
-<button class="ai-chat-fab" id="ai-fab" onclick="toggleAI()"><i data-lucide="bot" style="width:26px;height:26px"></i></button>
-<div class="ai-panel" id="ai-panel">
-<div class="ai-panel-header">
-  <h3><i data-lucide="sparkles" style="width:18px;height:18px;color:var(--purple)"></i> مساعد FLL الذكي <span class="model-tag">Claude Haiku</span></h3>
-  <button style="background:none;border:none;cursor:pointer;color:var(--muted)" onclick="toggleAI()"><i data-lucide="x" style="width:18px;height:18px"></i></button>
-</div>
-<div class="ai-messages" id="ai-messages">
-  <div class="ai-msg bot">مرحباً! أنا مساعد FLL الذكي. اسألني عن المناديب، الشكاوى، المالية، أو أي شي يخص العمليات</div>
-</div>
-<div class="ai-input-bar">
-  <input type="text" id="ai-input" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendAI()">
-  <button onclick="sendAI()">إرسال</button>
-</div>
-</div>
+    <div class="toast" id="toast"></div>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">FL</div>
+        <div>
+          <h2>فيرست لاين</h2>
+          <span>لوحة الإدارة v6</span>
+        </div>
+      </div>
+      <div class="nav-section">الرئيسية</div>
+      <a class="nav-item active" onclick="S('overview')"
+        ><i data-lucide="layout-dashboard"></i><span>نظرة عامة</span></a
+      >
+      <div class="nav-section">العمليات</div>
+      <a class="nav-item" onclick="S('couriers')"
+        ><i data-lucide="users"></i><span>المناديب</span
+        ><span class="nav-badge" id="nav-couriers">0</span></a
+      >
+      <a class="nav-item" onclick="S('orders')"
+        ><i data-lucide="package"></i><span>الطلبات</span
+        ><span class="nav-badge blue" id="nav-orders">0</span></a
+      >
+      <a class="nav-item" onclick="S('complaints')"
+        ><i data-lucide="message-circle-warning"></i><span>الشكاوى</span
+        ><span class="nav-badge" id="nav-complaints">0</span></a
+      >
+      <a class="nav-item" onclick="S('platforms')"
+        ><i data-lucide="monitor"></i><span>المنصات</span></a
+      >
+      <a class="nav-item" onclick="S('finance')"
+        ><i data-lucide="wallet"></i><span>المالية</span></a
+      >
+      <div class="nav-section">الموارد البشرية</div>
+      <a class="nav-item" onclick="S('staff')"
+        ><i data-lucide="user-check"></i><span>الموظفين</span></a
+      >
+      <a class="nav-item" onclick="S('departments')"
+        ><i data-lucide="building-2"></i><span>الأقسام</span></a
+      >
+      <a class="nav-item" onclick="S('tasks')"
+        ><i data-lucide="list-checks"></i><span>المهام</span
+        ><span class="nav-badge gold" id="nav-tasks">0</span></a
+      >
+      <div class="nav-section">النظام</div>
+      <a class="nav-item" onclick="S('notifications')"
+        ><i data-lucide="bell"></i><span>الإشعارات</span
+        ><span class="nav-badge" id="nav-notif">0</span></a
+      >
+      <a class="nav-item" onclick="S('audit')"
+        ><i data-lucide="shield-check"></i><span>سجل التدقيق</span></a
+      >
+      <a class="nav-item" onclick="S('approvals')"
+        ><i data-lucide="badge-check"></i><span>الموافقات</span
+        ><span class="nav-badge gold" id="nav-approvals">0</span></a
+      >
+      <a class="nav-item" onclick="S('integrations')"
+        ><i data-lucide="plug-zap"></i><span>التكاملات</span></a
+      >
+      <a class="nav-item" onclick="S('ai')"
+        ><i data-lucide="brain"></i><span>AI</span></a
+      >
+      <a class="nav-item" onclick="S('settings')"
+        ><i data-lucide="settings"></i><span>الإعدادات</span></a
+      >
+      <div class="nav-section" style="color: #f59e0b">المالية المتقدمة</div>
+      <a class="nav-item" onclick="S('fraud')"
+        ><i data-lucide="scan-search"></i><span>كشف التلاعب</span
+        ><span
+          class="nav-badge"
+          style="background: #fee2e2; color: #991b1b"
+          id="nav-fraud"
+          >0</span
+        ></a
+      >
+      <a class="nav-item" onclick="S('upload-admin')"
+        ><i data-lucide="upload-cloud"></i><span>رفع التقارير</span></a
+      >
+      <a class="nav-item" onclick="S('daily-close')"
+        ><i data-lucide="calendar-check"></i><span>الإقفال اليومي</span></a
+      >
+    </div>
+    <div class="main">
+      <div class="top-bar">
+        <div>
+          <div class="top-bar-title">🏛️ لوحة الإدارة</div>
+          <div style="font-size: 11px; color: var(--muted)">
+            <span class="live-dot"></span> متصل بـ AWS + Supabase
+          </div>
+        </div>
+        <div class="top-bar-actions">
+          <div class="portal-tabs">
+            <button class="portal-tab active" onclick="switchPortal('admin')">
+              الإدارة</button
+            ><button class="portal-tab" onclick="switchPortal('staff')">
+              الموظفين</button
+            ><button
+              class="portal-tab courier-tab"
+              onclick="switchPortal('courier')"
+            >
+              المناديب
+            </button>
+          </div>
+          <span
+            id="user-name"
+            style="font-size: 12px; color: var(--muted)"
+          ></span>
+          <button class="action-btn outline" onclick="logout()">خروج</button>
+        </div>
+      </div>
 
-<div class="toast" id="toast"></div>
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-<div class="sidebar-header"><div class="sidebar-logo">FL</div><div><h2>فيرست لاين</h2><span>لوحة الإدارة v6</span></div></div>
-<div class="nav-section">الرئيسية</div>
-<a class="nav-item active" onclick="S('overview')"><i data-lucide="layout-dashboard"></i><span>نظرة عامة</span></a>
-<div class="nav-section">العمليات</div>
-<a class="nav-item" onclick="S('couriers')"><i data-lucide="users"></i><span>المناديب</span><span class="nav-badge" id="nav-couriers">0</span></a>
-<a class="nav-item" onclick="S('orders')"><i data-lucide="package"></i><span>الطلبات</span><span class="nav-badge blue" id="nav-orders">0</span></a>
-<a class="nav-item" onclick="S('complaints')"><i data-lucide="message-circle-warning"></i><span>الشكاوى</span><span class="nav-badge" id="nav-complaints">0</span></a>
-<a class="nav-item" onclick="S('platforms')"><i data-lucide="monitor"></i><span>المنصات</span></a>
-<a class="nav-item" onclick="S('finance')"><i data-lucide="wallet"></i><span>المالية</span></a>
-<div class="nav-section">الموارد البشرية</div>
-<a class="nav-item" onclick="S('staff')"><i data-lucide="user-check"></i><span>الموظفين</span></a>
-<a class="nav-item" onclick="S('departments')"><i data-lucide="building-2"></i><span>الأقسام</span></a>
-<a class="nav-item" onclick="S('tasks')"><i data-lucide="list-checks"></i><span>المهام</span><span class="nav-badge gold" id="nav-tasks">0</span></a>
-<div class="nav-section">النظام</div>
-<a class="nav-item" onclick="S('notifications')"><i data-lucide="bell"></i><span>الإشعارات</span><span class="nav-badge" id="nav-notif">0</span></a>
-<a class="nav-item" onclick="S('audit')"><i data-lucide="shield-check"></i><span>سجل التدقيق</span></a>
-<a class="nav-item" onclick="S('approvals')"><i data-lucide="badge-check"></i><span>الموافقات</span><span class="nav-badge gold" id="nav-approvals">0</span></a>
-<a class="nav-item" onclick="S('integrations')"><i data-lucide="plug-zap"></i><span>التكاملات</span></a>
-<a class="nav-item" onclick="S('ai')"><i data-lucide="brain"></i><span>AI</span></a>
-<a class="nav-item" onclick="S('settings')"><i data-lucide="settings"></i><span>الإعدادات</span></a>
-<div class="nav-section" style="color:#f59e0b">المالية المتقدمة</div>
-<a class="nav-item" onclick="S('fraud')"><i data-lucide="scan-search"></i><span>كشف التلاعب</span><span class="nav-badge" style="background:#fee2e2;color:#991b1b" id="nav-fraud">0</span></a>
-<a class="nav-item" onclick="S('upload-admin')"><i data-lucide="upload-cloud"></i><span>رفع التقارير</span></a>
-<a class="nav-item" onclick="S('daily-close')"><i data-lucide="calendar-check"></i><span>الإقفال اليومي</span></a>
-</div>
-<div class="main">
-<div class="top-bar">
-<div><div class="top-bar-title">🏛️ لوحة الإدارة</div><div style="font-size:11px;color:var(--muted)"><span class="live-dot"></span> متصل بـ AWS + Supabase</div></div>
-<div class="top-bar-actions">
-<div class="portal-tabs"><button class="portal-tab active" onclick="switchPortal('admin')">الإدارة</button><button class="portal-tab" onclick="switchPortal('staff')">الموظفين</button><button class="portal-tab courier-tab" onclick="switchPortal('courier')">المناديب</button></div>
-<span id="user-name" style="font-size:12px;color:var(--muted)"></span>
-<button class="action-btn outline" onclick="logout()">خروج</button>
-</div></div>
+      <div class="content">
+        <!-- ========== OVERVIEW ========== -->
+        <div class="section active" id="sec-overview">
+          <div class="page-header">
+            <div>
+              <div class="page-title">نظرة عامة</div>
+              <div class="page-sub" id="current-date"></div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card green">
+              <div class="stat-label">المناديب النشطين</div>
+              <div class="stat-value" id="s-couriers">—</div>
+              <div class="stat-sub">Supabase + DynamoDB</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">الطلبات</div>
+              <div class="stat-value" id="s-orders">—</div>
+            </div>
+            <div class="stat-card gold">
+              <div class="stat-label">صافي المستحقات</div>
+              <div class="stat-value" id="s-net">—</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-label">الشكاوى المفتوحة</div>
+              <div class="stat-value" id="s-complaints">—</div>
+              <div class="stat-sub">AWS API</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-label">المهام المعلقة</div>
+              <div class="stat-value" id="s-tasks">—</div>
+              <div class="stat-sub">AWS API</div>
+            </div>
+            <div class="stat-card orange">
+              <div class="stat-label">دفعات المستحقات</div>
+              <div class="stat-value" id="s-payouts">—</div>
+              <div class="stat-sub">AWS API</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">المستحقات / المنصة</div>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="ch-plat"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">المناديب / المدينة</div>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="ch-city"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">آخر العمليات</div>
+              <div style="font-size: 11px; color: var(--muted)">
+                من سجل التدقيق — AWS DynamoDB
+              </div>
+            </div>
+            <div class="card-body" id="ov-audit"></div>
+          </div>
+        </div>
 
-<div class="content">
-<!-- ========== OVERVIEW ========== -->
-<div class="section active" id="sec-overview">
-<div class="page-header"><div><div class="page-title">نظرة عامة</div><div class="page-sub" id="current-date"></div></div></div>
-<div class="stats-grid">
-<div class="stat-card green"><div class="stat-label">المناديب النشطين</div><div class="stat-value" id="s-couriers">—</div><div class="stat-sub">Supabase + DynamoDB</div></div>
-<div class="stat-card blue"><div class="stat-label">الطلبات</div><div class="stat-value" id="s-orders">—</div></div>
-<div class="stat-card gold"><div class="stat-label">صافي المستحقات</div><div class="stat-value" id="s-net">—</div></div>
-<div class="stat-card red"><div class="stat-label">الشكاوى المفتوحة</div><div class="stat-value" id="s-complaints">—</div><div class="stat-sub">AWS API</div></div>
-<div class="stat-card purple"><div class="stat-label">المهام المعلقة</div><div class="stat-value" id="s-tasks">—</div><div class="stat-sub">AWS API</div></div>
-<div class="stat-card orange"><div class="stat-label">دفعات المستحقات</div><div class="stat-value" id="s-payouts">—</div><div class="stat-sub">AWS API</div></div>
-</div>
-<div class="grid-2">
-<div class="card"><div class="card-header"><div class="card-title">المستحقات / المنصة</div></div><div class="card-body"><div class="chart-container"><canvas id="ch-plat"></canvas></div></div></div>
-<div class="card"><div class="card-header"><div class="card-title">المناديب / المدينة</div></div><div class="card-body"><div class="chart-container"><canvas id="ch-city"></canvas></div></div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title">آخر العمليات</div><div style="font-size:11px;color:var(--muted)">من سجل التدقيق — AWS DynamoDB</div></div><div class="card-body" id="ov-audit"></div></div>
-</div>
+        <!-- ========== COURIERS ========== -->
+        <div class="section" id="sec-couriers">
+          <div class="page-header">
+            <div>
+              <div class="page-title">إدارة المناديب</div>
+              <div class="page-sub">Supabase + AWS API</div>
+            </div>
+            <button
+              class="action-btn primary"
+              onclick="openModal('courier-modal')"
+            >
+              + إضافة مندوب
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">جدول المناديب</div>
+              <button
+                class="action-btn outline"
+                onclick="exportCSV('couriers')"
+              >
+                📥 تصدير CSV
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>الهوية</th>
+                      <th>الجوال</th>
+                      <th>STC Bank</th>
+                      <th>المدينة</th>
+                      <th>التعاقد</th>
+                      <th>الحالة</th>
+                      <th>إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-couriers"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== COURIERS ========== -->
-<div class="section" id="sec-couriers">
-<div class="page-header"><div><div class="page-title">إدارة المناديب</div><div class="page-sub">Supabase + AWS API</div></div><button class="action-btn primary" onclick="openModal('courier-modal')">+ إضافة مندوب</button></div>
-<div class="card"><div class="card-header"><div class="card-title">جدول المناديب</div><button class="action-btn outline" onclick="exportCSV('couriers')">📥 تصدير CSV</button></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الاسم</th><th>الهوية</th><th>الجوال</th><th>STC Bank</th><th>المدينة</th><th>التعاقد</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="tbl-couriers"></tbody></table></div></div></div>
-</div>
+        <!-- ========== ORDERS ========== -->
+        <div class="section" id="sec-orders">
+          <div class="page-header">
+            <div><div class="page-title">سجل الطلبات</div></div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>المندوب</th>
+                      <th>المنصة</th>
+                      <th>التاريخ</th>
+                      <th>عدد</th>
+                      <th>الإجمالي</th>
+                      <th>خصومات</th>
+                      <th>الصافي</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-orders"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== ORDERS ========== -->
-<div class="section" id="sec-orders">
-<div class="page-header"><div><div class="page-title">سجل الطلبات</div></div></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المندوب</th><th>المنصة</th><th>التاريخ</th><th>عدد</th><th>الإجمالي</th><th>خصومات</th><th>الصافي</th><th>الحالة</th></tr></thead><tbody id="tbl-orders"></tbody></table></div></div></div>
-</div>
+        <!-- ========== COMPLAINTS — FULL AWS API ========== -->
+        <div class="section" id="sec-complaints">
+          <div class="page-header">
+            <div>
+              <div class="page-title">إدارة الشكاوى</div>
+              <div class="page-sub">
+                مربوط مباشرة بـ AWS API — الإنشاء والتعيين والتحويل والتصعيد
+                والحل
+              </div>
+            </div>
+            <button
+              class="action-btn primary"
+              onclick="openModal('comp-modal')"
+            >
+              + شكوى جديدة
+            </button>
+          </div>
+          <div class="stats-grid" id="comp-stats"></div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>رقم التذكرة</th>
+                      <th>المندوب</th>
+                      <th>التصنيف</th>
+                      <th>الأولوية</th>
+                      <th>الموضوع</th>
+                      <th>الحالة</th>
+                      <th>SLA</th>
+                      <th>إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-complaints"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== COMPLAINTS — FULL AWS API ========== -->
-<div class="section" id="sec-complaints">
-<div class="page-header"><div><div class="page-title">إدارة الشكاوى</div><div class="page-sub">مربوط مباشرة بـ AWS API — الإنشاء والتعيين والتحويل والتصعيد والحل</div></div><button class="action-btn primary" onclick="openModal('comp-modal')">+ شكوى جديدة</button></div>
-<div class="stats-grid" id="comp-stats"></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>رقم التذكرة</th><th>المندوب</th><th>التصنيف</th><th>الأولوية</th><th>الموضوع</th><th>الحالة</th><th>SLA</th><th>إجراءات</th></tr></thead><tbody id="tbl-complaints"></tbody></table></div></div></div>
-</div>
+        <!-- ========== PLATFORMS ========== -->
+        <div class="section" id="sec-platforms">
+          <div class="page-header">
+            <div class="page-title">إدارة المنصات</div>
+          </div>
+          <div class="stats-grid" id="plat-stats"></div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>المنصة</th>
+                      <th>المناديب</th>
+                      <th>التوصيلات</th>
+                      <th>المستحقات</th>
+                      <th>المتوسط/مندوب</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-platforms"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== PLATFORMS ========== -->
-<div class="section" id="sec-platforms">
-<div class="page-header"><div class="page-title">إدارة المنصات</div></div>
-<div class="stats-grid" id="plat-stats"></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المنصة</th><th>المناديب</th><th>التوصيلات</th><th>المستحقات</th><th>المتوسط/مندوب</th></tr></thead><tbody id="tbl-platforms"></tbody></table></div></div></div>
-</div>
+        <!-- ========== FINANCE — AWS Payout Runs ========== -->
+        <div class="section" id="sec-finance">
+          <div class="page-header">
+            <div>
+              <div class="page-title">المالية والمستحقات</div>
+              <div class="page-sub">AWS API — Payout Runs + STC Bank Excel</div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button class="action-btn primary" onclick="createPayoutRun()">
+                + دفعة جديدة</button
+              ><button class="action-btn outline" onclick="generateSTC()">
+                🏦 STC Bank Excel
+              </button>
+            </div>
+          </div>
+          <div class="stats-grid" id="fin-stats"></div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">دفعات المستحقات — AWS DynamoDB</div>
+            </div>
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>رقم الدفعة</th>
+                      <th>الفترة</th>
+                      <th>المبلغ</th>
+                      <th>المنشئ</th>
+                      <th>الحالة</th>
+                      <th>التاريخ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-payouts"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== FINANCE — AWS Payout Runs ========== -->
-<div class="section" id="sec-finance">
-<div class="page-header"><div><div class="page-title">المالية والمستحقات</div><div class="page-sub">AWS API — Payout Runs + STC Bank Excel</div></div><div style="display:flex;gap:8px"><button class="action-btn primary" onclick="createPayoutRun()">+ دفعة جديدة</button><button class="action-btn outline" onclick="generateSTC()">🏦 STC Bank Excel</button></div></div>
-<div class="stats-grid" id="fin-stats"></div>
-<div class="card"><div class="card-header"><div class="card-title">دفعات المستحقات — AWS DynamoDB</div></div><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>رقم الدفعة</th><th>الفترة</th><th>المبلغ</th><th>المنشئ</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-payouts"></tbody></table></div></div></div>
-</div>
+        <!-- ========== STAFF ========== -->
+        <div class="section" id="sec-staff">
+          <div class="page-header">
+            <div><div class="page-title">الموظفين</div></div>
+            <button
+              class="action-btn primary"
+              onclick="openModal('staff-modal')"
+            >
+              + موظف جديد
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>البريد</th>
+                      <th>القسم</th>
+                      <th>المسمى</th>
+                      <th>الدور</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-staff"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== STAFF ========== -->
-<div class="section" id="sec-staff">
-<div class="page-header"><div><div class="page-title">الموظفين</div></div><button class="action-btn primary" onclick="openModal('staff-modal')">+ موظف جديد</button></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>القسم</th><th>المسمى</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="tbl-staff"></tbody></table></div></div></div>
-</div>
+        <!-- ========== DEPARTMENTS ========== -->
+        <div class="section" id="sec-departments">
+          <div class="page-header">
+            <div class="page-title">الأقسام</div>
+            <button
+              class="action-btn primary"
+              onclick="openModal('dept-modal')"
+            >
+              + قسم جديد
+            </button>
+          </div>
+          <div class="grid-3" id="dept-grid"></div>
+        </div>
 
-<!-- ========== DEPARTMENTS ========== -->
-<div class="section" id="sec-departments">
-<div class="page-header"><div class="page-title">الأقسام</div><button class="action-btn primary" onclick="openModal('dept-modal')">+ قسم جديد</button></div>
-<div class="grid-3" id="dept-grid"></div>
-</div>
+        <!-- ========== TASKS — AWS API ========== -->
+        <div class="section" id="sec-tasks">
+          <div class="page-header">
+            <div>
+              <div class="page-title">المهام الداخلية</div>
+              <div class="page-sub">
+                AWS API — إنشاء وتعيين ومتابعة المهام بين المدراء والموظفين
+              </div>
+            </div>
+            <button
+              class="action-btn primary"
+              onclick="openModal('task-modal')"
+            >
+              + مهمة جديدة
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>المهمة</th>
+                      <th>المسند إلى</th>
+                      <th>المسند من</th>
+                      <th>القسم</th>
+                      <th>الأولوية</th>
+                      <th>الحالة</th>
+                      <th>التاريخ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-tasks"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== TASKS — AWS API ========== -->
-<div class="section" id="sec-tasks">
-<div class="page-header"><div><div class="page-title">المهام الداخلية</div><div class="page-sub">AWS API — إنشاء وتعيين ومتابعة المهام بين المدراء والموظفين</div></div><button class="action-btn primary" onclick="openModal('task-modal')">+ مهمة جديدة</button></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>المهمة</th><th>المسند إلى</th><th>المسند من</th><th>القسم</th><th>الأولوية</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="tbl-tasks"></tbody></table></div></div></div>
-</div>
+        <!-- ========== NOTIFICATIONS — AWS API ========== -->
+        <div class="section" id="sec-notifications">
+          <div class="page-header">
+            <div>
+              <div class="page-title">الإشعارات</div>
+              <div class="page-sub">AWS DynamoDB — إشعارات النظام</div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button
+                class="action-btn primary"
+                onclick="openModal('notif-modal')"
+              >
+                + إشعار جديد</button
+              ><button class="action-btn outline" onclick="markAllRead()">
+                ✓ تعيين الكل كمقروء
+              </button>
+            </div>
+          </div>
+          <div class="card"><div class="card-body" id="notif-list"></div></div>
+        </div>
 
-<!-- ========== NOTIFICATIONS — AWS API ========== -->
-<div class="section" id="sec-notifications">
-<div class="page-header"><div><div class="page-title">الإشعارات</div><div class="page-sub">AWS DynamoDB — إشعارات النظام</div></div><div style="display:flex;gap:8px"><button class="action-btn primary" onclick="openModal('notif-modal')">+ إشعار جديد</button><button class="action-btn outline" onclick="markAllRead()">✓ تعيين الكل كمقروء</button></div></div>
-<div class="card"><div class="card-body" id="notif-list"></div></div>
-</div>
+        <!-- ========== AUDIT LOG — AWS API ========== -->
+        <div class="section" id="sec-audit">
+          <div class="page-header">
+            <div>
+              <div class="page-title">سجل التدقيق</div>
+              <div class="page-sub">AWS DynamoDB — كل عملية مسجلة تلقائياً</div>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <select
+              class="form-select"
+              id="audit-filter"
+              onchange="filterAudit()"
+            >
+              <option value="">كل العمليات</option>
+              <option value="login">دخول</option>
+              <option value="create">إنشاء</option>
+              <option value="update">تعديل</option>
+              <option value="delete">حذف</option>
+              <option value="approve">موافقة</option>
+            </select>
+          </div>
+          <div class="card">
+            <div class="card-body" id="audit-content"></div>
+          </div>
+        </div>
 
-<!-- ========== AUDIT LOG — AWS API ========== -->
-<div class="section" id="sec-audit">
-<div class="page-header"><div><div class="page-title">سجل التدقيق</div><div class="page-sub">AWS DynamoDB — كل عملية مسجلة تلقائياً</div></div></div>
-<div class="filter-bar"><select class="form-select" id="audit-filter" onchange="filterAudit()"><option value="">كل العمليات</option><option value="login">دخول</option><option value="create">إنشاء</option><option value="update">تعديل</option><option value="delete">حذف</option><option value="approve">موافقة</option></select></div>
-<div class="card"><div class="card-body" id="audit-content"></div></div>
-</div>
+        <!-- ========== APPROVALS — AWS API ========== -->
+        <div class="section" id="sec-approvals">
+          <div class="page-header">
+            <div>
+              <div class="page-title">الموافقات</div>
+              <div class="page-sub">AWS API — طلبات الاعتماد</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>الطلب</th>
+                      <th>النوع</th>
+                      <th>الطالب</th>
+                      <th>المبلغ</th>
+                      <th>الحالة</th>
+                      <th>التاريخ</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl-approvals"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== APPROVALS — AWS API ========== -->
-<div class="section" id="sec-approvals">
-<div class="page-header"><div><div class="page-title">الموافقات</div><div class="page-sub">AWS API — طلبات الاعتماد</div></div></div>
-<div class="card"><div class="card-body"><div class="table-wrapper"><table class="table"><thead><tr><th>الطلب</th><th>النوع</th><th>الطالب</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody id="tbl-approvals"></tbody></table></div></div></div>
-</div>
+        <!-- ========== INTEGRATIONS ========== -->
+        <div class="section" id="sec-integrations">
+          <div class="page-header"><div class="page-title">التكاملات</div></div>
+          <div id="integ-list"></div>
+        </div>
 
-<!-- ========== INTEGRATIONS ========== -->
-<div class="section" id="sec-integrations">
-<div class="page-header"><div class="page-title">التكاملات</div></div>
-<div id="integ-list"></div>
-</div>
+        <!-- ========== AI ========== -->
+        <div class="section" id="sec-ai">
+          <div class="page-header">
+            <div class="page-title">AI Dashboard</div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card purple">
+              <div class="stat-label">النموذج</div>
+              <div class="stat-value" style="font-size: 15px">Claude Haiku</div>
+              <div class="stat-sub">Bedrock me-south-1</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">المراجعات المالية</div>
+              <div class="stat-value" id="ai-rev">—</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">الشكاوى المصنفة</div>
+              <div class="stat-value" id="ai-cls">—</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Review Pack — مراجعة ذكية لكل إدارة</div>
+              <button class="action-btn primary" onclick="genReviewPack()">
+                🔍 توليد Review Pack
+              </button>
+            </div>
+            <div class="card-body" id="review-pack"></div>
+          </div>
+        </div>
 
-<!-- ========== AI ========== -->
-<div class="section" id="sec-ai">
-<div class="page-header"><div class="page-title">AI Dashboard</div></div>
-<div class="stats-grid"><div class="stat-card purple"><div class="stat-label">النموذج</div><div class="stat-value" style="font-size:15px">Claude Haiku</div><div class="stat-sub">Bedrock me-south-1</div></div><div class="stat-card blue"><div class="stat-label">المراجعات المالية</div><div class="stat-value" id="ai-rev">—</div></div><div class="stat-card green"><div class="stat-label">الشكاوى المصنفة</div><div class="stat-value" id="ai-cls">—</div></div></div>
-<div class="card"><div class="card-header"><div class="card-title">Review Pack — مراجعة ذكية لكل إدارة</div><button class="action-btn primary" onclick="genReviewPack()">🔍 توليد Review Pack</button></div><div class="card-body" id="review-pack"></div></div>
-</div>
+        <!-- ========== SETTINGS ========== -->
+        <div class="section" id="sec-settings">
+          <div class="page-header"><div class="page-title">الإعدادات</div></div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">إعدادات النظام — AWS</div>
+              </div>
+              <div class="card-body" id="sys-settings"></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">حالة الخدمات</div>
+              </div>
+              <div class="card-body" id="sys-health"></div>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== SETTINGS ========== -->
-<div class="section" id="sec-settings">
-<div class="page-header"><div class="page-title">الإعدادات</div></div>
-<div class="grid-2">
-<div class="card"><div class="card-header"><div class="card-title">إعدادات النظام — AWS</div></div><div class="card-body" id="sys-settings"></div></div>
-<div class="card"><div class="card-header"><div class="card-title">حالة الخدمات</div></div><div class="card-body" id="sys-health"></div></div>
-</div>
-</div>
+        <!-- ========== FRAUD DETECTION ========== -->
+        <div class="section" id="sec-fraud">
+          <div class="page-header">
+            <div>
+              <div class="page-title">🔍 كشف التلاعب المالي</div>
+              <div class="page-sub">
+                Fraud Detection System — مراقبة الأنماط المشبوهة
+              </div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card red">
+              <div class="stat-label">تنبيهات نشطة</div>
+              <div class="stat-value" id="fraud-active">—</div>
+            </div>
+            <div class="stat-card gold">
+              <div class="stat-label">قيد التحقيق</div>
+              <div class="stat-value" id="fraud-investigating">—</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">تم الحل</div>
+              <div class="stat-value" id="fraud-resolved">—</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">قواعد نشطة</div>
+              <div class="stat-value" id="fraud-rules-count">5</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚠️ التنبيهات الأخيرة</div>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>السائق</th>
+                    <th>النوع</th>
+                    <th>الخطورة</th>
+                    <th>النقاط</th>
+                    <th>التفاصيل</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                  </tr>
+                </thead>
+                <tbody id="fraud-flags-tbl"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 قواعد الكشف (Fraud Rules)</div>
+            </div>
+            <div class="card-body" id="fraud-rules-list"></div>
+          </div>
+        </div>
 
-<!-- ========== FRAUD DETECTION ========== -->
-<div class="section" id="sec-fraud">
-<div class="page-header"><div><div class="page-title">🔍 كشف التلاعب المالي</div><div class="page-sub">Fraud Detection System — مراقبة الأنماط المشبوهة</div></div></div>
-<div class="stats-grid">
-<div class="stat-card red"><div class="stat-label">تنبيهات نشطة</div><div class="stat-value" id="fraud-active">—</div></div>
-<div class="stat-card gold"><div class="stat-label">قيد التحقيق</div><div class="stat-value" id="fraud-investigating">—</div></div>
-<div class="stat-card green"><div class="stat-label">تم الحل</div><div class="stat-value" id="fraud-resolved">—</div></div>
-<div class="stat-card blue"><div class="stat-label">قواعد نشطة</div><div class="stat-value" id="fraud-rules-count">5</div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title">⚠️ التنبيهات الأخيرة</div></div><div class="card-body"><table class="data-table"><thead><tr><th>السائق</th><th>النوع</th><th>الخطورة</th><th>النقاط</th><th>التفاصيل</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="fraud-flags-tbl"></tbody></table></div></div>
-<div class="card"><div class="card-header"><div class="card-title">📋 قواعد الكشف (Fraud Rules)</div></div><div class="card-body" id="fraud-rules-list"></div></div>
-</div>
+        <!-- ========== UPLOAD CENTER ========== -->
+        <div class="section" id="sec-upload-admin">
+          <div class="page-header">
+            <div>
+              <div class="page-title">📤 مركز رفع تقارير المنصات</div>
+              <div class="page-sub">S3 Landing Zone — fll-ops-raw</div>
+            </div>
+          </div>
+          <div
+            style="
+              background: #fffbeb;
+              border: 2px solid #fde68a;
+              border-radius: 12px;
+              padding: 20px;
+              margin-bottom: 20px;
+            "
+          >
+            <h4 style="color: #92400e; margin-bottom: 8px">
+              المسار المالي الكامل
+            </h4>
+            <p style="font-size: 13px; color: #78350f">
+              📁 Excel → S3 raw → Glue normalize → Aurora staging → Step
+              Functions → Nected Rules → Wallet Ledger → Athena → QuickSight
+            </p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">رفع ملف جديد</div>
+              </div>
+              <div class="card-body">
+                <div style="margin-bottom: 12px">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      display: block;
+                      margin-bottom: 4px;
+                    "
+                    >المنصة</label
+                  ><select id="adm-upload-platform" class="form-select">
+                    <option value="hungerstation">هنقرستيشن</option>
+                    <option value="keeta">كيتا</option>
+                    <option value="ninja">نينجا</option>
+                    <option value="mrsool">مرسول</option>
+                    <option value="toyou">تويو</option>
+                    <option value="jahez">جاهز</option>
+                    <option value="careem">كريم</option>
+                  </select>
+                </div>
+                <div style="margin-bottom: 12px">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      display: block;
+                      margin-bottom: 4px;
+                    "
+                    >التاريخ</label
+                  ><input type="date" id="adm-upload-date" class="form-input" />
+                </div>
+                <div
+                  style="
+                    border: 2px dashed var(--border);
+                    border-radius: 10px;
+                    padding: 30px;
+                    text-align: center;
+                    cursor: pointer;
+                  "
+                  onclick="document.getElementById('adm-file').click()"
+                >
+                  <div style="font-size: 28px; margin-bottom: 6px">📁</div>
+                  <p style="font-size: 13px; font-weight: 600">
+                    اسحب أو اختر ملف Excel/CSV
+                  </p>
+                  <input
+                    type="file"
+                    id="adm-file"
+                    accept=".xlsx,.xls,.csv"
+                    style="display: none"
+                  />
+                </div>
+                <div id="adm-upload-status" style="margin-top: 10px"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📊 حالة الملفات اليوم</div>
+              </div>
+              <div class="card-body" id="adm-expected-status"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 آخر الملفات المرفوعة</div>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الملف</th>
+                    <th>المنصة</th>
+                    <th>التاريخ</th>
+                    <th>الحالة</th>
+                    <th>الرافع</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-uploads-tbl"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-<!-- ========== UPLOAD CENTER ========== -->
-<div class="section" id="sec-upload-admin">
-<div class="page-header"><div><div class="page-title">📤 مركز رفع تقارير المنصات</div><div class="page-sub">S3 Landing Zone — fll-ops-raw</div></div></div>
-<div style="background:#fffbeb;border:2px solid #fde68a;border-radius:12px;padding:20px;margin-bottom:20px">
-<h4 style="color:#92400e;margin-bottom:8px">المسار المالي الكامل</h4>
-<p style="font-size:13px;color:#78350f">📁 Excel → S3 raw → Glue normalize → Aurora staging → Step Functions → Nected Rules → Wallet Ledger → Athena → QuickSight</p>
-</div>
-<div class="grid-2">
-<div class="card"><div class="card-header"><div class="card-title">رفع ملف جديد</div></div><div class="card-body">
-<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">المنصة</label><select id="adm-upload-platform" class="form-select"><option value="hungerstation">هنقرستيشن</option><option value="keeta">كيتا</option><option value="ninja">نينجا</option><option value="mrsool">مرسول</option><option value="toyou">تويو</option><option value="jahez">جاهز</option><option value="careem">كريم</option></select></div>
-<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">التاريخ</label><input type="date" id="adm-upload-date" class="form-input"></div>
-<div style="border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;cursor:pointer" onclick="document.getElementById('adm-file').click()">
-<div style="font-size:28px;margin-bottom:6px">📁</div>
-<p style="font-size:13px;font-weight:600">اسحب أو اختر ملف Excel/CSV</p>
-<input type="file" id="adm-file" accept=".xlsx,.xls,.csv" style="display:none">
-</div>
-<div id="adm-upload-status" style="margin-top:10px"></div>
-</div></div>
-<div class="card"><div class="card-header"><div class="card-title">📊 حالة الملفات اليوم</div></div><div class="card-body" id="adm-expected-status"></div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title">📋 آخر الملفات المرفوعة</div></div><div class="card-body"><table class="data-table"><thead><tr><th>الملف</th><th>المنصة</th><th>التاريخ</th><th>الحالة</th><th>الرافع</th></tr></thead><tbody id="adm-uploads-tbl"></tbody></table></div></div>
-</div>
+        <!-- ========== DAILY FINANCE CLOSE ========== -->
+        <div class="section" id="sec-daily-close">
+          <div class="page-header">
+            <div>
+              <div class="page-title">📅 الإقفال المالي اليومي</div>
+              <div class="page-sub">
+                Step Functions: fll-daily-finance-close — يعمل تلقائياً 11 مساءً
+              </div>
+            </div>
+            <button class="action-btn primary" onclick="triggerDailyClose()">
+              ▶️ تشغيل يدوي
+            </button>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card green">
+              <div class="stat-label">حالة اليوم</div>
+              <div class="stat-value" id="close-status">—</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">ملفات معالجة</div>
+              <div class="stat-value" id="close-files">—</div>
+            </div>
+            <div class="stat-card gold">
+              <div class="stat-label">دفعات محسوبة</div>
+              <div class="stat-value" id="close-payouts">—</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-label">تسويات</div>
+              <div class="stat-value" id="close-recon">—</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                🔄 خطوات الإقفال اليومي (Step Functions)
+              </div>
+            </div>
+            <div class="card-body">
+              <div
+                style="
+                  display: flex;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                  margin-bottom: 16px;
+                "
+              >
+                <div
+                  style="
+                    background: #dbeafe;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #1e40af;
+                  "
+                >
+                  1️⃣ فحص الملفات
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #fef9c3;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #854d0e;
+                  "
+                >
+                  2️⃣ تنظيف البيانات
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #fce7f3;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #9d174d;
+                  "
+                >
+                  3️⃣ Nected Rules
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #d1fae5;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #065f46;
+                  "
+                >
+                  4️⃣ التسوية
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #ede9fe;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #5b21b6;
+                  "
+                >
+                  5️⃣ Wallet Ledger
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #e0f2fe;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #0369a1;
+                  "
+                >
+                  6️⃣ AI Insights
+                </div>
+                <div style="color: var(--muted)">→</div>
+                <div
+                  style="
+                    background: #dcfce7;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #166534;
+                  "
+                >
+                  7️⃣ إشعارات ✓
+                </div>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>البداية</th>
+                    <th>النهاية</th>
+                    <th>الملفات</th>
+                    <th>الدفعات</th>
+                    <th>الفروقات</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody id="daily-close-tbl"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="courier-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>إضافة مندوب</h3>
+          <button class="modal-close" onclick="closeModal('courier-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">الاسم بالعربي</label
+              ><input class="form-input" id="cr-name-ar" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">الاسم بالإنجليزي</label
+              ><input class="form-input" id="cr-name-en" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">رقم الهوية</label
+              ><input class="form-input" id="cr-nid" maxlength="10" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">الجوال</label
+              ><input
+                class="form-input"
+                id="cr-phone"
+                placeholder="05xxxxxxxx"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">📱 رقم STC Bank</label
+              ><input
+                class="form-input"
+                id="cr-stc"
+                placeholder="5xxxxxxxx"
+                maxlength="9"
+                oninput="
+                  this.value = this.value.replace(/[^0-9]/g, '');
+                  $('cr-stc-pre').textContent = this.value
+                    ? '966' + this.value
+                    : '—';
+                "
+              />
+              <div
+                style="font-size: 11px; color: var(--muted); margin-top: 3px"
+              >
+                يُحفظ كـ: <strong id="cr-stc-pre">—</strong>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">نوع التعاقد</label
+              ><select class="form-select" id="cr-contract">
+                <option value="kafala">كفالة</option>
+                <option value="contract">تعاقد</option>
+                <option value="trial">تجربة</option>
+                <option value="freelance">حر</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">المدينة</label
+              ><select class="form-select" id="cr-city">
+                <option value="">اختر</option>
+                <option>الرياض</option>
+                <option>جدة</option>
+                <option>مكة المكرمة</option>
+                <option>المدينة المنورة</option>
+                <option>الدمام</option>
+                <option>الخبر</option>
+                <option>الطائف</option>
+                <option>تبوك</option>
+                <option>أبها</option>
+                <option>بريدة</option>
+                <option>حائل</option>
+                <option>جازان</option>
+                <option>نجران</option>
+                <option>الأحساء</option>
+                <option>ينبع</option>
+                <option>خميس مشيط</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">البنك</label
+              ><input class="form-input" id="cr-bank" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="saveCourier()">
+            💾 حفظ</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('courier-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
 
-<!-- ========== DAILY FINANCE CLOSE ========== -->
-<div class="section" id="sec-daily-close">
-<div class="page-header"><div><div class="page-title">📅 الإقفال المالي اليومي</div><div class="page-sub">Step Functions: fll-daily-finance-close — يعمل تلقائياً 11 مساءً</div></div><button class="action-btn primary" onclick="triggerDailyClose()">▶️ تشغيل يدوي</button></div>
-<div class="stats-grid">
-<div class="stat-card green"><div class="stat-label">حالة اليوم</div><div class="stat-value" id="close-status">—</div></div>
-<div class="stat-card blue"><div class="stat-label">ملفات معالجة</div><div class="stat-value" id="close-files">—</div></div>
-<div class="stat-card gold"><div class="stat-label">دفعات محسوبة</div><div class="stat-value" id="close-payouts">—</div></div>
-<div class="stat-card purple"><div class="stat-label">تسويات</div><div class="stat-value" id="close-recon">—</div></div>
-</div>
-<div class="card"><div class="card-header"><div class="card-title">🔄 خطوات الإقفال اليومي (Step Functions)</div></div><div class="card-body">
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-<div style="background:#dbeafe;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#1e40af">1️⃣ فحص الملفات</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#fef9c3;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#854d0e">2️⃣ تنظيف البيانات</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#fce7f3;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#9d174d">3️⃣ Nected Rules</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#d1fae5;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#065f46">4️⃣ التسوية</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#ede9fe;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#5b21b6">5️⃣ Wallet Ledger</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#e0f2fe;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#0369a1">6️⃣ AI Insights</div>
-<div style="color:var(--muted)">→</div>
-<div style="background:#dcfce7;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;color:#166534">7️⃣ إشعارات ✓</div>
-</div>
-<table class="data-table"><thead><tr><th>التاريخ</th><th>البداية</th><th>النهاية</th><th>الملفات</th><th>الدفعات</th><th>الفروقات</th><th>الحالة</th></tr></thead><tbody id="daily-close-tbl"></tbody></table>
-</div></div>
-</div>
+    <div class="modal-overlay" id="comp-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>شكوى جديدة</h3>
+          <button class="modal-close" onclick="closeModal('comp-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">الموضوع</label
+            ><input class="form-input" id="cmp-subject" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">التصنيف</label
+              ><select class="form-select" id="cmp-cat">
+                <option value="salary">مستحقات</option>
+                <option value="operations">عمليات</option>
+                <option value="technical">تقنية</option>
+                <option value="hr">موارد بشرية</option>
+                <option value="fleet">مركبات</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">الأولوية</label
+              ><select class="form-select" id="cmp-pri">
+                <option value="low">منخفض</option>
+                <option value="medium" selected>متوسط</option>
+                <option value="high">مرتفع</option>
+                <option value="urgent">عاجل</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">اسم المندوب</label
+            ><input class="form-input" id="cmp-driver" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">الوصف</label
+            ><textarea class="form-input" id="cmp-desc" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="saveComplaintAWS()">
+            📤 إرسال عبر AWS API</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('comp-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
 
-</div></div>
-<div class="modal-overlay" id="courier-modal"><div class="modal"><div class="modal-header"><h3>إضافة مندوب</h3><button class="modal-close" onclick="closeModal('courier-modal')">✕</button></div><div class="modal-body">
-<div class="form-row"><div class="form-group"><label class="form-label">الاسم بالعربي</label><input class="form-input" id="cr-name-ar"></div><div class="form-group"><label class="form-label">الاسم بالإنجليزي</label><input class="form-input" id="cr-name-en"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">رقم الهوية</label><input class="form-input" id="cr-nid" maxlength="10"></div><div class="form-group"><label class="form-label">الجوال</label><input class="form-input" id="cr-phone" placeholder="05xxxxxxxx"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">📱 رقم STC Bank</label><input class="form-input" id="cr-stc" placeholder="5xxxxxxxx" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'');$('cr-stc-pre').textContent=this.value?'966'+this.value:'—'"><div style="font-size:11px;color:var(--muted);margin-top:3px">يُحفظ كـ: <strong id="cr-stc-pre">—</strong></div></div><div class="form-group"><label class="form-label">نوع التعاقد</label><select class="form-select" id="cr-contract"><option value="kafala">كفالة</option><option value="contract">تعاقد</option><option value="trial">تجربة</option><option value="freelance">حر</option></select></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">المدينة</label><select class="form-select" id="cr-city"><option value="">اختر</option><option>الرياض</option><option>جدة</option><option>مكة المكرمة</option><option>المدينة المنورة</option><option>الدمام</option><option>الخبر</option><option>الطائف</option><option>تبوك</option><option>أبها</option><option>بريدة</option><option>حائل</option><option>جازان</option><option>نجران</option><option>الأحساء</option><option>ينبع</option><option>خميس مشيط</option></select></div><div class="form-group"><label class="form-label">البنك</label><input class="form-input" id="cr-bank"></div></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="saveCourier()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('courier-modal')">إلغاء</button></div></div></div>
+    <div class="modal-overlay" id="staff-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>إضافة موظف</h3>
+          <button class="modal-close" onclick="closeModal('staff-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">الاسم</label
+              ><input class="form-input" id="sf-name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">البريد</label
+              ><input class="form-input" id="sf-email" type="email" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">القسم</label
+              ><select class="form-select" id="sf-dept"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">المسمى</label
+              ><input class="form-input" id="sf-pos" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الدور</label
+            ><select class="form-select" id="sf-role">
+              <option value="staff">موظف</option>
+              <option value="finance">مالية</option>
+              <option value="hr">موارد بشرية</option>
+              <option value="ops">عمليات</option>
+              <option value="fleet">أسطول</option>
+              <option value="admin">مدير</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="saveStaff()">
+            💾 حفظ</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('staff-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
 
-<div class="modal-overlay" id="comp-modal"><div class="modal"><div class="modal-header"><h3>شكوى جديدة</h3><button class="modal-close" onclick="closeModal('comp-modal')">✕</button></div><div class="modal-body">
-<div class="form-group"><label class="form-label">الموضوع</label><input class="form-input" id="cmp-subject"></div>
-<div class="form-row"><div class="form-group"><label class="form-label">التصنيف</label><select class="form-select" id="cmp-cat"><option value="salary">مستحقات</option><option value="operations">عمليات</option><option value="technical">تقنية</option><option value="hr">موارد بشرية</option><option value="fleet">مركبات</option><option value="other">أخرى</option></select></div><div class="form-group"><label class="form-label">الأولوية</label><select class="form-select" id="cmp-pri"><option value="low">منخفض</option><option value="medium" selected>متوسط</option><option value="high">مرتفع</option><option value="urgent">عاجل</option></select></div></div>
-<div class="form-group"><label class="form-label">اسم المندوب</label><input class="form-input" id="cmp-driver"></div>
-<div class="form-group"><label class="form-label">الوصف</label><textarea class="form-input" id="cmp-desc" rows="3"></textarea></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="saveComplaintAWS()">📤 إرسال عبر AWS API</button><button class="action-btn outline" onclick="closeModal('comp-modal')">إلغاء</button></div></div></div>
+    <div class="modal-overlay" id="dept-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>إضافة قسم</h3>
+          <button class="modal-close" onclick="closeModal('dept-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">الاسم EN</label
+              ><input class="form-input" id="dp-name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">الاسم AR</label
+              ><input class="form-input" id="dp-name-ar" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الوصف</label
+            ><input class="form-input" id="dp-desc" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="saveDept()">💾 حفظ</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('dept-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
 
-<div class="modal-overlay" id="staff-modal"><div class="modal"><div class="modal-header"><h3>إضافة موظف</h3><button class="modal-close" onclick="closeModal('staff-modal')">✕</button></div><div class="modal-body">
-<div class="form-row"><div class="form-group"><label class="form-label">الاسم</label><input class="form-input" id="sf-name"></div><div class="form-group"><label class="form-label">البريد</label><input class="form-input" id="sf-email" type="email"></div></div>
-<div class="form-row"><div class="form-group"><label class="form-label">القسم</label><select class="form-select" id="sf-dept"></select></div><div class="form-group"><label class="form-label">المسمى</label><input class="form-input" id="sf-pos"></div></div>
-<div class="form-group"><label class="form-label">الدور</label><select class="form-select" id="sf-role"><option value="staff">موظف</option><option value="finance">مالية</option><option value="hr">موارد بشرية</option><option value="ops">عمليات</option><option value="fleet">أسطول</option><option value="admin">مدير</option></select></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="saveStaff()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('staff-modal')">إلغاء</button></div></div></div>
+    <div class="modal-overlay" id="task-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>مهمة جديدة</h3>
+          <button class="modal-close" onclick="closeModal('task-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">عنوان المهمة</label
+            ><input class="form-input" id="tk-title" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">المسند إلى</label
+              ><input
+                class="form-input"
+                id="tk-to"
+                placeholder="email@fll.sa"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">القسم</label
+              ><input class="form-input" id="tk-dept" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الأولوية</label
+            ><select class="form-select" id="tk-pri">
+              <option value="low">منخفض</option>
+              <option value="medium" selected>متوسط</option>
+              <option value="high">مرتفع</option>
+              <option value="urgent">عاجل</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">التفاصيل</label
+            ><textarea class="form-input" id="tk-desc" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="saveTaskAWS()">
+            📤 إنشاء عبر AWS API</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('task-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
 
-<div class="modal-overlay" id="dept-modal"><div class="modal"><div class="modal-header"><h3>إضافة قسم</h3><button class="modal-close" onclick="closeModal('dept-modal')">✕</button></div><div class="modal-body">
-<div class="form-row"><div class="form-group"><label class="form-label">الاسم EN</label><input class="form-input" id="dp-name"></div><div class="form-group"><label class="form-label">الاسم AR</label><input class="form-input" id="dp-name-ar"></div></div>
-<div class="form-group"><label class="form-label">الوصف</label><input class="form-input" id="dp-desc"></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="saveDept()">💾 حفظ</button><button class="action-btn outline" onclick="closeModal('dept-modal')">إلغاء</button></div></div></div>
+    <div class="modal-overlay" id="notif-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>إرسال إشعار</h3>
+          <button class="modal-close" onclick="closeModal('notif-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">العنوان</label
+            ><input class="form-input" id="nf-title" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">الرسالة</label
+            ><textarea class="form-input" id="nf-msg" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">المستلم</label
+            ><select class="form-select" id="nf-to">
+              <option value="admin">المدراء</option>
+              <option value="all-staff">كل الموظفين</option>
+              <option value="finance">المالية</option>
+              <option value="ops">العمليات</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn primary" onclick="sendNotifAWS()">
+            📤 إرسال عبر AWS</button
+          ><button
+            class="action-btn outline"
+            onclick="closeModal('notif-modal')"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // ============================================================
+      // CONFIG
+      // ============================================================
+      const SB_URL = "https://djebhztfewjfyyoortvv.supabase.co";
+      const SB_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8";
+      const AWS_API = "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+      const sb = supabase.createClient(SB_URL, SB_KEY);
 
-<div class="modal-overlay" id="task-modal"><div class="modal"><div class="modal-header"><h3>مهمة جديدة</h3><button class="modal-close" onclick="closeModal('task-modal')">✕</button></div><div class="modal-body">
-<div class="form-group"><label class="form-label">عنوان المهمة</label><input class="form-input" id="tk-title"></div>
-<div class="form-row"><div class="form-group"><label class="form-label">المسند إلى</label><input class="form-input" id="tk-to" placeholder="email@fll.sa"></div><div class="form-group"><label class="form-label">القسم</label><input class="form-input" id="tk-dept"></div></div>
-<div class="form-group"><label class="form-label">الأولوية</label><select class="form-select" id="tk-pri"><option value="low">منخفض</option><option value="medium" selected>متوسط</option><option value="high">مرتفع</option><option value="urgent">عاجل</option></select></div>
-<div class="form-group"><label class="form-label">التفاصيل</label><textarea class="form-input" id="tk-desc" rows="2"></textarea></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="saveTaskAWS()">📤 إنشاء عبر AWS API</button><button class="action-btn outline" onclick="closeModal('task-modal')">إلغاء</button></div></div></div>
+      // Auth
+      const user = JSON.parse(localStorage.getItem("fll_user") || "null");
+      const token = localStorage.getItem("fll_token");
+      if (!user || !token) window.location.href = "/unified-login";
+      document.getElementById("user-name").textContent =
+        user?.name || user?.email || "";
+      document.getElementById("current-date").textContent =
+        new Date().toLocaleDateString("ar-SA", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
 
-<div class="modal-overlay" id="notif-modal"><div class="modal"><div class="modal-header"><h3>إرسال إشعار</h3><button class="modal-close" onclick="closeModal('notif-modal')">✕</button></div><div class="modal-body">
-<div class="form-group"><label class="form-label">العنوان</label><input class="form-input" id="nf-title"></div>
-<div class="form-group"><label class="form-label">الرسالة</label><textarea class="form-input" id="nf-msg" rows="2"></textarea></div>
-<div class="form-group"><label class="form-label">المستلم</label><select class="form-select" id="nf-to"><option value="admin">المدراء</option><option value="all-staff">كل الموظفين</option><option value="finance">المالية</option><option value="ops">العمليات</option></select></div>
-</div><div class="modal-footer"><button class="action-btn primary" onclick="sendNotifAWS()">📤 إرسال عبر AWS</button><button class="action-btn outline" onclick="closeModal('notif-modal')">إلغاء</button></div></div></div>
-<script>
-// ============================================================
-// CONFIG
-// ============================================================
-const SB_URL='https://djebhztfewjfyyoortvv.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZWJoenRmZXdqZnl5b29ydHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwODE2OTYsImV4cCI6MjA4NjY1NzY5Nn0.763DeRupf7g8pP4USMRnYSNT8WJcgckCFaeh3D2wml8';
-const AWS_API='https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com';
-const sb=supabase.createClient(SB_URL,SB_KEY);
+      // Helpers
+      const $ = (id) => document.getElementById(id);
+      function openModal(id) {
+        $(id).classList.add("active");
+      }
+      function closeModal(id) {
+        $(id).classList.remove("active");
+      }
+      function toast(m, t = "success") {
+        const e = $("toast");
+        e.textContent = m;
+        e.className = "toast " + t + " show";
+        setTimeout(() => e.classList.remove("show"), 3000);
+      }
+      function badge(t, c) {
+        return `<span class="badge badge-${c}">${t}</span>`;
+      }
+      function fmt(v) {
+        return parseFloat(v || 0).toFixed(2);
+      }
+      function logout() {
+        localStorage.clear();
+        location.href = "/";
+      }
+      function switchPortal(p) {
+        if (p === "staff") location.href = "/staff-hr";
+        else if (p === "courier") location.href = "/courier-dashboard";
+      }
 
-// Auth
-const user=JSON.parse(localStorage.getItem('fll_user')||'null');
-const token=localStorage.getItem('fll_token');
-if(!user||!token)window.location.href='/unified-login';
-document.getElementById('user-name').textContent=user?.name||user?.email||'';
-document.getElementById('current-date').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      // Section nav
+      function S(name) {
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => s.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        const sec = $("sec-" + name);
+        if (sec) sec.classList.add("active");
+        event?.target?.closest?.(".nav-item")?.classList.add("active");
+      }
 
-// Helpers
-const $=id=>document.getElementById(id);
-function openModal(id){$(id).classList.add('active')}
-function closeModal(id){$(id).classList.remove('active')}
-function toast(m,t='success'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
-function badge(t,c){return`<span class="badge badge-${c}">${t}</span>`}
-function fmt(v){return parseFloat(v||0).toFixed(2)}
-function logout(){localStorage.clear();location.href='/'}
-function switchPortal(p){if(p==='staff')location.href='/staff-hr';else if(p==='courier')location.href='/courier-dashboard'}
+      // AWS API helpers
+      async function awsGet(path) {
+        try {
+          const r = await fetch(AWS_API + path);
+          return await r.json();
+        } catch (e) {
+          console.error("AWS GET", path, e);
+          return { items: [], count: 0 };
+        }
+      }
+      async function awsPost(path, body) {
+        try {
+          const r = await fetch(AWS_API + path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          return await r.json();
+        } catch (e) {
+          console.error("AWS POST", path, e);
+          return { error: e.message };
+        }
+      }
 
-// Section nav
-function S(name){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const sec=$('sec-'+name);if(sec)sec.classList.add('active');event?.target?.closest?.('.nav-item')?.classList.add('active')}
+      // Audit log helper — auto-logs every action to AWS
+      async function auditLog(action, details, resource = "dashboard") {
+        awsPost("/api/audit-log", {
+          auditId: "AUD-" + Date.now(),
+          action,
+          user: user?.email || "admin",
+          details,
+          resource,
+          created_at: new Date().toISOString(),
+        });
+      }
 
-// AWS API helpers
-async function awsGet(path){try{const r=await fetch(AWS_API+path);return await r.json()}catch(e){console.error('AWS GET',path,e);return{items:[],count:0}}}
-async function awsPost(path,body){try{const r=await fetch(AWS_API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return await r.json()}catch(e){console.error('AWS POST',path,e);return{error:e.message}}}
+      // ============================================================
+      // DATA STORE
+      // ============================================================
+      let D = {
+        couriers: [],
+        orders: [],
+        staff: [],
+        depts: [],
+        complaints_sb: [],
+        complaints_aws: [],
+        tasks: [],
+        notifications: [],
+        audit: [],
+        payouts: [],
+        approvals: [],
+      };
+      let CH = {};
 
-// Audit log helper — auto-logs every action to AWS
-async function auditLog(action,details,resource='dashboard'){awsPost('/api/audit-log',{auditId:'AUD-'+Date.now(),action,user:user?.email||'admin',details,resource,created_at:new Date().toISOString()})}
+      // ============================================================
+      // LOAD ALL DATA — Supabase + AWS API in parallel
+      // ============================================================
+      async function loadAll() {
+        try {
+          const [
+            sbC,
+            sbO,
+            sbS,
+            sbD,
+            sbCo,
+            awsCo,
+            awsT,
+            awsN,
+            awsA,
+            awsP,
+            awsAp,
+          ] = await Promise.allSettled([
+            sb.from("couriers").select("*"),
+            sb
+              .from("orders")
+              .select(
+                "*,couriers(full_name_ar,full_name,city,stc_bank_phone_int,contract_type)",
+              ),
+            sb.from("staff_users").select("*"),
+            sb.from("departments").select("*"),
+            sb.from("complaints").select("*"),
+            awsGet("/complaints"),
+            awsGet("/api/tasks"),
+            awsGet("/api/notifications"),
+            awsGet("/api/audit-log"),
+            awsGet("/api/payout-runs"),
+            awsGet("/api/approvals"),
+          ]);
+          D.couriers = sbC.value?.data || [];
+          D.orders = sbO.value?.data || [];
+          D.staff = sbS.value?.data || [];
+          D.depts = sbD.value?.data || [];
+          D.complaints_sb = sbCo.value?.data || [];
+          D.complaints_aws = awsCo.value?.items || [];
+          D.tasks = awsT.value?.items || [];
+          D.notifications = awsN.value?.items || [];
+          D.audit = awsA.value?.items || [];
+          D.payouts = awsP.value?.items || [];
+          D.approvals = awsAp.value?.items || [];
+          renderAll();
+        } catch (e) {
+          console.error("loadAll:", e);
+        }
+      }
 
-// ============================================================
-// DATA STORE
-// ============================================================
-let D={couriers:[],orders:[],staff:[],depts:[],complaints_sb:[],complaints_aws:[],tasks:[],notifications:[],audit:[],payouts:[],approvals:[]};
-let CH={};
+      function renderAll() {
+        renderOverview();
+        renderCouriers();
+        renderOrders();
+        renderComplaints();
+        renderPlatforms();
+        renderFinance();
+        renderStaff();
+        renderDepts();
+        renderTasks();
+        renderNotifications();
+        renderAudit();
+        renderApprovals();
+        renderIntegrations();
+        renderAI();
+        renderSettings();
+        try {
+          lucide.createIcons();
+        } catch (e) {}
+      }
+      // ============================================================
+      // RENDER FUNCTIONS
+      // ============================================================
+      function renderOverview() {
+        const ac = D.couriers.filter((c) => c.status === "active");
+        $("s-couriers").textContent = ac.length;
+        $("nav-couriers").textContent = D.couriers.length;
+        $("s-orders").textContent = D.orders.length;
+        $("nav-orders").textContent = D.orders.length;
+        const net = D.orders.reduce(
+          (s, o) => s + parseFloat(o.net_earnings || 0),
+          0,
+        );
+        $("s-net").textContent = fmt(net) + " ر.س";
+        const openC = D.complaints_aws.filter(
+          (c) =>
+            c.status === "new" ||
+            c.status === "assigned" ||
+            c.status === "in_progress",
+        );
+        $("s-complaints").textContent = openC.length;
+        $("nav-complaints").textContent =
+          openC.length || D.complaints_aws.length;
+        $("s-tasks").textContent = D.tasks.filter(
+          (t) => t.status === "pending",
+        ).length;
+        $("nav-tasks").textContent = D.tasks.length;
+        $("s-payouts").textContent = D.payouts.length;
+        $("nav-notif").textContent = D.notifications.length;
+        $("nav-approvals").textContent = D.approvals.filter(
+          (a) => a.status === "pending",
+        ).length;
 
-// ============================================================
-// LOAD ALL DATA — Supabase + AWS API in parallel
-// ============================================================
-async function loadAll(){
-  try{
-    const[sbC,sbO,sbS,sbD,sbCo,awsCo,awsT,awsN,awsA,awsP,awsAp]=await Promise.allSettled([
-      sb.from('couriers').select('*'),
-      sb.from('orders').select('*,couriers(full_name_ar,full_name,city,stc_bank_phone_int,contract_type)'),
-      sb.from('staff_users').select('*'),
-      sb.from('departments').select('*'),
-      sb.from('complaints').select('*'),
-      awsGet('/complaints'),
-      awsGet('/api/tasks'),
-      awsGet('/api/notifications'),
-      awsGet('/api/audit-log'),
-      awsGet('/api/payout-runs'),
-      awsGet('/api/approvals')
-    ]);
-    D.couriers=sbC.value?.data||[];D.orders=sbO.value?.data||[];D.staff=sbS.value?.data||[];D.depts=sbD.value?.data||[];D.complaints_sb=sbCo.value?.data||[];
-    D.complaints_aws=awsCo.value?.items||[];D.tasks=awsT.value?.items||[];D.notifications=awsN.value?.items||[];D.audit=awsA.value?.items||[];D.payouts=awsP.value?.items||[];D.approvals=awsAp.value?.items||[];
-    renderAll();
-  }catch(e){console.error('loadAll:',e)}
-}
+        // Charts
+        const byP = {};
+        D.orders.forEach((o) => {
+          const p = o.platform || "?";
+          byP[p] = (byP[p] || 0) + parseFloat(o.net_earnings || 0);
+        });
+        const pC = {
+          HungerStation: "#f59e0b",
+          Keeta: "#6366f1",
+          Ninja: "#f97316",
+          Mrsool: "#0ea5e9",
+          ToYou: "#10b981",
+          Careem: "#ef4444",
+        };
+        if (CH.p) CH.p.destroy();
+        const c1 = $("ch-plat");
+        if (c1 && Object.keys(byP).length)
+          CH.p = new Chart(c1, {
+            type: "doughnut",
+            data: {
+              labels: Object.keys(byP),
+              datasets: [
+                {
+                  data: Object.values(byP),
+                  backgroundColor: Object.keys(byP).map(
+                    (k) => pC[k] || "#64748b",
+                  ),
+                  borderWidth: 0,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { font: { family: "Tajawal", size: 11 } },
+                },
+              },
+            },
+          });
+        const byC = {};
+        D.couriers.forEach((c) => {
+          byC[c.city || "?"] = (byC[c.city || "?"] || 0) + 1;
+        });
+        if (CH.c) CH.c.destroy();
+        const c2 = $("ch-city");
+        if (c2 && Object.keys(byC).length)
+          CH.c = new Chart(c2, {
+            type: "bar",
+            data: {
+              labels: Object.keys(byC),
+              datasets: [
+                {
+                  data: Object.values(byC),
+                  backgroundColor: "#0f2744",
+                  borderRadius: 6,
+                  barPercentage: 0.6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: "y",
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  grid: { display: false },
+                  ticks: { font: { family: "Tajawal", size: 11 } },
+                },
+              },
+            },
+          });
 
-function renderAll(){
-  renderOverview();renderCouriers();renderOrders();renderComplaints();renderPlatforms();
-  renderFinance();renderStaff();renderDepts();renderTasks();renderNotifications();
-  renderAudit();renderApprovals();renderIntegrations();renderAI();renderSettings();
-  try{lucide.createIcons()}catch(e){}
-}
-// ============================================================
-// RENDER FUNCTIONS
-// ============================================================
-function renderOverview(){
-  const ac=D.couriers.filter(c=>c.status==='active');
-  $('s-couriers').textContent=ac.length;$('nav-couriers').textContent=D.couriers.length;
-  $('s-orders').textContent=D.orders.length;$('nav-orders').textContent=D.orders.length;
-  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
-  $('s-net').textContent=fmt(net)+' ر.س';
-  const openC=D.complaints_aws.filter(c=>c.status==='new'||c.status==='assigned'||c.status==='in_progress');
-  $('s-complaints').textContent=openC.length;$('nav-complaints').textContent=openC.length||D.complaints_aws.length;
-  $('s-tasks').textContent=D.tasks.filter(t=>t.status==='pending').length;$('nav-tasks').textContent=D.tasks.length;
-  $('s-payouts').textContent=D.payouts.length;
-  $('nav-notif').textContent=D.notifications.length;
-  $('nav-approvals').textContent=D.approvals.filter(a=>a.status==='pending').length;
+        // Recent audit
+        const el = $("ov-audit");
+        if (el)
+          el.innerHTML =
+            (D.audit || [])
+              .slice(0, 8)
+              .map(
+                (a) =>
+                  `<div class="audit-entry"><strong>${a.action || "—"}</strong> — ${a.user || "—"} <span class="audit-time">${a.created_at ? new Date(a.created_at).toLocaleString("ar-SA") : "—"}</span></div>`,
+              )
+              .join("") ||
+            '<p style="color:var(--muted);text-align:center">لا توجد سجلات بعد</p>';
+      }
 
-  // Charts
-  const byP={};D.orders.forEach(o=>{const p=o.platform||'?';byP[p]=(byP[p]||0)+parseFloat(o.net_earnings||0)});
-  const pC={'HungerStation':'#f59e0b','Keeta':'#6366f1','Ninja':'#f97316','Mrsool':'#0ea5e9','ToYou':'#10b981','Careem':'#ef4444'};
-  if(CH.p)CH.p.destroy();const c1=$('ch-plat');
-  if(c1&&Object.keys(byP).length)CH.p=new Chart(c1,{type:'doughnut',data:{labels:Object.keys(byP),datasets:[{data:Object.values(byP),backgroundColor:Object.keys(byP).map(k=>pC[k]||'#64748b'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Tajawal',size:11}}}}}});
-  const byC={};D.couriers.forEach(c=>{byC[c.city||'?']=(byC[c.city||'?']||0)+1});
-  if(CH.c)CH.c.destroy();const c2=$('ch-city');
-  if(c2&&Object.keys(byC).length)CH.c=new Chart(c2,{type:'bar',data:{labels:Object.keys(byC),datasets:[{data:Object.values(byC),backgroundColor:'#0f2744',borderRadius:6,barPercentage:.6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{display:false},ticks:{font:{family:'Tajawal',size:11}}}}}});
-
-  // Recent audit
-  const el=$('ov-audit');if(el)el.innerHTML=(D.audit||[]).slice(0,8).map(a=>`<div class="audit-entry"><strong>${a.action||'—'}</strong> — ${a.user||'—'} <span class="audit-time">${a.created_at?new Date(a.created_at).toLocaleString('ar-SA'):'—'}</span></div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد سجلات بعد</p>';
-}
-
-function renderCouriers(){
-  const ct={kafala:'كفالة',contract:'تعاقد',trial:'تجربة',freelance:'حر'};
-  $('tbl-couriers').innerHTML=D.couriers.map(c=>`<tr>
-    <td><strong>${c.full_name_ar||c.full_name||'—'}</strong></td><td>${c.national_id||'—'}</td><td>${c.phone||'—'}</td>
-    <td style="direction:ltr">${c.stc_bank_phone_int||'<span style="color:var(--red)">❌ مطلوب</span>'}</td>
-    <td>${c.city||'—'}</td><td>${badge(ct[c.contract_type]||c.contract_type||'—','purple')}</td>
-    <td>${c.status==='active'?badge('نشط','green'):badge('غير نشط','red')}</td>
+      function renderCouriers() {
+        const ct = {
+          kafala: "كفالة",
+          contract: "تعاقد",
+          trial: "تجربة",
+          freelance: "حر",
+        };
+        $("tbl-couriers").innerHTML =
+          D.couriers
+            .map(
+              (c) => `<tr>
+    <td><strong>${c.full_name_ar || c.full_name || "—"}</strong></td><td>${c.national_id || "—"}</td><td>${c.phone || "—"}</td>
+    <td style="direction:ltr">${c.stc_bank_phone_int || '<span style="color:var(--red)">❌ مطلوب</span>'}</td>
+    <td>${c.city || "—"}</td><td>${badge(ct[c.contract_type] || c.contract_type || "—", "purple")}</td>
+    <td>${c.status === "active" ? badge("نشط", "green") : badge("غير نشط", "red")}</td>
     <td><button class="action-btn outline" style="padding:4px 8px;font-size:11px" onclick="viewCourier('${c.id}')">👁️</button></td>
-  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا يوجد مناديب</td></tr>';
-}
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا يوجد مناديب</td></tr>';
+      }
 
-function renderOrders(){
-  $('tbl-orders').innerHTML=D.orders.map(o=>`<tr>
-    <td><strong>${o.couriers?.full_name_ar||'—'}</strong></td><td>${badge(o.platform||'—','blue')}</td><td>${o.order_date||'—'}</td>
-    <td>${o.orders_count||0}</td><td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
+      function renderOrders() {
+        $("tbl-orders").innerHTML =
+          D.orders
+            .map(
+              (o) => `<tr>
+    <td><strong>${o.couriers?.full_name_ar || "—"}</strong></td><td>${badge(o.platform || "—", "blue")}</td><td>${o.order_date || "—"}</td>
+    <td>${o.orders_count || 0}</td><td>${fmt(o.gross_earnings)}</td><td>${fmt(o.deductions)}</td>
     <td><strong>${fmt(o.net_earnings)} ر.س</strong></td>
-    <td>${o.status==='approved'?badge('معتمد','green'):badge('معلق','yellow')}</td>
-  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
-}
+    <td>${o.status === "approved" ? badge("معتمد", "green") : badge("معلق", "yellow")}</td>
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد طلبات</td></tr>';
+      }
 
-function renderComplaints(){
-  const all=D.complaints_aws;
-  const open=all.filter(c=>c.status==='new'||!c.status);
-  const assigned=all.filter(c=>c.status==='assigned');
-  const resolved=all.filter(c=>c.status==='resolved'||c.status==='closed');
-  $('comp-stats').innerHTML=`
+      function renderComplaints() {
+        const all = D.complaints_aws;
+        const open = all.filter((c) => c.status === "new" || !c.status);
+        const assigned = all.filter((c) => c.status === "assigned");
+        const resolved = all.filter(
+          (c) => c.status === "resolved" || c.status === "closed",
+        );
+        $("comp-stats").innerHTML = `
     <div class="stat-card red"><div class="stat-label">مفتوحة</div><div class="stat-value">${open.length}</div></div>
     <div class="stat-card gold"><div class="stat-label">قيد المعالجة</div><div class="stat-value">${assigned.length}</div></div>
     <div class="stat-card green"><div class="stat-label">محلولة</div><div class="stat-value">${resolved.length}</div></div>
     <div class="stat-card blue"><div class="stat-label">الإجمالي</div><div class="stat-value">${all.length}</div><div class="stat-sub">AWS DynamoDB</div></div>`;
-  const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
-  const priC={urgent:'red',high:'orange',medium:'blue',low:'green'};
-  const stL={new:'جديد',assigned:'معيّن',in_progress:'قيد المعالجة',resolved:'محلول',closed:'مغلق'};
-  const stC={new:'red',assigned:'yellow',in_progress:'blue',resolved:'green',closed:'green'};
-  $('tbl-complaints').innerHTML=all.map(c=>{
-    const hrs=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;
-    const sla=hrs>=48?badge('🔴 48h+','red'):hrs>=24?badge('🟡 24h+','yellow'):badge('🟢 OK','green');
-    return`<tr>
-    <td><strong>${c.ticket_id||c.complaintId||'—'}</strong></td><td>${c.driver_name||'—'}</td>
-    <td>${badge(c.category||'—','blue')}</td><td>${badge(priL[c.priority]||'—',priC[c.priority]||'blue')}</td>
-    <td>${c.subject||'—'}</td><td>${badge(stL[c.status]||c.status||'جديد',stC[c.status]||'yellow')}</td>
+        const priL = {
+          urgent: "عاجل",
+          high: "مرتفع",
+          medium: "متوسط",
+          low: "منخفض",
+        };
+        const priC = {
+          urgent: "red",
+          high: "orange",
+          medium: "blue",
+          low: "green",
+        };
+        const stL = {
+          new: "جديد",
+          assigned: "معيّن",
+          in_progress: "قيد المعالجة",
+          resolved: "محلول",
+          closed: "مغلق",
+        };
+        const stC = {
+          new: "red",
+          assigned: "yellow",
+          in_progress: "blue",
+          resolved: "green",
+          closed: "green",
+        };
+        $("tbl-complaints").innerHTML =
+          all
+            .map((c) => {
+              const hrs = c.created_at
+                ? Math.floor(
+                    (Date.now() - new Date(c.created_at).getTime()) / 3600000,
+                  )
+                : 0;
+              const sla =
+                hrs >= 48
+                  ? badge("🔴 48h+", "red")
+                  : hrs >= 24
+                    ? badge("🟡 24h+", "yellow")
+                    : badge("🟢 OK", "green");
+              return `<tr>
+    <td><strong>${c.ticket_id || c.complaintId || "—"}</strong></td><td>${c.driver_name || "—"}</td>
+    <td>${badge(c.category || "—", "blue")}</td><td>${badge(priL[c.priority] || "—", priC[c.priority] || "blue")}</td>
+    <td>${c.subject || "—"}</td><td>${badge(stL[c.status] || c.status || "جديد", stC[c.status] || "yellow")}</td>
     <td>${sla}</td>
     <td><button class="action-btn outline" style="padding:3px 6px;font-size:10px" onclick="resolveComplaint('${c.complaintId}')">✅ حل</button></td>
-  </tr>`}).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
-}
+  </tr>`;
+            })
+            .join("") ||
+          '<tr><td colspan="8" style="text-align:center;color:var(--muted)">لا توجد شكاوى</td></tr>';
+      }
 
-function renderPlatforms(){
-  const byP={};D.orders.forEach(o=>{const p=o.platform||'?';if(!byP[p])byP[p]={n:0,g:0,cs:new Set()};byP[p].n+=(o.orders_count||0);byP[p].g+=parseFloat(o.net_earnings||0);if(o.courier_id)byP[p].cs.add(o.courier_id)});
-  const col={hungerstation:'gold',keeta:'purple',ninja:'orange',mrsool:'blue',toyou:'green',careem:'red'};
-  $('plat-stats').innerHTML=Object.entries(byP).map(([n,d])=>`<div class="stat-card ${col[n.toLowerCase()]||'blue'}"><div class="stat-label">${n}</div><div class="stat-value">${d.n}</div><div class="stat-sub">${fmt(d.g)} ر.س • ${d.cs.size} مندوب</div></div>`).join('');
-  $('tbl-platforms').innerHTML=Object.entries(byP).map(([n,d])=>`<tr><td><strong>${n}</strong></td><td>${d.cs.size}</td><td>${d.n}</td><td>${fmt(d.g)} ر.س</td><td>${d.cs.size?(d.g/d.cs.size).toFixed(2):'0'} ر.س</td></tr>`).join('');
-}
-function renderFinance(){
-  const gross=D.orders.reduce((s,o)=>s+parseFloat(o.gross_earnings||0),0);
-  const ded=D.orders.reduce((s,o)=>s+parseFloat(o.deductions||0),0);
-  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
-  $('fin-stats').innerHTML=`
+      function renderPlatforms() {
+        const byP = {};
+        D.orders.forEach((o) => {
+          const p = o.platform || "?";
+          if (!byP[p]) byP[p] = { n: 0, g: 0, cs: new Set() };
+          byP[p].n += o.orders_count || 0;
+          byP[p].g += parseFloat(o.net_earnings || 0);
+          if (o.courier_id) byP[p].cs.add(o.courier_id);
+        });
+        const col = {
+          hungerstation: "gold",
+          keeta: "purple",
+          ninja: "orange",
+          mrsool: "blue",
+          toyou: "green",
+          careem: "red",
+        };
+        $("plat-stats").innerHTML = Object.entries(byP)
+          .map(
+            ([n, d]) =>
+              `<div class="stat-card ${col[n.toLowerCase()] || "blue"}"><div class="stat-label">${n}</div><div class="stat-value">${d.n}</div><div class="stat-sub">${fmt(d.g)} ر.س • ${d.cs.size} مندوب</div></div>`,
+          )
+          .join("");
+        $("tbl-platforms").innerHTML = Object.entries(byP)
+          .map(
+            ([n, d]) =>
+              `<tr><td><strong>${n}</strong></td><td>${d.cs.size}</td><td>${d.n}</td><td>${fmt(d.g)} ر.س</td><td>${d.cs.size ? (d.g / d.cs.size).toFixed(2) : "0"} ر.س</td></tr>`,
+          )
+          .join("");
+      }
+      function renderFinance() {
+        const gross = D.orders.reduce(
+          (s, o) => s + parseFloat(o.gross_earnings || 0),
+          0,
+        );
+        const ded = D.orders.reduce(
+          (s, o) => s + parseFloat(o.deductions || 0),
+          0,
+        );
+        const net = D.orders.reduce(
+          (s, o) => s + parseFloat(o.net_earnings || 0),
+          0,
+        );
+        $("fin-stats").innerHTML = `
     <div class="stat-card gold"><div class="stat-label">إجمالي المستحقات</div><div class="stat-value">${fmt(gross)}</div><div class="stat-sub">ر.س</div></div>
     <div class="stat-card red"><div class="stat-label">الخصومات</div><div class="stat-value">${fmt(ded)}</div></div>
     <div class="stat-card green"><div class="stat-label">الصافي</div><div class="stat-value">${fmt(net)}</div></div>
     <div class="stat-card purple"><div class="stat-label">دفعات AWS</div><div class="stat-value">${D.payouts.length}</div><div class="stat-sub">DynamoDB</div></div>`;
-  $('tbl-payouts').innerHTML=D.payouts.map(p=>`<tr>
-    <td><strong>${p.runId||p.id||'—'}</strong></td><td>${p.period||'—'}</td>
-    <td>${p.total_amount||0} ر.س</td><td>${p.created_by||'—'}</td>
-    <td>${p.status==='approved'?badge('معتمد','green'):p.status==='draft'?badge('مسودة','yellow'):badge(p.status||'—','blue')}</td>
-    <td>${p.createdAt?new Date(p.createdAt).toLocaleString('ar-SA'):'—'}</td>
-  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد دفعات — اضغط "+ دفعة جديدة"</td></tr>';
-}
+        $("tbl-payouts").innerHTML =
+          D.payouts
+            .map(
+              (p) => `<tr>
+    <td><strong>${p.runId || p.id || "—"}</strong></td><td>${p.period || "—"}</td>
+    <td>${p.total_amount || 0} ر.س</td><td>${p.created_by || "—"}</td>
+    <td>${p.status === "approved" ? badge("معتمد", "green") : p.status === "draft" ? badge("مسودة", "yellow") : badge(p.status || "—", "blue")}</td>
+    <td>${p.createdAt ? new Date(p.createdAt).toLocaleString("ar-SA") : "—"}</td>
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد دفعات — اضغط "+ دفعة جديدة"</td></tr>';
+      }
 
-function renderStaff(){
-  $('tbl-staff').innerHTML=D.staff.map(s=>`<tr>
-    <td><strong>${s.full_name||s.name||'—'}</strong></td><td>${s.email||'—'}</td>
-    <td>${badge(s.department||'—','blue')}</td><td>${s.position_title||'—'}</td>
-    <td>${badge(s.role||'—','purple')}</td>
-    <td>${s.is_active!==false?badge('نشط','green'):badge('معطل','red')}</td>
-  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا يوجد موظفين</td></tr>';
-  // Fill dept dropdown
-  $('sf-dept').innerHTML='<option value="">اختر</option>'+D.depts.map(d=>`<option value="${d.name}">${d.name_ar||d.name}</option>`).join('');
-}
+      function renderStaff() {
+        $("tbl-staff").innerHTML =
+          D.staff
+            .map(
+              (s) => `<tr>
+    <td><strong>${s.full_name || s.name || "—"}</strong></td><td>${s.email || "—"}</td>
+    <td>${badge(s.department || "—", "blue")}</td><td>${s.position_title || "—"}</td>
+    <td>${badge(s.role || "—", "purple")}</td>
+    <td>${s.is_active !== false ? badge("نشط", "green") : badge("معطل", "red")}</td>
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا يوجد موظفين</td></tr>';
+        // Fill dept dropdown
+        $("sf-dept").innerHTML =
+          '<option value="">اختر</option>' +
+          D.depts
+            .map(
+              (d) =>
+                `<option value="${d.name}">${d.name_ar || d.name}</option>`,
+            )
+            .join("");
+      }
 
-function renderDepts(){
-  $('dept-grid').innerHTML=D.depts.map(d=>`<div class="card"><div class="card-body" style="text-align:center;padding:20px">
-    <div style="font-size:28px">🏢</div><h3 style="font-size:14px;color:var(--navy);margin:8px 0">${d.name_ar||d.name}</h3>
-    <p style="font-size:12px;color:var(--muted)">${d.description||d.name}</p>
-    <div style="margin-top:8px">${d.is_active!==false?badge('مفعل','green'):badge('معطل','red')}</div>
-  </div></div>`).join('')||'<p style="color:var(--muted)">لا توجد أقسام</p>';
-}
+      function renderDepts() {
+        $("dept-grid").innerHTML =
+          D.depts
+            .map(
+              (
+                d,
+              ) => `<div class="card"><div class="card-body" style="text-align:center;padding:20px">
+    <div style="font-size:28px">🏢</div><h3 style="font-size:14px;color:var(--navy);margin:8px 0">${d.name_ar || d.name}</h3>
+    <p style="font-size:12px;color:var(--muted)">${d.description || d.name}</p>
+    <div style="margin-top:8px">${d.is_active !== false ? badge("مفعل", "green") : badge("معطل", "red")}</div>
+  </div></div>`,
+            )
+            .join("") || '<p style="color:var(--muted)">لا توجد أقسام</p>';
+      }
 
-function renderTasks(){
-  const priL={urgent:'عاجل',high:'مرتفع',medium:'متوسط',low:'منخفض'};
-  const stL={pending:'معلق',in_progress:'قيد التنفيذ',completed:'مكتمل',cancelled:'ملغي'};
-  const stC={pending:'yellow',in_progress:'blue',completed:'green',cancelled:'red'};
-  $('tbl-tasks').innerHTML=D.tasks.map(t=>`<tr>
-    <td><strong>${t.title||'—'}</strong></td><td>${t.assigned_to||'—'}</td><td>${t.assigned_by||'—'}</td>
-    <td>${t.department||'—'}</td><td>${badge(priL[t.priority]||'—','blue')}</td>
-    <td>${badge(stL[t.status]||t.status||'—',stC[t.status]||'yellow')}</td>
-    <td>${t.createdAt?new Date(t.createdAt).toLocaleString('ar-SA'):'—'}</td>
-  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد مهام — اضغط "+ مهمة جديدة"</td></tr>';
-}
+      function renderTasks() {
+        const priL = {
+          urgent: "عاجل",
+          high: "مرتفع",
+          medium: "متوسط",
+          low: "منخفض",
+        };
+        const stL = {
+          pending: "معلق",
+          in_progress: "قيد التنفيذ",
+          completed: "مكتمل",
+          cancelled: "ملغي",
+        };
+        const stC = {
+          pending: "yellow",
+          in_progress: "blue",
+          completed: "green",
+          cancelled: "red",
+        };
+        $("tbl-tasks").innerHTML =
+          D.tasks
+            .map(
+              (t) => `<tr>
+    <td><strong>${t.title || "—"}</strong></td><td>${t.assigned_to || "—"}</td><td>${t.assigned_by || "—"}</td>
+    <td>${t.department || "—"}</td><td>${badge(priL[t.priority] || "—", "blue")}</td>
+    <td>${badge(stL[t.status] || t.status || "—", stC[t.status] || "yellow")}</td>
+    <td>${t.createdAt ? new Date(t.createdAt).toLocaleString("ar-SA") : "—"}</td>
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد مهام — اضغط "+ مهمة جديدة"</td></tr>';
+      }
 
-function renderNotifications(){
-  $('notif-list').innerHTML=D.notifications.map(n=>`<div class="notif-item">
+      function renderNotifications() {
+        $("notif-list").innerHTML =
+          D.notifications
+            .map(
+              (n) => `<div class="notif-item">
     <div class="notif-dot"></div>
-    <div><div style="font-size:13px;font-weight:600">${n.title||'إشعار'}</div>
-    <div style="font-size:12px;color:var(--muted)">${n.message||''}</div>
-    <div style="font-size:11px;color:var(--muted)">${n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'—'}</div></div>
-  </div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات — اضغط "+ إشعار جديد"</p>';
-}
-function markAllRead(){toast('تم تعيين الكل كمقروء ✅');document.querySelectorAll('.notif-dot').forEach(d=>d.classList.add('read'))}
+    <div><div style="font-size:13px;font-weight:600">${n.title || "إشعار"}</div>
+    <div style="font-size:12px;color:var(--muted)">${n.message || ""}</div>
+    <div style="font-size:11px;color:var(--muted)">${n.createdAt ? new Date(n.createdAt).toLocaleString("ar-SA") : "—"}</div></div>
+  </div>`,
+            )
+            .join("") ||
+          '<p style="color:var(--muted);text-align:center;padding:20px">لا توجد إشعارات — اضغط "+ إشعار جديد"</p>';
+      }
+      function markAllRead() {
+        toast("تم تعيين الكل كمقروء ✅");
+        document
+          .querySelectorAll(".notif-dot")
+          .forEach((d) => d.classList.add("read"));
+      }
 
-function renderAudit(items){
-  const list=items||D.audit||[];
-  $('audit-content').innerHTML=list.map(a=>`<div class="audit-entry">
-    <strong>${a.action||'—'}</strong> — <span style="color:var(--blue)">${a.user||'—'}</span>
-    ${a.details?'<br><span style="font-size:12px;color:var(--muted)">'+a.details+'</span>':''}
-    <br><span class="audit-time">${a.created_at||a.createdAt?new Date(a.created_at||a.createdAt).toLocaleString('ar-SA'):'—'}</span>
-  </div>`).join('')||'<p style="color:var(--muted);text-align:center">لا توجد سجلات</p>';
-}
-function filterAudit(){const v=$('audit-filter').value;renderAudit(v?D.audit.filter(a=>(a.action||'').includes(v)):D.audit)}
+      function renderAudit(items) {
+        const list = items || D.audit || [];
+        $("audit-content").innerHTML =
+          list
+            .map(
+              (a) => `<div class="audit-entry">
+    <strong>${a.action || "—"}</strong> — <span style="color:var(--blue)">${a.user || "—"}</span>
+    ${a.details ? '<br><span style="font-size:12px;color:var(--muted)">' + a.details + "</span>" : ""}
+    <br><span class="audit-time">${a.created_at || a.createdAt ? new Date(a.created_at || a.createdAt).toLocaleString("ar-SA") : "—"}</span>
+  </div>`,
+            )
+            .join("") ||
+          '<p style="color:var(--muted);text-align:center">لا توجد سجلات</p>';
+      }
+      function filterAudit() {
+        const v = $("audit-filter").value;
+        renderAudit(
+          v ? D.audit.filter((a) => (a.action || "").includes(v)) : D.audit,
+        );
+      }
 
-function renderApprovals(){
-  $('tbl-approvals').innerHTML=D.approvals.map(a=>`<tr>
-    <td><strong>${a.description||a.approvalId||'—'}</strong></td><td>${a.type||'—'}</td>
-    <td>${a.requested_by||'—'}</td><td>${a.amount||0} ر.س</td>
-    <td>${a.status==='approved'?badge('معتمد','green'):a.status==='rejected'?badge('مرفوض','red'):badge('معلق','yellow')}</td>
-    <td>${a.createdAt?new Date(a.createdAt).toLocaleString('ar-SA'):'—'}</td>
-    <td>${a.status==='pending'?'<button class="action-btn green" style="padding:3px 8px;font-size:10px" onclick="approveItem(\''+a.id+'\')">✅ اعتماد</button>':''}</td>
-  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد طلبات اعتماد</td></tr>';
-}
+      function renderApprovals() {
+        $("tbl-approvals").innerHTML =
+          D.approvals
+            .map(
+              (a) => `<tr>
+    <td><strong>${a.description || a.approvalId || "—"}</strong></td><td>${a.type || "—"}</td>
+    <td>${a.requested_by || "—"}</td><td>${a.amount || 0} ر.س</td>
+    <td>${a.status === "approved" ? badge("معتمد", "green") : a.status === "rejected" ? badge("مرفوض", "red") : badge("معلق", "yellow")}</td>
+    <td>${a.createdAt ? new Date(a.createdAt).toLocaleString("ar-SA") : "—"}</td>
+    <td>${a.status === "pending" ? '<button class="action-btn green" style="padding:3px 8px;font-size:10px" onclick="approveItem(\'' + a.id + "')\">✅ اعتماد</button>" : ""}</td>
+  </tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد طلبات اعتماد</td></tr>';
+      }
 
-function renderIntegrations(){
-  const I=[
-    {n:'AWS API Gateway',d:`60 route — ${AWS_API}`,s:'✅ متصل',b:'green',i:'⚡'},
-    {n:'Supabase PostgreSQL',d:'53 جدول — بيانات حية',s:'✅ متصل',b:'green',i:'🗄️'},
-    {n:'AWS Cognito',d:'5 مستخدمين — 9 مجموعات',s:'✅ متصل',b:'green',i:'🔐'},
-    {n:'AWS DynamoDB',d:'38 جدول — بيانات مفعّلة',s:'✅ متصل',b:'green',i:'📊'},
-    {n:'AWS SES',d:'no-reply@fll.sa',s:'✅ مفعل',b:'green',i:'📧'},
-    {n:'AWS Bedrock AI',d:'Claude Haiku — Finance Review + Chatbot',s:'✅ مفعل',b:'green',i:'🤖'},
-    {n:'AWS EventBridge',d:'SLA Scanner (كل ساعة) + Daily Backup (2AM)',s:'✅ ENABLED',b:'green',i:'⏰'},
-    {n:'AWS SNS',d:'5 topics: complaints, escalation, driver, fleet, migration',s:'✅ مفعل',b:'green',i:'📢'},
-    {n:'STC Bank Excel',d:'POST /finance/generate-stc-excel',s:'✅ جاهز',b:'blue',i:'🏦'},
-    {n:'S3 Storage',d:'8 حاويات (KYC, finance, exports...)',s:'✅ متصل',b:'green',i:'📦'},
-    {n:'Vercel',d:'fll.sa — auto-deploy from GitHub',s:'✅ متصل',b:'green',i:'▲'},
-    {n:'GitHub',d:'mshari-11/firstlinelog.com',s:'✅ مربوط',b:'blue',i:'🐙'}
-  ];
-  $('integ-list').innerHTML=I.map(x=>`<div class="integration-card"><div style="font-size:26px">${x.i}</div><div><strong>${x.n}</strong><br><span style="font-size:12px;color:var(--muted)">${x.d}</span></div><span class="badge badge-${x.b} integration-status">${x.s}</span></div>`).join('');
-}
+      function renderIntegrations() {
+        const I = [
+          {
+            n: "AWS API Gateway",
+            d: `60 route — ${AWS_API}`,
+            s: "✅ متصل",
+            b: "green",
+            i: "⚡",
+          },
+          {
+            n: "Supabase PostgreSQL",
+            d: "53 جدول — بيانات حية",
+            s: "✅ متصل",
+            b: "green",
+            i: "🗄️",
+          },
+          {
+            n: "AWS Cognito",
+            d: "5 مستخدمين — 9 مجموعات",
+            s: "✅ متصل",
+            b: "green",
+            i: "🔐",
+          },
+          {
+            n: "AWS DynamoDB",
+            d: "38 جدول — بيانات مفعّلة",
+            s: "✅ متصل",
+            b: "green",
+            i: "📊",
+          },
+          {
+            n: "AWS SES",
+            d: "no-reply@fll.sa",
+            s: "✅ مفعل",
+            b: "green",
+            i: "📧",
+          },
+          {
+            n: "AWS Bedrock AI",
+            d: "Claude Haiku — Finance Review + Chatbot",
+            s: "✅ مفعل",
+            b: "green",
+            i: "🤖",
+          },
+          {
+            n: "AWS EventBridge",
+            d: "SLA Scanner (كل ساعة) + Daily Backup (2AM)",
+            s: "✅ ENABLED",
+            b: "green",
+            i: "⏰",
+          },
+          {
+            n: "AWS SNS",
+            d: "5 topics: complaints, escalation, driver, fleet, migration",
+            s: "✅ مفعل",
+            b: "green",
+            i: "📢",
+          },
+          {
+            n: "STC Bank Excel",
+            d: "POST /finance/generate-stc-excel",
+            s: "✅ جاهز",
+            b: "blue",
+            i: "🏦",
+          },
+          {
+            n: "S3 Storage",
+            d: "8 حاويات (KYC, finance, exports...)",
+            s: "✅ متصل",
+            b: "green",
+            i: "📦",
+          },
+          {
+            n: "Vercel",
+            d: "fll.sa — auto-deploy from GitHub",
+            s: "✅ متصل",
+            b: "green",
+            i: "▲",
+          },
+          {
+            n: "GitHub",
+            d: "mshari-11/firstlinelog.com",
+            s: "✅ مربوط",
+            b: "blue",
+            i: "🐙",
+          },
+        ];
+        $("integ-list").innerHTML = I.map(
+          (x) =>
+            `<div class="integration-card"><div style="font-size:26px">${x.i}</div><div><strong>${x.n}</strong><br><span style="font-size:12px;color:var(--muted)">${x.d}</span></div><span class="badge badge-${x.b} integration-status">${x.s}</span></div>`,
+        ).join("");
+      }
 
-function renderAI(){
-  $('ai-rev').textContent=D.orders.length;$('ai-cls').textContent=D.complaints_aws.length;
-}
+      function renderAI() {
+        $("ai-rev").textContent = D.orders.length;
+        $("ai-cls").textContent = D.complaints_aws.length;
+      }
 
-function renderSettings(){
-  $('sys-settings').innerHTML=`<div style="font-size:13px;line-height:2">
+      function renderSettings() {
+        $("sys-settings").innerHTML =
+          `<div style="font-size:13px;line-height:2">
     <strong>API Gateway:</strong> ${AWS_API}<br>
     <strong>Supabase:</strong> ${SB_URL}<br>
     <strong>Cognito Pool:</strong> me-south-1_aJtmQ0QrN<br>
@@ -615,7 +2915,7 @@ function renderSettings(){
     <strong>EventBridge:</strong> SLA Scanner (hourly) + Daily Backup (2AM)<br>
     <strong>Region:</strong> me-south-1 (البحرين)
   </div>`;
-  $('sys-health').innerHTML=`<div style="font-size:13px;line-height:2">
+        $("sys-health").innerHTML = `<div style="font-size:13px;line-height:2">
     <span class="live-dot"></span> <strong>Supabase:</strong> ${D.couriers.length} مناديب، ${D.orders.length} طلبات<br>
     <span class="live-dot"></span> <strong>AWS Complaints:</strong> ${D.complaints_aws.length} شكاوى<br>
     <span class="live-dot"></span> <strong>AWS Tasks:</strong> ${D.tasks.length} مهام<br>
@@ -623,266 +2923,536 @@ function renderSettings(){
     <span class="live-dot"></span> <strong>AWS Payouts:</strong> ${D.payouts.length} دفعات<br>
     <span class="live-dot"></span> <strong>AWS Notifications:</strong> ${D.notifications.length} إشعار
   </div>`;
-}
-// ============================================================
-// ACTIONS — All connected to AWS API
-// ============================================================
+      }
+      // ============================================================
+      // ACTIONS — All connected to AWS API
+      // ============================================================
 
-// === COMPLAINTS via AWS ===
-async function saveComplaintAWS(){
-  const cId='FLL-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+String(D.complaints_aws.length+1).padStart(4,'0');
-  const body={complaintId:cId,ticket_id:'TK-'+String(D.complaints_aws.length+1).padStart(3,'0'),subject:$('cmp-subject').value,category:$('cmp-cat').value,priority:$('cmp-pri').value,driver_name:$('cmp-driver').value,description:$('cmp-desc').value,status:'new',created_at:new Date().toISOString()};
-  if(!body.subject)return toast('الموضوع مطلوب','error');
-  const r=await awsPost('/complaints',body);
-  if(r.error)return toast('خطأ AWS: '+r.error,'error');
-  await auditLog('create','شكوى جديدة: '+body.subject,'complaints');
-  toast('✅ تم إنشاء الشكوى عبر AWS API — '+cId);closeModal('comp-modal');loadAll();
-}
+      // === COMPLAINTS via AWS ===
+      async function saveComplaintAWS() {
+        const cId =
+          "FLL-" +
+          new Date().toISOString().slice(0, 10).replace(/-/g, "") +
+          "-" +
+          String(D.complaints_aws.length + 1).padStart(4, "0");
+        const body = {
+          complaintId: cId,
+          ticket_id:
+            "TK-" + String(D.complaints_aws.length + 1).padStart(3, "0"),
+          subject: $("cmp-subject").value,
+          category: $("cmp-cat").value,
+          priority: $("cmp-pri").value,
+          driver_name: $("cmp-driver").value,
+          description: $("cmp-desc").value,
+          status: "new",
+          created_at: new Date().toISOString(),
+        };
+        if (!body.subject) return toast("الموضوع مطلوب", "error");
+        const r = await awsPost("/complaints", body);
+        if (r.error) return toast("خطأ AWS: " + r.error, "error");
+        await auditLog("create", "شكوى جديدة: " + body.subject, "complaints");
+        toast("✅ تم إنشاء الشكوى عبر AWS API — " + cId);
+        closeModal("comp-modal");
+        loadAll();
+      }
 
-async function resolveComplaint(id){
-  const r=await awsPost('/complaints/'+id+'/resolve',{resolved_by:user?.email||'admin',resolution:'تم الحل من لوحة الإدارة'});
-  if(r.error)toast('⚠️ خطأ: '+r.error,'error');else{await auditLog('resolve','حل شكوى: '+id,'complaints');toast('✅ تم حل الشكوى');loadAll()}}
+      async function resolveComplaint(id) {
+        const r = await awsPost("/complaints/" + id + "/resolve", {
+          resolved_by: user?.email || "admin",
+          resolution: "تم الحل من لوحة الإدارة",
+        });
+        if (r.error) toast("⚠️ خطأ: " + r.error, "error");
+        else {
+          await auditLog("resolve", "حل شكوى: " + id, "complaints");
+          toast("✅ تم حل الشكوى");
+          loadAll();
+        }
+      }
 
-// === TASKS via AWS ===
-async function saveTaskAWS(){
-  const body={taskId:'TASK-'+String(D.tasks.length+1).padStart(3,'0'),title:$('tk-title').value,assigned_to:$('tk-to').value,assigned_by:user?.email||'admin',department:$('tk-dept').value,priority:$('tk-pri').value,description:$('tk-desc')?.value||'',status:'pending',created_at:new Date().toISOString()};
-  if(!body.title)return toast('عنوان المهمة مطلوب','error');
-  const r=await awsPost('/api/tasks',body);
-  if(r.error)return toast('خطأ: '+r.error,'error');
-  await auditLog('create','مهمة جديدة: '+body.title,'tasks');
-  toast('✅ تم إنشاء المهمة عبر AWS API');closeModal('task-modal');loadAll();
-}
+      // === TASKS via AWS ===
+      async function saveTaskAWS() {
+        const body = {
+          taskId: "TASK-" + String(D.tasks.length + 1).padStart(3, "0"),
+          title: $("tk-title").value,
+          assigned_to: $("tk-to").value,
+          assigned_by: user?.email || "admin",
+          department: $("tk-dept").value,
+          priority: $("tk-pri").value,
+          description: $("tk-desc")?.value || "",
+          status: "pending",
+          created_at: new Date().toISOString(),
+        };
+        if (!body.title) return toast("عنوان المهمة مطلوب", "error");
+        const r = await awsPost("/api/tasks", body);
+        if (r.error) return toast("خطأ: " + r.error, "error");
+        await auditLog("create", "مهمة جديدة: " + body.title, "tasks");
+        toast("✅ تم إنشاء المهمة عبر AWS API");
+        closeModal("task-modal");
+        loadAll();
+      }
 
-// === NOTIFICATIONS via AWS ===
-async function sendNotifAWS(){
-  const ts=Date.now();
-  const body={recipient_sub:$('nf-to').value,createdAt_id:new Date().toISOString()+'-'+ts,title:$('nf-title').value,message:$('nf-msg').value,type:'admin',created_at:new Date().toISOString()};
-  if(!body.title)return toast('العنوان مطلوب','error');
-  const r=await awsPost('/api/notifications',body);
-  if(r.error)return toast('خطأ: '+r.error,'error');
-  await auditLog('create','إشعار جديد: '+body.title,'notifications');
-  toast('✅ تم إرسال الإشعار عبر AWS');closeModal('notif-modal');loadAll();
-}
+      // === NOTIFICATIONS via AWS ===
+      async function sendNotifAWS() {
+        const ts = Date.now();
+        const body = {
+          recipient_sub: $("nf-to").value,
+          createdAt_id: new Date().toISOString() + "-" + ts,
+          title: $("nf-title").value,
+          message: $("nf-msg").value,
+          type: "admin",
+          created_at: new Date().toISOString(),
+        };
+        if (!body.title) return toast("العنوان مطلوب", "error");
+        const r = await awsPost("/api/notifications", body);
+        if (r.error) return toast("خطأ: " + r.error, "error");
+        await auditLog("create", "إشعار جديد: " + body.title, "notifications");
+        toast("✅ تم إرسال الإشعار عبر AWS");
+        closeModal("notif-modal");
+        loadAll();
+      }
 
-// === FINANCE — Payout Runs + STC Excel ===
-async function createPayoutRun(){
-  const now=new Date();const period=now.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
-  const net=D.orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
-  const body={runId:'PAY-'+now.toISOString().slice(0,7),period,status:'draft',total_amount:net,courier_count:D.couriers.filter(c=>c.status==='active').length,created_by:user?.email||'admin',created_at:now.toISOString()};
-  const r=await awsPost('/api/payout-runs',body);
-  if(r.error)return toast('خطأ: '+r.error,'error');
-  await auditLog('create','دفعة مستحقات جديدة: '+period,'finance');
-  toast('✅ تم إنشاء دفعة المستحقات — '+body.runId);loadAll();
-}
+      // === FINANCE — Payout Runs + STC Excel ===
+      async function createPayoutRun() {
+        const now = new Date();
+        const period = now.toLocaleDateString("ar-SA", {
+          month: "long",
+          year: "numeric",
+        });
+        const net = D.orders.reduce(
+          (s, o) => s + parseFloat(o.net_earnings || 0),
+          0,
+        );
+        const body = {
+          runId: "PAY-" + now.toISOString().slice(0, 7),
+          period,
+          status: "draft",
+          total_amount: net,
+          courier_count: D.couriers.filter((c) => c.status === "active").length,
+          created_by: user?.email || "admin",
+          created_at: now.toISOString(),
+        };
+        const r = await awsPost("/api/payout-runs", body);
+        if (r.error) return toast("خطأ: " + r.error, "error");
+        await auditLog("create", "دفعة مستحقات جديدة: " + period, "finance");
+        toast("✅ تم إنشاء دفعة المستحقات — " + body.runId);
+        loadAll();
+      }
 
-async function generateSTC(){
-  const payouts=D.couriers.filter(c=>c.status==='active'&&c.stc_bank_phone_int).map((c,i)=>{
-    const orders=D.orders.filter(o=>o.courier_id===c.id);
-    const net=orders.reduce((s,o)=>s+parseFloat(o.net_earnings||0),0);
-    return{reference:'PAY-'+String(i+1).padStart(3,'0'),phone:c.stc_bank_phone_int,amount:net}
-  }).filter(p=>p.amount>0);
-  if(!payouts.length)return toast('لا توجد مدفوعات لتصديرها','error');
-  const r=await awsPost('/finance/generate-stc-excel',{payouts});
-  if(r.error||r.status==='error')toast('⚠️ '+JSON.stringify(r.message||r.error),'error');
-  else{await auditLog('export','STC Bank Excel — '+payouts.length+' مندوب','finance');toast('✅ تم توليد ملف STC Bank')}
-}
+      async function generateSTC() {
+        const payouts = D.couriers
+          .filter((c) => c.status === "active" && c.stc_bank_phone_int)
+          .map((c, i) => {
+            const orders = D.orders.filter((o) => o.courier_id === c.id);
+            const net = orders.reduce(
+              (s, o) => s + parseFloat(o.net_earnings || 0),
+              0,
+            );
+            return {
+              reference: "PAY-" + String(i + 1).padStart(3, "0"),
+              phone: c.stc_bank_phone_int,
+              amount: net,
+            };
+          })
+          .filter((p) => p.amount > 0);
+        if (!payouts.length) return toast("لا توجد مدفوعات لتصديرها", "error");
+        const r = await awsPost("/finance/generate-stc-excel", { payouts });
+        if (r.error || r.status === "error")
+          toast("⚠️ " + JSON.stringify(r.message || r.error), "error");
+        else {
+          await auditLog(
+            "export",
+            "STC Bank Excel — " + payouts.length + " مندوب",
+            "finance",
+          );
+          toast("✅ تم توليد ملف STC Bank");
+        }
+      }
 
-// === SUPABASE SAVES ===
-async function saveCourier(){
-  const stc=$('cr-stc').value;
-  if(stc&&(stc.length!==9||!stc.startsWith('5')))return toast('رقم STC Bank لازم 9 أرقام يبدأ بـ 5','error');
-  const nid=$('cr-nid').value;
-  if(nid){const{data:ex}=await sb.from('couriers').select('id').eq('national_id',nid).limit(1);if(ex?.length)return toast('🔴 رقم الهوية مسجل — تواصل مع support@fll.sa','error')}
-  if(stc){const dup=D.couriers.find(c=>c.stc_bank_phone_int==='966'+stc);if(dup)return toast('🔴 رقم STC مسجل لمندوب آخر','error')}
-  const rec={full_name_ar:$('cr-name-ar').value,full_name:$('cr-name-en').value,national_id:nid,phone:$('cr-phone').value,stc_bank_phone_local:stc,stc_bank_phone_int:stc?'966'+stc:null,contract_type:$('cr-contract').value,city:$('cr-city').value,bank_name:$('cr-bank').value,status:'active'};
-  if(!rec.full_name_ar||!rec.national_id)return toast('الاسم والهوية مطلوبين','error');
-  const{error}=await sb.from('couriers').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
-  await auditLog('create','مندوب جديد: '+rec.full_name_ar,'couriers');
-  toast('✅ تم إضافة المندوب');closeModal('courier-modal');loadAll();
-}
+      // === SUPABASE SAVES ===
+      async function saveCourier() {
+        const stc = $("cr-stc").value;
+        if (stc && (stc.length !== 9 || !stc.startsWith("5")))
+          return toast("رقم STC Bank لازم 9 أرقام يبدأ بـ 5", "error");
+        const nid = $("cr-nid").value;
+        if (nid) {
+          const { data: ex } = await sb
+            .from("couriers")
+            .select("id")
+            .eq("national_id", nid)
+            .limit(1);
+          if (ex?.length)
+            return toast(
+              "🔴 رقم الهوية مسجل — تواصل مع support@fll.sa",
+              "error",
+            );
+        }
+        if (stc) {
+          const dup = D.couriers.find(
+            (c) => c.stc_bank_phone_int === "966" + stc,
+          );
+          if (dup) return toast("🔴 رقم STC مسجل لمندوب آخر", "error");
+        }
+        const rec = {
+          full_name_ar: $("cr-name-ar").value,
+          full_name: $("cr-name-en").value,
+          national_id: nid,
+          phone: $("cr-phone").value,
+          stc_bank_phone_local: stc,
+          stc_bank_phone_int: stc ? "966" + stc : null,
+          contract_type: $("cr-contract").value,
+          city: $("cr-city").value,
+          bank_name: $("cr-bank").value,
+          status: "active",
+        };
+        if (!rec.full_name_ar || !rec.national_id)
+          return toast("الاسم والهوية مطلوبين", "error");
+        const { error } = await sb.from("couriers").insert(rec);
+        if (error) return toast("خطأ: " + error.message, "error");
+        await auditLog("create", "مندوب جديد: " + rec.full_name_ar, "couriers");
+        toast("✅ تم إضافة المندوب");
+        closeModal("courier-modal");
+        loadAll();
+      }
 
-async function saveStaff(){
-  const rec={full_name:$('sf-name').value,email:$('sf-email').value,department:$('sf-dept').value,position_title:$('sf-pos').value,role:$('sf-role').value,is_active:true};
-  if(!rec.full_name||!rec.email)return toast('الاسم والبريد مطلوبين','error');
-  const{error}=await sb.from('staff_users').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
-  await auditLog('create','موظف جديد: '+rec.full_name,'staff');
-  toast('✅ تم إضافة الموظف');closeModal('staff-modal');loadAll();
-}
+      async function saveStaff() {
+        const rec = {
+          full_name: $("sf-name").value,
+          email: $("sf-email").value,
+          department: $("sf-dept").value,
+          position_title: $("sf-pos").value,
+          role: $("sf-role").value,
+          is_active: true,
+        };
+        if (!rec.full_name || !rec.email)
+          return toast("الاسم والبريد مطلوبين", "error");
+        const { error } = await sb.from("staff_users").insert(rec);
+        if (error) return toast("خطأ: " + error.message, "error");
+        await auditLog("create", "موظف جديد: " + rec.full_name, "staff");
+        toast("✅ تم إضافة الموظف");
+        closeModal("staff-modal");
+        loadAll();
+      }
 
-async function saveDept(){
-  const rec={name:$('dp-name').value,name_ar:$('dp-name-ar').value,description:$('dp-desc').value,is_active:true};
-  if(!rec.name)return toast('اسم القسم مطلوب','error');
-  const{error}=await sb.from('departments').insert(rec);if(error)return toast('خطأ: '+error.message,'error');
-  await auditLog('create','قسم جديد: '+rec.name_ar,'departments');
-  toast('✅ تم إضافة القسم');closeModal('dept-modal');loadAll();
-}
+      async function saveDept() {
+        const rec = {
+          name: $("dp-name").value,
+          name_ar: $("dp-name-ar").value,
+          description: $("dp-desc").value,
+          is_active: true,
+        };
+        if (!rec.name) return toast("اسم القسم مطلوب", "error");
+        const { error } = await sb.from("departments").insert(rec);
+        if (error) return toast("خطأ: " + error.message, "error");
+        await auditLog("create", "قسم جديد: " + rec.name_ar, "departments");
+        toast("✅ تم إضافة القسم");
+        closeModal("dept-modal");
+        loadAll();
+      }
 
-function viewCourier(id){const c=D.couriers.find(x=>x.id==id);if(c)alert(`${c.full_name_ar}\nالهوية: ${c.national_id}\nSTC: ${c.stc_bank_phone_int||'—'}\nالمدينة: ${c.city}\nالتعاقد: ${c.contract_type}`)}
-async function approveItem(id){toast('✅ تم الاعتماد');await auditLog('approve','اعتماد طلب: '+id,'approvals');loadAll()}
+      function viewCourier(id) {
+        const c = D.couriers.find((x) => x.id == id);
+        if (c)
+          alert(
+            `${c.full_name_ar}\nالهوية: ${c.national_id}\nSTC: ${c.stc_bank_phone_int || "—"}\nالمدينة: ${c.city}\nالتعاقد: ${c.contract_type}`,
+          );
+      }
+      async function approveItem(id) {
+        toast("✅ تم الاعتماد");
+        await auditLog("approve", "اعتماد طلب: " + id, "approvals");
+        loadAll();
+      }
 
-// === EXPORT CSV ===
-function exportCSV(type){
-  let csv='\uFEFF';
-  if(type==='couriers'){csv+='الاسم,الهوية,الجوال,STC Bank,المدينة,التعاقد,الحالة\n';D.couriers.forEach(c=>csv+=`${c.full_name_ar||''},${c.national_id||''},${c.phone||''},${c.stc_bank_phone_int||''},${c.city||''},${c.contract_type||''},${c.status||''}\n`)}
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`fll-${type}-${new Date().toISOString().slice(0,10)}.csv`;a.click();
-  auditLog('export','تصدير CSV: '+type,'export');toast('📥 تم التصدير');
-}
+      // === EXPORT CSV ===
+      function exportCSV(type) {
+        let csv = "\uFEFF";
+        if (type === "couriers") {
+          csv += "الاسم,الهوية,الجوال,STC Bank,المدينة,التعاقد,الحالة\n";
+          D.couriers.forEach(
+            (c) =>
+              (csv += `${c.full_name_ar || ""},${c.national_id || ""},${c.phone || ""},${c.stc_bank_phone_int || ""},${c.city || ""},${c.contract_type || ""},${c.status || ""}\n`),
+          );
+        }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+        a.download = `fll-${type}-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        auditLog("export", "تصدير CSV: " + type, "export");
+        toast("📥 تم التصدير");
+      }
 
-// === REVIEW PACK ===
-function genReviewPack(){
-  const noSTC=D.couriers.filter(c=>!c.stc_bank_phone_int&&c.status==='active');
-  const phones=D.couriers.map(c=>c.stc_bank_phone_int).filter(Boolean);
-  const dupPhones=phones.filter((p,i)=>phones.indexOf(p)!==i);
-  const zeroAmt=D.orders.filter(o=>parseFloat(o.net_earnings||0)<=0);
-  const openComp=D.complaints_aws.filter(c=>c.status==='new'||!c.status);
-  const slaBreak=D.complaints_aws.filter(c=>{const h=c.created_at?Math.floor((Date.now()-new Date(c.created_at).getTime())/3600000):0;return h>=24&&c.status!=='resolved'&&c.status!=='closed'});
-  $('review-pack').innerHTML=`
+      // === REVIEW PACK ===
+      function genReviewPack() {
+        const noSTC = D.couriers.filter(
+          (c) => !c.stc_bank_phone_int && c.status === "active",
+        );
+        const phones = D.couriers
+          .map((c) => c.stc_bank_phone_int)
+          .filter(Boolean);
+        const dupPhones = phones.filter((p, i) => phones.indexOf(p) !== i);
+        const zeroAmt = D.orders.filter(
+          (o) => parseFloat(o.net_earnings || 0) <= 0,
+        );
+        const openComp = D.complaints_aws.filter(
+          (c) => c.status === "new" || !c.status,
+        );
+        const slaBreak = D.complaints_aws.filter((c) => {
+          const h = c.created_at
+            ? Math.floor(
+                (Date.now() - new Date(c.created_at).getTime()) / 3600000,
+              )
+            : 0;
+          return h >= 24 && c.status !== "resolved" && c.status !== "closed";
+        });
+        $("review-pack").innerHTML = `
     <div class="review-section"><h4>💰 المالية</h4>
-      ${noSTC.length?`<span class="review-flag error">⚠️ ${noSTC.length} مندوب نشط بدون STC Bank</span>`:'<span class="review-flag ok">✅ كل المناديب لديهم STC</span>'}
-      ${dupPhones.length?`<span class="review-flag error">🔴 ${dupPhones.length} رقم STC مكرر!</span>`:'<span class="review-flag ok">✅ لا أرقام مكررة</span>'}
-      ${zeroAmt.length?`<span class="review-flag warn">⚠️ ${zeroAmt.length} سجل بمبلغ 0 أو سالب</span>`:''}
+      ${noSTC.length ? `<span class="review-flag error">⚠️ ${noSTC.length} مندوب نشط بدون STC Bank</span>` : '<span class="review-flag ok">✅ كل المناديب لديهم STC</span>'}
+      ${dupPhones.length ? `<span class="review-flag error">🔴 ${dupPhones.length} رقم STC مكرر!</span>` : '<span class="review-flag ok">✅ لا أرقام مكررة</span>'}
+      ${zeroAmt.length ? `<span class="review-flag warn">⚠️ ${zeroAmt.length} سجل بمبلغ 0 أو سالب</span>` : ""}
     </div>
     <div class="review-section"><h4>📋 الشكاوى (AWS)</h4>
-      ${openComp.length?`<span class="review-flag warn">⚠️ ${openComp.length} شكوى مفتوحة</span>`:'<span class="review-flag ok">✅ لا شكاوى مفتوحة</span>'}
-      ${slaBreak.length?`<span class="review-flag error">🔴 ${slaBreak.length} شكوى تجاوزت SLA 24h!</span>`:'<span class="review-flag ok">✅ كل الشكاوى ضمن SLA</span>'}
+      ${openComp.length ? `<span class="review-flag warn">⚠️ ${openComp.length} شكوى مفتوحة</span>` : '<span class="review-flag ok">✅ لا شكاوى مفتوحة</span>'}
+      ${slaBreak.length ? `<span class="review-flag error">🔴 ${slaBreak.length} شكوى تجاوزت SLA 24h!</span>` : '<span class="review-flag ok">✅ كل الشكاوى ضمن SLA</span>'}
     </div>
     <div class="review-section"><h4>👥 الموارد البشرية</h4>
-      <span class="review-flag ${D.couriers.filter(c=>!c.national_id&&c.status==='active').length?'error':'ok'}">${D.couriers.filter(c=>!c.national_id&&c.status==='active').length?'⚠️ '+D.couriers.filter(c=>!c.national_id&&c.status==='active').length+' مندوب بدون هوية':'✅ كل المناديب لديهم هوية'}</span>
+      <span class="review-flag ${D.couriers.filter((c) => !c.national_id && c.status === "active").length ? "error" : "ok"}">${D.couriers.filter((c) => !c.national_id && c.status === "active").length ? "⚠️ " + D.couriers.filter((c) => !c.national_id && c.status === "active").length + " مندوب بدون هوية" : "✅ كل المناديب لديهم هوية"}</span>
     </div>
     <div class="review-section"><h4>⚙️ النظام</h4>
       <span class="review-flag ok">✅ AWS API: 60 route مفعّل</span>
       <span class="review-flag ok">✅ EventBridge: SLA Scanner + Daily Backup</span>
       <span class="review-flag ok">✅ Cognito: 5 مستخدمين</span>
     </div>`;
-  auditLog('review','Review Pack generated','ai');toast('🔍 تم توليد Review Pack');
-}
+        auditLog("review", "Review Pack generated", "ai");
+        toast("🔍 تم توليد Review Pack");
+      }
 
-// ============================================================
-// INIT
-// ============================================================
-loadAll();
-auditLog('login','Dashboard admin login','auth');
+      // ============================================================
+      // INIT
+      // ============================================================
+      loadAll();
+      auditLog("login", "Dashboard admin login", "auth");
 
-// ============================================================
-// AI CHAT — Bedrock Claude Haiku
-// ============================================================
-let aiOpen=false;
-function toggleAI(){aiOpen=!aiOpen;document.getElementById('ai-panel').classList.toggle('open',aiOpen);if(aiOpen)document.getElementById('ai-input').focus();try{lucide.createIcons()}catch(e){}}
-async function sendAI(){
-  const input=document.getElementById('ai-input');const q=input.value.trim();if(!q)return;input.value='';
-  const msgs=document.getElementById('ai-messages');
-  msgs.innerHTML+='<div class="ai-msg user">'+q+'</div>';
-  msgs.innerHTML+='<div class="ai-msg bot loading" id="ai-loading">يفكر...</div>';
-  msgs.scrollTop=msgs.scrollHeight;
-  try{
-    const ctx='أنت مساعد ذكي لشركة فيرست لاين لوجستيكس (FLL). البيانات: '+D.couriers.length+' مندوب، '+D.orders.length+' طلب، '+D.complaints_aws.length+' شكوى. أجب بالعربي بإيجاز.';
-    const r=await fetch(AWS_API+'/api/ai-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,context:ctx})});
-    const d=await r.json();
-    const el=document.getElementById('ai-loading');if(el)el.remove();
-    msgs.innerHTML+='<div class="ai-msg bot">'+(d.response||d.message||'عذراً، حدث خطأ.')+'</div>';
-  }catch(e){
-    const el=document.getElementById('ai-loading');if(el)el.remove();
-    msgs.innerHTML+='<div class="ai-msg bot" style="color:var(--red)">لم يتم الاتصال بـ Bedrock — تأكد من تفعيل Lambda /api/ai-chat</div>';
-  }
-  msgs.scrollTop=msgs.scrollHeight;
-}
+      // ============================================================
+      // AI CHAT — Bedrock Claude Haiku
+      // ============================================================
+      let aiOpen = false;
+      function toggleAI() {
+        aiOpen = !aiOpen;
+        document.getElementById("ai-panel").classList.toggle("open", aiOpen);
+        if (aiOpen) document.getElementById("ai-input").focus();
+        try {
+          lucide.createIcons();
+        } catch (e) {}
+      }
+      async function sendAI() {
+        const input = document.getElementById("ai-input");
+        const q = input.value.trim();
+        if (!q) return;
+        input.value = "";
+        const msgs = document.getElementById("ai-messages");
+        msgs.innerHTML += '<div class="ai-msg user">' + q + "</div>";
+        msgs.innerHTML +=
+          '<div class="ai-msg bot loading" id="ai-loading">يفكر...</div>';
+        msgs.scrollTop = msgs.scrollHeight;
+        try {
+          const ctx =
+            "أنت مساعد ذكي لشركة فيرست لاين لوجستيكس (FLL). البيانات: " +
+            D.couriers.length +
+            " مندوب، " +
+            D.orders.length +
+            " طلب، " +
+            D.complaints_aws.length +
+            " شكوى. أجب بالعربي بإيجاز.";
+          const r = await fetch(AWS_API + "/api/ai-chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: q, context: ctx }),
+          });
+          const d = await r.json();
+          const el = document.getElementById("ai-loading");
+          if (el) el.remove();
+          msgs.innerHTML +=
+            '<div class="ai-msg bot">' +
+            (d.response || d.message || "عذراً، حدث خطأ.") +
+            "</div>";
+        } catch (e) {
+          const el = document.getElementById("ai-loading");
+          if (el) el.remove();
+          msgs.innerHTML +=
+            '<div class="ai-msg bot" style="color:var(--red)">لم يتم الاتصال بـ Bedrock — تأكد من تفعيل Lambda /api/ai-chat</div>';
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+      }
 
-// Init Lucide icons
-try{lucide.createIcons()}catch(e){}
+      // Init Lucide icons
+      try {
+        lucide.createIcons();
+      } catch (e) {}
 
+      // ============================================================
+      // NEW v5: Fraud Detection + Upload Center + Daily Close
+      // ============================================================
 
-// ============================================================
-// NEW v5: Fraud Detection + Upload Center + Daily Close
-// ============================================================
+      // Extend S function to load new sections
+      const _origS = S;
+      S = function (name) {
+        _origS(name);
+        if (name === "fraud") loadFraud();
+        if (name === "upload-admin") loadAdminUploads();
+        if (name === "daily-close") loadDailyClose();
+      };
 
-// Extend S function to load new sections
-const _origS = S;
-S = function(name) {
-  _origS(name);
-  if(name==='fraud') loadFraud();
-  if(name==='upload-admin') loadAdminUploads();
-  if(name==='daily-close') loadDailyClose();
-};
+      // === FRAUD DETECTION ===
+      async function loadFraud() {
+        try {
+          // Load fraud rules
+          const rr = await fetch(A + "/api/system-settings");
+          const rd = await rr.json();
+          const rules = (rd.items || []).find(
+            (i) => i.setting_key === "fraud_rules",
+          );
+          // Fraud rules from Supabase
+          const { data: dbRules } = await sb.from("fraud_rules").select("*");
+          const activeRules = dbRules || [];
+          document.getElementById("fraud-rules-count").textContent =
+            activeRules.length;
+          document.getElementById("fraud-rules-list").innerHTML =
+            activeRules
+              .map(
+                (
+                  r,
+                ) => `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;margin:4px;border-radius:8px;background:${r.severity === "critical" ? "#fee2e2" : r.severity === "high" ? "#fef3c7" : "#dbeafe"};font-size:12px;font-weight:600;color:${r.severity === "critical" ? "#991b1b" : r.severity === "high" ? "#92400e" : "#1e40af"}">
+      ${r.severity === "critical" ? "🔴" : r.severity === "high" ? "🟡" : "🔵"} ${r.rule_name_ar} (${r.score_weight} نقطة)
+    </div>`,
+              )
+              .join("") || '<p style="color:var(--muted)">لا توجد قواعد</p>';
+          // Fraud flags
+          const { data: flags } = await sb
+            .from("fraud_flags")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(15);
+          let active = 0,
+            investigating = 0,
+            resolved = 0;
+          (flags || []).forEach((f) => {
+            if (f.status === "open") active++;
+            else if (f.status === "investigating") investigating++;
+            else resolved++;
+          });
+          document.getElementById("fraud-active").textContent = active;
+          document.getElementById("fraud-investigating").textContent =
+            investigating;
+          document.getElementById("fraud-resolved").textContent = resolved;
+          document.getElementById("fraud-flags-tbl").innerHTML =
+            (flags || [])
+              .map(
+                (f) => `<tr>
+      <td>${f.driver_id?.substring(0, 8) || "—"}</td>
+      <td>${f.flag_type || "—"}</td>
+      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${f.severity === "critical" ? "#fee2e2" : f.severity === "high" ? "#fef3c7" : "#dbeafe"};color:${f.severity === "critical" ? "#991b1b" : "#1e40af"}">${f.severity || "—"}</span></td>
+      <td>${f.score || 0}</td>
+      <td style="font-size:11px">${JSON.stringify(f.details || {}).substring(0, 60)}</td>
+      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${f.status === "open" ? "#fee2e2" : "#dcfce7"};color:${f.status === "open" ? "#991b1b" : "#166534"}">${f.status === "open" ? "نشط" : "تم الحل"}</span></td>
+      <td style="font-size:11px">${new Date(f.created_at).toLocaleDateString("ar-SA")}</td>
+    </tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد تنبيهات — النظام نظيف ✅</td></tr>';
+        } catch (e) {
+          console.error("fraud:", e);
+        }
+      }
 
-// === FRAUD DETECTION ===
-async function loadFraud(){
-  try{
-    // Load fraud rules
-    const rr=await fetch(A+'/api/system-settings');const rd=await rr.json();
-    const rules=(rd.items||[]).find(i=>i.setting_key==='fraud_rules');
-    // Fraud rules from Supabase
-    const {data:dbRules}=await sb.from('fraud_rules').select('*');
-    const activeRules=dbRules||[];
-    document.getElementById('fraud-rules-count').textContent=activeRules.length;
-    document.getElementById('fraud-rules-list').innerHTML=activeRules.map(r=>`<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;margin:4px;border-radius:8px;background:${r.severity==='critical'?'#fee2e2':r.severity==='high'?'#fef3c7':'#dbeafe'};font-size:12px;font-weight:600;color:${r.severity==='critical'?'#991b1b':r.severity==='high'?'#92400e':'#1e40af'}">
-      ${r.severity==='critical'?'🔴':r.severity==='high'?'🟡':'🔵'} ${r.rule_name_ar} (${r.score_weight} نقطة)
-    </div>`).join('')||'<p style="color:var(--muted)">لا توجد قواعد</p>';
-    // Fraud flags
-    const {data:flags}=await sb.from('fraud_flags').select('*').order('created_at',{ascending:false}).limit(15);
-    let active=0,investigating=0,resolved=0;
-    (flags||[]).forEach(f=>{if(f.status==='open')active++;else if(f.status==='investigating')investigating++;else resolved++});
-    document.getElementById('fraud-active').textContent=active;
-    document.getElementById('fraud-investigating').textContent=investigating;
-    document.getElementById('fraud-resolved').textContent=resolved;
-    document.getElementById('fraud-flags-tbl').innerHTML=(flags||[]).map(f=>`<tr>
-      <td>${f.driver_id?.substring(0,8)||'—'}</td>
-      <td>${f.flag_type||'—'}</td>
-      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${f.severity==='critical'?'#fee2e2':f.severity==='high'?'#fef3c7':'#dbeafe'};color:${f.severity==='critical'?'#991b1b':'#1e40af'}">${f.severity||'—'}</span></td>
-      <td>${f.score||0}</td>
-      <td style="font-size:11px">${JSON.stringify(f.details||{}).substring(0,60)}</td>
-      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${f.status==='open'?'#fee2e2':'#dcfce7'};color:${f.status==='open'?'#991b1b':'#166534'}">${f.status==='open'?'نشط':'تم الحل'}</span></td>
-      <td style="font-size:11px">${new Date(f.created_at).toLocaleDateString('ar-SA')}</td>
-    </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">لا توجد تنبيهات — النظام نظيف ✅</td></tr>';
-  }catch(e){console.error('fraud:',e)}
-}
-
-// === ADMIN UPLOAD CENTER ===
-async function loadAdminUploads(){
-  const platforms=['hungerstation','keeta','ninja','mrsool','toyou','jahez','careem'];
-  const today=new Date().toISOString().slice(0,10);
-  try{
-    const r=await fetch(A+'/api/system-settings');const d=await r.json();
-    const uploads=(d.items||[]).filter(i=>i.setting_key==='file_upload').sort((a,b)=>(b.uploaded_at||'').localeCompare(a.uploaded_at||''));
-    const todayUploads=uploads.filter(u=>u.report_date===today).map(u=>u.platform_code);
-    document.getElementById('adm-expected-status').innerHTML=platforms.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:6px;border-radius:8px;background:${todayUploads.includes(p)?'#dcfce7':'#fee2e2'}">
-      <span style="font-size:18px">${todayUploads.includes(p)?'✅':'⏳'}</span>
+      // === ADMIN UPLOAD CENTER ===
+      async function loadAdminUploads() {
+        const platforms = [
+          "hungerstation",
+          "keeta",
+          "ninja",
+          "mrsool",
+          "toyou",
+          "jahez",
+          "careem",
+        ];
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+          const r = await fetch(A + "/api/system-settings");
+          const d = await r.json();
+          const uploads = (d.items || [])
+            .filter((i) => i.setting_key === "file_upload")
+            .sort((a, b) =>
+              (b.uploaded_at || "").localeCompare(a.uploaded_at || ""),
+            );
+          const todayUploads = uploads
+            .filter((u) => u.report_date === today)
+            .map((u) => u.platform_code);
+          document.getElementById("adm-expected-status").innerHTML = platforms
+            .map(
+              (
+                p,
+              ) => `<div style="display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:6px;border-radius:8px;background:${todayUploads.includes(p) ? "#dcfce7" : "#fee2e2"}">
+      <span style="font-size:18px">${todayUploads.includes(p) ? "✅" : "⏳"}</span>
       <span style="font-weight:600;font-size:13px">${p}</span>
-      <span style="font-size:11px;color:var(--muted);margin-right:auto">${todayUploads.includes(p)?'تم الرفع':'لم يصل بعد'}</span>
-    </div>`).join('');
-    document.getElementById('adm-uploads-tbl').innerHTML=uploads.slice(0,15).map(u=>`<tr>
-      <td><strong>${u.file_name||'—'}</strong></td>
-      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dbeafe;color:#1e40af">${u.platform_code||'?'}</span></td>
-      <td>${u.report_date||'—'}</td>
-      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dcfce7;color:#166534">${u.status||'uploaded'}</span></td>
-      <td style="font-size:11px">${u.uploaded_by||'—'}</td>
-    </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد ملفات</td></tr>';
-  }catch(e){console.error('uploads:',e)}
-}
+      <span style="font-size:11px;color:var(--muted);margin-right:auto">${todayUploads.includes(p) ? "تم الرفع" : "لم يصل بعد"}</span>
+    </div>`,
+            )
+            .join("");
+          document.getElementById("adm-uploads-tbl").innerHTML =
+            uploads
+              .slice(0, 15)
+              .map(
+                (u) => `<tr>
+      <td><strong>${u.file_name || "—"}</strong></td>
+      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dbeafe;color:#1e40af">${u.platform_code || "?"}</span></td>
+      <td>${u.report_date || "—"}</td>
+      <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dcfce7;color:#166534">${u.status || "uploaded"}</span></td>
+      <td style="font-size:11px">${u.uploaded_by || "—"}</td>
+    </tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد ملفات</td></tr>';
+        } catch (e) {
+          console.error("uploads:", e);
+        }
+      }
 
-// === DAILY FINANCE CLOSE ===
-async function loadDailyClose(){
-  document.getElementById('close-status').textContent='جاهز';
-  document.getElementById('close-status').style.color='#10b981';
-  document.getElementById('close-files').textContent='—';
-  document.getElementById('close-payouts').textContent='—';
-  document.getElementById('close-recon').textContent='—';
-  // Show last 7 days simulated
-  const days=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10))}
-  document.getElementById('daily-close-tbl').innerHTML=days.map((d,i)=>`<tr>
+      // === DAILY FINANCE CLOSE ===
+      async function loadDailyClose() {
+        document.getElementById("close-status").textContent = "جاهز";
+        document.getElementById("close-status").style.color = "#10b981";
+        document.getElementById("close-files").textContent = "—";
+        document.getElementById("close-payouts").textContent = "—";
+        document.getElementById("close-recon").textContent = "—";
+        // Show last 7 days simulated
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          days.push(d.toISOString().slice(0, 10));
+        }
+        document.getElementById("daily-close-tbl").innerHTML = days
+          .map(
+            (d, i) => `<tr>
     <td><strong>${d}</strong></td>
-    <td>23:00</td><td>23:${String(Math.floor(Math.random()*10+2)).padStart(2,'0')}</td>
-    <td>${Math.floor(Math.random()*5+3)}</td>
-    <td>${Math.floor(Math.random()*4+1)}</td>
-    <td>${i===2?'<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#fee2e2;color:#991b1b">1 فرق</span>':'<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dcfce7;color:#166534">0</span>'}</td>
-    <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:${i===0?'#dbeafe':'#dcfce7'};color:${i===0?'#1e40af':'#166534'}">${i===0?'جاري':'مكتمل'}</span></td>
-  </tr>`).join('');
-}
-function triggerDailyClose(){
-  showToast('⚡ تم تشغيل الإقفال اليومي عبر Step Functions','success');
-  document.getElementById('close-status').textContent='قيد التنفيذ...';
-  document.getElementById('close-status').style.color='#f59e0b';
-  setTimeout(()=>{document.getElementById('close-status').textContent='مكتمل ✓';document.getElementById('close-status').style.color='#10b981';showToast('✅ اكتمل الإقفال اليومي','success')},3000);
-}
-</script>
-</body>
+    <td>23:00</td><td>23:${String(Math.floor(Math.random() * 10 + 2)).padStart(2, "0")}</td>
+    <td>${Math.floor(Math.random() * 5 + 3)}</td>
+    <td>${Math.floor(Math.random() * 4 + 1)}</td>
+    <td>${i === 2 ? '<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#fee2e2;color:#991b1b">1 فرق</span>' : '<span style="padding:3px 8px;border-radius:12px;font-size:11px;background:#dcfce7;color:#166534">0</span>'}</td>
+    <td><span style="padding:3px 8px;border-radius:12px;font-size:11px;background:${i === 0 ? "#dbeafe" : "#dcfce7"};color:${i === 0 ? "#1e40af" : "#166534"}">${i === 0 ? "جاري" : "مكتمل"}</span></td>
+  </tr>`,
+          )
+          .join("");
+      }
+      function triggerDailyClose() {
+        showToast("⚡ تم تشغيل الإقفال اليومي عبر Step Functions", "success");
+        document.getElementById("close-status").textContent = "قيد التنفيذ...";
+        document.getElementById("close-status").style.color = "#f59e0b";
+        setTimeout(() => {
+          document.getElementById("close-status").textContent = "مكتمل ✓";
+          document.getElementById("close-status").style.color = "#10b981";
+          showToast("✅ اكتمل الإقفال اليومي", "success");
+        }, 3000);
+      }
+    </script>
+  </body>
 </html>

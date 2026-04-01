@@ -24,9 +24,13 @@ export default function News() {
             className="bg-card rounded-xl p-8 border"
           >
             <span className="text-sm text-primary font-mono">2025</span>
-            <h2 className="text-2xl font-bold mt-2 mb-4">توسع العمليات إلى 16 مدينة</h2>
+            <h2 className="text-2xl font-bold mt-2 mb-4">
+              توسع العمليات إلى 16 مدينة
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              أعلنت فيرست لاين لوجستيكس عن توسيع نطاق عملياتها التشغيلية لتشمل 16 مدينة رئيسية في المملكة العربية السعودية، مما يعزز قدرتها على تقديم خدمات الميل الأخير بكفاءة أكبر.
+              أعلنت فيرست لاين لوجستيكس عن توسيع نطاق عملياتها التشغيلية لتشمل
+              16 مدينة رئيسية في المملكة العربية السعودية، مما يعزز قدرتها على
+              تقديم خدمات الميل الأخير بكفاءة أكبر.
             </p>
           </motion.div>
 
@@ -37,9 +41,12 @@ export default function News() {
             className="bg-card rounded-xl p-8 border"
           >
             <span className="text-sm text-primary font-mono">2025</span>
-            <h2 className="text-2xl font-bold mt-2 mb-4">شراكة جديدة مع منصات التوصيل الرائدة</h2>
+            <h2 className="text-2xl font-bold mt-2 mb-4">
+              شراكة جديدة مع منصات التوصيل الرائدة
+            </h2>
             <p className="text-muted-foreground leading-relaxed">
-              وقّعت الشركة اتفاقيات شراكة تشغيلية جديدة مع عدد من أبرز منصات التوصيل في المملكة، لتعزيز نموذج التشغيل متعدد المنصات.
+              وقّعت الشركة اتفاقيات شراكة تشغيلية جديدة مع عدد من أبرز منصات
+              التوصيل في المملكة، لتعزيز نموذج التشغيل متعدد المنصات.
             </p>
           </motion.div>
         </div>

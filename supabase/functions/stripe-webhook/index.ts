@@ -21,7 +21,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
@@ -37,7 +37,11 @@ Deno.serve(async (req: Request) => {
 
   let event: Stripe.Event;
   try {
-    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      webhookSecret,
+    );
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -51,20 +55,21 @@ Deno.serve(async (req: Request) => {
         const pi = event.data.object as Stripe.PaymentIntent;
         const orderId = pi.metadata?.order_id;
         if (orderId) {
-          await supabase
-            .from("payments")
-            .upsert({
-              id: pi.id,
-              order_id: orderId,
-              amount: pi.amount / 100,
-              currency: pi.currency,
-              status: "succeeded",
-              stripe_payment_intent_id: pi.id,
-              paid_at: new Date().toISOString(),
-            });
+          await supabase.from("payments").upsert({
+            id: pi.id,
+            order_id: orderId,
+            amount: pi.amount / 100,
+            currency: pi.currency,
+            status: "succeeded",
+            stripe_payment_intent_id: pi.id,
+            paid_at: new Date().toISOString(),
+          });
           await supabase
             .from("orders")
-            .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+            .update({
+              payment_status: "paid",
+              paid_at: new Date().toISOString(),
+            })
             .eq("id", orderId);
         }
         break;
@@ -74,17 +79,15 @@ Deno.serve(async (req: Request) => {
         const pi = event.data.object as Stripe.PaymentIntent;
         const orderId = pi.metadata?.order_id;
         if (orderId) {
-          await supabase
-            .from("payments")
-            .upsert({
-              id: pi.id,
-              order_id: orderId,
-              amount: pi.amount / 100,
-              currency: pi.currency,
-              status: "failed",
-              stripe_payment_intent_id: pi.id,
-              failure_reason: pi.last_payment_error?.message,
-            });
+          await supabase.from("payments").upsert({
+            id: pi.id,
+            order_id: orderId,
+            amount: pi.amount / 100,
+            currency: pi.currency,
+            status: "failed",
+            stripe_payment_intent_id: pi.id,
+            failure_reason: pi.last_payment_error?.message,
+          });
           await supabase
             .from("orders")
             .update({ payment_status: "failed" })
@@ -95,13 +98,17 @@ Deno.serve(async (req: Request) => {
 
       case "charge.refunded": {
         const charge = event.data.object as Stripe.Charge;
-        const piId = typeof charge.payment_intent === "string"
-          ? charge.payment_intent
-          : charge.payment_intent?.id;
+        const piId =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
         if (piId) {
           await supabase
             .from("payments")
-            .update({ status: "refunded", refunded_at: new Date().toISOString() })
+            .update({
+              status: "refunded",
+              refunded_at: new Date().toISOString(),
+            })
             .eq("stripe_payment_intent_id", piId);
         }
         break;
@@ -119,7 +126,7 @@ Deno.serve(async (req: Request) => {
     console.error("Error processing webhook event:", err);
     return new Response(
       JSON.stringify({ error: err.message ?? "Processing error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 });

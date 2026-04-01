@@ -6,8 +6,16 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
-  Send, Zap, TrendingUp, AlertCircle, BarChart3,
-  Sparkles, Copy, Check, MessageSquare, ChevronRight,
+  Send,
+  Zap,
+  TrendingUp,
+  AlertCircle,
+  BarChart3,
+  Sparkles,
+  Copy,
+  Check,
+  MessageSquare,
+  ChevronRight,
 } from "lucide-react";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -19,9 +27,30 @@ const suggestedPrompts = [
 ];
 
 const mockAnomalies = [
-  { date: "2026-03-10", category: "الوقود والصيانة", amount: 8500, normal: 4200, severity: "high", reason: "صيانة طارئة لسيارات متعددة" },
-  { date: "2026-03-08", category: "إداري", amount: 3200, normal: 1500, severity: "medium", reason: "مصاريف غير متوقعة" },
-  { date: "2026-03-05", category: "رواتب السائقين", amount: 76000, normal: 69000, severity: "low", reason: "راتب إضافي للعاملين بالساعات الإضافية" },
+  {
+    date: "2026-03-10",
+    category: "الوقود والصيانة",
+    amount: 8500,
+    normal: 4200,
+    severity: "high",
+    reason: "صيانة طارئة لسيارات متعددة",
+  },
+  {
+    date: "2026-03-08",
+    category: "إداري",
+    amount: 3200,
+    normal: 1500,
+    severity: "medium",
+    reason: "مصاريف غير متوقعة",
+  },
+  {
+    date: "2026-03-05",
+    category: "رواتب السائقين",
+    amount: 76000,
+    normal: 69000,
+    severity: "low",
+    reason: "راتب إضافي للعاملين بالساعات الإضافية",
+  },
 ];
 
 const mockPredictions = {
@@ -40,7 +69,13 @@ interface ChatMessage {
 }
 
 // ─── Message Component ────────────────────────────────────────────────────────
-function MessageBubble({ message, onCopy }: { message: ChatMessage; onCopy: (text: string) => void }) {
+function MessageBubble({
+  message,
+  onCopy,
+}: {
+  message: ChatMessage;
+  onCopy: (text: string) => void;
+}) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -61,7 +96,10 @@ function MessageBubble({ message, onCopy }: { message: ChatMessage; onCopy: (tex
       <div
         style={{
           maxWidth: "75%",
-          background: message.type === "user" ? "var(--con-brand)" : "var(--con-bg-surface-2)",
+          background:
+            message.type === "user"
+              ? "var(--con-brand)"
+              : "var(--con-bg-surface-2)",
           color: message.type === "user" ? "white" : "var(--con-text-primary)",
           borderRadius: 12,
           padding: "12px 16px",
@@ -69,7 +107,13 @@ function MessageBubble({ message, onCopy }: { message: ChatMessage; onCopy: (tex
           position: "relative",
         }}
       >
-        <p style={{ margin: 0, lineHeight: 1.5, fontSize: "var(--con-text-body)" }}>
+        <p
+          style={{
+            margin: 0,
+            lineHeight: 1.5,
+            fontSize: "var(--con-text-body)",
+          }}
+        >
           {message.content}
         </p>
         {message.type === "ai" && (
@@ -110,7 +154,7 @@ function MessageBubble({ message, onCopy }: { message: ChatMessage; onCopy: (tex
 }
 
 // ─── Anomaly Card ──────────────────────────────────────────────────────────────
-function AnomalyCard({ anomaly }: { anomaly: typeof mockAnomalies[0] }) {
+function AnomalyCard({ anomaly }: { anomaly: (typeof mockAnomalies)[0] }) {
   const severityColor = {
     high: "var(--con-danger)",
     medium: "var(--con-warning)",
@@ -124,45 +168,86 @@ function AnomalyCard({ anomaly }: { anomaly: typeof mockAnomalies[0] }) {
   }[anomaly.severity];
 
   return (
-    <div style={{
-      background: "var(--con-bg-surface-2)",
-      border: `1px solid ${severityColor}33`,
-      borderLeft: `3px solid ${severityColor}`,
-      borderRadius: 8,
-      padding: "12px 16px",
-      marginBottom: 12,
-    }}>
-      <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 8 }}>
+    <div
+      style={{
+        background: "var(--con-bg-surface-2)",
+        border: `1px solid ${severityColor}33`,
+        borderLeft: `3px solid ${severityColor}`,
+        borderRadius: 8,
+        padding: "12px 16px",
+        marginBottom: 12,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "start",
+          justifyContent: "space-between",
+          marginBottom: 8,
+        }}
+      >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 4,
+            }}
+          >
             <span style={{ color: "var(--con-text-primary)", fontWeight: 600 }}>
               {anomaly.category}
             </span>
-            <span style={{
-              padding: "2px 8px",
-              background: `${severityColor}14`,
-              color: severityColor,
-              fontSize: "var(--con-text-caption)",
-              fontWeight: 600,
-              borderRadius: 4,
-            }}>
+            <span
+              style={{
+                padding: "2px 8px",
+                background: `${severityColor}14`,
+                color: severityColor,
+                fontSize: "var(--con-text-caption)",
+                fontWeight: 600,
+                borderRadius: 4,
+              }}
+            >
               {severityLabel}
             </span>
           </div>
-          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+          <div
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+            }}
+          >
             {anomaly.date}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "var(--con-text-body)", fontWeight: 700, color: "var(--con-danger)" }}>
+          <div
+            style={{
+              fontSize: "var(--con-text-body)",
+              fontWeight: 700,
+              color: "var(--con-danger)",
+            }}
+          >
             {(anomaly.amount / 1000).toFixed(1)}ك ر.س
           </div>
-          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+          <div
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+            }}
+          >
             المتوقع: {(anomaly.normal / 1000).toFixed(1)}ك ر.س
           </div>
         </div>
       </div>
-      <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", padding: "8px 0", borderTop: "1px solid var(--con-border-default)" }}>
+      <div
+        style={{
+          fontSize: "var(--con-text-caption)",
+          color: "var(--con-text-muted)",
+          padding: "8px 0",
+          borderTop: "1px solid var(--con-border-default)",
+        }}
+      >
         {anomaly.reason}
       </div>
     </div>
@@ -171,29 +256,49 @@ function AnomalyCard({ anomaly }: { anomaly: typeof mockAnomalies[0] }) {
 
 // ─── Prediction Card ──────────────────────────────────────────────────────────
 function PredictionCard({ label, data }: { label: string; data: any }) {
-  const trendIcon = data.trend === "up" ? "📈" : data.trend === "down" ? "📉" : "➡️";
-  const value = typeof data.value === "number" && data.value > 1000 ? `${(data.value / 1000).toFixed(1)}ك ر.س` : `${data.value}${label.includes("الهامش") || label.includes("معدل") ? "%" : ""}`;
+  const trendIcon =
+    data.trend === "up" ? "📈" : data.trend === "down" ? "📉" : "➡️";
+  const value =
+    typeof data.value === "number" && data.value > 1000
+      ? `${(data.value / 1000).toFixed(1)}ك ر.س`
+      : `${data.value}${label.includes("الهامش") || label.includes("معدل") ? "%" : ""}`;
 
   return (
-    <div style={{
-      background: "var(--con-bg-surface-2)",
-      border: "1px solid var(--con-border-default)",
-      borderRadius: 8,
-      padding: "12px 16px",
-      marginBottom: 12,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+    <div
+      style={{
+        background: "var(--con-bg-surface-2)",
+        border: "1px solid var(--con-border-default)",
+        borderRadius: 8,
+        padding: "12px 16px",
+        marginBottom: 12,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 8,
+        }}
+      >
         <span style={{ color: "var(--con-text-primary)", fontWeight: 600 }}>
           {label}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: "18px" }}>{trendIcon}</span>
-          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+            }}
+          >
             ثقة {data.confidence}%
           </span>
         </div>
       </div>
-      <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--con-brand)" }}>
+      <div
+        style={{ fontSize: "24px", fontWeight: 700, color: "var(--con-brand)" }}
+      >
         {value}
       </div>
     </div>
@@ -201,7 +306,13 @@ function PredictionCard({ label, data }: { label: string; data: any }) {
 }
 
 // ─── Suggested Prompt Button ───────────────────────────────────────────────────
-function SuggestedPrompt({ prompt, onClick }: { prompt: typeof suggestedPrompts[0]; onClick: () => void }) {
+function SuggestedPrompt({
+  prompt,
+  onClick,
+}: {
+  prompt: (typeof suggestedPrompts)[0];
+  onClick: () => void;
+}) {
   const Icon = prompt.icon;
   return (
     <button
@@ -228,16 +339,33 @@ function SuggestedPrompt({ prompt, onClick }: { prompt: typeof suggestedPrompts[
       }}
     >
       <Icon size={18} style={{ color: "var(--con-brand)", flexShrink: 0 }} />
-      <span style={{ textAlign: "right", color: "var(--con-text-primary)", fontWeight: 500 }}>
+      <span
+        style={{
+          textAlign: "right",
+          color: "var(--con-text-primary)",
+          fontWeight: 500,
+        }}
+      >
         {prompt.text}
       </span>
-      <ChevronRight size={18} style={{ color: "var(--con-text-muted)", marginLeft: "auto" }} />
+      <ChevronRight
+        size={18}
+        style={{ color: "var(--con-text-muted)", marginLeft: "auto" }}
+      />
     </button>
   );
 }
 
 // ─── Tab Button ────────────────────────────────────────────────────────────────
-function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function TabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -265,12 +393,15 @@ export default function AIFinanceAnalysis() {
     {
       id: "1",
       type: "ai",
-      content: "مرحباً! أنا مساعدك المالي الذكي. يمكنني مساعدتك في تحليل الإيرادات والمصروفات، توقع الاتجاهات، والإجابة على أسئلتك المالية. كيف يمكنني مساعدتك اليوم؟",
+      content:
+        "مرحباً! أنا مساعدك المالي الذكي. يمكنني مساعدتك في تحليل الإيرادات والمصروفات، توقع الاتجاهات، والإجابة على أسئلتك المالية. كيف يمكنني مساعدتك اليوم؟",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
-  const [activeTab, setActiveTab] = useState<"chat" | "anomalies" | "predictions">("chat");
+  const [activeTab, setActiveTab] = useState<
+    "chat" | "anomalies" | "predictions"
+  >("chat");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -315,63 +446,151 @@ export default function AIFinanceAnalysis() {
   };
 
   return (
-    <div dir="rtl" style={{ padding: "20px 24px", background: "var(--con-bg-default)", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      dir="rtl"
+      style={{
+        padding: "20px 24px",
+        background: "var(--con-bg-default)",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 8,
+          }}
+        >
           <Sparkles size={24} style={{ color: "var(--con-brand)" }} />
-          <h1 style={{ fontSize: "32px", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>
+          <h1
+            style={{
+              fontSize: "32px",
+              fontWeight: 700,
+              color: "var(--con-text-primary)",
+              margin: 0,
+            }}
+          >
             تحليل الذكاء الاصطناعي
           </h1>
         </div>
-        <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+        <p
+          style={{
+            fontSize: "var(--con-text-caption)",
+            color: "var(--con-text-muted)",
+            margin: 0,
+          }}
+        >
           محلل مالي ذكي لمساعدتك في اتخاذ القرارات المالية الأفضل
         </p>
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <TabButton label="الدردشة" active={activeTab === "chat"} onClick={() => setActiveTab("chat")} />
-        <TabButton label="حالات الشذوذ" active={activeTab === "anomalies"} onClick={() => setActiveTab("anomalies")} />
-        <TabButton label="التنبؤات" active={activeTab === "predictions"} onClick={() => setActiveTab("predictions")} />
+      <div
+        style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}
+      >
+        <TabButton
+          label="الدردشة"
+          active={activeTab === "chat"}
+          onClick={() => setActiveTab("chat")}
+        />
+        <TabButton
+          label="حالات الشذوذ"
+          active={activeTab === "anomalies"}
+          onClick={() => setActiveTab("anomalies")}
+        />
+        <TabButton
+          label="التنبؤات"
+          active={activeTab === "predictions"}
+          onClick={() => setActiveTab("predictions")}
+        />
       </div>
 
       {/* Chat Tab */}
       {activeTab === "chat" && (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: "600px" }}>
-          {/* Messages Area */}
-          <div style={{
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
             flex: 1,
-            background: "var(--con-bg-surface-1)",
-            border: "1px solid var(--con-border-default)",
-            borderRadius: 10,
-            padding: "20px",
-            marginBottom: 16,
-            overflowY: "auto",
-            minHeight: "400px",
-          }}>
+            minHeight: "600px",
+          }}
+        >
+          {/* Messages Area */}
+          <div
+            style={{
+              flex: 1,
+              background: "var(--con-bg-surface-1)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 10,
+              padding: "20px",
+              marginBottom: 16,
+              overflowY: "auto",
+              minHeight: "400px",
+            }}
+          >
             {messages.length <= 1 && (
-              <div style={{ textAlign: "center", paddingTop: "40px", marginBottom: 24 }}>
-                <MessageSquare size={48} style={{ color: "var(--con-text-muted)", margin: "0 auto 16px" }} />
-                <h3 style={{ color: "var(--con-text-primary)", marginBottom: 8 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  paddingTop: "40px",
+                  marginBottom: 24,
+                }}
+              >
+                <MessageSquare
+                  size={48}
+                  style={{
+                    color: "var(--con-text-muted)",
+                    margin: "0 auto 16px",
+                  }}
+                />
+                <h3
+                  style={{ color: "var(--con-text-primary)", marginBottom: 8 }}
+                >
                   ابدأ محادثتك المالية
                 </h3>
-                <p style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)" }}>
+                <p
+                  style={{
+                    color: "var(--con-text-muted)",
+                    fontSize: "var(--con-text-caption)",
+                  }}
+                >
                   اختر من الأسئلة المقترحة أو اكتب سؤالك الخاص
                 </p>
               </div>
             )}
 
             {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} onCopy={handleCopyMessage} />
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                onCopy={handleCopyMessage}
+              />
             ))}
 
             {messages.length === 1 && (
               <div style={{ marginTop: 24 }}>
-                <h4 style={{ color: "var(--con-text-primary)", marginBottom: 12, fontSize: "var(--con-text-body)", fontWeight: 600 }}>
+                <h4
+                  style={{
+                    color: "var(--con-text-primary)",
+                    marginBottom: 12,
+                    fontSize: "var(--con-text-body)",
+                    fontWeight: 600,
+                  }}
+                >
                   أسئلة مقترحة:
                 </h4>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 12,
+                  }}
+                >
                   {suggestedPrompts.map((prompt, idx) => (
                     <SuggestedPrompt
                       key={idx}
@@ -384,10 +603,43 @@ export default function AIFinanceAnalysis() {
             )}
 
             {loading && (
-              <div style={{ display: "flex", gap: 8, padding: "12px 16px", background: "var(--con-bg-surface-2)", borderRadius: 12, width: "fit-content" }}>
-                <div style={{ width: 8, height: 8, background: "var(--con-brand)", borderRadius: "50%", animation: "pulse 1.5s infinite" }} />
-                <div style={{ width: 8, height: 8, background: "var(--con-brand)", borderRadius: "50%", animation: "pulse 1.5s infinite 0.3s" }} />
-                <div style={{ width: 8, height: 8, background: "var(--con-brand)", borderRadius: "50%", animation: "pulse 1.5s infinite 0.6s" }} />
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  padding: "12px 16px",
+                  background: "var(--con-bg-surface-2)",
+                  borderRadius: 12,
+                  width: "fit-content",
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: "var(--con-brand)",
+                    borderRadius: "50%",
+                    animation: "pulse 1.5s infinite",
+                  }}
+                />
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: "var(--con-brand)",
+                    borderRadius: "50%",
+                    animation: "pulse 1.5s infinite 0.3s",
+                  }}
+                />
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: "var(--con-brand)",
+                    borderRadius: "50%",
+                    animation: "pulse 1.5s infinite 0.6s",
+                  }}
+                />
               </div>
             )}
 
@@ -395,14 +647,16 @@ export default function AIFinanceAnalysis() {
           </div>
 
           {/* Input Area */}
-          <div style={{
-            display: "flex",
-            gap: 12,
-            background: "var(--con-bg-surface-1)",
-            border: "1px solid var(--con-border-default)",
-            borderRadius: 10,
-            padding: "12px",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              background: "var(--con-bg-surface-1)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 10,
+              padding: "12px",
+            }}
+          >
             <input
               type="text"
               value={input}
@@ -425,7 +679,10 @@ export default function AIFinanceAnalysis() {
               disabled={!input.trim() || loading}
               style={{
                 padding: "12px 16px",
-                background: input.trim() && !loading ? "var(--con-brand)" : "rgba(59,130,246,0.5)",
+                background:
+                  input.trim() && !loading
+                    ? "var(--con-brand)"
+                    : "rgba(59,130,246,0.5)",
                 border: "none",
                 borderRadius: 8,
                 color: "white",
@@ -443,17 +700,32 @@ export default function AIFinanceAnalysis() {
 
       {/* Anomalies Tab */}
       {activeTab === "anomalies" && (
-        <div style={{
-          background: "var(--con-bg-surface-1)",
-          border: "1px solid var(--con-border-default)",
-          borderRadius: 10,
-          padding: "20px",
-        }}>
+        <div
+          style={{
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-default)",
+            borderRadius: 10,
+            padding: "20px",
+          }}
+        >
           <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: "0 0 4px 0" }}>
+            <h3
+              style={{
+                fontSize: "var(--con-text-card-title)",
+                fontWeight: 600,
+                color: "var(--con-text-primary)",
+                margin: "0 0 4px 0",
+              }}
+            >
               حالات الشذوذ المكتشفة
             </h3>
-            <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+            <p
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                margin: 0,
+              }}
+            >
               تم اكتشاف {mockAnomalies.length} حالات شذوذ في البيانات المالية
             </p>
           </div>
@@ -465,35 +737,85 @@ export default function AIFinanceAnalysis() {
 
       {/* Predictions Tab */}
       {activeTab === "predictions" && (
-        <div style={{
-          background: "var(--con-bg-surface-1)",
-          border: "1px solid var(--con-border-default)",
-          borderRadius: 10,
-          padding: "20px",
-        }}>
+        <div
+          style={{
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-default)",
+            borderRadius: 10,
+            padding: "20px",
+          }}
+        >
           <div style={{ marginBottom: 20 }}>
-            <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", margin: "0 0 4px 0" }}>
+            <h3
+              style={{
+                fontSize: "var(--con-text-card-title)",
+                fontWeight: 600,
+                color: "var(--con-text-primary)",
+                margin: "0 0 4px 0",
+              }}
+            >
               التنبؤات المالية
             </h3>
-            <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+            <p
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                margin: 0,
+              }}
+            >
               توقعات بناءً على تحليل الاتجاهات التاريخية
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+              gap: 16,
+            }}
+          >
             <div>
-              <h4 style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)", fontWeight: 600, marginBottom: 12 }}>
+              <h4
+                style={{
+                  color: "var(--con-text-muted)",
+                  fontSize: "var(--con-text-caption)",
+                  fontWeight: 600,
+                  marginBottom: 12,
+                }}
+              >
                 توقعات الإيرادات
               </h4>
-              <PredictionCard label="إيرادات مارس" data={mockPredictions.marchRevenue} />
-              <PredictionCard label="إيرادات أبريل" data={mockPredictions.aprilRevenue} />
-              <PredictionCard label="إيرادات مايو" data={mockPredictions.mayRevenue} />
+              <PredictionCard
+                label="إيرادات مارس"
+                data={mockPredictions.marchRevenue}
+              />
+              <PredictionCard
+                label="إيرادات أبريل"
+                data={mockPredictions.aprilRevenue}
+              />
+              <PredictionCard
+                label="إيرادات مايو"
+                data={mockPredictions.mayRevenue}
+              />
             </div>
             <div>
-              <h4 style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)", fontWeight: 600, marginBottom: 12 }}>
+              <h4
+                style={{
+                  color: "var(--con-text-muted)",
+                  fontSize: "var(--con-text-caption)",
+                  fontWeight: 600,
+                  marginBottom: 12,
+                }}
+              >
                 توقعات الأداء
               </h4>
-              <PredictionCard label="الهامش التشغيلي" data={mockPredictions.operatingMargin} />
-              <PredictionCard label="معدل الاحتراق" data={mockPredictions.burnRate} />
+              <PredictionCard
+                label="الهامش التشغيلي"
+                data={mockPredictions.operatingMargin}
+              />
+              <PredictionCard
+                label="معدل الاحتراق"
+                data={mockPredictions.burnRate}
+              />
             </div>
           </div>
         </div>

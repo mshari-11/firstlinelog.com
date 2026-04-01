@@ -41,7 +41,9 @@ export function AlertsPanel() {
     <WidgetShell
       id="alerts-panel"
       title="التنبيهات والاستثناءات"
-      subtitle={unreadCount > 0 ? `${unreadCount} تنبيه جديد` : "لا توجد تنبيهات"}
+      subtitle={
+        unreadCount > 0 ? `${unreadCount} تنبيه جديد` : "لا توجد تنبيهات"
+      }
       icon={AlertTriangle}
       iconColor={unreadCount > 0 ? "var(--con-warning)" : "var(--con-success)"}
       onDrilldown={() => navigate("/admin-panel/notifications")}
@@ -49,8 +51,17 @@ export function AlertsPanel() {
     >
       {unread.length === 0 ? (
         <div style={{ padding: "24px 16px", textAlign: "center" }}>
-          <Bell size={28} style={{ color: "var(--con-text-disabled)", marginBottom: 8 }} />
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0 }}>
+          <Bell
+            size={28}
+            style={{ color: "var(--con-text-disabled)", marginBottom: 8 }}
+          />
+          <p
+            style={{
+              fontSize: "var(--con-text-body)",
+              color: "var(--con-text-muted)",
+              margin: 0,
+            }}
+          >
             لا توجد تنبيهات نشطة
           </p>
         </div>
@@ -72,12 +83,25 @@ export function AlertsPanel() {
                 cursor: "pointer",
                 transition: "background 0.15s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--con-bg-surface-2)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--con-bg-surface-2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
             >
-              <span style={{ fontSize: 16, lineHeight: 1 }}>{typeIcons[n.type] || "🔔"}</span>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>
+                {typeIcons[n.type] || "🔔"}
+              </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginBottom: 2,
+                  }}
+                >
                   <span
                     style={{
                       fontSize: "var(--con-text-body)",
@@ -88,7 +112,13 @@ export function AlertsPanel() {
                     {n.title}
                   </span>
                 </div>
-                <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: 0 }}>
+                <p
+                  style={{
+                    fontSize: "var(--con-text-caption)",
+                    color: "var(--con-text-muted)",
+                    margin: 0,
+                  }}
+                >
                   {n.message}
                 </p>
                 <span

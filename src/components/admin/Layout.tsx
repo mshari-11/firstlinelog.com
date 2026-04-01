@@ -11,8 +11,12 @@ import { AdminAiAssistant } from "./AiAssistant";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock } from "lucide-react";
 import {
-  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
-  BreadcrumbPage, BreadcrumbSeparator,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
 const routeNames: Record<string, string> = {
@@ -76,7 +80,8 @@ export function AdminLayout() {
   }, [user, loading, navigate]);
 
   const currentPage = useMemo(() => {
-    const seg = location.pathname.split("/").filter(Boolean).pop() || "dashboard";
+    const seg =
+      location.pathname.split("/").filter(Boolean).pop() || "dashboard";
     return routeNames[seg] || seg;
   }, [location.pathname]);
 
@@ -91,7 +96,14 @@ export function AdminLayout() {
           minHeight: "100vh",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1rem",
+          }}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -111,7 +123,9 @@ export function AdminLayout() {
               src="/images/first_line_professional_english_1.png"
               alt="FL"
               style={{ width: 28, height: 28, objectFit: "contain" }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
           </motion.div>
           <div
@@ -124,7 +138,12 @@ export function AdminLayout() {
               animation: "spin 0.8s linear infinite",
             }}
           />
-          <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+          <p
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+            }}
+          >
             جارٍ التحميل...
           </p>
         </div>
@@ -158,7 +177,10 @@ export function AdminLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/admin-panel/dashboard" style={{ fontSize: 11 }}>
+                <BreadcrumbLink
+                  href="/admin-panel/dashboard"
+                  style={{ fontSize: 11 }}
+                >
                   لوحة الإدارة
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -193,7 +215,15 @@ export function AdminLayout() {
                   animation: "pulse 2s infinite",
                 }}
               />
-              <span style={{ fontSize: 11, color: "var(--con-success)", fontWeight: 500 }}>متصل</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--con-success)",
+                  fontWeight: 500,
+                }}
+              >
+                متصل
+              </span>
             </div>
             <div
               style={{

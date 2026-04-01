@@ -5,9 +5,17 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
-export type NotificationType = "complaint" | "order" | "finance" | "system" | "sla" | "approval";
+export type NotificationType =
+  | "complaint"
+  | "order"
+  | "finance"
+  | "system"
+  | "sla"
+  | "approval";
 export type NotificationPriority = "low" | "normal" | "high" | "urgent";
 
 export interface AdminNotification {
@@ -30,7 +38,9 @@ interface NotificationState {
   loadNotifications: () => Promise<void>;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
-  addNotification: (notification: Omit<AdminNotification, "id" | "createdAt" | "read">) => void;
+  addNotification: (
+    notification: Omit<AdminNotification, "id" | "createdAt" | "read">,
+  ) => void;
   removeNotification: (id: string) => void;
 
   // Selectors
@@ -105,7 +115,9 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
     set({ loading: true });
     try {
       // Try API first
-      const res = await fetch(`${API_BASE}/api/notifications`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${API_BASE}/api/notifications`, {
+        signal: AbortSignal.timeout(5000),
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -124,7 +136,9 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
           return;
         }
       }
-    } catch { /* fall through to Supabase */ }
+    } catch {
+      /* fall through to Supabase */
+    }
 
     // Try Supabase fallback
     if (supabase) {
@@ -149,7 +163,9 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
           set({ notifications: mapped, loading: false });
           return;
         }
-      } catch { /* keep mock */ }
+      } catch {
+        /* keep mock */
+      }
     }
 
     // Keep existing mock data
@@ -159,7 +175,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   markAsRead: (id) => {
     set((state) => ({
       notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
+        n.id === id ? { ...n, read: true } : n,
       ),
     }));
   },
@@ -198,7 +214,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
 
   getUrgent: () => {
     return get().notifications.filter(
-      (n) => !n.read && (n.priority === "urgent" || n.priority === "high")
+      (n) => !n.read && (n.priority === "urgent" || n.priority === "high"),
     );
   },
 }));

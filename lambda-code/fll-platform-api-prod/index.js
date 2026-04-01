@@ -14,16 +14,14 @@ const {
   AdminSetUserPasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
-// Lambda client removed — driver OTP handled directly, driver/apply disabled until me-south-1 recovers
 const sesClient = new SESClient({ region: "us-east-1" });
-// Lambda proxy to me-south-1 disabled — driver OTP handled directly in us-east-1
 const SES_FROM = process.env.SES_FROM || "FLL Platform <ADMIN@FLL.SA>";
 const c = new DynamoDBClient({ region: "us-east-1" });
 const d = DynamoDBDocumentClient.from(c);
 const cognitoClient = new CognitoIdentityProviderClient({
   region: "us-east-1",
 });
-const USER_POOL_ID = process.env.USER_POOL_ID || "me-south-1_aJtmQ0QrN";
+const USER_POOL_ID = process.env.USER_POOL_ID || "us-east-1_qHMox2NTB";
 const T = {
   drivers: "fll-drivers",
   "staff-users": "fll-staff-users",

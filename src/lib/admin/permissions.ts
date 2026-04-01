@@ -4,7 +4,14 @@
  */
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-export type PermissionAction = "view" | "create" | "edit" | "delete" | "approve" | "export" | "configure";
+export type PermissionAction =
+  | "view"
+  | "create"
+  | "edit"
+  | "delete"
+  | "approve"
+  | "export"
+  | "configure";
 
 export interface ModulePermission {
   moduleId: string;
@@ -28,7 +35,15 @@ export interface EnhancedRole {
 }
 
 // ─── Default Roles ──────────────────────────────────────────────────────────
-const ALL_ACTIONS: PermissionAction[] = ["view", "create", "edit", "delete", "approve", "export", "configure"];
+const ALL_ACTIONS: PermissionAction[] = [
+  "view",
+  "create",
+  "edit",
+  "delete",
+  "approve",
+  "export",
+  "configure",
+];
 
 export const SYSTEM_ROLES: EnhancedRole[] = [
   {
@@ -59,7 +74,13 @@ export const SYSTEM_ROLES: EnhancedRole[] = [
       { moduleId: "dispatch", actions: ["view", "create"] },
       { moduleId: "sla", actions: ["view"] },
     ],
-    dashboardWidgets: ["kpi-overview", "alerts-panel", "recent-activity", "operations-map", "charts-panel"],
+    dashboardWidgets: [
+      "kpi-overview",
+      "alerts-panel",
+      "recent-activity",
+      "operations-map",
+      "charts-panel",
+    ],
   },
   {
     id: "staff_finance",
@@ -76,7 +97,12 @@ export const SYSTEM_ROLES: EnhancedRole[] = [
       { moduleId: "payouts", actions: ["view", "create", "approve"] },
       { moduleId: "invoices", actions: ["view", "create", "export"] },
     ],
-    dashboardWidgets: ["kpi-overview", "finance-snapshot", "charts-panel", "pending-approvals"],
+    dashboardWidgets: [
+      "kpi-overview",
+      "finance-snapshot",
+      "charts-panel",
+      "pending-approvals",
+    ],
   },
   {
     id: "staff_hr",
@@ -90,7 +116,12 @@ export const SYSTEM_ROLES: EnhancedRole[] = [
       { moduleId: "kyc", actions: ["view", "edit"] },
       { moduleId: "driver-training", actions: ["view", "create"] },
     ],
-    dashboardWidgets: ["kpi-overview", "alerts-panel", "pending-approvals", "recent-activity"],
+    dashboardWidgets: [
+      "kpi-overview",
+      "alerts-panel",
+      "pending-approvals",
+      "recent-activity",
+    ],
   },
   {
     id: "staff_fleet",
@@ -100,7 +131,10 @@ export const SYSTEM_ROLES: EnhancedRole[] = [
     modules: [
       { moduleId: "vehicles", actions: ["view", "create", "edit", "delete"] },
       { moduleId: "fleet", actions: ["view", "create", "edit"] },
-      { moduleId: "fleet-assignments", actions: ["view", "create", "edit", "delete"] },
+      {
+        moduleId: "fleet-assignments",
+        actions: ["view", "create", "edit", "delete"],
+      },
     ],
     dashboardWidgets: ["kpi-overview", "alerts-panel", "module-status-grid"],
   },
@@ -137,9 +171,20 @@ export function evaluateDataScope(
   const mod = role.modules.find((m) => m.moduleId === moduleId);
   if (!mod?.dataScope) return true; // no scope restriction
   const { cities, platforms, departments } = mod.dataScope;
-  if (cities?.length && context.city && !cities.includes(context.city)) return false;
-  if (platforms?.length && context.platform && !platforms.includes(context.platform)) return false;
-  if (departments?.length && context.department && !departments.includes(context.department)) return false;
+  if (cities?.length && context.city && !cities.includes(context.city))
+    return false;
+  if (
+    platforms?.length &&
+    context.platform &&
+    !platforms.includes(context.platform)
+  )
+    return false;
+  if (
+    departments?.length &&
+    context.department &&
+    !departments.includes(context.department)
+  )
+    return false;
   return true;
 }
 
@@ -150,10 +195,17 @@ export function getAllowedWidgets(role: EnhancedRole | undefined): string[] {
   if (!role) return [];
   if (role.dashboardWidgets.includes("*")) {
     return [
-      "kpi-overview", "system-health", "quick-actions",
-      "charts-panel", "alerts-panel", "recent-activity",
-      "pending-approvals", "finance-snapshot", "operations-map",
-      "module-status-grid", "infrastructure-panel",
+      "kpi-overview",
+      "system-health",
+      "quick-actions",
+      "charts-panel",
+      "alerts-panel",
+      "recent-activity",
+      "pending-approvals",
+      "finance-snapshot",
+      "operations-map",
+      "module-status-grid",
+      "infrastructure-panel",
     ];
   }
   return role.dashboardWidgets;

@@ -4,21 +4,60 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import {
-  Plug, Play, CheckCircle2, XCircle, Copy, Clock,
-  RefreshCw, ChevronDown, ChevronUp, Zap, Globe,
-  Database, Shield, MessageSquare, FileText, Users,
-  CreditCard, AlertTriangle, Server, ExternalLink, Terminal,
+  Plug,
+  Play,
+  CheckCircle2,
+  XCircle,
+  Copy,
+  Clock,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  Globe,
+  Database,
+  Shield,
+  MessageSquare,
+  FileText,
+  Users,
+  CreditCard,
+  AlertTriangle,
+  Server,
+  ExternalLink,
+  Terminal,
   BookOpen,
 } from "lucide-react";
-import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Badge, Button, Toolbar, Select, Tabs } from "@/components/admin/ui";
+import {
+  PageWrapper,
+  PageHeader,
+  Card,
+  KPIGrid,
+  KPICard,
+  Badge,
+  Button,
+  Toolbar,
+  Select,
+  Tabs,
+} from "@/components/admin/ui";
 import { toast } from "sonner";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://djebhztfewjfyyoortvv.supabase.co";
 
 // ─── Endpoint Definitions ───────────────────────────────────────────────────
 type EndpointMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-type EndpointCategory = "auth" | "operations" | "finance" | "drivers" | "system" | "ai" | "supabase";
+type EndpointCategory =
+  | "auth"
+  | "operations"
+  | "finance"
+  | "drivers"
+  | "system"
+  | "ai"
+  | "supabase";
 
 interface APIEndpoint {
   id: string;
@@ -39,14 +78,17 @@ interface APIEndpoint {
   connectionCode?: string;
 }
 
-const CATEGORY_LABELS: Record<EndpointCategory, { label: string; icon: React.ElementType; color: string }> = {
-  auth:       { label: "التوثيق والأمان",     icon: Shield,         color: "var(--con-warning)" },
-  operations: { label: "التشغيل",             icon: Zap,            color: "var(--con-brand)" },
-  finance:    { label: "المالية",              icon: CreditCard,     color: "var(--con-success)" },
-  drivers:    { label: "السائقين",             icon: Users,          color: "var(--con-info)" },
-  system:     { label: "النظام",              icon: Server,         color: "var(--con-text-muted)" },
-  ai:         { label: "الذكاء الاصطناعي",   icon: MessageSquare,  color: "#8B5CF6" },
-  supabase:   { label: "قاعدة البيانات",      icon: Database,       color: "#3ECF8E" },
+const CATEGORY_LABELS: Record<
+  EndpointCategory,
+  { label: string; icon: React.ElementType; color: string }
+> = {
+  auth: { label: "التوثيق والأمان", icon: Shield, color: "var(--con-warning)" },
+  operations: { label: "التشغيل", icon: Zap, color: "var(--con-brand)" },
+  finance: { label: "المالية", icon: CreditCard, color: "var(--con-success)" },
+  drivers: { label: "السائقين", icon: Users, color: "var(--con-info)" },
+  system: { label: "النظام", icon: Server, color: "var(--con-text-muted)" },
+  ai: { label: "الذكاء الاصطناعي", icon: MessageSquare, color: "#8B5CF6" },
+  supabase: { label: "قاعدة البيانات", icon: Database, color: "#3ECF8E" },
 };
 
 const ENDPOINTS: APIEndpoint[] = [
@@ -60,7 +102,8 @@ const ENDPOINTS: APIEndpoint[] = [
     fullUrl: `${API_BASE}/auth/send-otp`,
     category: "auth",
     description: "Send 6-digit OTP to email via AWS SES (no-reply@fll.sa)",
-    descriptionAr: "إرسال رمز تحقق من 6 أرقام إلى البريد الإلكتروني عبر AWS SES",
+    descriptionAr:
+      "إرسال رمز تحقق من 6 أرقام إلى البريد الإلكتروني عبر AWS SES",
     requestBody: `{ "email": "user@fll.sa", "type": "login" }`,
     responseExample: `{ "success": true, "message": "OTP sent" }`,
     status: "unknown",
@@ -293,11 +336,11 @@ const ENDPOINTS: APIEndpoint[] = [
 
 // ─── Method colors ──────────────────────────────────────────────────────────
 const METHOD_COLORS: Record<string, { bg: string; color: string }> = {
-  GET:    { bg: "rgba(34,197,94,0.12)",  color: "var(--con-success)" },
-  POST:   { bg: "rgba(59,130,246,0.12)", color: "var(--con-info)" },
-  PUT:    { bg: "rgba(245,158,11,0.12)", color: "var(--con-warning)" },
-  DELETE: { bg: "rgba(239,68,68,0.12)",  color: "var(--con-danger)" },
-  PATCH:  { bg: "rgba(168,85,247,0.12)", color: "#A855F7" },
+  GET: { bg: "rgba(34,197,94,0.12)", color: "var(--con-success)" },
+  POST: { bg: "rgba(59,130,246,0.12)", color: "var(--con-info)" },
+  PUT: { bg: "rgba(245,158,11,0.12)", color: "var(--con-warning)" },
+  DELETE: { bg: "rgba(239,68,68,0.12)", color: "var(--con-danger)" },
+  PATCH: { bg: "rgba(168,85,247,0.12)", color: "#A855F7" },
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -307,7 +350,10 @@ export default function ApiManagement() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [tab, setTab] = useState("endpoints");
-  const [testProgress, setTestProgress] = useState<{ current: number; total: number } | null>(null);
+  const [testProgress, setTestProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [showGuide, setShowGuide] = useState(true);
 
   const onlineCount = endpoints.filter((e) => e.status === "online").length;
@@ -328,13 +374,19 @@ export default function ApiManagement() {
       await fetch(ep.fullUrl, opts);
       const ms = Math.round(performance.now() - start);
       setEndpoints((prev) =>
-        prev.map((e) => (e.id === ep.id ? { ...e, status: "online" as const, latency: ms } : e))
+        prev.map((e) =>
+          e.id === ep.id ? { ...e, status: "online" as const, latency: ms } : e,
+        ),
       );
       toast.success(`${ep.nameAr}: متصل (${ms}ms)`);
     } catch {
       const ms = Math.round(performance.now() - start);
       setEndpoints((prev) =>
-        prev.map((e) => (e.id === ep.id ? { ...e, status: "offline" as const, latency: ms } : e))
+        prev.map((e) =>
+          e.id === ep.id
+            ? { ...e, status: "offline" as const, latency: ms }
+            : e,
+        ),
       );
       toast.error(`${ep.nameAr}: غير متصل (${ms}ms)`);
     }
@@ -357,11 +409,16 @@ export default function ApiManagement() {
     toast.success(`تم نسخ ${label}`);
   };
 
-  const filtered = filter === "all" ? endpoints : endpoints.filter((e) => e.category === filter);
+  const filtered =
+    filter === "all"
+      ? endpoints
+      : endpoints.filter((e) => e.category === filter);
 
   const statusIcon = (s: string) => {
-    if (s === "online") return <CheckCircle2 size={12} style={{ color: "var(--con-success)" }} />;
-    if (s === "offline") return <XCircle size={12} style={{ color: "var(--con-danger)" }} />;
+    if (s === "online")
+      return <CheckCircle2 size={12} style={{ color: "var(--con-success)" }} />;
+    if (s === "offline")
+      return <XCircle size={12} style={{ color: "var(--con-danger)" }} />;
     return <Clock size={12} style={{ color: "var(--con-text-muted)" }} />;
   };
 
@@ -376,7 +433,10 @@ export default function ApiManagement() {
             <Button variant="ghost" icon={RefreshCw} onClick={testAll}>
               فحص الكل
             </Button>
-            <Button icon={Copy} onClick={() => copyToClipboard(API_BASE, "API Base URL")}>
+            <Button
+              icon={Copy}
+              onClick={() => copyToClipboard(API_BASE, "API Base URL")}
+            >
               نسخ Base URL
             </Button>
           </div>
@@ -384,37 +444,157 @@ export default function ApiManagement() {
       />
 
       {/* API Guide Section */}
-      <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-default)", borderRadius: "var(--con-radius-lg)", overflow: "hidden", marginBottom: 0 }}>
+      <div
+        style={{
+          background: "var(--con-bg-surface-1)",
+          border: "1px solid var(--con-border-default)",
+          borderRadius: "var(--con-radius-lg)",
+          overflow: "hidden",
+          marginBottom: 0,
+        }}
+      >
         <div
           onClick={() => setShowGuide(!showGuide)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", cursor: "pointer", background: "var(--con-bg-surface-2)" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 16px",
+            cursor: "pointer",
+            background: "var(--con-bg-surface-2)",
+          }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <BookOpen size={16} style={{ color: "var(--con-brand)" }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)" }}>دليل API والتكاملات</span>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--con-text-primary)",
+              }}
+            >
+              دليل API والتكاملات
+            </span>
           </div>
-          {showGuide ? <ChevronUp size={16} style={{ color: "var(--con-text-muted)" }} /> : <ChevronDown size={16} style={{ color: "var(--con-text-muted)" }} />}
+          {showGuide ? (
+            <ChevronUp size={16} style={{ color: "var(--con-text-muted)" }} />
+          ) : (
+            <ChevronDown size={16} style={{ color: "var(--con-text-muted)" }} />
+          )}
         </div>
         {showGuide && (
-          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div
+            style={{
+              padding: "16px 20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+            }}
+          >
             {/* Section A: أنواع الـ APIs */}
             <div>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                <Plug size={14} style={{ color: "var(--con-brand)" }} /> أنواع الـ APIs
+              <h3
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: "0 0 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Plug size={14} style={{ color: "var(--con-brand)" }} /> أنواع
+                الـ APIs
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: 8,
+                }}
+              >
                 {[
-                  { label: "Auth", desc: "تسجيل الدخول، OTP، استعادة كلمة المرور", icon: <Shield size={14} style={{ color: "var(--con-warning)" }} />, color: "var(--con-warning)" },
-                  { label: "Operations", desc: "الطلبات، المناديب، الشكاوى", icon: <Zap size={14} style={{ color: "var(--con-brand)" }} />, color: "var(--con-brand)" },
-                  { label: "Finance", desc: "الدفعات، الفواتير، المحافظ", icon: <CreditCard size={14} style={{ color: "var(--con-success)" }} />, color: "var(--con-success)" },
-                  { label: "Drivers", desc: "التسجيل، KYC، التدريب", icon: <Users size={14} style={{ color: "var(--con-info)" }} />, color: "var(--con-info)" },
-                  { label: "AI", desc: "المحادثة الذكية، تحليل مالي", icon: <MessageSquare size={14} style={{ color: "#8B5CF6" }} />, color: "#8B5CF6" },
-                ].map(api => (
-                  <div key={api.label} style={{ padding: "10px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)", display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  {
+                    label: "Auth",
+                    desc: "تسجيل الدخول، OTP، استعادة كلمة المرور",
+                    icon: (
+                      <Shield
+                        size={14}
+                        style={{ color: "var(--con-warning)" }}
+                      />
+                    ),
+                    color: "var(--con-warning)",
+                  },
+                  {
+                    label: "Operations",
+                    desc: "الطلبات، المناديب، الشكاوى",
+                    icon: (
+                      <Zap size={14} style={{ color: "var(--con-brand)" }} />
+                    ),
+                    color: "var(--con-brand)",
+                  },
+                  {
+                    label: "Finance",
+                    desc: "الدفعات، الفواتير، المحافظ",
+                    icon: (
+                      <CreditCard
+                        size={14}
+                        style={{ color: "var(--con-success)" }}
+                      />
+                    ),
+                    color: "var(--con-success)",
+                  },
+                  {
+                    label: "Drivers",
+                    desc: "التسجيل، KYC، التدريب",
+                    icon: (
+                      <Users size={14} style={{ color: "var(--con-info)" }} />
+                    ),
+                    color: "var(--con-info)",
+                  },
+                  {
+                    label: "AI",
+                    desc: "المحادثة الذكية، تحليل مالي",
+                    icon: (
+                      <MessageSquare size={14} style={{ color: "#8B5CF6" }} />
+                    ),
+                    color: "#8B5CF6",
+                  },
+                ].map((api) => (
+                  <div
+                    key={api.label}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "var(--con-radius-sm)",
+                      background: "var(--con-bg-surface-2)",
+                      border: "1px solid var(--con-border-default)",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
+                    }}
+                  >
                     {api.icon}
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: api.color }}>{api.label}</div>
-                      <div style={{ fontSize: 11, color: "var(--con-text-muted)", marginTop: 2, lineHeight: 1.5 }}>{api.desc}</div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: api.color,
+                        }}
+                      >
+                        {api.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--con-text-muted)",
+                          marginTop: 2,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {api.desc}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -423,31 +603,55 @@ export default function ApiManagement() {
 
             {/* Section B: أمثلة API Calls */}
             <div>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                <Terminal size={14} style={{ color: "var(--con-brand)" }} /> أمثلة API Calls
+              <h3
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: "0 0 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Terminal size={14} style={{ color: "var(--con-brand)" }} />{" "}
+                أمثلة API Calls
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
-                  { code: `POST /auth/send-otp\n{ "email": "user@fll.sa", "type": "login" }\n→ { "success": true, "message": "تم إرسال رمز التحقق" }` },
-                  { code: `GET /drivers?limit=10&status=active\n→ { "items": [...], "count": 10 }` },
-                  { code: `POST /driver/apply\n{ "full_name": "أحمد", "phone": "563636006", ... }\n→ { "success": true, "app_ref": "APP-XXXXXXX" }` },
-                  { code: `POST /ai/chat\n{ "message": "كم عدد الطلبات اليوم؟", "role": "admin" }\n→ { "reply": "عدد الطلبات اليوم 245 طلب..." }` },
-                  { code: `GET /ops/health\n→ { "status": "healthy", "uptime": "99.9%", "region": "us-east-1" }` },
+                  {
+                    code: `POST /auth/send-otp\n{ "email": "user@fll.sa", "type": "login" }\n→ { "success": true, "message": "تم إرسال رمز التحقق" }`,
+                  },
+                  {
+                    code: `GET /drivers?limit=10&status=active\n→ { "items": [...], "count": 10 }`,
+                  },
+                  {
+                    code: `POST /driver/apply\n{ "full_name": "أحمد", "phone": "563636006", ... }\n→ { "success": true, "app_ref": "APP-XXXXXXX" }`,
+                  },
+                  {
+                    code: `POST /ai/chat\n{ "message": "كم عدد الطلبات اليوم؟", "role": "admin" }\n→ { "reply": "عدد الطلبات اليوم 245 طلب..." }`,
+                  },
+                  {
+                    code: `GET /ops/health\n→ { "status": "healthy", "uptime": "99.9%", "region": "us-east-1" }`,
+                  },
                 ].map((ex, i) => (
-                  <pre key={i} style={{
-                    padding: "10px 14px",
-                    borderRadius: "var(--con-radius-sm)",
-                    background: "#0C0E14",
-                    border: "1px solid var(--con-border-default)",
-                    fontFamily: "var(--con-font-mono)",
-                    fontSize: 11,
-                    color: "#A3ABBE",
-                    margin: 0,
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.7,
-                    direction: "ltr",
-                    textAlign: "left",
-                  }}>
+                  <pre
+                    key={i}
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: "var(--con-radius-sm)",
+                      background: "#0C0E14",
+                      border: "1px solid var(--con-border-default)",
+                      fontFamily: "var(--con-font-mono)",
+                      fontSize: 11,
+                      color: "#A3ABBE",
+                      margin: 0,
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.7,
+                      direction: "ltr",
+                      textAlign: "left",
+                    }}
+                  >
                     {ex.code}
                   </pre>
                 ))}
@@ -456,20 +660,83 @@ export default function ApiManagement() {
 
             {/* Section C: رموز الحالة */}
             <div>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                <FileText size={14} style={{ color: "var(--con-info)" }} /> رموز الحالة
+              <h3
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: "0 0 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <FileText size={14} style={{ color: "var(--con-info)" }} /> رموز
+                الحالة
               </h3>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {[
-                  { code: "200", label: "نجاح", emoji: "\u2705", color: "var(--con-success)" },
-                  { code: "400", label: "خطأ في البيانات", emoji: "\u26A0\uFE0F", color: "var(--con-warning)" },
-                  { code: "401", label: "غير مصرح", emoji: "\uD83D\uDD12", color: "var(--con-danger)" },
-                  { code: "404", label: "غير موجود", emoji: "\uD83D\uDD0D", color: "var(--con-text-muted)" },
-                  { code: "500", label: "خطأ في الخادم", emoji: "\u274C", color: "var(--con-danger)" },
-                ].map(s => (
-                  <div key={s.code} style={{ padding: "8px 14px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: "var(--con-font-mono)", fontSize: 13, fontWeight: 700, color: s.color }}>{s.code}</span>
-                    <span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>{s.label}</span>
+                  {
+                    code: "200",
+                    label: "نجاح",
+                    emoji: "\u2705",
+                    color: "var(--con-success)",
+                  },
+                  {
+                    code: "400",
+                    label: "خطأ في البيانات",
+                    emoji: "\u26A0\uFE0F",
+                    color: "var(--con-warning)",
+                  },
+                  {
+                    code: "401",
+                    label: "غير مصرح",
+                    emoji: "\uD83D\uDD12",
+                    color: "var(--con-danger)",
+                  },
+                  {
+                    code: "404",
+                    label: "غير موجود",
+                    emoji: "\uD83D\uDD0D",
+                    color: "var(--con-text-muted)",
+                  },
+                  {
+                    code: "500",
+                    label: "خطأ في الخادم",
+                    emoji: "\u274C",
+                    color: "var(--con-danger)",
+                  },
+                ].map((s) => (
+                  <div
+                    key={s.code}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "var(--con-radius-sm)",
+                      background: "var(--con-bg-surface-2)",
+                      border: "1px solid var(--con-border-default)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--con-font-mono)",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: s.color,
+                      }}
+                    >
+                      {s.code}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "var(--con-text-secondary)",
+                      }}
+                    >
+                      {s.label}
+                    </span>
                     <span style={{ fontSize: 14 }}>{s.emoji}</span>
                   </div>
                 ))}
@@ -478,8 +745,22 @@ export default function ApiManagement() {
 
             {/* Section D: نصائح */}
             <div>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                <AlertTriangle size={14} style={{ color: "var(--con-warning)" }} /> نصائح
+              <h3
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  margin: "0 0 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <AlertTriangle
+                  size={14}
+                  style={{ color: "var(--con-warning)" }}
+                />{" "}
+                نصائح
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {[
@@ -487,9 +768,36 @@ export default function ApiManagement() {
                   "لا ترسل API keys في الرابط — استخدم Headers",
                   "Rate limit: 100 طلب/دقيقة",
                 ].map((tip, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-surface-2)", border: "1px solid var(--con-border-default)" }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--con-warning)", flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: "var(--con-text-secondary)", lineHeight: 1.6 }}>{tip}</span>
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 12px",
+                      borderRadius: "var(--con-radius-sm)",
+                      background: "var(--con-bg-surface-2)",
+                      border: "1px solid var(--con-border-default)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: "var(--con-warning)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "var(--con-text-secondary)",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {tip}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -499,106 +807,337 @@ export default function ApiManagement() {
       </div>
 
       <KPIGrid cols="repeat(5, 1fr)">
-        <KPICard label="إجمالي الـ Endpoints" value={ENDPOINTS.length} icon={Plug} accent="var(--con-brand)" />
-        <KPICard label="متصل" value={onlineCount} icon={CheckCircle2} accent="var(--con-success)" />
-        <KPICard label="غير متصل" value={offlineCount} icon={XCircle} accent="var(--con-danger)" />
-        <KPICard label="غير مفحوص" value={ENDPOINTS.length - onlineCount - offlineCount} icon={Clock} accent="var(--con-text-muted)" />
-        <KPICard label="مرتبط بالداشبورد" value={ENDPOINTS.filter((e) => e.dashboardWidget).length} icon={Zap} accent="var(--con-info)" />
+        <KPICard
+          label="إجمالي الـ Endpoints"
+          value={ENDPOINTS.length}
+          icon={Plug}
+          accent="var(--con-brand)"
+        />
+        <KPICard
+          label="متصل"
+          value={onlineCount}
+          icon={CheckCircle2}
+          accent="var(--con-success)"
+        />
+        <KPICard
+          label="غير متصل"
+          value={offlineCount}
+          icon={XCircle}
+          accent="var(--con-danger)"
+        />
+        <KPICard
+          label="غير مفحوص"
+          value={ENDPOINTS.length - onlineCount - offlineCount}
+          icon={Clock}
+          accent="var(--con-text-muted)"
+        />
+        <KPICard
+          label="مرتبط بالداشبورد"
+          value={ENDPOINTS.filter((e) => e.dashboardWidget).length}
+          icon={Zap}
+          accent="var(--con-info)"
+        />
       </KPIGrid>
 
       {/* Connection Info Card */}
       {/* Progress Bar */}
       {testProgress && (
-        <div style={{ background: "var(--con-bg-surface-1)", border: "1px solid var(--con-border-brand)", borderRadius: "var(--con-radius-lg)", padding: "12px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)" }}>
+        <div
+          style={{
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-brand)",
+            borderRadius: "var(--con-radius-lg)",
+            padding: "12px 16px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 8,
+            }}
+          >
+            <span
+              style={{
+                fontSize: "var(--con-text-body)",
+                fontWeight: 600,
+                color: "var(--con-text-primary)",
+              }}
+            >
               جارٍ فحص الـ Endpoints...
             </span>
-            <span style={{ fontSize: "var(--con-text-caption)", fontFamily: "var(--con-font-mono)", color: "var(--con-brand)" }}>
+            <span
+              style={{
+                fontSize: "var(--con-text-caption)",
+                fontFamily: "var(--con-font-mono)",
+                color: "var(--con-brand)",
+              }}
+            >
               {testProgress.current}/{testProgress.total}
             </span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: "var(--con-bg-elevated)", overflow: "hidden" }}>
-            <div style={{ height: "100%", borderRadius: 3, background: "var(--con-brand)", transition: "width 0.3s", width: `${(testProgress.current / testProgress.total) * 100}%` }} />
+          <div
+            style={{
+              height: 6,
+              borderRadius: 3,
+              background: "var(--con-bg-elevated)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                borderRadius: 3,
+                background: "var(--con-brand)",
+                transition: "width 0.3s",
+                width: `${(testProgress.current / testProgress.total) * 100}%`,
+              }}
+            />
           </div>
         </div>
       )}
 
       {/* Widget Connection Status */}
-      <Card title="حالة ربط الويدجت" subtitle="أي ويدجت داشبورد مرتبط ببيانات حقيقية">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8 }}>
+      <Card
+        title="حالة ربط الويدجت"
+        subtitle="أي ويدجت داشبورد مرتبط ببيانات حقيقية"
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 8,
+          }}
+        >
           {[
-            { name: "KPIOverview", nameAr: "المؤشرات الرئيسية", connected: true, source: "Supabase" },
-            { name: "RecentActivity", nameAr: "آخر الطلبات", connected: true, source: "Supabase" },
-            { name: "PendingApprovals", nameAr: "الاعتمادات", connected: true, source: "API + Supabase" },
-            { name: "SystemHealth", nameAr: "صحة النظام", connected: true, source: "Ping" },
-            { name: "AlertsPanel", nameAr: "التنبيهات", connected: true, source: "API + Supabase" },
-            { name: "ChartsPanel", nameAr: "الرسوم البيانية", connected: true, source: "Supabase" },
-            { name: "FinanceSnapshot", nameAr: "النظرة المالية", connected: true, source: "Supabase" },
-            { name: "OperationsMap", nameAr: "التوزيع التشغيلي", connected: true, source: "Supabase" },
-            { name: "ModuleStatusGrid", nameAr: "حالة الوحدات", connected: true, source: "Store" },
-            { name: "QuickActions", nameAr: "إجراءات سريعة", connected: false, source: "تنقل فقط" },
-            { name: "InfrastructurePanel", nameAr: "البنية التحتية", connected: true, source: "API + Supabase" },
+            {
+              name: "KPIOverview",
+              nameAr: "المؤشرات الرئيسية",
+              connected: true,
+              source: "Supabase",
+            },
+            {
+              name: "RecentActivity",
+              nameAr: "آخر الطلبات",
+              connected: true,
+              source: "Supabase",
+            },
+            {
+              name: "PendingApprovals",
+              nameAr: "الاعتمادات",
+              connected: true,
+              source: "API + Supabase",
+            },
+            {
+              name: "SystemHealth",
+              nameAr: "صحة النظام",
+              connected: true,
+              source: "Ping",
+            },
+            {
+              name: "AlertsPanel",
+              nameAr: "التنبيهات",
+              connected: true,
+              source: "API + Supabase",
+            },
+            {
+              name: "ChartsPanel",
+              nameAr: "الرسوم البيانية",
+              connected: true,
+              source: "Supabase",
+            },
+            {
+              name: "FinanceSnapshot",
+              nameAr: "النظرة المالية",
+              connected: true,
+              source: "Supabase",
+            },
+            {
+              name: "OperationsMap",
+              nameAr: "التوزيع التشغيلي",
+              connected: true,
+              source: "Supabase",
+            },
+            {
+              name: "ModuleStatusGrid",
+              nameAr: "حالة الوحدات",
+              connected: true,
+              source: "Store",
+            },
+            {
+              name: "QuickActions",
+              nameAr: "إجراءات سريعة",
+              connected: false,
+              source: "تنقل فقط",
+            },
+            {
+              name: "InfrastructurePanel",
+              nameAr: "البنية التحتية",
+              connected: true,
+              source: "API + Supabase",
+            },
           ].map((w) => (
             <div
               key={w.name}
               style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "8px 12px", borderRadius: "var(--con-radius-sm)",
-                background: w.connected ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.02)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "8px 12px",
+                borderRadius: "var(--con-radius-sm)",
+                background: w.connected
+                  ? "rgba(34,197,94,0.06)"
+                  : "rgba(255,255,255,0.02)",
                 border: `1px solid ${w.connected ? "rgba(34,197,94,0.2)" : "var(--con-border-default)"}`,
               }}
             >
               <div>
-                <div style={{ fontSize: "var(--con-text-body)", fontWeight: 500, color: "var(--con-text-primary)" }}>{w.nameAr}</div>
-                <div style={{ fontSize: 10, color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)" }}>{w.source}</div>
+                <div
+                  style={{
+                    fontSize: "var(--con-text-body)",
+                    fontWeight: 500,
+                    color: "var(--con-text-primary)",
+                  }}
+                >
+                  {w.nameAr}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--con-text-muted)",
+                    fontFamily: "var(--con-font-mono)",
+                  }}
+                >
+                  {w.source}
+                </div>
               </div>
-              {w.connected
-                ? <CheckCircle2 size={14} style={{ color: "var(--con-success)" }} />
-                : <Clock size={14} style={{ color: "var(--con-text-disabled)" }} />
-              }
+              {w.connected ? (
+                <CheckCircle2
+                  size={14}
+                  style={{ color: "var(--con-success)" }}
+                />
+              ) : (
+                <Clock
+                  size={14}
+                  style={{ color: "var(--con-text-disabled)" }}
+                />
+              )}
             </div>
           ))}
         </div>
       </Card>
 
-      <Card title="معلومات الاتصال" subtitle="استخدم هذه المعلومات لربط أي خدمة خارجية">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Card
+        title="معلومات الاتصال"
+        subtitle="استخدم هذه المعلومات لربط أي خدمة خارجية"
+      >
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <div>
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>API Gateway (AWS)</div>
+            <div
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                marginBottom: 4,
+                fontWeight: 600,
+              }}
+            >
+              API Gateway (AWS)
+            </div>
             <div
               onClick={() => copyToClipboard(API_BASE, "API Base")}
               style={{
-                padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)",
-                border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 12,
-                color: "var(--con-brand)", cursor: "pointer", wordBreak: "break-all",
+                padding: "8px 12px",
+                borderRadius: "var(--con-radius-sm)",
+                background: "var(--con-bg-elevated)",
+                border: "1px solid var(--con-border-default)",
+                fontFamily: "var(--con-font-mono)",
+                fontSize: 12,
+                color: "var(--con-brand)",
+                cursor: "pointer",
+                wordBreak: "break-all",
               }}
             >
               {API_BASE}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>Supabase REST</div>
+            <div
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                marginBottom: 4,
+                fontWeight: 600,
+              }}
+            >
+              Supabase REST
+            </div>
             <div
               onClick={() => copyToClipboard(SUPABASE_URL, "Supabase URL")}
               style={{
-                padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)",
-                border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 12,
-                color: "#3ECF8E", cursor: "pointer", wordBreak: "break-all",
+                padding: "8px 12px",
+                borderRadius: "var(--con-radius-sm)",
+                background: "var(--con-bg-elevated)",
+                border: "1px solid var(--con-border-default)",
+                fontFamily: "var(--con-font-mono)",
+                fontSize: 12,
+                color: "#3ECF8E",
+                cursor: "pointer",
+                wordBreak: "break-all",
               }}
             >
               {SUPABASE_URL}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>منطقة AWS</div>
-            <div style={{ padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 12, color: "var(--con-text-secondary)" }}>
+            <div
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                marginBottom: 4,
+                fontWeight: 600,
+              }}
+            >
+              منطقة AWS
+            </div>
+            <div
+              style={{
+                padding: "8px 12px",
+                borderRadius: "var(--con-radius-sm)",
+                background: "var(--con-bg-elevated)",
+                border: "1px solid var(--con-border-default)",
+                fontFamily: "var(--con-font-mono)",
+                fontSize: 12,
+                color: "var(--con-text-secondary)",
+              }}
+            >
               us-east-1 (فرجينيا)
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>البريد الإلكتروني (SES)</div>
-            <div style={{ padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 12, color: "var(--con-warning)" }}>
+            <div
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                marginBottom: 4,
+                fontWeight: 600,
+              }}
+            >
+              البريد الإلكتروني (SES)
+            </div>
+            <div
+              style={{
+                padding: "8px 12px",
+                borderRadius: "var(--con-radius-sm)",
+                background: "var(--con-bg-elevated)",
+                border: "1px solid var(--con-border-default)",
+                fontFamily: "var(--con-font-mono)",
+                fontSize: 12,
+                color: "var(--con-warning)",
+              }}
+            >
               no-reply@fll.sa
             </div>
           </div>
@@ -612,7 +1151,10 @@ export default function ApiManagement() {
           onChange={setFilter}
           options={[
             { value: "all", label: "جميع الفئات" },
-            ...Object.entries(CATEGORY_LABELS).map(([k, v]) => ({ value: k, label: v.label })),
+            ...Object.entries(CATEGORY_LABELS).map(([k, v]) => ({
+              value: k,
+              label: v.label,
+            })),
           ]}
         />
       </Toolbar>
@@ -666,33 +1208,65 @@ export default function ApiManagement() {
                 </span>
 
                 {/* Path */}
-                <span style={{ fontFamily: "var(--con-font-mono)", fontSize: 12, color: "var(--con-text-secondary)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    fontSize: 12,
+                    color: "var(--con-text-secondary)",
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {ep.path}
                 </span>
 
                 {/* Name */}
-                <span style={{ fontSize: "var(--con-text-body)", fontWeight: 500, color: "var(--con-text-primary)", flexShrink: 0 }}>
+                <span
+                  style={{
+                    fontSize: "var(--con-text-body)",
+                    fontWeight: 500,
+                    color: "var(--con-text-primary)",
+                    flexShrink: 0,
+                  }}
+                >
                   {ep.nameAr}
                 </span>
 
                 {/* Status */}
-                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    flexShrink: 0,
+                  }}
+                >
                   {statusIcon(ep.status)}
                   {ep.latency !== undefined && (
-                    <span style={{ fontSize: 10, fontFamily: "var(--con-font-mono)", color: "var(--con-text-muted)" }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontFamily: "var(--con-font-mono)",
+                        color: "var(--con-text-muted)",
+                      }}
+                    >
                       {ep.latency}ms
                     </span>
                   )}
                 </div>
 
                 {/* Dashboard link */}
-                {ep.dashboardWidget && (
-                  <Badge variant="brand">داشبورد</Badge>
-                )}
+                {ep.dashboardWidget && <Badge variant="brand">داشبورد</Badge>}
 
                 {/* Test Button */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); testEndpoint(ep); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    testEndpoint(ep);
+                  }}
                   disabled={testing === ep.id}
                   style={{
                     display: "flex",
@@ -711,42 +1285,121 @@ export default function ApiManagement() {
                     flexShrink: 0,
                   }}
                 >
-                  {testing === ep.id ? <RefreshCw size={10} style={{ animation: "spin 1s linear infinite" }} /> : <Play size={10} />}
+                  {testing === ep.id ? (
+                    <RefreshCw
+                      size={10}
+                      style={{ animation: "spin 1s linear infinite" }}
+                    />
+                  ) : (
+                    <Play size={10} />
+                  )}
                   فحص
                 </button>
 
                 {/* Expand */}
-                {expanded ? <ChevronUp size={14} style={{ color: "var(--con-text-muted)" }} /> : <ChevronDown size={14} style={{ color: "var(--con-text-muted)" }} />}
+                {expanded ? (
+                  <ChevronUp
+                    size={14}
+                    style={{ color: "var(--con-text-muted)" }}
+                  />
+                ) : (
+                  <ChevronDown
+                    size={14}
+                    style={{ color: "var(--con-text-muted)" }}
+                  />
+                )}
               </div>
 
               {/* Expanded Details */}
               {expanded && (
-                <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--con-border-default)" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 14 }}>
+                <div
+                  style={{
+                    padding: "0 16px 16px",
+                    borderTop: "1px solid var(--con-border-default)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 16,
+                      marginTop: 14,
+                    }}
+                  >
                     {/* Left — Info */}
                     <div>
-                      <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", margin: "0 0 12px", lineHeight: 1.7 }}>
+                      <p
+                        style={{
+                          fontSize: "var(--con-text-body)",
+                          color: "var(--con-text-secondary)",
+                          margin: "0 0 12px",
+                          lineHeight: 1.7,
+                        }}
+                      >
                         {ep.descriptionAr}
                       </p>
 
-                      <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>Full URL</div>
+                      <div
+                        style={{
+                          fontSize: "var(--con-text-caption)",
+                          color: "var(--con-text-muted)",
+                          marginBottom: 4,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Full URL
+                      </div>
                       <div
                         onClick={() => copyToClipboard(ep.fullUrl, "URL")}
                         style={{
-                          padding: "6px 10px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)",
-                          border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 11,
-                          color: "var(--con-brand)", cursor: "pointer", marginBottom: 12, wordBreak: "break-all",
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "6px 10px",
+                          borderRadius: "var(--con-radius-sm)",
+                          background: "var(--con-bg-elevated)",
+                          border: "1px solid var(--con-border-default)",
+                          fontFamily: "var(--con-font-mono)",
+                          fontSize: 11,
+                          color: "var(--con-brand)",
+                          cursor: "pointer",
+                          marginBottom: 12,
+                          wordBreak: "break-all",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
                         }}
                       >
                         <span>{ep.fullUrl}</span>
-                        <Copy size={11} style={{ flexShrink: 0, marginRight: 8 }} />
+                        <Copy
+                          size={11}
+                          style={{ flexShrink: 0, marginRight: 8 }}
+                        />
                       </div>
 
                       {ep.requestBody && (
                         <>
-                          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>Request Body</div>
-                          <pre style={{ padding: "8px 10px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 11, color: "var(--con-text-secondary)", margin: "0 0 12px", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                          <div
+                            style={{
+                              fontSize: "var(--con-text-caption)",
+                              color: "var(--con-text-muted)",
+                              marginBottom: 4,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Request Body
+                          </div>
+                          <pre
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "var(--con-radius-sm)",
+                              background: "var(--con-bg-elevated)",
+                              border: "1px solid var(--con-border-default)",
+                              fontFamily: "var(--con-font-mono)",
+                              fontSize: 11,
+                              color: "var(--con-text-secondary)",
+                              margin: "0 0 12px",
+                              whiteSpace: "pre-wrap",
+                              lineHeight: 1.6,
+                            }}
+                          >
                             {ep.requestBody}
                           </pre>
                         </>
@@ -754,8 +1407,30 @@ export default function ApiManagement() {
 
                       {ep.responseExample && (
                         <>
-                          <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, fontWeight: 600 }}>Response Example</div>
-                          <pre style={{ padding: "8px 10px", borderRadius: "var(--con-radius-sm)", background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", fontFamily: "var(--con-font-mono)", fontSize: 11, color: "var(--con-success)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                          <div
+                            style={{
+                              fontSize: "var(--con-text-caption)",
+                              color: "var(--con-text-muted)",
+                              marginBottom: 4,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Response Example
+                          </div>
+                          <pre
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: "var(--con-radius-sm)",
+                              background: "var(--con-bg-elevated)",
+                              border: "1px solid var(--con-border-default)",
+                              fontFamily: "var(--con-font-mono)",
+                              fontSize: 11,
+                              color: "var(--con-success)",
+                              margin: 0,
+                              whiteSpace: "pre-wrap",
+                              lineHeight: 1.6,
+                            }}
+                          >
                             {ep.responseExample}
                           </pre>
                         </>
@@ -764,19 +1439,44 @@ export default function ApiManagement() {
 
                     {/* Right — Connection Code */}
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                        <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 600 }}>
-                          <Terminal size={11} style={{ marginLeft: 4, verticalAlign: "middle" }} />
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 6,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: "var(--con-text-caption)",
+                            color: "var(--con-text-muted)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Terminal
+                            size={11}
+                            style={{ marginLeft: 4, verticalAlign: "middle" }}
+                          />
                           كود الربط
                         </div>
                         {ep.connectionCode && (
                           <button
-                            onClick={() => copyToClipboard(ep.connectionCode!, "كود الربط")}
+                            onClick={() =>
+                              copyToClipboard(ep.connectionCode!, "كود الربط")
+                            }
                             style={{
-                              display: "flex", alignItems: "center", gap: 3, padding: "2px 6px",
-                              borderRadius: 3, fontSize: 10, background: "var(--con-brand-subtle)",
-                              color: "var(--con-brand)", border: "1px solid var(--con-border-brand)",
-                              cursor: "pointer", fontFamily: "var(--con-font-primary)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 3,
+                              padding: "2px 6px",
+                              borderRadius: 3,
+                              fontSize: 10,
+                              background: "var(--con-brand-subtle)",
+                              color: "var(--con-brand)",
+                              border: "1px solid var(--con-border-brand)",
+                              cursor: "pointer",
+                              fontFamily: "var(--con-font-primary)",
                             }}
                           >
                             <Copy size={10} /> نسخ
@@ -784,19 +1484,42 @@ export default function ApiManagement() {
                         )}
                       </div>
                       {ep.connectionCode && (
-                        <pre style={{
-                          padding: "12px 14px", borderRadius: "var(--con-radius)",
-                          background: "#0C0E14", border: "1px solid var(--con-border-default)",
-                          fontFamily: "var(--con-font-mono)", fontSize: 11, color: "#A3ABBE",
-                          margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.8, minHeight: 100,
-                        }}>
+                        <pre
+                          style={{
+                            padding: "12px 14px",
+                            borderRadius: "var(--con-radius)",
+                            background: "#0C0E14",
+                            border: "1px solid var(--con-border-default)",
+                            fontFamily: "var(--con-font-mono)",
+                            fontSize: 11,
+                            color: "#A3ABBE",
+                            margin: 0,
+                            whiteSpace: "pre-wrap",
+                            lineHeight: 1.8,
+                            minHeight: 100,
+                          }}
+                        >
                           {ep.connectionCode}
                         </pre>
                       )}
 
                       {ep.dashboardWidget && (
-                        <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: "var(--con-radius-sm)", background: "var(--con-brand-subtle)", border: "1px solid var(--con-border-brand)" }}>
-                          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-brand)", fontWeight: 600 }}>
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: "8px 12px",
+                            borderRadius: "var(--con-radius-sm)",
+                            background: "var(--con-brand-subtle)",
+                            border: "1px solid var(--con-border-brand)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "var(--con-text-caption)",
+                              color: "var(--con-brand)",
+                              fontWeight: 600,
+                            }}
+                          >
                             مرتبط بـ: {ep.dashboardWidget}
                           </span>
                         </div>
@@ -814,11 +1537,26 @@ export default function ApiManagement() {
       <Card title="أوامر الربط السريعة" subtitle="انسخ وألصق في مشروعك">
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {[
-            { label: "تثبيت Supabase Client", cmd: "npm install @supabase/supabase-js" },
-            { label: "إعداد متغيرات البيئة", cmd: `VITE_API_BASE=${API_BASE}\nVITE_SUPABASE_URL=${SUPABASE_URL}\nVITE_SUPABASE_ANON_KEY=your_anon_key` },
-            { label: "استيراد API", cmd: `import { API_BASE, CHAT_API_URL } from "@/lib/api";\nimport { supabase } from "@/lib/supabase";` },
-            { label: "جلب بيانات من Supabase", cmd: `const { data, error } = await supabase\n  .from("orders")\n  .select("*")\n  .order("created_at", { ascending: false })\n  .limit(10);` },
-            { label: "استدعاء Lambda API", cmd: `const res = await fetch(\`\${API_BASE}/api/orders\`);\nconst data = await res.json();` },
+            {
+              label: "تثبيت Supabase Client",
+              cmd: "npm install @supabase/supabase-js",
+            },
+            {
+              label: "إعداد متغيرات البيئة",
+              cmd: `VITE_API_BASE=${API_BASE}\nVITE_SUPABASE_URL=${SUPABASE_URL}\nVITE_SUPABASE_ANON_KEY=your_anon_key`,
+            },
+            {
+              label: "استيراد API",
+              cmd: `import { API_BASE, CHAT_API_URL } from "@/lib/api";\nimport { supabase } from "@/lib/supabase";`,
+            },
+            {
+              label: "جلب بيانات من Supabase",
+              cmd: `const { data, error } = await supabase\n  .from("orders")\n  .select("*")\n  .order("created_at", { ascending: false })\n  .limit(10);`,
+            },
+            {
+              label: "استدعاء Lambda API",
+              cmd: `const res = await fetch(\`\${API_BASE}/api/orders\`);\nconst data = await res.json();`,
+            },
           ].map((item) => (
             <div
               key={item.label}
@@ -833,21 +1571,46 @@ export default function ApiManagement() {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: 6 }}>
+                <div
+                  style={{
+                    fontSize: "var(--con-text-body)",
+                    fontWeight: 600,
+                    color: "var(--con-text-primary)",
+                    marginBottom: 6,
+                  }}
+                >
                   {item.label}
                 </div>
-                <pre style={{ fontFamily: "var(--con-font-mono)", fontSize: 11, color: "var(--con-text-muted)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                <pre
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    fontSize: 11,
+                    color: "var(--con-text-muted)",
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    lineHeight: 1.6,
+                  }}
+                >
                   {item.cmd}
                 </pre>
               </div>
               <button
                 onClick={() => copyToClipboard(item.cmd, item.label)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 3, padding: "4px 8px",
-                  borderRadius: 4, fontSize: 10, fontWeight: 600,
-                  background: "var(--con-brand-subtle)", color: "var(--con-brand)",
-                  border: "1px solid var(--con-border-brand)", cursor: "pointer",
-                  fontFamily: "var(--con-font-primary)", flexShrink: 0, marginRight: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  padding: "4px 8px",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  background: "var(--con-brand-subtle)",
+                  color: "var(--con-brand)",
+                  border: "1px solid var(--con-border-brand)",
+                  cursor: "pointer",
+                  fontFamily: "var(--con-font-primary)",
+                  flexShrink: 0,
+                  marginRight: 8,
                 }}
               >
                 <Copy size={10} /> نسخ

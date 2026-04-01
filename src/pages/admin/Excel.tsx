@@ -5,9 +5,18 @@ import { useState, useRef, useEffect } from "react";
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import {
-  FileSpreadsheet, Upload, CheckCircle2, XCircle,
-  Clock, AlertCircle, Download, Eye, RefreshCw,
-  ChevronDown, FileText, Trash2
+  FileSpreadsheet,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Download,
+  Eye,
+  RefreshCw,
+  ChevronDown,
+  FileText,
+  Trash2,
 } from "lucide-react";
 
 interface ImportHistory {
@@ -27,17 +36,53 @@ const typeMap: Record<string, { label: string; color: string }> = {
   couriers: { label: "مناديب", color: "text-purple-400 bg-purple-500/10" },
 };
 
-const statusMap: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+const statusMap: Record<
+  string,
+  { label: string; color: string; icon: React.ElementType }
+> = {
   success: { label: "ناجح", color: "text-green-400", icon: CheckCircle2 },
   failed: { label: "فشل", color: "text-red-400", icon: XCircle },
   pending: { label: "قيد المراجعة", color: "text-yellow-400", icon: Clock },
 };
 
 const FALLBACK_HISTORY: ImportHistory[] = [
-  { id: "1", filename: "رواتب_فبراير_2025.xlsx", type: "salaries", rows: 47, status: "pending", uploaded_by: "محمد الشمري", created_at: "منذ 2 ساعة" },
-  { id: "2", filename: "طلبات_يناير_2025.xlsx", type: "orders", rows: 1234, status: "success", uploaded_by: "أحمد العمري", created_at: "منذ يوم" },
-  { id: "3", filename: "مناديب_جدد_2025.xlsx", type: "couriers", rows: 12, status: "success", uploaded_by: "خالد السالم", created_at: "منذ 3 أيام" },
-  { id: "4", filename: "رواتب_يناير_2025.xlsx", type: "salaries", rows: 47, status: "failed", errors: 3, uploaded_by: "محمد الشمري", created_at: "منذ 5 أيام" },
+  {
+    id: "1",
+    filename: "رواتب_فبراير_2025.xlsx",
+    type: "salaries",
+    rows: 47,
+    status: "pending",
+    uploaded_by: "محمد الشمري",
+    created_at: "منذ 2 ساعة",
+  },
+  {
+    id: "2",
+    filename: "طلبات_يناير_2025.xlsx",
+    type: "orders",
+    rows: 1234,
+    status: "success",
+    uploaded_by: "أحمد العمري",
+    created_at: "منذ يوم",
+  },
+  {
+    id: "3",
+    filename: "مناديب_جدد_2025.xlsx",
+    type: "couriers",
+    rows: 12,
+    status: "success",
+    uploaded_by: "خالد السالم",
+    created_at: "منذ 3 أيام",
+  },
+  {
+    id: "4",
+    filename: "رواتب_يناير_2025.xlsx",
+    type: "salaries",
+    rows: 47,
+    status: "failed",
+    errors: 3,
+    uploaded_by: "محمد الشمري",
+    created_at: "منذ 5 أيام",
+  },
 ];
 
 export default function AdminExcel() {
@@ -56,7 +101,9 @@ export default function AdminExcel() {
     try {
       const { data, error } = await supabase
         .from("excel_imports")
-        .select("id, filename, type, rows, status, errors, uploaded_by, created_at")
+        .select(
+          "id, filename, type, rows, status, errors, uploaded_by, created_at",
+        )
         .order("created_at", { ascending: false });
       if (!error && data && data.length > 0) {
         setHistory(data as ImportHistory[]);
@@ -76,7 +123,12 @@ export default function AdminExcel() {
     e.preventDefault();
     setDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f && (f.name.endsWith(".xlsx") || f.name.endsWith(".xls") || f.name.endsWith(".csv"))) {
+    if (
+      f &&
+      (f.name.endsWith(".xlsx") ||
+        f.name.endsWith(".xls") ||
+        f.name.endsWith(".csv"))
+    ) {
       setFile(f);
     }
   }
@@ -112,7 +164,9 @@ export default function AdminExcel() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">استيراد Excel</h1>
-          <p className="text-blue-300/60 text-sm mt-0.5">رفع ملفات البيانات وإدارة الاستيراد</p>
+          <p className="text-blue-300/60 text-sm mt-0.5">
+            رفع ملفات البيانات وإدارة الاستيراد
+          </p>
         </div>
         <a
           href="#"
@@ -146,7 +200,10 @@ export default function AdminExcel() {
 
         {/* Drag & Drop */}
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
           onClick={() => fileRef.current?.click()}
@@ -154,18 +211,26 @@ export default function AdminExcel() {
             dragging
               ? "border-cyan-500/60 bg-orange-500/5"
               : file
-              ? "border-green-500/40 bg-green-500/5"
-              : "border-slate-700/60 hover:border-slate-600 hover:bg-slate-800/30"
+                ? "border-green-500/40 bg-green-500/5"
+                : "border-slate-700/60 hover:border-slate-600 hover:bg-slate-800/30"
           }`}
         >
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileChange}
+            className="hidden"
+          />
           {file ? (
             <div className="space-y-2">
               <div className="w-12 h-12 bg-green-500/15 border border-green-500/20 rounded-xl flex items-center justify-center mx-auto">
                 <FileText size={24} className="text-green-400" />
               </div>
               <p className="text-green-400 font-medium">{file.name}</p>
-              <p className="text-slate-500 text-sm">{(file.size / 1024).toFixed(1)} KB</p>
+              <p className="text-slate-500 text-sm">
+                {(file.size / 1024).toFixed(1)} KB
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -173,8 +238,12 @@ export default function AdminExcel() {
                 <Upload size={24} className="text-blue-300/60" />
               </div>
               <div>
-                <p className="text-blue-100 font-medium">اسحب الملف هنا أو انقر للاختيار</p>
-                <p className="text-slate-500 text-sm mt-1">يدعم: .xlsx, .xls, .csv</p>
+                <p className="text-blue-100 font-medium">
+                  اسحب الملف هنا أو انقر للاختيار
+                </p>
+                <p className="text-slate-500 text-sm mt-1">
+                  يدعم: .xlsx, .xls, .csv
+                </p>
               </div>
             </div>
           )}
@@ -241,14 +310,22 @@ export default function AdminExcel() {
                     <FileSpreadsheet size={18} className="text-blue-300/60" />
                   </div>
                   <div>
-                    <p className="text-slate-200 text-sm font-medium">{item.filename}</p>
+                    <p className="text-slate-200 text-sm font-medium">
+                      {item.filename}
+                    </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${typeMap[item.type].color}`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-md font-medium ${typeMap[item.type].color}`}
+                      >
                         {typeMap[item.type].label}
                       </span>
-                      <span className="text-slate-500 text-xs">{item.rows} سجل</span>
+                      <span className="text-slate-500 text-xs">
+                        {item.rows} سجل
+                      </span>
                       {item.errors && (
-                        <span className="text-red-400 text-xs">{item.errors} أخطاء</span>
+                        <span className="text-red-400 text-xs">
+                          {item.errors} أخطاء
+                        </span>
                       )}
                     </div>
                   </div>
@@ -258,7 +335,9 @@ export default function AdminExcel() {
                     <p className="text-slate-500 text-xs">{item.uploaded_by}</p>
                     <p className="text-slate-600 text-xs">{item.created_at}</p>
                   </div>
-                  <div className={`flex items-center gap-1.5 text-sm font-medium ${statusMap[item.status].color}`}>
+                  <div
+                    className={`flex items-center gap-1.5 text-sm font-medium ${statusMap[item.status].color}`}
+                  >
                     <StatusIcon size={15} />
                     {statusMap[item.status].label}
                   </div>

@@ -10,8 +10,15 @@ function spaFallback(): Plugin {
     name: "spa-html-fallback",
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        const spaRoutes = ["/admin", "/admin-panel", "/unified-login", "/courier", "/login", "/application-status"];
-        if (req.url && spaRoutes.some(r => req.url!.startsWith(r))) {
+        const spaRoutes = [
+          "/admin",
+          "/admin-panel",
+          "/unified-login",
+          "/courier",
+          "/login",
+          "/application-status",
+        ];
+        if (req.url && spaRoutes.some((r) => req.url!.startsWith(r))) {
           req.url = "/spa.html";
         }
         next();
@@ -22,7 +29,11 @@ function spaFallback(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
-  plugins: [react(), tailwindcss(), ...(command === "serve" ? [spaFallback()] : [])],
+  plugins: [
+    react(),
+    tailwindcss(),
+    ...(command === "serve" ? [spaFallback()] : []),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -40,4 +51,3 @@ export default defineConfig(({ command }) => ({
     },
   },
 }));
-

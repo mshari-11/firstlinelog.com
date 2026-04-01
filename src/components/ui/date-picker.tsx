@@ -1,20 +1,29 @@
-import * as React from "react"
-import { format } from "date-fns"
-import { ar } from "date-fns/locale"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import * as React from "react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface DatePickerProps {
-  date?: Date
-  onSelect?: (date: Date | undefined) => void
-  placeholder?: string
-  className?: string
+  date?: Date;
+  onSelect?: (date: Date | undefined) => void;
+  placeholder?: string;
+  className?: string;
 }
 
-export function DatePicker({ date, onSelect, placeholder = "اختر تاريخ", className }: DatePickerProps) {
+export function DatePicker({
+  date,
+  onSelect,
+  placeholder = "اختر تاريخ",
+  className,
+}: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -23,7 +32,7 @@ export function DatePicker({ date, onSelect, placeholder = "اختر تاريخ"
           className={cn(
             "w-full justify-start text-right font-normal",
             !date && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="ml-2 h-4 w-4" />
@@ -40,5 +49,5 @@ export function DatePicker({ date, onSelect, placeholder = "اختر تاريخ"
         />
       </PopoverContent>
     </Popover>
-  )
+  );
 }

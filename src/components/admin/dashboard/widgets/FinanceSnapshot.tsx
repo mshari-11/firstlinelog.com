@@ -4,7 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, TrendingUp, CreditCard, ArrowRightLeft, AlertCircle } from "lucide-react";
+import {
+  DollarSign,
+  TrendingUp,
+  CreditCard,
+  ArrowRightLeft,
+  AlertCircle,
+} from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
@@ -17,10 +23,32 @@ interface FinanceMetric {
 }
 
 const MOCK_METRICS: FinanceMetric[] = [
-  { label: "إيرادات الشهر",  value: "142,000 ر.س", icon: TrendingUp,    accent: "var(--con-success)", change: 11 },
-  { label: "دفعات مكتملة",   value: "98,500 ر.س",  icon: CreditCard,    accent: "var(--con-info)" },
-  { label: "دفعات معلقة",    value: "43,500 ر.س",  icon: AlertCircle,   accent: "var(--con-warning)" },
-  { label: "صافي التدفق",    value: "+23,800 ر.س", icon: ArrowRightLeft, accent: "var(--con-brand)", change: 5 },
+  {
+    label: "إيرادات الشهر",
+    value: "142,000 ر.س",
+    icon: TrendingUp,
+    accent: "var(--con-success)",
+    change: 11,
+  },
+  {
+    label: "دفعات مكتملة",
+    value: "98,500 ر.س",
+    icon: CreditCard,
+    accent: "var(--con-info)",
+  },
+  {
+    label: "دفعات معلقة",
+    value: "43,500 ر.س",
+    icon: AlertCircle,
+    accent: "var(--con-warning)",
+  },
+  {
+    label: "صافي التدفق",
+    value: "+23,800 ر.س",
+    icon: ArrowRightLeft,
+    accent: "var(--con-brand)",
+    change: 5,
+  },
 ];
 
 function formatSAR(n: number): string {
@@ -34,38 +62,99 @@ export function FinanceSnapshot() {
 
   useEffect(() => {
     async function fetchFinance() {
-      if (!supabase) { setLoading(false); return; }
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       try {
         const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-        const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+        const monthStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+        ).toISOString();
+        const prevMonthStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1,
+        ).toISOString();
+        const prevMonthEnd = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          0,
+          23,
+          59,
+          59,
+        ).toISOString();
 
         // Current month orders revenue
         const [currentRes, prevRes, payoutsRes] = await Promise.all([
-          supabase.from("orders").select("total_amount").gte("created_at", monthStart),
-          supabase.from("orders").select("total_amount").gte("created_at", prevMonthStart).lte("created_at", prevMonthEnd),
+          supabase
+            .from("orders")
+            .select("total_amount")
+            .gte("created_at", monthStart),
+          supabase
+            .from("orders")
+            .select("total_amount")
+            .gte("created_at", prevMonthStart)
+            .lte("created_at", prevMonthEnd),
           supabase.from("driver_payouts" as any).select("net_payout, status"),
         ]);
 
-        const currentRevenue = (currentRes.data || []).reduce((sum: number, r: any) => sum + (Number(r.total_amount) || 0), 0);
-        const prevRevenue = (prevRes.data || []).reduce((sum: number, r: any) => sum + (Number(r.total_amount) || 0), 0);
-        const revenueChange = prevRevenue > 0 ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+        const currentRevenue = (currentRes.data || []).reduce(
+          (sum: number, r: any) => sum + (Number(r.total_amount) || 0),
+          0,
+        );
+        const prevRevenue = (prevRes.data || []).reduce(
+          (sum: number, r: any) => sum + (Number(r.total_amount) || 0),
+          0,
+        );
+        const revenueChange =
+          prevRevenue > 0
+            ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100)
+            : 0;
 
         const payouts = payoutsRes.data || [];
-        const completedPayouts = payouts.filter((p: any) => p.status === "paid").reduce((s: number, p: any) => s + (Number(p.net_payout) || 0), 0);
-        const pendingPayouts = payouts.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + (Number(p.net_payout) || 0), 0);
+        const completedPayouts = payouts
+          .filter((p: any) => p.status === "paid")
+          .reduce((s: number, p: any) => s + (Number(p.net_payout) || 0), 0);
+        const pendingPayouts = payouts
+          .filter((p: any) => p.status === "pending")
+          .reduce((s: number, p: any) => s + (Number(p.net_payout) || 0), 0);
         const netFlow = currentRevenue - completedPayouts - pendingPayouts;
 
         if (currentRevenue > 0 || payouts.length > 0) {
           setMetrics([
-            { label: "إيرادات الشهر",  value: formatSAR(currentRevenue), icon: TrendingUp,    accent: "var(--con-success)", change: revenueChange },
-            { label: "دفعات مكتملة",   value: formatSAR(completedPayouts), icon: CreditCard,  accent: "var(--con-info)" },
-            { label: "دفعات معلقة",    value: formatSAR(pendingPayouts), icon: AlertCircle,   accent: "var(--con-warning)" },
-            { label: "صافي التدفق",    value: `${netFlow >= 0 ? "+" : ""}${formatSAR(netFlow)}`, icon: ArrowRightLeft, accent: "var(--con-brand)" },
+            {
+              label: "إيرادات الشهر",
+              value: formatSAR(currentRevenue),
+              icon: TrendingUp,
+              accent: "var(--con-success)",
+              change: revenueChange,
+            },
+            {
+              label: "دفعات مكتملة",
+              value: formatSAR(completedPayouts),
+              icon: CreditCard,
+              accent: "var(--con-info)",
+            },
+            {
+              label: "دفعات معلقة",
+              value: formatSAR(pendingPayouts),
+              icon: AlertCircle,
+              accent: "var(--con-warning)",
+            },
+            {
+              label: "صافي التدفق",
+              value: `${netFlow >= 0 ? "+" : ""}${formatSAR(netFlow)}`,
+              icon: ArrowRightLeft,
+              accent: "var(--con-brand)",
+            },
           ]);
         }
-      } catch { /* keep mock */ }
+      } catch {
+        /* keep mock */
+      }
       setLoading(false);
     }
     fetchFinance();
@@ -80,7 +169,13 @@ export function FinanceSnapshot() {
       loading={loading}
       onDrilldown={() => navigate("/admin-panel/finance-dashboard")}
     >
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 10,
+        }}
+      >
         {metrics.map((m) => (
           <div
             key={m.label}
@@ -91,9 +186,21 @@ export function FinanceSnapshot() {
               border: `1px solid ${m.accent}20`,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: 8,
+              }}
+            >
               <m.icon size={13} style={{ color: m.accent }} />
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                }}
+              >
                 {m.label}
               </span>
             </div>
@@ -111,11 +218,13 @@ export function FinanceSnapshot() {
               <span
                 style={{
                   fontSize: "var(--con-text-caption)",
-                  color: m.change >= 0 ? "var(--con-success)" : "var(--con-danger)",
+                  color:
+                    m.change >= 0 ? "var(--con-success)" : "var(--con-danger)",
                   fontWeight: 600,
                 }}
               >
-                {m.change >= 0 ? "+" : ""}{m.change}% عن الشهر السابق
+                {m.change >= 0 ? "+" : ""}
+                {m.change}% عن الشهر السابق
               </span>
             )}
           </div>

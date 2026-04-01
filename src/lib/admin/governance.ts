@@ -56,7 +56,15 @@ export interface FeatureToggleEntry {
 }
 
 // ─── Audit Types ────────────────────────────────────────────────────────────
-export type AuditAction = "INSERT" | "UPDATE" | "DELETE" | "LOGIN" | "APPROVE" | "REJECT" | "EXPORT" | "CONFIGURE";
+export type AuditAction =
+  | "INSERT"
+  | "UPDATE"
+  | "DELETE"
+  | "LOGIN"
+  | "APPROVE"
+  | "REJECT"
+  | "EXPORT"
+  | "CONFIGURE";
 
 export interface AuditEntry {
   id: string;
@@ -82,7 +90,11 @@ export const DEFAULT_SLA_RULES: SLARule[] = [
     thresholdValue: 45,
     thresholdUnit: "minutes",
     escalationChain: [
-      { afterHours: 1, notifyRole: "staff_operations", notifyMethod: "dashboard" },
+      {
+        afterHours: 1,
+        notifyRole: "staff_operations",
+        notifyMethod: "dashboard",
+      },
       { afterHours: 4, notifyRole: "admin", notifyMethod: "email" },
     ],
     isActive: true,
@@ -95,7 +107,11 @@ export const DEFAULT_SLA_RULES: SLARule[] = [
     thresholdValue: 2,
     thresholdUnit: "hours",
     escalationChain: [
-      { afterHours: 2, notifyRole: "staff_operations", notifyMethod: "dashboard" },
+      {
+        afterHours: 2,
+        notifyRole: "staff_operations",
+        notifyMethod: "dashboard",
+      },
       { afterHours: 6, notifyRole: "admin", notifyMethod: "all" },
     ],
     isActive: true,

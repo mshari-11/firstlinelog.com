@@ -4,28 +4,62 @@
  */
 import { useState, useEffect } from "react";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 import { WidgetShell } from "../WidgetShell";
 import { BarChart3 } from "lucide-react";
 import { chartTooltipStyle } from "@/components/admin/FinanceUI";
 import { supabase } from "@/lib/supabase";
 
-const DAYS_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+const DAYS_AR = [
+  "الأحد",
+  "الاثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+];
+const MONTHS_AR = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+];
 
 const mockOrdersData = [
-  { day: "السبت", orders: 142 }, { day: "الأحد", orders: 198 },
-  { day: "الاثنين", orders: 167 }, { day: "الثلاثاء", orders: 223 },
-  { day: "الأربعاء", orders: 189 }, { day: "الخميس", orders: 245 },
+  { day: "السبت", orders: 142 },
+  { day: "الأحد", orders: 198 },
+  { day: "الاثنين", orders: 167 },
+  { day: "الثلاثاء", orders: 223 },
+  { day: "الأربعاء", orders: 189 },
+  { day: "الخميس", orders: 245 },
   { day: "الجمعة", orders: 98 },
 ];
 
 const mockRevenueData = [
-  { month: "أكتوبر", revenue: 92000 }, { month: "نوفمبر", revenue: 78000 },
-  { month: "ديسمبر", revenue: 115000 }, { month: "يناير", revenue: 103000 },
-  { month: "فبراير", revenue: 128000 }, { month: "مارس", revenue: 142000 },
+  { month: "أكتوبر", revenue: 92000 },
+  { month: "نوفمبر", revenue: 78000 },
+  { month: "ديسمبر", revenue: 115000 },
+  { month: "يناير", revenue: 103000 },
+  { month: "فبراير", revenue: 128000 },
+  { month: "مارس", revenue: 142000 },
 ];
 
 export function ChartsPanel() {
@@ -54,13 +88,17 @@ export function ChartsPanel() {
             countByDay.set(d.toISOString().split("T")[0], 0);
           }
           for (const row of ordersRaw) {
-            const dateKey = new Date(row.created_at).toISOString().split("T")[0];
+            const dateKey = new Date(row.created_at)
+              .toISOString()
+              .split("T")[0];
             countByDay.set(dateKey, (countByDay.get(dateKey) || 0) + 1);
           }
-          const live = Array.from(countByDay.entries()).map(([dateStr, count]) => ({
-            day: DAYS_AR[new Date(dateStr).getDay()],
-            orders: count,
-          }));
+          const live = Array.from(countByDay.entries()).map(
+            ([dateStr, count]) => ({
+              day: DAYS_AR[new Date(dateStr).getDay()],
+              orders: count,
+            }),
+          );
           if (live.some((d) => d.orders > 0)) setOrdersData(live);
         }
 
@@ -80,12 +118,18 @@ export function ChartsPanel() {
           for (let i = 0; i < 6; i++) {
             const d = new Date();
             d.setMonth(d.getMonth() - (5 - i));
-            byMonth.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, 0);
+            byMonth.set(
+              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+              0,
+            );
           }
           for (const row of revenueRaw) {
             const d = new Date(row.created_at);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            byMonth.set(key, (byMonth.get(key) || 0) + (Number(row.total_amount) || 0));
+            byMonth.set(
+              key,
+              (byMonth.get(key) || 0) + (Number(row.total_amount) || 0),
+            );
           }
           const live = Array.from(byMonth.entries()).map(([key, total]) => ({
             month: MONTHS_AR[parseInt(key.split("-")[1]) - 1],
@@ -93,7 +137,9 @@ export function ChartsPanel() {
           }));
           if (live.some((d) => d.revenue > 0)) setRevenueData(live);
         }
-      } catch { /* keep mock */ }
+      } catch {
+        /* keep mock */
+      }
     }
     fetchChartData();
   }, []);
@@ -109,7 +155,14 @@ export function ChartsPanel() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Weekly Orders */}
         <div>
-          <h4 style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: "0 0 10px", fontWeight: 600 }}>
+          <h4
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              margin: "0 0 10px",
+              fontWeight: 600,
+            }}
+          >
             طلبات الأسبوع
           </h4>
           <ResponsiveContainer width="100%" height={150}>
@@ -120,24 +173,62 @@ export function ChartsPanel() {
                   <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="day" tick={{ fill: "var(--con-text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "var(--con-text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={chartTooltipStyle} labelStyle={{ color: "var(--con-text-muted)" }} />
-              <Area type="monotone" dataKey="orders" name="الطلبات" stroke="#3B82F6" strokeWidth={2} fill="url(#ctOrdersGrad)" dot={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+              />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                labelStyle={{ color: "var(--con-text-muted)" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="orders"
+                name="الطلبات"
+                stroke="#3B82F6"
+                strokeWidth={2}
+                fill="url(#ctOrdersGrad)"
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* Monthly Revenue */}
         <div>
-          <h4 style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", margin: "0 0 10px", fontWeight: 600 }}>
+          <h4
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: "var(--con-text-muted)",
+              margin: "0 0 10px",
+              fontWeight: 600,
+            }}
+          >
             الإيرادات الشهرية
           </h4>
           <ResponsiveContainer width="100%" height={150}>
             <BarChart data={revenueData} barSize={18}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="month" tick={{ fill: "var(--con-text-muted)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+              />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis
                 tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
                 axisLine={false}
@@ -146,7 +237,10 @@ export function ChartsPanel() {
               />
               <Tooltip
                 contentStyle={chartTooltipStyle}
-                formatter={(v: number) => [`${v.toLocaleString("ar-SA")} ر.س`, "الإيراد"]}
+                formatter={(v: number) => [
+                  `${v.toLocaleString("ar-SA")} ر.س`,
+                  "الإيراد",
+                ]}
               />
               <Bar dataKey="revenue" fill="#16A34A" radius={[4, 4, 0, 0]} />
             </BarChart>

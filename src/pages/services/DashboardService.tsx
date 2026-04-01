@@ -2,8 +2,18 @@
  * صفحة خدمة لوحة التحكم والإدارة
  */
 import {
-  BarChart3, LayoutDashboard, Building2, Bell, Settings, Shield,
-  Users, ClipboardList, Car, DollarSign, MessageSquare, FileSpreadsheet
+  BarChart3,
+  LayoutDashboard,
+  Building2,
+  Bell,
+  Settings,
+  Shield,
+  Users,
+  ClipboardList,
+  Car,
+  DollarSign,
+  MessageSquare,
+  FileSpreadsheet,
 } from "lucide-react";
 import ServicePageLayout from "./ServicePageLayout";
 
@@ -25,7 +35,8 @@ export default function DashboardService() {
       features={[
         {
           title: "لوحة بيانات لحظية",
-          description: "رسوم بيانية ومؤشرات أداء محدّثة لحظياً لكل أقسام التشغيل.",
+          description:
+            "رسوم بيانية ومؤشرات أداء محدّثة لحظياً لكل أقسام التشغيل.",
           icon: BarChart3,
         },
         {
@@ -35,12 +46,14 @@ export default function DashboardService() {
         },
         {
           title: "نظام الصلاحيات",
-          description: "صلاحيات دقيقة لكل مستخدم حسب دوره: مالك، مدير، موظف، مندوب.",
+          description:
+            "صلاحيات دقيقة لكل مستخدم حسب دوره: مالك، مدير، موظف، مندوب.",
           icon: Shield,
         },
         {
           title: "الإشعارات الذكية",
-          description: "إشعارات فورية للأحداث المهمة: طلبات جديدة، شكاوى، موافقات.",
+          description:
+            "إشعارات فورية للأحداث المهمة: طلبات جديدة، شكاوى، موافقات.",
           icon: Bell,
         },
         {
@@ -55,12 +68,42 @@ export default function DashboardService() {
         },
       ]}
       relatedLinks={[
-        { label: "المناديب", path: "/services/couriers", icon: Users, color: "oklch(0.65 0.18 200)" },
-        { label: "الطلبات", path: "/services/orders", icon: ClipboardList, color: "oklch(0.70 0.15 150)" },
-        { label: "المركبات", path: "/services/vehicles", icon: Car, color: "oklch(0.65 0.15 50)" },
-        { label: "المالية", path: "/services/finance", icon: DollarSign, color: "oklch(0.70 0.15 130)" },
-        { label: "الشكاوى", path: "/services/complaints", icon: MessageSquare, color: "oklch(0.65 0.15 300)" },
-        { label: "Excel", path: "/services/excel", icon: FileSpreadsheet, color: "oklch(0.60 0.15 160)" },
+        {
+          label: "المناديب",
+          path: "/services/couriers",
+          icon: Users,
+          color: "oklch(0.65 0.18 200)",
+        },
+        {
+          label: "الطلبات",
+          path: "/services/orders",
+          icon: ClipboardList,
+          color: "oklch(0.70 0.15 150)",
+        },
+        {
+          label: "المركبات",
+          path: "/services/vehicles",
+          icon: Car,
+          color: "oklch(0.65 0.15 50)",
+        },
+        {
+          label: "المالية",
+          path: "/services/finance",
+          icon: DollarSign,
+          color: "oklch(0.70 0.15 130)",
+        },
+        {
+          label: "الشكاوى",
+          path: "/services/complaints",
+          icon: MessageSquare,
+          color: "oklch(0.65 0.15 300)",
+        },
+        {
+          label: "Excel",
+          path: "/services/excel",
+          icon: FileSpreadsheet,
+          color: "oklch(0.60 0.15 160)",
+        },
       ]}
     />
   );

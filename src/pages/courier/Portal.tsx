@@ -10,13 +10,32 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
-  User, Wallet, Package, Clock, LogOut,
-  TrendingUp, AlertCircle, CheckCircle2,
-  FileText, Phone, Mail, MapPin,
-  ChevronLeft, Truck, CreditCard, BarChart3,
-  Bell, Settings, Shield, ArrowUpRight,
-  ArrowDownRight, Calendar, Hash, Building2,
-  LocateFixed, Radio,
+  User,
+  Wallet,
+  Package,
+  Clock,
+  LogOut,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  Phone,
+  Mail,
+  MapPin,
+  ChevronLeft,
+  Truck,
+  CreditCard,
+  BarChart3,
+  Bell,
+  Settings,
+  Shield,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  Hash,
+  Building2,
+  LocateFixed,
+  Radio,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -122,8 +141,12 @@ export default function CourierPortal() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [userEmail, setUserEmail] = useState("");
-  const [trackingEnabled, setTrackingEnabled] = useState(localStorage.getItem("fll_tracking_enabled") === "1");
-  const [trackingStatus, setTrackingStatus] = useState<"idle" | "sharing" | "error">("idle");
+  const [trackingEnabled, setTrackingEnabled] = useState(
+    localStorage.getItem("fll_tracking_enabled") === "1",
+  );
+  const [trackingStatus, setTrackingStatus] = useState<
+    "idle" | "sharing" | "error"
+  >("idle");
   const [trackingMessage, setTrackingMessage] = useState("");
   const [lastLocationAt, setLastLocationAt] = useState("");
   const watchIdRef = useRef<number | null>(null);
@@ -141,7 +164,9 @@ export default function CourierPortal() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate("/login");
         return;
@@ -156,8 +181,10 @@ export default function CourierPortal() {
         .eq("id", user.id)
         .maybeSingle();
 
-      const inferredFullName = userData?.full_name || (user.user_metadata as any)?.full_name || "";
-      const isCourierAuth = userData?.role === "courier" || userData?.role === "driver";
+      const inferredFullName =
+        userData?.full_name || (user.user_metadata as any)?.full_name || "";
+      const isCourierAuth =
+        userData?.role === "courier" || userData?.role === "driver";
 
       let courierData: any = null;
 
@@ -202,7 +229,9 @@ export default function CourierPortal() {
 
             const { data: txns } = await supabase
               .from("wallet_transactions")
-              .select("id, event_type, amount, balance_after, description, created_at")
+              .select(
+                "id, event_type, amount, balance_after, description, created_at",
+              )
               .eq("driver_id", courierData.id)
               .order("created_at", { ascending: false })
               .limit(50);
@@ -248,7 +277,9 @@ export default function CourierPortal() {
     };
     let saved = false;
     if (supabase) {
-      const { error } = await supabase.from("driver_locations").upsert(payload, { onConflict: "driver_id" });
+      const { error } = await supabase
+        .from("driver_locations")
+        .upsert(payload, { onConflict: "driver_id" });
       saved = !error;
     }
     if (!saved) {
@@ -268,11 +299,14 @@ export default function CourierPortal() {
           lng: coords.longitude,
           updatedAt: new Date().toISOString(),
         };
-        const putRes = await fetch(`${PLATFORM_API_BASE}/api/drivers/${profile.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(apiPayload),
-        });
+        const putRes = await fetch(
+          `${PLATFORM_API_BASE}/api/drivers/${profile.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(apiPayload),
+          },
+        );
         if (!putRes.ok) {
           await fetch(`${PLATFORM_API_BASE}/api/drivers`, {
             method: "POST",
@@ -286,7 +320,12 @@ export default function CourierPortal() {
       }
     }
     if (saved) {
-      setLastLocationAt(new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }));
+      setLastLocationAt(
+        new Date().toLocaleTimeString("ar-SA", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      );
       setTrackingStatus("sharing");
       setTrackingMessage("يتم تحديث موقعك مباشرة للإدارة");
     }
@@ -296,21 +335,25 @@ export default function CourierPortal() {
     if (!profile) return;
     try {
       if (supabase) {
-        await supabase
-          .from("driver_locations")
-          .upsert({
+        await supabase.from("driver_locations").upsert(
+          {
             driver_id: profile.id,
             latitude: 0,
             longitude: 0,
             is_online: false,
             source: "courier_portal",
             updated_at: new Date().toISOString(),
-          }, { onConflict: "driver_id" });
+          },
+          { onConflict: "driver_id" },
+        );
       }
       await fetch(`${PLATFORM_API_BASE}/api/drivers/${profile.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "offline", updatedAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          status: "offline",
+          updatedAt: new Date().toISOString(),
+        }),
       }).catch(() => {});
     } catch {
       // best effort
@@ -338,10 +381,14 @@ export default function CourierPortal() {
     localStorage.setItem("fll_tracking_enabled", "1");
     setTrackingMessage("جاري طلب صلاحية الموقع...");
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => { pushLocation(position, true); },
+      (position) => {
+        pushLocation(position, true);
+      },
       () => {
         setTrackingStatus("error");
-        setTrackingMessage("تعذر الوصول إلى الموقع. فعّل إذن الموقع من المتصفح.");
+        setTrackingMessage(
+          "تعذر الوصول إلى الموقع. فعّل إذن الموقع من المتصفح.",
+        );
       },
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
     );
@@ -351,24 +398,41 @@ export default function CourierPortal() {
     if (!profile || !trackingEnabled) return;
     startTracking();
     return () => {
-      if (watchIdRef.current != null && navigator.geolocation) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current != null && navigator.geolocation)
+        navigator.geolocation.clearWatch(watchIdRef.current);
     };
   }, [profile]);
 
   // ── Loading ──
   if (loading) {
     return (
-      <div className="fll-console" style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--con-bg-app)", fontFamily: "var(--con-font-primary)",
-      }} dir="rtl">
+      <div
+        className="fll-console"
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--con-bg-app)",
+          fontFamily: "var(--con-font-primary)",
+        }}
+        dir="rtl"
+      >
         <div style={{ textAlign: "center" }}>
-          <div style={{
-            width: "40px", height: "40px", border: "3px solid var(--con-border-strong)",
-            borderTopColor: "var(--con-brand)", borderRadius: "50%",
-            animation: "spin 0.8s linear infinite", margin: "0 auto 1rem",
-          }} />
-          <p style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>جاري تحميل البوابة...</p>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              border: "3px solid var(--con-border-strong)",
+              borderTopColor: "var(--con-brand)",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 1rem",
+            }}
+          />
+          <p style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>
+            جاري تحميل البوابة...
+          </p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -378,20 +442,61 @@ export default function CourierPortal() {
   // ── Auth Error ──
   if (authError) {
     return (
-      <div className="fll-console" style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--con-bg-app)", fontFamily: "var(--con-font-primary)", padding: "1.5rem",
-      }} dir="rtl">
-        <div className="con-card" style={{ maxWidth: "400px", width: "100%", textAlign: "center", padding: "2rem" }}>
-          <AlertCircle size={40} style={{ color: "var(--con-danger)", marginBottom: "1rem" }} />
-          <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.5rem" }}>
+      <div
+        className="fll-console"
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--con-bg-app)",
+          fontFamily: "var(--con-font-primary)",
+          padding: "1.5rem",
+        }}
+        dir="rtl"
+      >
+        <div
+          className="con-card"
+          style={{
+            maxWidth: "400px",
+            width: "100%",
+            textAlign: "center",
+            padding: "2rem",
+          }}
+        >
+          <AlertCircle
+            size={40}
+            style={{ color: "var(--con-danger)", marginBottom: "1rem" }}
+          />
+          <h2
+            style={{
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--con-text-primary)",
+              marginBottom: "0.5rem",
+            }}
+          >
             خطأ في الوصول
           </h2>
-          <p style={{ fontSize: "13px", color: "var(--con-text-muted)", marginBottom: "1.5rem" }}>{authError}</p>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--con-text-muted)",
+              marginBottom: "1.5rem",
+            }}
+          >
+            {authError}
+          </p>
           <button
             onClick={() => navigate("/admin/login")}
             className="con-btn-primary"
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
           >
             <LogOut size={14} /> تسجيل الدخول
           </button>
@@ -410,56 +515,86 @@ export default function CourierPortal() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="fll-console" style={{
-      minHeight: "100vh",
-      background: "var(--con-bg-app)",
-      fontFamily: "var(--con-font-primary)",
-    }} dir="rtl">
+    <div
+      className="fll-console"
+      style={{
+        minHeight: "100vh",
+        background: "var(--con-bg-app)",
+        fontFamily: "var(--con-font-primary)",
+      }}
+      dir="rtl"
+    >
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* ── Top Bar ── */}
-      <header style={{
-        background: "var(--con-bg-surface-1)",
-        borderBottom: "1px solid var(--con-border-default)",
-        padding: "0 1.5rem",
-        height: "56px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-      }}>
+      <header
+        style={{
+          background: "var(--con-bg-surface-1)",
+          borderBottom: "1px solid var(--con-border-default)",
+          padding: "0 1.5rem",
+          height: "56px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div style={{
-            width: "32px", height: "32px",
-            background: "var(--con-brand-subtle)",
-            border: "1px solid var(--con-brand-border)",
-            borderRadius: "var(--con-radius)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              background: "var(--con-brand-subtle)",
+              border: "1px solid var(--con-brand-border)",
+              borderRadius: "var(--con-radius)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Truck size={16} style={{ color: "var(--con-brand)" }} />
           </div>
           <div>
-            <h1 style={{ fontSize: "14px", fontWeight: 700, color: "var(--con-text-primary)", lineHeight: 1.2 }}>
+            <h1
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "var(--con-text-primary)",
+                lineHeight: 1.2,
+              }}
+            >
               بوابة المندوب
             </h1>
-            <p style={{ fontSize: "11px", color: "var(--con-text-muted)", lineHeight: 1 }}>
+            <p
+              style={{
+                fontSize: "11px",
+                color: "var(--con-text-muted)",
+                lineHeight: 1,
+              }}
+            >
               First Line Logistics
             </p>
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div style={{
-            display: "flex", alignItems: "center", gap: "0.5rem",
-            padding: "0.375rem 0.75rem",
-            background: "var(--con-bg-elevated)",
-            borderRadius: "var(--con-radius)",
-            border: "1px solid var(--con-border-default)",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.375rem 0.75rem",
+              background: "var(--con-bg-elevated)",
+              borderRadius: "var(--con-radius)",
+              border: "1px solid var(--con-border-default)",
+            }}
+          >
             <User size={13} style={{ color: "var(--con-text-muted)" }} />
-            <span style={{ fontSize: "12px", color: "var(--con-text-secondary)" }}>
+            <span
+              style={{ fontSize: "12px", color: "var(--con-text-secondary)" }}
+            >
               {profile?.full_name || userEmail}
             </span>
           </div>
@@ -472,7 +607,9 @@ export default function CourierPortal() {
               borderRadius: "var(--con-radius)",
               padding: "0.375rem",
               cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               color: "var(--con-text-muted)",
               transition: "all 0.15s",
             }}
@@ -483,14 +620,16 @@ export default function CourierPortal() {
       </header>
 
       {/* ── Tab Bar ── */}
-      <nav style={{
-        background: "var(--con-bg-surface-1)",
-        borderBottom: "1px solid var(--con-border-default)",
-        display: "flex",
-        gap: 0,
-        padding: "0 1.5rem",
-        overflowX: "auto",
-      }}>
+      <nav
+        style={{
+          background: "var(--con-bg-surface-1)",
+          borderBottom: "1px solid var(--con-border-default)",
+          display: "flex",
+          gap: 0,
+          padding: "0 1.5rem",
+          overflowX: "auto",
+        }}
+      >
         {tabs.map((t) => {
           const active = tab === t.key;
           const Icon = t.icon;
@@ -499,14 +638,18 @@ export default function CourierPortal() {
               key={t.key}
               onClick={() => setTab(t.key)}
               style={{
-                display: "flex", alignItems: "center", gap: "0.375rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.375rem",
                 padding: "0.75rem 1rem",
                 fontSize: "13px",
                 fontWeight: active ? 600 : 400,
                 color: active ? "var(--con-brand)" : "var(--con-text-muted)",
                 background: "none",
                 border: "none",
-                borderBottom: active ? "2px solid var(--con-brand)" : "2px solid transparent",
+                borderBottom: active
+                  ? "2px solid var(--con-brand)"
+                  : "2px solid transparent",
                 cursor: "pointer",
                 transition: "all 0.15s",
                 whiteSpace: "nowrap",
@@ -521,41 +664,94 @@ export default function CourierPortal() {
 
       {/* ── Content ── */}
       <main style={{ padding: "1.5rem", maxWidth: "1000px", margin: "0 auto" }}>
-        <div className="con-card" style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+        <div
+          className="con-card"
+          style={{
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            flexWrap: "wrap",
+          }}
+        >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <Radio size={14} style={{ color: trackingStatus === "sharing" ? "var(--con-success)" : trackingStatus === "error" ? "var(--con-danger)" : "var(--con-warning)" }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--con-text-primary)" }}>التتبع الحي</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
+              <Radio
+                size={14}
+                style={{
+                  color:
+                    trackingStatus === "sharing"
+                      ? "var(--con-success)"
+                      : trackingStatus === "error"
+                        ? "var(--con-danger)"
+                        : "var(--con-warning)",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--con-text-primary)",
+                }}
+              >
+                التتبع الحي
+              </span>
             </div>
             <div style={{ fontSize: 12, color: "var(--con-text-muted)" }}>
-              {trackingMessage || "فعّل مشاركة الموقع ليظهر موقعك في خريطة الإرسال"}
+              {trackingMessage ||
+                "فعّل مشاركة الموقع ليظهر موقعك في خريطة الإرسال"}
               {lastLocationAt ? ` · آخر تحديث ${lastLocationAt}` : ""}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {!trackingEnabled ? (
-              <button className="con-btn-primary" onClick={startTracking}><LocateFixed size={14} /> تفعيل التتبع</button>
+              <button className="con-btn-primary" onClick={startTracking}>
+                <LocateFixed size={14} /> تفعيل التتبع
+              </button>
             ) : (
-              <button className="con-btn-ghost" onClick={stopTracking}><LocateFixed size={14} /> إيقاف التتبع</button>
+              <button className="con-btn-ghost" onClick={stopTracking}>
+                <LocateFixed size={14} /> إيقاف التتبع
+              </button>
             )}
           </div>
         </div>
-        {tab === "overview" && <OverviewTab profile={profile} wallet={wallet} transactions={transactions} />}
-        {tab === "wallet" && <WalletTab wallet={wallet} transactions={transactions} />}
+        {tab === "overview" && (
+          <OverviewTab
+            profile={profile}
+            wallet={wallet}
+            transactions={transactions}
+          />
+        )}
+        {tab === "wallet" && (
+          <WalletTab wallet={wallet} transactions={transactions} />
+        )}
         {tab === "orders" && <OrdersTab />}
-        {tab === "profile" && <ProfileTab profile={profile} email={userEmail} />}
+        {tab === "profile" && (
+          <ProfileTab profile={profile} email={userEmail} />
+        )}
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{
-        textAlign: "center",
-        padding: "1.5rem",
-        fontSize: "11px",
-        color: "var(--con-text-muted)",
-        borderTop: "1px solid var(--con-border-default)",
-        marginTop: "2rem",
-      }}>
-        &copy; {new Date().getFullYear()} First Line Logistics — جميع الحقوق محفوظة
+      <footer
+        style={{
+          textAlign: "center",
+          padding: "1.5rem",
+          fontSize: "11px",
+          color: "var(--con-text-muted)",
+          borderTop: "1px solid var(--con-border-default)",
+          marginTop: "2rem",
+        }}
+      >
+        &copy; {new Date().getFullYear()} First Line Logistics — جميع الحقوق
+        محفوظة
       </footer>
     </div>
   );
@@ -577,7 +773,14 @@ function OverviewTab({
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       {/* Welcome */}
       <div>
-        <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.25rem" }}>
+        <h2
+          style={{
+            fontSize: "18px",
+            fontWeight: 700,
+            color: "var(--con-text-primary)",
+            marginBottom: "0.25rem",
+          }}
+        >
           مرحبًا، {profile?.full_name || "مندوب"}
         </h2>
         <p style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>
@@ -587,26 +790,36 @@ function OverviewTab({
 
       {/* Wallet Frozen Warning */}
       {wallet?.is_frozen && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.75rem",
-          padding: "0.875rem 1rem",
-          background: "var(--con-danger-subtle)",
-          border: "1px solid var(--con-danger)",
-          borderRadius: "var(--con-radius-md)",
-          fontSize: "13px",
-          color: "var(--con-danger)",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            padding: "0.875rem 1rem",
+            background: "var(--con-danger-subtle)",
+            border: "1px solid var(--con-danger)",
+            borderRadius: "var(--con-radius-md)",
+            fontSize: "13px",
+            color: "var(--con-danger)",
+          }}
+        >
           <AlertCircle size={16} />
-          <span>محفظتك مجمّدة مؤقتًا{wallet.freeze_reason ? `: ${wallet.freeze_reason}` : ""}. تواصل مع الإدارة.</span>
+          <span>
+            محفظتك مجمّدة مؤقتًا
+            {wallet.freeze_reason ? `: ${wallet.freeze_reason}` : ""}. تواصل مع
+            الإدارة.
+          </span>
         </div>
       )}
 
       {/* KPI Cards */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "1rem",
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "1rem",
+        }}
+      >
         <KPICard
           label="الرصيد الحالي"
           value={formatSAR(wallet?.balance || 0)}
@@ -635,11 +848,21 @@ function OverviewTab({
 
       {/* Recent Transactions */}
       <div className="con-card" style={{ padding: "1.25rem" }}>
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: "1rem",
-        }}>
-          <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--con-text-primary)" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "1rem",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "var(--con-text-primary)",
+            }}
+          >
             آخر المعاملات
           </h3>
           <span style={{ fontSize: "11px", color: "var(--con-text-muted)" }}>
@@ -648,11 +871,20 @@ function OverviewTab({
         </div>
 
         {recentTxns.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "var(--con-text-muted)", textAlign: "center", padding: "2rem 0" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--con-text-muted)",
+              textAlign: "center",
+              padding: "2rem 0",
+            }}
+          >
             لا توجد معاملات بعد
           </p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+          >
             {recentTxns.map((txn) => (
               <TransactionRow key={txn.id} txn={txn} />
             ))}
@@ -673,62 +905,116 @@ function WalletTab({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--con-text-primary)" }}>
+      <h2
+        style={{
+          fontSize: "18px",
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+        }}
+      >
         المحفظة
       </h2>
 
       {/* Balance Card */}
-      <div className="con-card-elevated" style={{
-        padding: "2rem",
-        textAlign: "center",
-        background: "linear-gradient(135deg, var(--con-bg-surface-2), var(--con-bg-elevated))",
-      }}>
-        <p style={{ fontSize: "12px", color: "var(--con-text-muted)", marginBottom: "0.5rem" }}>
+      <div
+        className="con-card-elevated"
+        style={{
+          padding: "2rem",
+          textAlign: "center",
+          background:
+            "linear-gradient(135deg, var(--con-bg-surface-2), var(--con-bg-elevated))",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "12px",
+            color: "var(--con-text-muted)",
+            marginBottom: "0.5rem",
+          }}
+        >
           الرصيد المتاح
         </p>
-        <p style={{
-          fontFamily: "var(--con-font-mono)",
-          fontSize: "2rem",
-          fontWeight: 700,
-          color: "var(--con-text-primary)",
-          letterSpacing: "-0.02em",
-          marginBottom: "0.5rem",
-        }}>
+        <p
+          style={{
+            fontFamily: "var(--con-font-mono)",
+            fontSize: "2rem",
+            fontWeight: 700,
+            color: "var(--con-text-primary)",
+            letterSpacing: "-0.02em",
+            marginBottom: "0.5rem",
+          }}
+        >
           {formatSAR(wallet?.balance || 0)}
         </p>
         {wallet?.is_frozen && (
-          <span style={{
-            fontSize: "11px",
-            background: "var(--con-danger-subtle)",
-            color: "var(--con-danger)",
-            padding: "0.25rem 0.75rem",
-            borderRadius: "999px",
-            fontWeight: 600,
-          }}>
+          <span
+            style={{
+              fontSize: "11px",
+              background: "var(--con-danger-subtle)",
+              color: "var(--con-danger)",
+              padding: "0.25rem 0.75rem",
+              borderRadius: "999px",
+              fontWeight: 600,
+            }}
+          >
             مجمّدة
           </span>
         )}
       </div>
 
       {/* Stats Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
-        <MiniStat label="إجمالي الإيرادات" value={formatSAR(wallet?.total_earned || 0)} color="var(--con-success)" />
-        <MiniStat label="إجمالي المدفوع" value={formatSAR(wallet?.total_paid_out || 0)} color="var(--con-info)" />
-        <MiniStat label="معلّق" value={formatSAR(wallet?.pending_balance || 0)} color="var(--con-warning)" />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: "0.75rem",
+        }}
+      >
+        <MiniStat
+          label="إجمالي الإيرادات"
+          value={formatSAR(wallet?.total_earned || 0)}
+          color="var(--con-success)"
+        />
+        <MiniStat
+          label="إجمالي المدفوع"
+          value={formatSAR(wallet?.total_paid_out || 0)}
+          color="var(--con-info)"
+        />
+        <MiniStat
+          label="معلّق"
+          value={formatSAR(wallet?.pending_balance || 0)}
+          color="var(--con-warning)"
+        />
       </div>
 
       {/* All Transactions */}
       <div className="con-card" style={{ padding: "1.25rem" }}>
-        <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem" }}>
+        <h3
+          style={{
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "var(--con-text-primary)",
+            marginBottom: "1rem",
+          }}
+        >
           سجل المعاملات ({transactions.length})
         </h3>
 
         {transactions.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "var(--con-text-muted)", textAlign: "center", padding: "2rem 0" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--con-text-muted)",
+              textAlign: "center",
+              padding: "2rem 0",
+            }}
+          >
             لا توجد معاملات بعد
           </p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+          >
             {transactions.map((txn) => (
               <TransactionRow key={txn.id} txn={txn} showBalance />
             ))}
@@ -743,15 +1029,42 @@ function WalletTab({
 function OrdersTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--con-text-primary)" }}>
+      <h2
+        style={{
+          fontSize: "18px",
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+        }}
+      >
         الطلبات
       </h2>
-      <div className="con-card" style={{ textAlign: "center", padding: "3rem 1.5rem" }}>
-        <Package size={40} style={{ color: "var(--con-text-muted)", marginBottom: "1rem" }} />
-        <h3 style={{ fontSize: "15px", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "0.5rem" }}>
+      <div
+        className="con-card"
+        style={{ textAlign: "center", padding: "3rem 1.5rem" }}
+      >
+        <Package
+          size={40}
+          style={{ color: "var(--con-text-muted)", marginBottom: "1rem" }}
+        />
+        <h3
+          style={{
+            fontSize: "15px",
+            fontWeight: 600,
+            color: "var(--con-text-primary)",
+            marginBottom: "0.5rem",
+          }}
+        >
           قريبًا
         </h3>
-        <p style={{ fontSize: "13px", color: "var(--con-text-muted)", maxWidth: "320px", margin: "0 auto", lineHeight: 1.6 }}>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--con-text-muted)",
+            maxWidth: "320px",
+            margin: "0 auto",
+            lineHeight: 1.6,
+          }}
+        >
           ستتمكن قريبًا من عرض طلباتك الحالية والسابقة وتتبع حالة التسليم من هنا
         </p>
       </div>
@@ -769,9 +1082,17 @@ function ProfileTab({
 }) {
   if (!profile) {
     return (
-      <div className="con-card" style={{ textAlign: "center", padding: "3rem" }}>
-        <AlertCircle size={32} style={{ color: "var(--con-warning)", marginBottom: "1rem" }} />
-        <p style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>لم يتم العثور على بيانات الملف الشخصي</p>
+      <div
+        className="con-card"
+        style={{ textAlign: "center", padding: "3rem" }}
+      >
+        <AlertCircle
+          size={32}
+          style={{ color: "var(--con-warning)", marginBottom: "1rem" }}
+        />
+        <p style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>
+          لم يتم العثور على بيانات الملف الشخصي
+        </p>
       </div>
     );
   }
@@ -781,34 +1102,69 @@ function ProfileTab({
     { label: "البريد الإلكتروني", value: email, icon: Mail },
     { label: "رقم الجوال", value: profile.phone, icon: Phone },
     { label: "المدينة", value: profile.city, icon: MapPin },
-    { label: "نوع المركبة", value: vehicleLabel(profile.vehicle_type), icon: Truck },
-    { label: "تاريخ التسجيل", value: formatDate(profile.created_at), icon: Calendar },
+    {
+      label: "نوع المركبة",
+      value: vehicleLabel(profile.vehicle_type),
+      icon: Truck,
+    },
+    {
+      label: "تاريخ التسجيل",
+      value: formatDate(profile.created_at),
+      icon: Calendar,
+    },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--con-text-primary)" }}>
+      <h2
+        style={{
+          fontSize: "18px",
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+        }}
+      >
         الملف الشخصي
       </h2>
 
       {/* Status Badge */}
-      <div className="con-card" style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "1rem 1.25rem",
-      }}>
+      <div
+        className="con-card"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1rem 1.25rem",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Shield size={16} style={{ color: "var(--con-brand)" }} />
-          <span style={{ fontSize: "13px", color: "var(--con-text-secondary)" }}>الحالة</span>
+          <span
+            style={{ fontSize: "13px", color: "var(--con-text-secondary)" }}
+          >
+            الحالة
+          </span>
         </div>
-        <span style={{
-          fontSize: "12px",
-          fontWeight: 600,
-          padding: "0.25rem 0.75rem",
-          borderRadius: "999px",
-          background: profile.status === "active" ? "var(--con-success-subtle)" : "var(--con-warning-subtle)",
-          color: profile.status === "active" ? "var(--con-success)" : "var(--con-warning)",
-        }}>
-          {profile.status === "active" ? "نشط" : profile.status === "inactive" ? "غير نشط" : profile.status}
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            padding: "0.25rem 0.75rem",
+            borderRadius: "999px",
+            background:
+              profile.status === "active"
+                ? "var(--con-success-subtle)"
+                : "var(--con-warning-subtle)",
+            color:
+              profile.status === "active"
+                ? "var(--con-success)"
+                : "var(--con-warning)",
+          }}
+        >
+          {profile.status === "active"
+            ? "نشط"
+            : profile.status === "inactive"
+              ? "غير نشط"
+              : profile.status}
         </span>
       </div>
 
@@ -828,11 +1184,27 @@ function ProfileTab({
                   borderBottom: "1px solid var(--con-border-default)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
                   <Icon size={14} style={{ color: "var(--con-text-muted)" }} />
-                  <span style={{ fontSize: "13px", color: "var(--con-text-muted)" }}>{f.label}</span>
+                  <span
+                    style={{ fontSize: "13px", color: "var(--con-text-muted)" }}
+                  >
+                    {f.label}
+                  </span>
                 </div>
-                <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--con-text-primary)" }}>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "var(--con-text-primary)",
+                  }}
+                >
                   {f.value || "—"}
                 </span>
               </div>
@@ -842,23 +1214,32 @@ function ProfileTab({
       </div>
 
       {/* Courier ID */}
-      <div className="con-card" style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "1rem 1.25rem",
-      }}>
+      <div
+        className="con-card"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1rem 1.25rem",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Hash size={14} style={{ color: "var(--con-text-muted)" }} />
-          <span style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>رقم المندوب</span>
+          <span style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>
+            رقم المندوب
+          </span>
         </div>
-        <span style={{
-          fontFamily: "var(--con-font-mono)",
-          fontSize: "12px",
-          color: "var(--con-text-secondary)",
-          background: "var(--con-bg-elevated)",
-          padding: "0.25rem 0.625rem",
-          borderRadius: "var(--con-radius-sm)",
-          border: "1px solid var(--con-border-default)",
-        }}>
+        <span
+          style={{
+            fontFamily: "var(--con-font-mono)",
+            fontSize: "12px",
+            color: "var(--con-text-secondary)",
+            background: "var(--con-bg-elevated)",
+            padding: "0.25rem 0.625rem",
+            borderRadius: "var(--con-radius-sm)",
+            border: "1px solid var(--con-border-default)",
+          }}
+        >
           {profile.id.slice(0, 8)}
         </span>
       </div>
@@ -881,73 +1262,131 @@ function KPICard({
 }) {
   return (
     <div className="con-kpi-card">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>{label}</span>
-        <div style={{
-          width: "28px", height: "28px",
-          borderRadius: "var(--con-radius-sm)",
-          background: `${color}15`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color,
-        }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ fontSize: "12px", color: "var(--con-text-muted)" }}>
+          {label}
+        </span>
+        <div
+          style={{
+            width: "28px",
+            height: "28px",
+            borderRadius: "var(--con-radius-sm)",
+            background: `${color}15`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color,
+          }}
+        >
           {icon}
         </div>
       </div>
-      <span style={{
-        fontFamily: "var(--con-font-mono)",
-        fontSize: "1.25rem",
-        fontWeight: 700,
-        color: "var(--con-text-primary)",
-        letterSpacing: "-0.02em",
-      }}>
+      <span
+        style={{
+          fontFamily: "var(--con-font-mono)",
+          fontSize: "1.25rem",
+          fontWeight: 700,
+          color: "var(--con-text-primary)",
+          letterSpacing: "-0.02em",
+        }}
+      >
         {value}
       </span>
     </div>
   );
 }
 
-function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+function MiniStat({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: string;
+}) {
   return (
-    <div className="con-card" style={{ textAlign: "center", padding: "1rem 0.75rem" }}>
-      <p style={{ fontSize: "11px", color: "var(--con-text-muted)", marginBottom: "0.375rem" }}>{label}</p>
-      <p style={{
-        fontFamily: "var(--con-font-mono)",
-        fontSize: "14px",
-        fontWeight: 600,
-        color,
-      }}>
+    <div
+      className="con-card"
+      style={{ textAlign: "center", padding: "1rem 0.75rem" }}
+    >
+      <p
+        style={{
+          fontSize: "11px",
+          color: "var(--con-text-muted)",
+          marginBottom: "0.375rem",
+        }}
+      >
+        {label}
+      </p>
+      <p
+        style={{
+          fontFamily: "var(--con-font-mono)",
+          fontSize: "14px",
+          fontWeight: 600,
+          color,
+        }}
+      >
         {value}
       </p>
     </div>
   );
 }
 
-function TransactionRow({ txn, showBalance }: { txn: WalletTransaction; showBalance?: boolean }) {
+function TransactionRow({
+  txn,
+  showBalance,
+}: {
+  txn: WalletTransaction;
+  showBalance?: boolean;
+}) {
   const isPositive = txn.amount >= 0;
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0.625rem 0.75rem",
-      background: "var(--con-bg-elevated)",
-      borderRadius: "var(--con-radius)",
-      border: "1px solid var(--con-border-default)",
-    }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0.625rem 0.75rem",
+        background: "var(--con-bg-elevated)",
+        borderRadius: "var(--con-radius)",
+        border: "1px solid var(--con-border-default)",
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-        <div style={{
-          width: "28px", height: "28px",
-          borderRadius: "var(--con-radius-sm)",
-          background: isPositive ? "var(--con-success-subtle)" : "var(--con-danger-subtle)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          {isPositive
-            ? <ArrowDownRight size={14} style={{ color: "var(--con-success)" }} />
-            : <ArrowUpRight size={14} style={{ color: "var(--con-danger)" }} />
-          }
+        <div
+          style={{
+            width: "28px",
+            height: "28px",
+            borderRadius: "var(--con-radius-sm)",
+            background: isPositive
+              ? "var(--con-success-subtle)"
+              : "var(--con-danger-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {isPositive ? (
+            <ArrowDownRight size={14} style={{ color: "var(--con-success)" }} />
+          ) : (
+            <ArrowUpRight size={14} style={{ color: "var(--con-danger)" }} />
+          )}
         </div>
         <div>
-          <p style={{ fontSize: "13px", fontWeight: 500, color: "var(--con-text-primary)" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--con-text-primary)",
+            }}
+          >
             {eventLabel(txn.event_type)}
           </p>
           <p style={{ fontSize: "11px", color: "var(--con-text-muted)" }}>
@@ -956,20 +1395,25 @@ function TransactionRow({ txn, showBalance }: { txn: WalletTransaction; showBala
         </div>
       </div>
       <div style={{ textAlign: "left" }}>
-        <p style={{
-          fontFamily: "var(--con-font-mono)",
-          fontSize: "13px",
-          fontWeight: 600,
-          color: isPositive ? "var(--con-success)" : "var(--con-danger)",
-        }}>
-          {isPositive ? "+" : ""}{formatSAR(txn.amount)}
+        <p
+          style={{
+            fontFamily: "var(--con-font-mono)",
+            fontSize: "13px",
+            fontWeight: 600,
+            color: isPositive ? "var(--con-success)" : "var(--con-danger)",
+          }}
+        >
+          {isPositive ? "+" : ""}
+          {formatSAR(txn.amount)}
         </p>
         {showBalance && (
-          <p style={{
-            fontFamily: "var(--con-font-mono)",
-            fontSize: "10px",
-            color: "var(--con-text-muted)",
-          }}>
+          <p
+            style={{
+              fontFamily: "var(--con-font-mono)",
+              fontSize: "10px",
+              color: "var(--con-text-muted)",
+            }}
+          >
             الرصيد: {formatSAR(txn.balance_after)}
           </p>
         )}

@@ -9,7 +9,9 @@ import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
 interface ApprovalItem {
   id: string;
@@ -21,10 +23,36 @@ interface ApprovalItem {
 }
 
 const mockApprovals: ApprovalItem[] = [
-  { id: "apr-001", title: "استيراد Excel — رواتب فبراير 2026", by: "محمد الشمري", time: "منذ 2 ساعة", type: "excel", amount: "128,000 ر.س" },
-  { id: "apr-002", title: "تعديل راتب — خالد العمري", by: "قسم المالية", time: "منذ 5 ساعات", type: "finance" },
-  { id: "apr-003", title: "طلب انضمام سائق — فهد الغامدي", by: "فهد الغامدي", time: "منذ يوم", type: "driver" },
-  { id: "apr-004", title: "دفعة رواتب مارس — 47 سائق", by: "قسم المالية", time: "منذ يوم", type: "payout", amount: "156,000 ر.س" },
+  {
+    id: "apr-001",
+    title: "استيراد Excel — رواتب فبراير 2026",
+    by: "محمد الشمري",
+    time: "منذ 2 ساعة",
+    type: "excel",
+    amount: "128,000 ر.س",
+  },
+  {
+    id: "apr-002",
+    title: "تعديل راتب — خالد العمري",
+    by: "قسم المالية",
+    time: "منذ 5 ساعات",
+    type: "finance",
+  },
+  {
+    id: "apr-003",
+    title: "طلب انضمام سائق — فهد الغامدي",
+    by: "فهد الغامدي",
+    time: "منذ يوم",
+    type: "driver",
+  },
+  {
+    id: "apr-004",
+    title: "دفعة رواتب مارس — 47 سائق",
+    by: "قسم المالية",
+    time: "منذ يوم",
+    type: "payout",
+    amount: "156,000 ر.س",
+  },
 ];
 
 function timeAgo(dateStr: string): string {
@@ -48,7 +76,9 @@ export function PendingApprovals() {
         // Try finance.approval_requests first
         const { data, error } = await supabase
           .from("approval_requests" as any)
-          .select("id, request_type, reference_id, requested_by, status, priority, notes, created_at")
+          .select(
+            "id, request_type, reference_id, requested_by, status, priority, notes, created_at",
+          )
           .eq("status", "pending")
           .order("created_at", { ascending: false })
           .limit(5);
@@ -84,7 +114,10 @@ export function PendingApprovals() {
         try {
           await supabase
             .from("approval_requests" as any)
-            .update({ status: action === "approve" ? "approved" : "rejected", decided_at: new Date().toISOString() })
+            .update({
+              status: action === "approve" ? "approved" : "rejected",
+              decided_at: new Date().toISOString(),
+            })
             .eq("id", id);
         } catch {
           // Silent — UI still updates optimistically
@@ -108,8 +141,17 @@ export function PendingApprovals() {
     >
       {approvals.length === 0 ? (
         <div style={{ textAlign: "center", padding: "16px 0" }}>
-          <CheckCircle2 size={28} style={{ color: "var(--con-success)", marginBottom: 8 }} />
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0 }}>
+          <CheckCircle2
+            size={28}
+            style={{ color: "var(--con-success)", marginBottom: 8 }}
+          />
+          <p
+            style={{
+              fontSize: "var(--con-text-body)",
+              color: "var(--con-text-muted)",
+              margin: 0,
+            }}
+          >
             لا توجد اعتمادات معلقة
           </p>
         </div>
@@ -131,13 +173,31 @@ export function PendingApprovals() {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "var(--con-text-body)", fontWeight: 500, color: "var(--con-text-primary)" }}>
+                <div
+                  style={{
+                    fontSize: "var(--con-text-body)",
+                    fontWeight: 500,
+                    color: "var(--con-text-primary)",
+                  }}
+                >
                   {item.title}
                 </div>
-                <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: 2 }}>
+                <div
+                  style={{
+                    fontSize: "var(--con-text-caption)",
+                    color: "var(--con-text-muted)",
+                    marginTop: 2,
+                  }}
+                >
                   {item.by} · {item.time}
                   {item.amount && (
-                    <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-info)", marginRight: 8 }}>
+                    <span
+                      style={{
+                        fontFamily: "var(--con-font-mono)",
+                        color: "var(--con-info)",
+                        marginRight: 8,
+                      }}
+                    >
                       {item.amount}
                     </span>
                   )}
@@ -162,7 +222,15 @@ export function PendingApprovals() {
                     cursor: actionLoading ? "not-allowed" : "pointer",
                   }}
                 >
-                  {actionLoading === item.id ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <CheckCircle2 size={12} />} اعتماد
+                  {actionLoading === item.id ? (
+                    <Loader2
+                      size={12}
+                      style={{ animation: "spin 1s linear infinite" }}
+                    />
+                  ) : (
+                    <CheckCircle2 size={12} />
+                  )}{" "}
+                  اعتماد
                 </button>
                 <button
                   onClick={() => handleAction(item.id, "reject")}

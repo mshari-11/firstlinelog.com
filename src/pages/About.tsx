@@ -1,6 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, Eye, Users, Shield, Zap, TrendingUp, ArrowLeft } from "lucide-react";
+import {
+  Target,
+  Eye,
+  Users,
+  Shield,
+  Zap,
+  TrendingUp,
+  ArrowLeft,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTE_PATHS } from "@/lib/index";
 import { IMAGES } from "@/assets/images";
@@ -13,7 +21,7 @@ const springPresets = {
     damping: 20,
   },
   smooth: {
-    type: "spring", 
+    type: "spring",
     stiffness: 100,
     damping: 15,
   },
@@ -57,7 +65,10 @@ const coreValues = [
 
 const About: React.FC = () => {
   return (
-    <div className="flex flex-col w-full overflow-hidden page-with-logo-bg" dir="rtl">
+    <div
+      className="flex flex-col w-full overflow-hidden page-with-logo-bg"
+      dir="rtl"
+    >
       {/* قسم البطل (Hero Section) */}
       <section className="relative pt-32 pb-24 md:pt-48 md:pb-36 bg-slate-950">
         <div className="absolute inset-0 z-0">
@@ -88,7 +99,8 @@ const About: React.FC = () => {
               transition={{ ...springPresets.gentle, delay: 0.1 }}
               className="text-xl opacity-90 leading-relaxed"
             >
-              الخط الأول للخدمات اللوجستية - شريكك الاستراتيجي في عالم التوصيل الرقمي
+              الخط الأول للخدمات اللوجستية - شريكك الاستراتيجي في عالم التوصيل
+              الرقمي
             </motion.p>
           </motion.div>
         </div>
@@ -99,15 +111,19 @@ const About: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* مقدمة عن الشركة */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-6">نحن الخط الأول للخدمات اللوجستية</h2>
+            <h2 className="text-4xl font-bold mb-6">
+              نحن الخط الأول للخدمات اللوجستية
+            </h2>
             <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              شركة تشغيل لوجستي وطنية، متخصصة في إدارة وتنفيذ عمليات التوصيل بالنيابة عن كبرى تطبيقات التوصيل في المملكة.
+              شركة تشغيل لوجستي وطنية، متخصصة في إدارة وتنفيذ عمليات التوصيل
+              بالنيابة عن كبرى تطبيقات التوصيل في المملكة.
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-4">
-              نُعد شريكًا استراتيجيًا للمنصات الرقمية، نقدم لها بنية تشغيلية موثوقة لإيصال ملايين الطلبات إلى المستهلكين بكفاءة يومًا بعد يوم.
+              نُعد شريكًا استراتيجيًا للمنصات الرقمية، نقدم لها بنية تشغيلية
+              موثوقة لإيصال ملايين الطلبات إلى المستهلكين بكفاءة يومًا بعد يوم.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start mb-16">
             <motion.div
               initial="initial"
@@ -122,7 +138,8 @@ const About: React.FC = () => {
                   🎯 رؤيتنا
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  أن نكون البنية التشغيلية الأذكى والأكثر موثوقية في قطاع الميل الأخير بالمملكة والخليج.
+                  أن نكون البنية التشغيلية الأذكى والأكثر موثوقية في قطاع الميل
+                  الأخير بالمملكة والخليج.
                 </p>
               </div>
 
@@ -150,7 +167,7 @@ const About: React.FC = () => {
                 </ul>
               </div>
             </motion.div>
-            
+
             <motion.div
               initial="initial"
               whileInView="animate"
@@ -163,15 +180,31 @@ const About: React.FC = () => {
                 <h3 className="text-2xl font-bold flex items-center gap-3 text-foreground">
                   🤝 من نخدم
                 </h3>
-                <p className="text-muted-foreground mb-4">نعمل مع أبرز التطبيقات والمنصات في المملكة:</p>
+                <p className="text-muted-foreground mb-4">
+                  نعمل مع أبرز التطبيقات والمنصات في المملكة:
+                </p>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">جاهز</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">هنقرستيشن</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">كيتا</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">مرسول</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">ذا شيفز</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">نينجا</span>
-                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">تويو</span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    جاهز
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    هنقرستيشن
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    كيتا
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    مرسول
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    ذا شيفز
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    نينجا
+                  </span>
+                  <span className="bg-muted/50 px-3 py-2 rounded-lg text-center">
+                    تويو
+                  </span>
                 </div>
                 <div className="bg-primary/10 p-4 rounded-lg">
                   <p className="text-sm font-medium text-primary">
@@ -184,20 +217,27 @@ const About: React.FC = () => {
                 <h3 className="text-2xl font-bold flex items-center gap-3 text-foreground">
                   📍 تغطيتنا الجغرافية
                 </h3>
-                <p className="text-muted-foreground mb-4">نُدير عملياتنا في أكثر من 15 مدينة رئيسية:</p>
+                <p className="text-muted-foreground mb-4">
+                  نُدير عملياتنا في أكثر من 15 مدينة رئيسية:
+                </p>
                 <div className="text-sm text-muted-foreground leading-relaxed">
-                  الرياض، جدة، مكة، المدينة، الطائف، الدمام، الخبر، بريدة، تبوك، نجران، حائل، خميس مشيط، أبها، الخرج، حفر الباطن
+                  الرياض، جدة، مكة، المدينة، الطائف، الدمام، الخبر، بريدة، تبوك،
+                  نجران، حائل، خميس مشيط، أبها، الخرج، حفر الباطن
                 </div>
               </div>
             </motion.div>
           </div>
-          
+
           {/* قسم الإحصائيات */}
           <div className="bg-muted/30 rounded-2xl p-8 mb-16">
-            <h3 className="text-2xl font-bold text-center mb-8">📊 ماذا نُقدّم؟</h3>
+            <h3 className="text-2xl font-bold text-center mb-8">
+              📊 ماذا نُقدّم؟
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">35,000+</div>
+                <div className="text-3xl font-bold text-primary mb-2">
+                  35,000+
+                </div>
                 <div className="text-sm text-muted-foreground">طلب يوميًا</div>
               </div>
               <div className="text-center">
@@ -210,19 +250,24 @@ const About: React.FC = () => {
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary mb-2">خفيف</div>
-                <div className="text-sm text-muted-foreground">نموذج الأصول</div>
+                <div className="text-sm text-muted-foreground">
+                  نموذج الأصول
+                </div>
               </div>
             </div>
           </div>
-          
+
           {/* قسم لماذا نحن */}
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-6">🇸🇦 لماذا نحن؟</h3>
             <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              لأننا لا نعمل على هامش الاقتصاد الرقمي، بل نُمثّل الطبقة التشغيلية الحيوية التي تربط التطبيقات بالميدان — ونمكّن آلاف السعوديين من العمل في قطاع واعد ومتسارع النمو.
+              لأننا لا نعمل على هامش الاقتصاد الرقمي، بل نُمثّل الطبقة التشغيلية
+              الحيوية التي تربط التطبيقات بالميدان — ونمكّن آلاف السعوديين من
+              العمل في قطاع واعد ومتسارع النمو.
             </p>
             <p className="text-lg text-muted-foreground mb-8">
-              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة، المملكة العربية السعودية.
+              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة،
+              المملكة العربية السعودية.
             </p>
           </div>
         </div>
@@ -232,7 +277,9 @@ const About: React.FC = () => {
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">قيمنا الجوهرية</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              قيمنا الجوهرية
+            </h2>
             <p className="text-muted-foreground">
               القيم التي توجه عملنا وتحدد هويتنا كشركة رائدة في قطاع اللوجستيات.
             </p>
@@ -282,13 +329,19 @@ const About: React.FC = () => {
                 className="w-full aspect-[4/3] object-cover rounded-2xl mb-8"
               />
             </motion.div>
-            
-            <h2 className="text-3xl font-bold mb-8">جاهز لتوسيع نطاق عملياتك؟</h2>
+
+            <h2 className="text-3xl font-bold mb-8">
+              جاهز لتوسيع نطاق عملياتك؟
+            </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة، المملكة العربية السعودية.
+              تواصل معنا عبر info@firstlinelog.com أو 0126033133 - مقرنا في جدة،
+              المملكة العربية السعودية.
             </p>
             <Button asChild size="lg" className="px-8">
-              <Link to={ROUTE_PATHS.INVESTORS} className="flex items-center gap-2">
+              <Link
+                to={ROUTE_PATHS.INVESTORS}
+                className="flex items-center gap-2"
+              >
                 نظرة عامة للمستثمرين
                 <ArrowLeft className="w-4 h-4" />
               </Link>

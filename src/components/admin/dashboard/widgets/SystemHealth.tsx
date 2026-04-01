@@ -2,11 +2,22 @@
  * System Health Widget — Real health checks via ping endpoints
  */
 import { useState, useEffect, useCallback } from "react";
-import { Activity, Database, Cloud, Globe, Wifi, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  Database,
+  Cloud,
+  Globe,
+  Wifi,
+  RefreshCw,
+} from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://djebhztfewjfyyoortvv.supabase.co";
 
 interface ServiceStatus {
   name: string;
@@ -28,7 +39,10 @@ const statusLabels = {
   offline: "متوقف",
 };
 
-async function pingEndpoint(url: string, timeout = 8000): Promise<{ ok: boolean; ms: number }> {
+async function pingEndpoint(
+  url: string,
+  timeout = 8000,
+): Promise<{ ok: boolean; ms: number }> {
   const start = performance.now();
   try {
     const res = await fetch(url, {
@@ -53,10 +67,34 @@ function toStatus(ok: boolean, ms: number): "online" | "degraded" | "offline" {
 
 export function SystemHealth() {
   const [services, setServices] = useState<ServiceStatus[]>([
-    { name: "API Gateway", nameAr: "بوابة API", icon: Cloud, status: "online", latency: "—" },
-    { name: "Supabase DB", nameAr: "قاعدة البيانات", icon: Database, status: "online", latency: "—" },
-    { name: "Cognito Auth", nameAr: "نظام التوثيق", icon: Wifi, status: "online", latency: "—" },
-    { name: "CloudFront CDN", nameAr: "شبكة التوزيع", icon: Globe, status: "online", latency: "—" },
+    {
+      name: "API Gateway",
+      nameAr: "بوابة API",
+      icon: Cloud,
+      status: "online",
+      latency: "—",
+    },
+    {
+      name: "Supabase DB",
+      nameAr: "قاعدة البيانات",
+      icon: Database,
+      status: "online",
+      latency: "—",
+    },
+    {
+      name: "Cognito Auth",
+      nameAr: "نظام التوثيق",
+      icon: Wifi,
+      status: "online",
+      latency: "—",
+    },
+    {
+      name: "CloudFront CDN",
+      nameAr: "شبكة التوزيع",
+      icon: Globe,
+      status: "online",
+      latency: "—",
+    },
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -73,10 +111,34 @@ export function SystemHealth() {
     const cognitoMs = apiRes.ok ? Math.round(apiRes.ms * 0.7) : apiRes.ms;
 
     setServices([
-      { name: "API Gateway", nameAr: "بوابة API", icon: Cloud, status: toStatus(apiRes.ok, apiRes.ms), latency: `${apiRes.ms}ms` },
-      { name: "Supabase DB", nameAr: "قاعدة البيانات", icon: Database, status: toStatus(dbRes.ok, dbRes.ms), latency: `${dbRes.ms}ms` },
-      { name: "Cognito Auth", nameAr: "نظام التوثيق", icon: Wifi, status: toStatus(cognitoOk, cognitoMs), latency: `${cognitoMs}ms` },
-      { name: "CloudFront CDN", nameAr: "شبكة التوزيع", icon: Globe, status: toStatus(cdnRes.ok, cdnRes.ms), latency: `${cdnRes.ms}ms` },
+      {
+        name: "API Gateway",
+        nameAr: "بوابة API",
+        icon: Cloud,
+        status: toStatus(apiRes.ok, apiRes.ms),
+        latency: `${apiRes.ms}ms`,
+      },
+      {
+        name: "Supabase DB",
+        nameAr: "قاعدة البيانات",
+        icon: Database,
+        status: toStatus(dbRes.ok, dbRes.ms),
+        latency: `${dbRes.ms}ms`,
+      },
+      {
+        name: "Cognito Auth",
+        nameAr: "نظام التوثيق",
+        icon: Wifi,
+        status: toStatus(cognitoOk, cognitoMs),
+        latency: `${cognitoMs}ms`,
+      },
+      {
+        name: "CloudFront CDN",
+        nameAr: "شبكة التوزيع",
+        icon: Globe,
+        status: toStatus(cdnRes.ok, cdnRes.ms),
+        latency: `${cdnRes.ms}ms`,
+      },
     ]);
     setLoading(false);
   }, []);
@@ -89,7 +151,11 @@ export function SystemHealth() {
   }, []);
 
   const allOnline = services.every((s) => s.status === "online");
-  const overallStatus = allOnline ? "online" : services.some((s) => s.status === "offline") ? "offline" : "degraded";
+  const overallStatus = allOnline
+    ? "online"
+    : services.some((s) => s.status === "offline")
+      ? "offline"
+      : "degraded";
 
   return (
     <WidgetShell
@@ -122,8 +188,16 @@ export function SystemHealth() {
               animation: "pulse 2s infinite",
             }}
           />
-          <span style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)" }}>
-            {allOnline ? "جميع الأنظمة تعمل بشكل طبيعي" : "بعض الأنظمة تواجه مشاكل"}
+          <span
+            style={{
+              fontSize: "var(--con-text-body)",
+              fontWeight: 600,
+              color: "var(--con-text-primary)",
+            }}
+          >
+            {allOnline
+              ? "جميع الأنظمة تعمل بشكل طبيعي"
+              : "بعض الأنظمة تواجه مشاكل"}
           </span>
         </div>
 
@@ -140,7 +214,12 @@ export function SystemHealth() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <svc.icon size={13} style={{ color: "var(--con-text-muted)" }} />
-              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>
+              <span
+                style={{
+                  fontSize: "var(--con-text-body)",
+                  color: "var(--con-text-secondary)",
+                }}
+              >
                 {svc.nameAr}
               </span>
             </div>

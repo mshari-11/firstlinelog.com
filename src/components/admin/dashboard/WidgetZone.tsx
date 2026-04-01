@@ -91,7 +91,10 @@ export function WidgetZone({
             animate={{ height: "auto", opacity: 1 }}
             exit={collapsible ? { height: 0, opacity: 0 } : undefined}
             transition={{ duration: 0.2 }}
-            style={{ overflow: collapsible ? "hidden" : undefined, ...layoutStyle }}
+            style={{
+              overflow: collapsible ? "hidden" : undefined,
+              ...layoutStyle,
+            }}
           >
             {children}
           </motion.div>

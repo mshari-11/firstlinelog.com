@@ -77,7 +77,8 @@ const companyValues = [
   },
   {
     title: "العمل الجماعي",
-    description: "نجاحنا مبني على التعاون والتنسيق بين فرقنا المنتشرة في أكثر من 18 مدينة.",
+    description:
+      "نجاحنا مبني على التعاون والتنسيق بين فرقنا المنتشرة في أكثر من 18 مدينة.",
   },
 ];
 
@@ -103,7 +104,10 @@ const Team: React.FC = () => {
             transition={springPresets.smooth}
             className="max-w-4xl text-right"
           >
-            <Badge variant="outline" className="mb-6 border-primary/50 text-primary bg-primary/5 px-4 py-1">
+            <Badge
+              variant="outline"
+              className="mb-6 border-primary/50 text-primary bg-primary/5 px-4 py-1"
+            >
               <Users className="w-3 h-3 ml-2" />
               فريق القيادة
             </Badge>
@@ -112,7 +116,8 @@ const Team: React.FC = () => {
               <span className="text-primary">الميل الأخير</span>
             </h1>
             <p className="text-xl md:text-2xl text-slate-300 leading-relaxed font-light">
-              فريق قيادي يجمع بين الخبرة العميقة في اللوجستيات والرؤية الاستراتيجية لبناء أكبر شبكة تنفيذ في المملكة.
+              فريق قيادي يجمع بين الخبرة العميقة في اللوجستيات والرؤية
+              الاستراتيجية لبناء أكبر شبكة تنفيذ في المملكة.
             </p>
           </motion.div>
         </div>
@@ -122,9 +127,12 @@ const Team: React.FC = () => {
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">فريق القيادة التنفيذية</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              فريق القيادة التنفيذية
+            </h2>
             <p className="text-lg text-muted-foreground">
-              قادة يمتلكون رؤية واضحة وخبرة عملية في بناء وتشغيل شبكات التوصيل على نطاق واسع.
+              قادة يمتلكون رؤية واضحة وخبرة عملية في بناء وتشغيل شبكات التوصيل
+              على نطاق واسع.
             </p>
           </div>
 
@@ -141,12 +149,18 @@ const Team: React.FC = () => {
               >
                 {/* Avatar */}
                 <div className="flex items-center gap-4 mb-6">
-                  <div className={`w-16 h-16 rounded-2xl ${member.color} flex items-center justify-center text-white text-2xl font-bold shadow-lg`}>
+                  <div
+                    className={`w-16 h-16 rounded-2xl ${member.color} flex items-center justify-center text-white text-2xl font-bold shadow-lg`}
+                  >
                     {member.avatar}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">{member.name}</h3>
-                    <p className="text-sm text-primary font-semibold">{member.role}</p>
+                    <h3 className="text-xl font-bold text-foreground">
+                      {member.name}
+                    </h3>
+                    <p className="text-sm text-primary font-semibold">
+                      {member.role}
+                    </p>
                   </div>
                 </div>
 
@@ -181,9 +195,12 @@ const Team: React.FC = () => {
               variants={fadeInUp}
               transition={springPresets.gentle}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">قيمنا التي نعمل بها</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                قيمنا التي نعمل بها
+              </h2>
               <p className="text-lg text-muted-foreground mb-10">
-                القيم التي تحرك فريقنا وتوجه قراراتنا اليومية في كل مدينة نعمل بها.
+                القيم التي تحرك فريقنا وتوجه قراراتنا اليومية في كل مدينة نعمل
+                بها.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -201,7 +218,9 @@ const Team: React.FC = () => {
                       <Award className="w-5 h-5 text-primary" />
                     </div>
                     <h4 className="font-bold mb-2">{value.title}</h4>
-                    <p className="text-sm text-muted-foreground">{value.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {value.description}
+                    </p>
                   </motion.div>
                 ))}
               </div>
@@ -239,16 +258,27 @@ const Team: React.FC = () => {
               انضم إلى فريقنا المتنامي
             </h2>
             <p className="text-xl opacity-80 leading-relaxed">
-              نبحث دائماً عن كفاءات استثنائية تشاركنا الشغف ببناء مستقبل اللوجستيات في المملكة.
+              نبحث دائماً عن كفاءات استثنائية تشاركنا الشغف ببناء مستقبل
+              اللوجستيات في المملكة.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 px-8">
-                <Link to={ROUTE_PATHS.JOIN_US}>
-                  استعرض الفرص المتاحة
-                </Link>
+              <Button
+                asChild
+                size="lg"
+                className="bg-primary text-white hover:bg-primary/90 px-8"
+              >
+                <Link to={ROUTE_PATHS.JOIN_US}>استعرض الفرص المتاحة</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8">
-                <Link to={ROUTE_PATHS.CONTACT} className="flex items-center gap-2">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 px-8"
+              >
+                <Link
+                  to={ROUTE_PATHS.CONTACT}
+                  className="flex items-center gap-2"
+                >
                   تواصل معنا
                   <ArrowLeft className="w-4 h-4" />
                 </Link>

@@ -3,8 +3,14 @@
  */
 import { useNavigate } from "react-router-dom";
 import {
-  UserPlus, FileSpreadsheet, CreditCard,
-  CheckCircle2, Map, BarChart3, ShieldAlert, Settings,
+  UserPlus,
+  FileSpreadsheet,
+  CreditCard,
+  CheckCircle2,
+  Map,
+  BarChart3,
+  ShieldAlert,
+  Settings,
 } from "lucide-react";
 
 interface QuickAction {
@@ -16,14 +22,62 @@ interface QuickAction {
 }
 
 const actions: QuickAction[] = [
-  { id: "approve",    label: "الاعتمادات",    icon: CheckCircle2,   color: "var(--con-success)",  path: "/admin-panel/approvals" },
-  { id: "dispatch",   label: "الإرسال",       icon: Map,            color: "var(--con-brand)",    path: "/admin-panel/dispatch" },
-  { id: "import",     label: "استيراد Excel", icon: FileSpreadsheet, color: "var(--con-info)",     path: "/admin-panel/excel" },
-  { id: "payouts",    label: "الدفعات",       icon: CreditCard,     color: "var(--con-warning)",  path: "/admin-panel/payouts" },
-  { id: "drivers",    label: "سائق جديد",    icon: UserPlus,       color: "var(--con-brand)",    path: "/admin-panel/driver-applications" },
-  { id: "reports",    label: "التقارير",       icon: BarChart3,      color: "var(--con-info)",     path: "/admin-panel/reports" },
-  { id: "sla",        label: "مراقبة SLA",    icon: ShieldAlert,    color: "var(--con-danger)",   path: "/admin-panel/sla" },
-  { id: "settings",   label: "الإعدادات",     icon: Settings,       color: "var(--con-text-muted)", path: "/admin-panel/settings" },
+  {
+    id: "approve",
+    label: "الاعتمادات",
+    icon: CheckCircle2,
+    color: "var(--con-success)",
+    path: "/admin-panel/approvals",
+  },
+  {
+    id: "dispatch",
+    label: "الإرسال",
+    icon: Map,
+    color: "var(--con-brand)",
+    path: "/admin-panel/dispatch",
+  },
+  {
+    id: "import",
+    label: "استيراد Excel",
+    icon: FileSpreadsheet,
+    color: "var(--con-info)",
+    path: "/admin-panel/excel",
+  },
+  {
+    id: "payouts",
+    label: "الدفعات",
+    icon: CreditCard,
+    color: "var(--con-warning)",
+    path: "/admin-panel/payouts",
+  },
+  {
+    id: "drivers",
+    label: "سائق جديد",
+    icon: UserPlus,
+    color: "var(--con-brand)",
+    path: "/admin-panel/driver-applications",
+  },
+  {
+    id: "reports",
+    label: "التقارير",
+    icon: BarChart3,
+    color: "var(--con-info)",
+    path: "/admin-panel/reports",
+  },
+  {
+    id: "sla",
+    label: "مراقبة SLA",
+    icon: ShieldAlert,
+    color: "var(--con-danger)",
+    path: "/admin-panel/sla",
+  },
+  {
+    id: "settings",
+    label: "الإعدادات",
+    icon: Settings,
+    color: "var(--con-text-muted)",
+    path: "/admin-panel/settings",
+  },
 ];
 
 export function QuickActions() {

@@ -4,7 +4,13 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_MODULES, type ModuleDefinition, type ModuleGroup, GROUP_LABELS, toPageConfig } from "@/lib/admin/moduleRegistry";
+import {
+  DEFAULT_MODULES,
+  type ModuleDefinition,
+  type ModuleGroup,
+  GROUP_LABELS,
+  toPageConfig,
+} from "@/lib/admin/moduleRegistry";
 
 interface ModuleRegistryState {
   modules: ModuleDefinition[];
@@ -15,14 +21,22 @@ interface ModuleRegistryState {
   toggleModule: (moduleId: string) => void;
   toggleFeature: (moduleId: string, featureId: string) => void;
   reorderModule: (moduleId: string, newOrder: number) => void;
-  updateModuleBadge: (moduleId: string, count: number, variant?: string) => void;
+  updateModuleBadge: (
+    moduleId: string,
+    count: number,
+    variant?: string,
+  ) => void;
   resetToDefaults: () => void;
 
   // Selectors
   getEnabledModules: () => ModuleDefinition[];
   getModulesByGroup: (group: ModuleGroup) => ModuleDefinition[];
   getModule: (moduleId: string) => ModuleDefinition | undefined;
-  getGroups: () => { key: ModuleGroup; label: string; modules: ModuleDefinition[] }[];
+  getGroups: () => {
+    key: ModuleGroup;
+    label: string;
+    modules: ModuleDefinition[];
+  }[];
   getPageConfig: () => ReturnType<typeof toPageConfig>;
 }
 
@@ -40,7 +54,10 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
         const savedIds = new Set(state.modules.map((m) => m.id));
         const newModules = DEFAULT_MODULES.filter((m) => !savedIds.has(m.id));
         if (newModules.length > 0) {
-          set({ modules: [...state.modules, ...newModules], initialized: true });
+          set({
+            modules: [...state.modules, ...newModules],
+            initialized: true,
+          });
         } else {
           set({ initialized: true });
         }
@@ -49,7 +66,7 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
       toggleModule: (moduleId) => {
         set((state) => ({
           modules: state.modules.map((m) =>
-            m.id === moduleId && !m.isCore ? { ...m, enabled: !m.enabled } : m
+            m.id === moduleId && !m.isCore ? { ...m, enabled: !m.enabled } : m,
           ),
         }));
       },
@@ -61,10 +78,10 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
               ? {
                   ...m,
                   features: m.features.map((f) =>
-                    f.id === featureId ? { ...f, enabled: !f.enabled } : f
+                    f.id === featureId ? { ...f, enabled: !f.enabled } : f,
                   ),
                 }
-              : m
+              : m,
           ),
         }));
       },
@@ -72,7 +89,7 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
       reorderModule: (moduleId, newOrder) => {
         set((state) => ({
           modules: state.modules.map((m) =>
-            m.id === moduleId ? { ...m, order: newOrder } : m
+            m.id === moduleId ? { ...m, order: newOrder } : m,
           ),
         }));
       },
@@ -80,7 +97,9 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
       updateModuleBadge: (moduleId, count, variant = "warning") => {
         set((state) => ({
           modules: state.modules.map((m) =>
-            m.id === moduleId ? { ...m, badge: count > 0 ? { count, variant } : undefined } : m
+            m.id === moduleId
+              ? { ...m, badge: count > 0 ? { count, variant } : undefined }
+              : m,
           ),
         }));
       },
@@ -129,6 +148,6 @@ export const useModuleRegistry = create<ModuleRegistryState>()(
       partialize: (state) => ({
         modules: state.modules.map(({ badge, ...rest }) => rest), // Don't persist badge counts
       }),
-    }
-  )
+    },
+  ),
 );

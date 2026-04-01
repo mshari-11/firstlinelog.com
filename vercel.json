@@ -1,76 +1,124 @@
 {
-        "installCommand": "npm install",
-        "buildCommand": "npm run build",
-        "framework": null,
-        "outputDirectory": ".",
-        "cleanUrls": true,
-        "trailingSlash": false,
-        "redirects": [
-                    { "source": "/admin-dashboard.html", "destination": "/admin-panel/dashboard", "statusCode": 301 },
-                    { "source": "/courier-dashboard.html", "destination": "/courier/portal", "statusCode": 301 },
-                    { "source": "/staff-dashboard.html", "destination": "/admin-panel/dashboard", "statusCode": 301 },
-                    { "source": "/staff-finance.html", "destination": "/admin-panel/finance", "statusCode": 301 },
-                    { "source": "/staff-fleet.html", "destination": "/admin-panel/fleet", "statusCode": 301 },
-                    { "source": "/staff-hr.html", "destination": "/admin-panel/staff", "statusCode": 301 },
-                    { "source": "/staff-ops.html", "destination": "/admin-panel/dispatch", "statusCode": 301 },
-                    { "source": "/marketplace-integrations.html", "destination": "/admin-panel/marketplace", "statusCode": 301 },
-                    { "source": "/unauthorized.html", "destination": "/unified-login", "statusCode": 301 }
-        ],
-        "rewrites": [
-                    { "source": "/admin-panel/:path*", "destination": "/dist/index" },
-                    { "source": "/admin/:path*", "destination": "/dist/index" },
-                    { "source": "/admin/login", "destination": "/dist/index" },
-                    { "source": "/login", "destination": "/dist/index" },
-                    { "source": "/unified-login", "destination": "/dist/index" },
-                    { "source": "/forgot-password", "destination": "/dist/index" },
-                    { "source": "/reset-password", "destination": "/dist/index" },
-                    { "source": "/courier/:path*", "destination": "/dist/index" },
-                    { "source": "/application-status", "destination": "/dist/index" },
-                    { "source": "/driver/:path*", "destination": "/dist/index" },
-                    { "source": "/about", "destination": "/" },
-                    { "source": "/contact", "destination": "/" },
-                    { "source": "/services", "destination": "/" },
-                    { "source": "/services/:path*", "destination": "/" },
-                    { "source": "/news", "destination": "/" },
-                    { "source": "/investors", "destination": "/" },
-                    { "source": "/team", "destination": "/" },
-                    { "source": "/faq", "destination": "/" },
-                    { "source": "/join-us", "destination": "/" },
-                    { "source": "/platforms", "destination": "/" },
-                    { "source": "/terms", "destination": "/" },
-                    { "source": "/privacy", "destination": "/" },
-                    { "source": "/compliance", "destination": "/" },
-                    { "source": "/governance", "destination": "/" },
-                    { "source": "/operational-model", "destination": "/" },
-                    { "source": "/employee-services", "destination": "/" },
-                    { "source": "/github-management", "destination": "/" }
-        ],
-        "headers": [
-                    {
-                        "source": "/dist/index",
-                        "headers": [
-                            { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-                            { "key": "Pragma", "value": "no-cache" }
-                        ]
-                    },
-                    {
-                        "source": "/(.*).html",
-                        "headers": [
-                            { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-                            { "key": "Pragma", "value": "no-cache" }
-                        ]
-                    },
-                    {
-                        "source": "/",
-                        "headers": [
-                            { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-                        ]
-                    },
-                    {
-                        "source": "/dist/assets/(.*)",
-                        "headers": [
-                            { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-                        ]
-                    }
-        ]
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "framework": null,
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/admin-dashboard.html",
+      "destination": "/admin-panel/dashboard",
+      "statusCode": 301
+    },
+    {
+      "source": "/courier-dashboard.html",
+      "destination": "/courier/portal",
+      "statusCode": 301
+    },
+    {
+      "source": "/staff-dashboard.html",
+      "destination": "/admin-panel/dashboard",
+      "statusCode": 301
+    },
+    {
+      "source": "/staff-finance.html",
+      "destination": "/admin-panel/finance",
+      "statusCode": 301
+    },
+    {
+      "source": "/staff-fleet.html",
+      "destination": "/admin-panel/fleet",
+      "statusCode": 301
+    },
+    {
+      "source": "/staff-hr.html",
+      "destination": "/admin-panel/staff",
+      "statusCode": 301
+    },
+    {
+      "source": "/staff-ops.html",
+      "destination": "/admin-panel/dispatch",
+      "statusCode": 301
+    },
+    {
+      "source": "/marketplace-integrations.html",
+      "destination": "/admin-panel/marketplace",
+      "statusCode": 301
+    },
+    {
+      "source": "/unauthorized.html",
+      "destination": "/unified-login",
+      "statusCode": 301
+    }
+  ],
+  "rewrites": [
+    { "source": "/admin-panel/:path*", "destination": "/dist/index" },
+    { "source": "/admin/:path*", "destination": "/dist/index" },
+    { "source": "/admin/login", "destination": "/dist/index" },
+    { "source": "/login", "destination": "/dist/index" },
+    { "source": "/unified-login", "destination": "/dist/index" },
+    { "source": "/forgot-password", "destination": "/dist/index" },
+    { "source": "/reset-password", "destination": "/dist/index" },
+    { "source": "/courier/:path*", "destination": "/dist/index" },
+    { "source": "/application-status", "destination": "/dist/index" },
+    { "source": "/driver/:path*", "destination": "/dist/index" },
+    { "source": "/about", "destination": "/" },
+    { "source": "/contact", "destination": "/" },
+    { "source": "/services", "destination": "/" },
+    { "source": "/services/:path*", "destination": "/" },
+    { "source": "/news", "destination": "/" },
+    { "source": "/investors", "destination": "/" },
+    { "source": "/team", "destination": "/" },
+    { "source": "/faq", "destination": "/" },
+    { "source": "/join-us", "destination": "/" },
+    { "source": "/platforms", "destination": "/" },
+    { "source": "/terms", "destination": "/" },
+    { "source": "/privacy", "destination": "/" },
+    { "source": "/compliance", "destination": "/" },
+    { "source": "/governance", "destination": "/" },
+    { "source": "/operational-model", "destination": "/" },
+    { "source": "/employee-services", "destination": "/" },
+    { "source": "/github-management", "destination": "/" }
+  ],
+  "headers": [
+    {
+      "source": "/dist/index",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        { "key": "Pragma", "value": "no-cache" }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        { "key": "Pragma", "value": "no-cache" }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/dist/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
 }

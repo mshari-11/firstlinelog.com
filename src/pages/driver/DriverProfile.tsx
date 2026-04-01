@@ -19,7 +19,13 @@ import {
   CreditCard,
   Edit3,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -50,7 +56,10 @@ const documents = [
   { name: "الفحص الدوري", status: "valid", expiry: "أغسطس 2026" },
 ];
 
-const docStatusConfig: Record<string, { label: string; variant: "default" | "destructive" | "outline" }> = {
+const docStatusConfig: Record<
+  string,
+  { label: string; variant: "default" | "destructive" | "outline" }
+> = {
   valid: { label: "ساري", variant: "default" },
   expiring: { label: "قارب على الانتهاء", variant: "outline" },
   expired: { label: "منتهي", variant: "destructive" },
@@ -68,10 +77,17 @@ const item = {
 
 export default function DriverProfile() {
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       <motion.div variants={item}>
         <h1 className="text-2xl font-bold">حسابي</h1>
-        <p className="text-muted-foreground text-sm mt-1">إدارة بياناتك الشخصية وإعداداتك</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          إدارة بياناتك الشخصية وإعداداتك
+        </p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -85,10 +101,14 @@ export default function DriverProfile() {
                 </AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-bold">{driverProfile.name}</h2>
-              <p className="text-sm text-muted-foreground font-mono">{driverProfile.driverId}</p>
+              <p className="text-sm text-muted-foreground font-mono">
+                {driverProfile.driverId}
+              </p>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="font-bold font-mono">{driverProfile.rating}</span>
+                <span className="font-bold font-mono">
+                  {driverProfile.rating}
+                </span>
               </div>
               <Badge className="mt-3 bg-emerald-500">نشط</Badge>
 
@@ -127,20 +147,32 @@ export default function DriverProfile() {
             <div className="grid grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold font-mono text-emerald-600">{driverProfile.totalOrders.toLocaleString("ar-SA")}</p>
-                  <p className="text-xs text-muted-foreground mt-1">إجمالي الطلبات</p>
+                  <p className="text-2xl font-bold font-mono text-emerald-600">
+                    {driverProfile.totalOrders.toLocaleString("ar-SA")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    إجمالي الطلبات
+                  </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold font-mono text-primary">{driverProfile.totalEarnings}</p>
-                  <p className="text-xs text-muted-foreground mt-1">إجمالي الأرباح</p>
+                  <p className="text-2xl font-bold font-mono text-primary">
+                    {driverProfile.totalEarnings}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    إجمالي الأرباح
+                  </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold font-mono text-amber-600">{driverProfile.rating}</p>
-                  <p className="text-xs text-muted-foreground mt-1">التقييم العام</p>
+                  <p className="text-2xl font-bold font-mono text-amber-600">
+                    {driverProfile.rating}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    التقييم العام
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -159,15 +191,22 @@ export default function DriverProfile() {
                 {documents.map((doc) => {
                   const status = docStatusConfig[doc.status];
                   return (
-                    <div key={doc.name} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                    <div
+                      key={doc.name}
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30"
+                    >
                       <div className="flex items-center gap-3">
                         <Shield className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">{doc.name}</p>
-                          <p className="text-xs text-muted-foreground">ينتهي: {doc.expiry}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ينتهي: {doc.expiry}
+                          </p>
                         </div>
                       </div>
-                      <Badge variant={status.variant} className="text-[10px]">{status.label}</Badge>
+                      <Badge variant={status.variant} className="text-[10px]">
+                        {status.label}
+                      </Badge>
                     </div>
                   );
                 })}
@@ -190,7 +229,9 @@ export default function DriverProfile() {
                     <Bell className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">الإشعارات</p>
-                      <p className="text-xs text-muted-foreground">تلقي إشعارات الطلبات الجديدة</p>
+                      <p className="text-xs text-muted-foreground">
+                        تلقي إشعارات الطلبات الجديدة
+                      </p>
                     </div>
                   </div>
                   <Switch defaultChecked />
@@ -201,10 +242,14 @@ export default function DriverProfile() {
                     <Lock className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">الأمان</p>
-                      <p className="text-xs text-muted-foreground">تغيير رقم الهاتف أو كلمة المرور</p>
+                      <p className="text-xs text-muted-foreground">
+                        تغيير رقم الهاتف أو كلمة المرور
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">تعديل</Button>
+                  <Button variant="ghost" size="sm">
+                    تعديل
+                  </Button>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -212,10 +257,14 @@ export default function DriverProfile() {
                     <CreditCard className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">الحساب البنكي</p>
-                      <p className="text-xs text-muted-foreground">إدارة بيانات التحويل</p>
+                      <p className="text-xs text-muted-foreground">
+                        إدارة بيانات التحويل
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">تعديل</Button>
+                  <Button variant="ghost" size="sm">
+                    تعديل
+                  </Button>
                 </div>
               </CardContent>
             </Card>

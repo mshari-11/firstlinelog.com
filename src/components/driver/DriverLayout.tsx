@@ -22,9 +22,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const driverNavLinks = [
-  { name: "الرئيسية", path: ROUTE_PATHS.DRIVER, icon: LayoutDashboard, end: true },
+  {
+    name: "الرئيسية",
+    path: ROUTE_PATHS.DRIVER,
+    icon: LayoutDashboard,
+    end: true,
+  },
   { name: "طلباتي", path: ROUTE_PATHS.DRIVER_ORDERS, icon: Package },
-  { name: "مستحقاتي", path: ROUTE_PATHS.DRIVER_ENTITLEMENTS, icon: BadgeDollarSign },
+  {
+    name: "مستحقاتي",
+    path: ROUTE_PATHS.DRIVER_ENTITLEMENTS,
+    icon: BadgeDollarSign,
+  },
   { name: "حسابي", path: ROUTE_PATHS.DRIVER_PROFILE, icon: User },
 ];
 
@@ -42,7 +51,10 @@ export function DriverLayout() {
 
   if (isLoading) {
     return (
-      <div dir="rtl" className="min-h-screen bg-muted/30 flex items-center justify-center">
+      <div
+        dir="rtl"
+        className="min-h-screen bg-muted/30 flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-muted-foreground">جاري التحقق...</p>
@@ -70,7 +82,9 @@ export function DriverLayout() {
           </div>
           <div>
             <p className="font-bold text-sm leading-none">First Line</p>
-            <p className="text-[10px] text-sidebar-foreground/60 font-medium">لوحة السائق</p>
+            <p className="text-[10px] text-sidebar-foreground/60 font-medium">
+              لوحة السائق
+            </p>
           </div>
         </div>
 
@@ -105,7 +119,9 @@ export function DriverLayout() {
               {user?.name?.[0] || "س"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{user?.name || "سائق"}</p>
+              <p className="text-sm font-semibold truncate">
+                {user?.name || "سائق"}
+              </p>
               <p className="text-xs text-sidebar-foreground/50">قائد مركبة</p>
             </div>
           </div>
@@ -159,7 +175,9 @@ export function DriverLayout() {
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                        isActive ? "bg-emerald-500 text-white" : "text-sidebar-foreground/70 hover:bg-sidebar-accent"
+                        isActive
+                          ? "bg-emerald-500 text-white"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent"
                       }`
                     }
                   >
@@ -177,7 +195,10 @@ export function DriverLayout() {
       <div className="flex-1 lg:mr-64">
         <header className="sticky top-0 z-30 h-16 bg-background/95 backdrop-blur border-b border-border flex items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-4">
-            <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setSidebarOpen(true)}>
+            <button
+              className="lg:hidden p-2 hover:bg-muted rounded-lg"
+              onClick={() => setSidebarOpen(true)}
+            >
               <Menu className="w-5 h-5" />
             </button>
             <Link

@@ -2,15 +2,17 @@
  * FLL AI Chat Widget v1.0
  * مساعد ذكي مصغر يظهر في أسفل الصفحة
  */
-(function() {
-  const API_URL = 'https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/ai/chat';
-  const FALLBACK_URL = 'https://djebhztfewjfyyoortvv.supabase.co/functions/v1/ai-support-system';
+(function () {
+  const API_URL =
+    "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com/ai/chat";
+  const FALLBACK_URL =
+    "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/ai-support-system";
   let conversationId = null;
   let history = [];
   let isOpen = false;
 
   // Inject CSS
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     #fll-chat-btn{position:fixed;bottom:24px;left:24px;width:60px;height:60px;border-radius:50%;background:#0f2744;color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:9999;font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .2s}
     #fll-chat-btn:hover{transform:scale(1.1)}
@@ -40,14 +42,14 @@
   document.head.appendChild(style);
 
   // Create elements
-  const btn = document.createElement('button');
-  btn.id = 'fll-chat-btn';
-  btn.innerHTML = '💬';
-  btn.title = 'المساعد الذكي';
+  const btn = document.createElement("button");
+  btn.id = "fll-chat-btn";
+  btn.innerHTML = "💬";
+  btn.title = "المساعد الذكي";
   document.body.appendChild(btn);
 
-  const box = document.createElement('div');
-  box.id = 'fll-chat-box';
+  const box = document.createElement("div");
+  box.id = "fll-chat-box";
   box.innerHTML = `
     <div id="fll-chat-header">
       <h4>🤖 المساعد الذكي — FLL</h4>
@@ -63,26 +65,37 @@
   `;
   document.body.appendChild(box);
 
-  const msgs = document.getElementById('fll-chat-messages');
-  const input = document.getElementById('fll-chat-input');
-  const sendBtn = document.getElementById('fll-chat-send');
+  const msgs = document.getElementById("fll-chat-messages");
+  const input = document.getElementById("fll-chat-input");
+  const sendBtn = document.getElementById("fll-chat-send");
 
-  btn.onclick = () => { isOpen = !isOpen; box.classList.toggle('open', isOpen); if(isOpen) input.focus(); };
-  document.getElementById('fll-chat-close').onclick = () => { isOpen = false; box.classList.remove('open'); };
+  btn.onclick = () => {
+    isOpen = !isOpen;
+    box.classList.toggle("open", isOpen);
+    if (isOpen) input.focus();
+  };
+  document.getElementById("fll-chat-close").onclick = () => {
+    isOpen = false;
+    box.classList.remove("open");
+  };
 
   function addMsg(text, role) {
-    const d = document.createElement('div');
-    d.className = 'fll-msg ' + role;
-    d.innerHTML = '<div class="fll-msg-bubble">' + text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '</div>';
+    const d = document.createElement("div");
+    d.className = "fll-msg " + role;
+    d.innerHTML =
+      '<div class="fll-msg-bubble">' +
+      text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") +
+      "</div>";
     msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
   }
 
   function showTyping() {
-    const d = document.createElement('div');
-    d.className = 'fll-msg bot';
-    d.id = 'fll-typing';
-    d.innerHTML = '<div class="fll-msg-bubble"><div class="fll-typing"><span></span><span></span><span></span></div></div>';
+    const d = document.createElement("div");
+    d.className = "fll-msg bot";
+    d.id = "fll-typing";
+    d.innerHTML =
+      '<div class="fll-msg-bubble"><div class="fll-typing"><span></span><span></span><span></span></div></div>';
     msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
   }
@@ -90,38 +103,49 @@
   async function send() {
     const text = input.value.trim();
     if (!text) return;
-    input.value = '';
+    input.value = "";
     sendBtn.disabled = true;
-    addMsg(text, 'user');
+    addMsg(text, "user");
     showTyping();
 
     try {
-      const userId = localStorage.getItem('fll_user_id') || 'anonymous';
-      const anonKey = localStorage.getItem('sb-anon-key') || '';
+      const userId = localStorage.getItem("fll_user_id") || "anonymous";
+      const anonKey = localStorage.getItem("sb-anon-key") || "";
       const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + anonKey, 'apikey': anonKey },
-        body: JSON.stringify({ message: text, user_id: userId, conversation_id: conversationId, history: history })
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + anonKey,
+          apikey: anonKey,
+        },
+        body: JSON.stringify({
+          message: text,
+          user_id: userId,
+          conversation_id: conversationId,
+          history: history,
+        }),
       });
       const data = await res.json();
-      document.getElementById('fll-typing')?.remove();
+      document.getElementById("fll-typing")?.remove();
       if (data.reply) {
-        addMsg(data.reply, 'bot');
+        addMsg(data.reply, "bot");
         conversationId = data.conversation_id;
-        history.push({ role: 'user', content: text });
-        history.push({ role: 'assistant', content: data.reply });
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: data.reply });
         if (history.length > 20) history = history.slice(-20);
       } else {
-        addMsg('عذراً، حصل خطأ. حاول مرة ثانية.', 'bot');
+        addMsg("عذراً، حصل خطأ. حاول مرة ثانية.", "bot");
       }
-    } catch(e) {
-      document.getElementById('fll-typing')?.remove();
-      addMsg('عذراً، ما قدرت أتواصل مع الخادم. حاول لاحقاً.', 'bot');
+    } catch (e) {
+      document.getElementById("fll-typing")?.remove();
+      addMsg("عذراً، ما قدرت أتواصل مع الخادم. حاول لاحقاً.", "bot");
     }
     sendBtn.disabled = false;
     input.focus();
   }
 
   sendBtn.onclick = send;
-  input.onkeydown = (e) => { if (e.key === 'Enter') send(); };
+  input.onkeydown = (e) => {
+    if (e.key === "Enter") send();
+  };
 })();

@@ -77,23 +77,39 @@ export const useDashboardStore = create<DashboardState>()(
           }
 
           const today = new Date().toISOString().split("T")[0];
-          const [couriersRes, ordersRes, complaintsRes, approvalsRes] = await Promise.all([
-            supabase.from("couriers").select("id, status", { count: "exact" }),
-            supabase.from("orders").select("id", { count: "exact" }).gte("created_at", today),
-            supabase.from("complaints_requests").select("id", { count: "exact" }).eq("status", "open"),
-            supabase.from("couriers").select("id", { count: "exact" }).eq("status", "pending"),
-          ]);
+          const [couriersRes, ordersRes, complaintsRes, approvalsRes] =
+            await Promise.all([
+              supabase
+                .from("couriers")
+                .select("id, status", { count: "exact" }),
+              supabase
+                .from("orders")
+                .select("id", { count: "exact" })
+                .gte("created_at", today),
+              supabase
+                .from("complaints_requests")
+                .select("id", { count: "exact" })
+                .eq("status", "open"),
+              supabase
+                .from("couriers")
+                .select("id", { count: "exact" })
+                .eq("status", "pending"),
+            ]);
 
           const couriers = couriersRes.data || [];
           set({
             stats: {
               totalCouriers: couriersRes.count || 0,
-              activeCouriers: couriers.filter((c: { status: string }) => c.status === "active").length,
+              activeCouriers: couriers.filter(
+                (c: { status: string }) => c.status === "active",
+              ).length,
               todayOrders: ordersRes.count || 0,
               pendingComplaints: complaintsRes.count || 0,
               monthRevenue: 128000, // TODO: aggregate from finance tables
               pendingApprovals: approvalsRes.count || 0,
-              activeDriversNow: couriers.filter((c: { status: string }) => c.status === "active").length,
+              activeDriversNow: couriers.filter(
+                (c: { status: string }) => c.status === "active",
+              ).length,
               slaBreaches: 0, // TODO: query from SLA scanner
             },
             statsLoading: false,
@@ -129,6 +145,6 @@ export const useDashboardStore = create<DashboardState>()(
         collapsedWidgets: state.collapsedWidgets,
         widgetOrder: state.widgetOrder,
       }),
-    }
-  )
+    },
+  ),
 );

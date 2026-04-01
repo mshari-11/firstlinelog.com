@@ -4,10 +4,27 @@
  */
 import { useState, useEffect } from "react";
 import {
-  Server, Cloud, Database, Globe, GitBranch, Shield, Zap,
-  HardDrive, RefreshCw, ExternalLink, Activity, Users,
+  Server,
+  Cloud,
+  Database,
+  Globe,
+  GitBranch,
+  Shield,
+  Zap,
+  HardDrive,
+  RefreshCw,
+  ExternalLink,
+  Activity,
+  Users,
 } from "lucide-react";
-import { PageWrapper, PageHeader, Card, KPIGrid, KPICard, Badge } from "@/components/admin/ui";
+import {
+  PageWrapper,
+  PageHeader,
+  Card,
+  KPIGrid,
+  KPICard,
+  Badge,
+} from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
 
 const API_BASE = import.meta.env.VITE_API_BASE as string | undefined;
@@ -142,9 +159,21 @@ const otherServices: ServiceDetail[] = [
 ];
 
 const statusConfig = {
-  online:   { color: "var(--con-success)", label: "متصل", bg: "rgba(34,197,94,0.08)" },
-  degraded: { color: "var(--con-warning)", label: "بطيء", bg: "rgba(245,158,11,0.08)" },
-  offline:  { color: "var(--con-danger)",  label: "متوقف", bg: "rgba(239,68,68,0.08)" },
+  online: {
+    color: "var(--con-success)",
+    label: "متصل",
+    bg: "rgba(34,197,94,0.08)",
+  },
+  degraded: {
+    color: "var(--con-warning)",
+    label: "بطيء",
+    bg: "rgba(245,158,11,0.08)",
+  },
+  offline: {
+    color: "var(--con-danger)",
+    label: "متوقف",
+    bg: "rgba(239,68,68,0.08)",
+  },
 };
 
 function ServiceCard({ svc }: { svc: ServiceDetail }) {
@@ -160,7 +189,14 @@ function ServiceCard({ svc }: { svc: ServiceDetail }) {
       }}
     >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div
             style={{
@@ -176,10 +212,24 @@ function ServiceCard({ svc }: { svc: ServiceDetail }) {
             <svc.icon size={16} style={{ color: "var(--con-brand)" }} />
           </div>
           <div>
-            <h4 style={{ fontSize: "var(--con-text-body)", fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>
+            <h4
+              style={{
+                fontSize: "var(--con-text-body)",
+                fontWeight: 600,
+                color: "var(--con-text-primary)",
+                margin: 0,
+              }}
+            >
               {svc.nameAr}
             </h4>
-            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{svc.provider}</span>
+            <span
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+              }}
+            >
+              {svc.provider}
+            </span>
           </div>
         </div>
         <div
@@ -192,23 +242,69 @@ function ServiceCard({ svc }: { svc: ServiceDetail }) {
             background: st.bg,
           }}
         >
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: st.color, animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: "var(--con-text-caption)", color: st.color, fontWeight: 500 }}>{st.label}</span>
+          <div
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: st.color,
+              animation: "pulse 2s infinite",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "var(--con-text-caption)",
+              color: st.color,
+              fontWeight: 500,
+            }}
+          >
+            {st.label}
+          </span>
         </div>
       </div>
 
       {/* Detail */}
-      <p style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontFamily: "var(--con-font-mono)", margin: "0 0 12px" }}>
+      <p
+        style={{
+          fontSize: "var(--con-text-caption)",
+          color: "var(--con-text-muted)",
+          fontFamily: "var(--con-font-mono)",
+          margin: "0 0 12px",
+        }}
+      >
         {svc.detail}
       </p>
 
       {/* Metrics */}
       {svc.metrics && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "8px 16px",
+          }}
+        >
           {svc.metrics.map((m) => (
-            <div key={m.label} style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{m.label}</span>
-              <span style={{ fontSize: "var(--con-text-caption)", fontWeight: 600, fontFamily: "var(--con-font-mono)", color: "var(--con-text-primary)" }}>
+            <div
+              key={m.label}
+              style={{ display: "flex", justifyContent: "space-between" }}
+            >
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                }}
+              >
+                {m.label}
+              </span>
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  fontWeight: 600,
+                  fontFamily: "var(--con-font-mono)",
+                  color: "var(--con-text-primary)",
+                }}
+              >
                 {m.value}
               </span>
             </div>
@@ -246,7 +342,9 @@ export default function InfrastructureOverview() {
         if (!error && data) {
           setLiveMetrics({
             totalLogs: data.length,
-            errorsToday: data.filter((r: { level: string }) => r.level === "error").length,
+            errorsToday: data.filter(
+              (r: { level: string }) => r.level === "error",
+            ).length,
             activeConnections: 0,
           });
           return;
@@ -258,7 +356,9 @@ export default function InfrastructureOverview() {
       // Attempt 2: API_BASE health endpoint
       if (API_BASE) {
         try {
-          const res = await fetch(`${API_BASE}/ops/health`, { signal: AbortSignal.timeout(5000) });
+          const res = await fetch(`${API_BASE}/ops/health`, {
+            signal: AbortSignal.timeout(5000),
+          });
           if (res.ok) {
             const json = await res.json();
             setLiveMetrics({
@@ -282,7 +382,12 @@ export default function InfrastructureOverview() {
         subtitle="نظرة شاملة على حالة جميع الخدمات: AWS · GitHub · Vercel · Supabase"
         actions={
           <div style={{ display: "flex", gap: 8 }}>
-            <Badge variant={onlineCount === allServices.length ? "success" : "warning"} dot>
+            <Badge
+              variant={
+                onlineCount === allServices.length ? "success" : "warning"
+              }
+              dot
+            >
               {onlineCount}/{allServices.length} متصل
             </Badge>
           </div>
@@ -290,24 +395,69 @@ export default function InfrastructureOverview() {
       />
 
       <KPIGrid cols="repeat(4, 1fr)">
-        <KPICard label="خدمات AWS" value={awsServices.length} icon={Cloud} accent="#FF9900" />
-        <KPICard label="خدمات أخرى" value={otherServices.length} icon={Globe} accent="var(--con-brand)" />
-        <KPICard label="متصل" value={onlineCount} icon={Activity} accent="var(--con-success)" />
-        <KPICard label="منطقة AWS" value="us-east-1" icon={Server} accent="var(--con-info)" mono={false} />
+        <KPICard
+          label="خدمات AWS"
+          value={awsServices.length}
+          icon={Cloud}
+          accent="#FF9900"
+        />
+        <KPICard
+          label="خدمات أخرى"
+          value={otherServices.length}
+          icon={Globe}
+          accent="var(--con-brand)"
+        />
+        <KPICard
+          label="متصل"
+          value={onlineCount}
+          icon={Activity}
+          accent="var(--con-success)"
+        />
+        <KPICard
+          label="منطقة AWS"
+          value="us-east-1"
+          icon={Server}
+          accent="var(--con-info)"
+          mono={false}
+        />
       </KPIGrid>
 
       {/* Live Metrics (from ops.system_logs or API) */}
       {liveMetrics && (
         <KPIGrid cols="repeat(3, 1fr)">
-          <KPICard label="سجلات اليوم" value={liveMetrics.totalLogs} icon={Activity} accent="var(--con-info)" />
-          <KPICard label="أخطاء اليوم" value={liveMetrics.errorsToday} icon={Server} accent="var(--con-danger)" />
-          <KPICard label="اتصالات نشطة" value={liveMetrics.activeConnections} icon={Users} accent="var(--con-success)" />
+          <KPICard
+            label="سجلات اليوم"
+            value={liveMetrics.totalLogs}
+            icon={Activity}
+            accent="var(--con-info)"
+          />
+          <KPICard
+            label="أخطاء اليوم"
+            value={liveMetrics.errorsToday}
+            icon={Server}
+            accent="var(--con-danger)"
+          />
+          <KPICard
+            label="اتصالات نشطة"
+            value={liveMetrics.activeConnections}
+            icon={Users}
+            accent="var(--con-success)"
+          />
         </KPIGrid>
       )}
 
       {/* AWS Services */}
-      <Card title="Amazon Web Services" subtitle="المنطقة: us-east-1 (فرجينيا) · الحساب: 230811072086">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+      <Card
+        title="Amazon Web Services"
+        subtitle="المنطقة: us-east-1 (فرجينيا) · الحساب: 230811072086"
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 12,
+          }}
+        >
           {awsServices.map((svc) => (
             <ServiceCard key={svc.name} svc={svc} />
           ))}
@@ -316,7 +466,13 @@ export default function InfrastructureOverview() {
 
       {/* Other Services */}
       <Card title="خدمات أخرى" subtitle="Supabase · GitHub · Vercel">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 12,
+          }}
+        >
           {otherServices.map((svc) => (
             <ServiceCard key={svc.name} svc={svc} />
           ))}

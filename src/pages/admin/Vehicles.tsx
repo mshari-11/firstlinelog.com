@@ -3,14 +3,33 @@
  * Enterprise Fleet Panel — vehicle registry, status tracking, service history
  */
 import { useState, useEffect } from "react";
-import { Truck, Plus, Search, Car, Bike, Package, Wrench, MapPin, AlertCircle, X, Download, Printer } from "lucide-react";
+import {
+  Truck,
+  Plus,
+  Search,
+  Car,
+  Bike,
+  Package,
+  Wrench,
+  MapPin,
+  AlertCircle,
+  X,
+  Download,
+  Printer,
+} from "lucide-react";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
   if (!data.length) return;
   const headers = Object.keys(data[0]);
-  const csv = [headers.join(","), ...data.map(r => headers.map(h => `"${r[h] ?? ""}"`).join(","))].join("\n");
+  const csv = [
+    headers.join(","),
+    ...data.map((r) => headers.map((h) => `"${r[h] ?? ""}"`).join(",")),
+  ].join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename + ".csv"; a.click();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename + ".csv";
+  a.click();
 }
 import { supabase } from "../../lib/supabase";
 
@@ -38,26 +57,55 @@ const VEHICLE_TYPE_MAP: Record<string, string> = {
 };
 
 const FALLBACK_VEHICLES: Vehicle[] = [
-  { id: 1, plate: "ABC-1234", type: "دراجة نارية",  brand: "هوندا",   year: 2022, courier: "أحمد محمد",   city: "الرياض",  status: "active",      lastService: "2025-12-01" },
-  { id: 2, plate: "XYZ-5678", type: "سيارة",        brand: "تويوتا",  year: 2021, courier: "محمد علي",    city: "جدة",     status: "maintenance", lastService: "2025-11-15" },
+  {
+    id: 1,
+    plate: "ABC-1234",
+    type: "دراجة نارية",
+    brand: "هوندا",
+    year: 2022,
+    courier: "أحمد محمد",
+    city: "الرياض",
+    status: "active",
+    lastService: "2025-12-01",
+  },
+  {
+    id: 2,
+    plate: "XYZ-5678",
+    type: "سيارة",
+    brand: "تويوتا",
+    year: 2021,
+    courier: "محمد علي",
+    city: "جدة",
+    status: "maintenance",
+    lastService: "2025-11-15",
+  },
 ];
 
-const STATUS_META: Record<VehicleStatus, { label: string; badgeClass: string }> = {
-  active:      { label: "نشط",       badgeClass: "con-badge-success" },
-  maintenance: { label: "صيانة",     badgeClass: "con-badge-warning" },
-  inactive:    { label: "غير نشط",   badgeClass: "con-badge-danger"  },
+const STATUS_META: Record<
+  VehicleStatus,
+  { label: string; badgeClass: string }
+> = {
+  active: { label: "نشط", badgeClass: "con-badge-success" },
+  maintenance: { label: "صيانة", badgeClass: "con-badge-warning" },
+  inactive: { label: "غير نشط", badgeClass: "con-badge-danger" },
 };
 
 function VehicleTypeIcon({ type }: { type: string }) {
-  if (type === "سيارة")        return <Car   size={15} style={{ color: "var(--con-brand)" }} />;
-  if (type === "دراجة هوائية") return <Bike  size={15} style={{ color: "var(--con-success)" }} />;
-  return                              <Truck size={15} style={{ color: "var(--con-warning)" }} />;
+  if (type === "سيارة")
+    return <Car size={15} style={{ color: "var(--con-brand)" }} />;
+  if (type === "دراجة هوائية")
+    return <Bike size={15} style={{ color: "var(--con-success)" }} />;
+  return <Truck size={15} style={{ color: "var(--con-warning)" }} />;
 }
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" });
+    return new Date(dateStr).toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   } catch {
     return dateStr;
   }
@@ -66,12 +114,21 @@ function formatDate(dateStr: string) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Vehicles() {
-  const [search, setSearch]             = useState("");
-  const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
-  const [vehicles, setVehicles]         = useState<Vehicle[]>(FALLBACK_VEHICLES);
-  const [loading, setLoading]           = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">(
+    "all",
+  );
+  const [vehicles, setVehicles] = useState<Vehicle[]>(FALLBACK_VEHICLES);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newVehicle, setNewVehicle]     = useState({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
+  const [newVehicle, setNewVehicle] = useState({
+    plate: "",
+    type: "سيارة",
+    brand: "",
+    courier: "",
+    city: "الرياض",
+    year: "2024",
+  });
 
   function addVehicle() {
     if (!newVehicle.plate) return;
@@ -88,7 +145,14 @@ export default function Vehicles() {
     };
     setVehicles((prev) => [next, ...prev]);
     setShowAddModal(false);
-    setNewVehicle({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
+    setNewVehicle({
+      plate: "",
+      type: "سيارة",
+      brand: "",
+      courier: "",
+      city: "الرياض",
+      year: "2024",
+    });
   }
 
   useEffect(() => {
@@ -103,77 +167,147 @@ export default function Vehicles() {
 
         if (!error && data && data.length > 0) {
           const mapped: Vehicle[] = data.map((v: any) => ({
-            id:          v.id,
-            plate:       v.plate_number || "",
-            type:        VEHICLE_TYPE_MAP[v.vehicle_type] || v.vehicle_type || "دراجة نارية",
-            brand:       v.brand || "",
-            year:        v.year || 2024,
-            courier:     v.rider_name || "غير معيّن",
-            city:        v.city || "",
-            status:      (v.status === "maintenance" ? "maintenance" : v.status === "inactive" ? "inactive" : "active") as VehicleStatus,
+            id: v.id,
+            plate: v.plate_number || "",
+            type:
+              VEHICLE_TYPE_MAP[v.vehicle_type] ||
+              v.vehicle_type ||
+              "دراجة نارية",
+            brand: v.brand || "",
+            year: v.year || 2024,
+            courier: v.rider_name || "غير معيّن",
+            city: v.city || "",
+            status: (v.status === "maintenance"
+              ? "maintenance"
+              : v.status === "inactive"
+                ? "inactive"
+                : "active") as VehicleStatus,
             lastService: v.insurance_exp || "",
           }));
           setVehicles(mapped);
         }
-      } catch { /* keep fallback */ }
-      finally { setLoading(false); }
+      } catch {
+        /* keep fallback */
+      } finally {
+        setLoading(false);
+      }
     }
     fetchVehicles();
   }, []);
 
-  const filtered = vehicles.filter(v => {
-    const matchSearch = v.plate.includes(search) || v.courier.includes(search) || v.brand.includes(search);
+  const filtered = vehicles.filter((v) => {
+    const matchSearch =
+      v.plate.includes(search) ||
+      v.courier.includes(search) ||
+      v.brand.includes(search);
     const matchStatus = statusFilter === "all" || v.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
   const stats = {
-    total:       vehicles.length,
-    active:      vehicles.filter(v => v.status === "active").length,
-    maintenance: vehicles.filter(v => v.status === "maintenance").length,
-    inactive:    vehicles.filter(v => v.status === "inactive").length,
+    total: vehicles.length,
+    active: vehicles.filter((v) => v.status === "active").length,
+    maintenance: vehicles.filter((v) => v.status === "maintenance").length,
+    inactive: vehicles.filter((v) => v.status === "inactive").length,
   };
 
   return (
-    <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
+    <div
+      dir="rtl"
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+    >
       {/* Page Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{
-              background: "rgba(59,130,246,0.12)", borderRadius: 8, padding: "7px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 4,
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(59,130,246,0.12)",
+                borderRadius: 8,
+                padding: "7px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Truck size={18} style={{ color: "var(--con-brand)" }} />
             </div>
-            <h1 style={{
-              fontSize: "var(--con-text-page-title)", fontWeight: 700,
-              color: "var(--con-text-primary)", margin: 0,
-              fontFamily: "var(--con-font-primary)",
-            }}>
+            <h1
+              style={{
+                fontSize: "var(--con-text-page-title)",
+                fontWeight: 700,
+                color: "var(--con-text-primary)",
+                margin: 0,
+                fontFamily: "var(--con-font-primary)",
+              }}
+            >
               الأسطول والمركبات
             </h1>
           </div>
-          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", margin: 0, paddingRight: 44 }}>
+          <p
+            style={{
+              fontSize: "var(--con-text-body)",
+              color: "var(--con-text-muted)",
+              margin: 0,
+              paddingRight: 44,
+            }}
+          >
             إدارة مركبات المناديب وتاريخ الصيانة
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <button className="con-btn-ghost" onClick={() => { window.print(); }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            className="con-btn-ghost"
+            onClick={() => {
+              window.print();
+            }}
+          >
             <Printer size={14} /> طباعة
           </button>
-          <button className="con-btn-ghost" onClick={() => {
-            const rows = vehicles.map(v => ({
-              النوع: v.type, رقم_اللوحة: v.plate, الماركة: v.brand,
-              السنة: v.year, المندوب: v.courier, المدينة: v.city,
-              الحالة: STATUS_META[v.status]?.label ?? v.status, آخر_صيانة: v.lastService,
-            }));
-            downloadCSV(rows, "vehicles_export");
-          }}>
+          <button
+            className="con-btn-ghost"
+            onClick={() => {
+              const rows = vehicles.map((v) => ({
+                النوع: v.type,
+                رقم_اللوحة: v.plate,
+                الماركة: v.brand,
+                السنة: v.year,
+                المندوب: v.courier,
+                المدينة: v.city,
+                الحالة: STATUS_META[v.status]?.label ?? v.status,
+                آخر_صيانة: v.lastService,
+              }));
+              downloadCSV(rows, "vehicles_export");
+            }}
+          >
             <Download size={14} /> تصدير CSV
           </button>
-          <button className="con-btn-primary" onClick={() => setShowAddModal(true)}>
+          <button
+            className="con-btn-primary"
+            onClick={() => setShowAddModal(true)}
+          >
             <Plus size={14} />
             إضافة مركبة
           </button>
@@ -181,21 +315,65 @@ export default function Vehicles() {
       </div>
 
       {/* KPI Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 12,
+        }}
+      >
         {[
-          { label: "إجمالي المركبات", value: stats.total,       icon: Truck,    accent: "var(--con-brand)"   },
-          { label: "نشطة",            value: stats.active,      icon: Car,      accent: "var(--con-success)" },
-          { label: "في الصيانة",      value: stats.maintenance, icon: Wrench,   accent: "var(--con-warning)" },
-          { label: "غير نشطة",        value: stats.inactive,    icon: Bike,     accent: "var(--con-danger)"  },
-        ].map(k => (
+          {
+            label: "إجمالي المركبات",
+            value: stats.total,
+            icon: Truck,
+            accent: "var(--con-brand)",
+          },
+          {
+            label: "نشطة",
+            value: stats.active,
+            icon: Car,
+            accent: "var(--con-success)",
+          },
+          {
+            label: "في الصيانة",
+            value: stats.maintenance,
+            icon: Wrench,
+            accent: "var(--con-warning)",
+          },
+          {
+            label: "غير نشطة",
+            value: stats.inactive,
+            icon: Bike,
+            accent: "var(--con-danger)",
+          },
+        ].map((k) => (
           <div key={k.label} className="con-kpi-card">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", fontWeight: 500 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                  fontWeight: 500,
+                }}
+              >
                 {k.label}
               </span>
               <k.icon size={14} style={{ color: k.accent }} />
             </div>
-            <div className="con-kpi-value" style={{ fontSize: 26, color: k.accent }}>{k.value}</div>
+            <div
+              className="con-kpi-value"
+              style={{ fontSize: 26, color: k.accent }}
+            >
+              {k.value}
+            </div>
           </div>
         ))}
       </div>
@@ -204,13 +382,20 @@ export default function Vehicles() {
       <div className="con-toolbar" style={{ flexWrap: "wrap", gap: 10 }}>
         {/* Search */}
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
-          <Search size={14} style={{
-            position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)",
-            color: "var(--con-text-muted)", pointerEvents: "none",
-          }} />
+          <Search
+            size={14}
+            style={{
+              position: "absolute",
+              insetInlineEnd: 10,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "var(--con-text-muted)",
+              pointerEvents: "none",
+            }}
+          />
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث بالرقم، الماركة، أو المندوب..."
             className="con-input"
             style={{ paddingInlineEnd: 32, width: "100%" }}
@@ -218,17 +403,32 @@ export default function Vehicles() {
         </div>
 
         {/* Status filter pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          {(["all", "active", "maintenance", "inactive"] as const).map(s => (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap",
+          }}
+        >
+          {(["all", "active", "maintenance", "inactive"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
               style={{
-                padding: "4px 12px", borderRadius: 6,
-                fontSize: "var(--con-text-caption)", fontWeight: 500,
-                border: "1px solid", cursor: "pointer", transition: "all 0.15s",
-                background: statusFilter === s ? "var(--con-brand)" : "transparent",
-                borderColor: statusFilter === s ? "var(--con-brand)" : "var(--con-border-strong)",
+                padding: "4px 12px",
+                borderRadius: 6,
+                fontSize: "var(--con-text-caption)",
+                fontWeight: 500,
+                border: "1px solid",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                background:
+                  statusFilter === s ? "var(--con-brand)" : "transparent",
+                borderColor:
+                  statusFilter === s
+                    ? "var(--con-brand)"
+                    : "var(--con-border-strong)",
                 color: statusFilter === s ? "#fff" : "var(--con-text-muted)",
               }}
             >
@@ -239,11 +439,14 @@ export default function Vehicles() {
       </div>
 
       {/* Fleet Table */}
-      <div style={{
-        background: "var(--con-bg-surface-1)",
-        border: "1px solid var(--con-border-default)",
-        borderRadius: 10, overflow: "hidden",
-      }}>
+      <div
+        style={{
+          background: "var(--con-bg-surface-1)",
+          border: "1px solid var(--con-border-default)",
+          borderRadius: 10,
+          overflow: "hidden",
+        }}
+      >
         {filtered.length === 0 ? (
           <div className="con-empty">
             <Truck size={32} style={{ opacity: 0.25, marginBottom: 10 }} />
@@ -264,19 +467,37 @@ export default function Vehicles() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(v => (
+                {filtered.map((v) => (
                   <tr key={v.id}>
                     {/* Type */}
                     <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          background: "var(--con-bg-surface-2)",
-                        }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "var(--con-bg-surface-2)",
+                          }}
+                        >
                           <VehicleTypeIcon type={v.type} />
                         </div>
-                        <span style={{ color: "var(--con-text-secondary)", fontSize: "var(--con-text-table)" }}>
+                        <span
+                          style={{
+                            color: "var(--con-text-secondary)",
+                            fontSize: "var(--con-text-table)",
+                          }}
+                        >
                           {v.type}
                         </span>
                       </div>
@@ -284,52 +505,85 @@ export default function Vehicles() {
 
                     {/* Plate */}
                     <td>
-                      <span style={{
-                        fontFamily: "var(--con-font-mono)", fontSize: 13, fontWeight: 600,
-                        color: "var(--con-text-primary)",
-                        background: "var(--con-bg-surface-2)",
-                        padding: "2px 8px", borderRadius: 5,
-                        border: "1px solid var(--con-border-default)",
-                      }}>
+                      <span
+                        style={{
+                          fontFamily: "var(--con-font-mono)",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "var(--con-text-primary)",
+                          background: "var(--con-bg-surface-2)",
+                          padding: "2px 8px",
+                          borderRadius: 5,
+                          border: "1px solid var(--con-border-default)",
+                        }}
+                      >
                         {v.plate}
                       </span>
                     </td>
 
                     {/* Brand / Year */}
                     <td>
-                      <span style={{ color: "var(--con-text-primary)", fontWeight: 500 }}>{v.brand}</span>
-                      <span style={{
-                        fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)",
-                        marginInlineStart: 5,
-                      }}>
+                      <span
+                        style={{
+                          color: "var(--con-text-primary)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {v.brand}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "var(--con-text-caption)",
+                          color: "var(--con-text-muted)",
+                          marginInlineStart: 5,
+                        }}
+                      >
                         ({v.year})
                       </span>
                     </td>
 
                     {/* Courier */}
-                    <td style={{ color: "var(--con-text-secondary)" }}>{v.courier}</td>
+                    <td style={{ color: "var(--con-text-secondary)" }}>
+                      {v.courier}
+                    </td>
 
                     {/* City */}
                     <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <MapPin size={11} style={{ color: "var(--con-text-muted)" }} />
-                        <span style={{ color: "var(--con-text-muted)" }}>{v.city || "—"}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <MapPin
+                          size={11}
+                          style={{ color: "var(--con-text-muted)" }}
+                        />
+                        <span style={{ color: "var(--con-text-muted)" }}>
+                          {v.city || "—"}
+                        </span>
                       </div>
                     </td>
 
                     {/* Last service */}
                     <td>
-                      <span style={{
-                        fontFamily: "var(--con-font-mono)", fontSize: 12,
-                        color: "var(--con-text-muted)",
-                      }}>
+                      <span
+                        style={{
+                          fontFamily: "var(--con-font-mono)",
+                          fontSize: 12,
+                          color: "var(--con-text-muted)",
+                        }}
+                      >
                         {formatDate(v.lastService)}
                       </span>
                     </td>
 
                     {/* Status */}
                     <td>
-                      <span className={`con-badge con-badge-sm ${STATUS_META[v.status]?.badgeClass ?? ""}`}>
+                      <span
+                        className={`con-badge con-badge-sm ${STATUS_META[v.status]?.badgeClass ?? ""}`}
+                      >
                         {STATUS_META[v.status]?.label ?? v.status}
                       </span>
                     </td>
@@ -339,23 +593,50 @@ export default function Vehicles() {
             </table>
 
             {/* Table footer */}
-            <div style={{
-              padding: "9px 16px",
-              borderTop: "1px solid var(--con-border-default)",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+            <div
+              style={{
+                padding: "9px 16px",
+                borderTop: "1px solid var(--con-border-default)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                }}
+              >
                 {filtered.length} مركبة
-                {statusFilter !== "all" && ` — تصفية: ${STATUS_META[statusFilter].label}`}
+                {statusFilter !== "all" &&
+                  ` — تصفية: ${STATUS_META[statusFilter].label}`}
               </span>
-              <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+              <span
+                style={{
+                  fontSize: "var(--con-text-caption)",
+                  color: "var(--con-text-muted)",
+                }}
+              >
                 نشط:{" "}
-                <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-success)", fontWeight: 600 }}>
-                  {filtered.filter(v => v.status === "active").length}
+                <span
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-success)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {filtered.filter((v) => v.status === "active").length}
                 </span>
                 {" · "}صيانة:{" "}
-                <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-warning)", fontWeight: 600 }}>
-                  {filtered.filter(v => v.status === "maintenance").length}
+                <span
+                  style={{
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-warning)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {filtered.filter((v) => v.status === "maintenance").length}
                 </span>
               </span>
             </div>
@@ -365,27 +646,146 @@ export default function Vehicles() {
 
       {/* Add Vehicle Modal */}
       {showAddModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
-          <div dir="rtl" style={{ background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-strong)", borderRadius: 12, width: "100%", maxWidth: 440, boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--con-border-default)" }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--con-text-primary)", margin: 0 }}>إضافة مركبة جديدة</h2>
-              <button onClick={() => setShowAddModal(false)} style={{ background: "transparent", border: "none", color: "var(--con-text-muted)", cursor: "pointer" }}><X size={20} /></button>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
+            padding: 16,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddModal(false);
+          }}
+        >
+          <div
+            dir="rtl"
+            style={{
+              background: "var(--con-bg-elevated)",
+              border: "1px solid var(--con-border-strong)",
+              borderRadius: 12,
+              width: "100%",
+              maxWidth: 440,
+              boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px 24px",
+                borderBottom: "1px solid var(--con-border-default)",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  color: "var(--con-text-primary)",
+                  margin: 0,
+                }}
+              >
+                إضافة مركبة جديدة
+              </h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--con-text-muted)",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={20} />
+              </button>
             </div>
-            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div
+              style={{
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
               {[
-                { label: "رقم اللوحة *", value: newVehicle.plate, key: "plate", placeholder: "ABC-1234" },
-                { label: "نوع المركبة", value: newVehicle.type, key: "type", placeholder: "سيارة" },
-                { label: "الماركة", value: newVehicle.brand, key: "brand", placeholder: "تويوتا" },
-                { label: "اسم المندوب", value: newVehicle.courier, key: "courier", placeholder: "غير محدد" },
-                { label: "المدينة", value: newVehicle.city, key: "city", placeholder: "الرياض" },
-                { label: "السنة", value: newVehicle.year, key: "year", placeholder: "2024" },
+                {
+                  label: "رقم اللوحة *",
+                  value: newVehicle.plate,
+                  key: "plate",
+                  placeholder: "ABC-1234",
+                },
+                {
+                  label: "نوع المركبة",
+                  value: newVehicle.type,
+                  key: "type",
+                  placeholder: "سيارة",
+                },
+                {
+                  label: "الماركة",
+                  value: newVehicle.brand,
+                  key: "brand",
+                  placeholder: "تويوتا",
+                },
+                {
+                  label: "اسم المندوب",
+                  value: newVehicle.courier,
+                  key: "courier",
+                  placeholder: "غير محدد",
+                },
+                {
+                  label: "المدينة",
+                  value: newVehicle.city,
+                  key: "city",
+                  placeholder: "الرياض",
+                },
+                {
+                  label: "السنة",
+                  value: newVehicle.year,
+                  key: "year",
+                  placeholder: "2024",
+                },
               ].map((f) => (
                 <div key={f.key}>
-                  <label style={{ fontSize: 12, color: "var(--con-text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>{f.label}</label>
-                  <input className="con-input" value={f.value} placeholder={f.placeholder} onChange={(e) => setNewVehicle((prev) => ({ ...prev, [f.key]: e.target.value }))} style={{ width: "100%" }} />
+                  <label
+                    style={{
+                      fontSize: 12,
+                      color: "var(--con-text-muted)",
+                      fontWeight: 600,
+                      marginBottom: 4,
+                      display: "block",
+                    }}
+                  >
+                    {f.label}
+                  </label>
+                  <input
+                    className="con-input"
+                    value={f.value}
+                    placeholder={f.placeholder}
+                    onChange={(e) =>
+                      setNewVehicle((prev) => ({
+                        ...prev,
+                        [f.key]: e.target.value,
+                      }))
+                    }
+                    style={{ width: "100%" }}
+                  />
                 </div>
               ))}
-              <button className="con-btn-primary" onClick={addVehicle} disabled={!newVehicle.plate} style={{ width: "100%", justifyContent: "center", marginTop: 4 }}>
+              <button
+                className="con-btn-primary"
+                onClick={addVehicle}
+                disabled={!newVehicle.plate}
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  marginTop: 4,
+                }}
+              >
                 <Plus size={14} /> إضافة المركبة
               </button>
             </div>

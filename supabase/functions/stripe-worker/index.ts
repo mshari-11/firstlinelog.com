@@ -20,12 +20,13 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -49,7 +50,11 @@ async function processPayouts(params: any) {
     try {
       const stripeAccountId = line.couriers?.stripe_account_id;
       if (!stripeAccountId) {
-        results.push({ id: line.id, status: "skipped", reason: "لا يوجد حساب Stripe" });
+        results.push({
+          id: line.id,
+          status: "skipped",
+          reason: "لا يوجد حساب Stripe",
+        });
         continue;
       }
 
@@ -101,7 +106,10 @@ async function retryFailed(_params: any) {
       await stripe.paymentIntents.confirm(payment.stripe_payment_intent_id);
       await supabase
         .from("payments")
-        .update({ retry_count: (payment.retry_count ?? 0) + 1, last_retry_at: new Date().toISOString() })
+        .update({
+          retry_count: (payment.retry_count ?? 0) + 1,
+          last_retry_at: new Date().toISOString(),
+        })
         .eq("id", payment.id);
       retried++;
     } catch {
@@ -117,8 +125,8 @@ async function retryFailed(_params: any) {
 
 async function syncBalance(_params: any) {
   const balance = await stripe.balance.retrieve();
-  const available = balance.available.find(b => b.currency === "sar");
-  const pending = balance.pending.find(b => b.currency === "sar");
+  const available = balance.available.find((b) => b.currency === "sar");
+  const pending = balance.pending.find((b) => b.currency === "sar");
 
   await supabase.from("system_settings").upsert({
     key: "stripe_balance",
@@ -161,19 +169,22 @@ Deno.serve(async (req: Request) => {
       default:
         return new Response(
           JSON.stringify({ error: `مهمة غير معروفة: ${task}` }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
         );
     }
 
-    return new Response(
-      JSON.stringify({ task, success: true, result }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ task, success: true, result }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err: any) {
     console.error("stripe-worker error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message ?? "خطأ داخلي" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: err.message ?? "خطأ داخلي" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

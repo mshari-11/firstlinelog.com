@@ -72,7 +72,10 @@ export function AdminLayout() {
   // عرض شاشة تحميل أثناء التحقق
   if (isLoading) {
     return (
-      <div dir="rtl" className="min-h-screen bg-muted/30 flex items-center justify-center">
+      <div
+        dir="rtl"
+        className="min-h-screen bg-muted/30 flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-muted-foreground">جاري التحقق...</p>
@@ -98,11 +101,15 @@ export function AdminLayout() {
         {/* Logo */}
         <div className="flex items-center gap-3 h-16 px-6 border-b border-sidebar-border">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">FL</span>
+            <span className="text-primary-foreground font-bold text-sm">
+              FL
+            </span>
           </div>
           <div>
             <p className="font-bold text-sm leading-none">First Line</p>
-            <p className="text-[10px] text-sidebar-foreground/60 font-medium">لوحة الإدارة</p>
+            <p className="text-[10px] text-sidebar-foreground/60 font-medium">
+              لوحة الإدارة
+            </p>
           </div>
         </div>
 
@@ -139,8 +146,12 @@ export function AdminLayout() {
               {user?.name?.[0] || "م"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{user?.name || "مشرف"}</p>
-              <p className="text-xs text-sidebar-foreground/50">{user?.role || "إداري"}</p>
+              <p className="text-sm font-semibold truncate">
+                {user?.name || "مشرف"}
+              </p>
+              <p className="text-xs text-sidebar-foreground/50">
+                {user?.role || "إداري"}
+              </p>
             </div>
           </div>
           <Button
@@ -176,7 +187,9 @@ export function AdminLayout() {
               <div className="flex items-center justify-between h-16 px-6 border-b border-sidebar-border">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-sm">FL</span>
+                    <span className="text-primary-foreground font-bold text-sm">
+                      FL
+                    </span>
                   </div>
                   <p className="font-bold text-sm">لوحة الإدارة</p>
                 </div>
@@ -245,7 +258,10 @@ export function AdminLayout() {
                 <DropdownMenuItem>إعدادات الحساب</DropdownMenuItem>
                 <DropdownMenuItem>الإشعارات</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-500">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-red-500"
+                >
                   تسجيل الخروج
                 </DropdownMenuItem>
               </DropdownMenuContent>

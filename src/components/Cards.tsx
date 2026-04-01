@@ -1,22 +1,18 @@
 import { motion } from "framer-motion";
 import { MapPin, ArrowUpLeft } from "lucide-react";
-import { 
-  MetricData, 
-  PlatformData, 
-  CityData 
-} from "@/lib/index";
+import { MetricData, PlatformData, CityData } from "@/lib/index";
 
 const hoverLift = {
   rest: { y: 0, scale: 1 },
   hover: {
-    y: -8, 
-    scale: 1.02, 
-    transition: { 
-      type: "spring", 
-      stiffness: 400, 
-      damping: 30 
-    } 
-  }
+    y: -8,
+    scale: 1.02,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 30,
+    },
+  },
 };
 
 /**
@@ -33,11 +29,11 @@ export function MetricCard({ metric }: { metric: MetricData }) {
       <div className="absolute top-0 left-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <ArrowUpLeft className="w-12 h-12 text-primary rotate-[-90deg]" />
       </div>
-      
+
       <p className="text-sm font-bold tracking-wide text-muted-foreground mb-4">
         {metric.label}
       </p>
-      
+
       <div className="flex items-baseline gap-2 mb-2 justify-start flex-row-reverse">
         <span className="text-4xl md:text-5xl font-mono font-bold text-primary">
           {metric.value}
@@ -63,7 +59,15 @@ export function MetricCard({ metric }: { metric: MetricData }) {
 /**
  * بطاقة لعرض الخدمات والمميزات مع أيقونة
  */
-export function ServiceCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
+export function ServiceCard({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
   return (
     <motion.div
       variants={hoverLift}
@@ -74,12 +78,10 @@ export function ServiceCard({ title, description, icon }: { title: string; descr
       <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
         {icon}
       </div>
-      
+
       <div className="space-y-3">
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
-        <p className="text-muted-foreground leading-relaxed">
-          {description}
-        </p>
+        <p className="text-muted-foreground leading-relaxed">{description}</p>
       </div>
     </motion.div>
   );
@@ -132,7 +134,9 @@ export function CityCard({ city }: { city: CityData }) {
       </div>
       <div className="flex-1">
         <h4 className="font-bold text-foreground">{city.name}</h4>
-        <p className="text-xs text-muted-foreground uppercase tracking-tight">{city.region}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-tight">
+          {city.region}
+        </p>
       </div>
     </div>
   );

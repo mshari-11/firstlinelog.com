@@ -16,7 +16,13 @@ import {
   ChevronDown,
   FileText,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -37,18 +43,58 @@ const monthlyRevenue = [
 ];
 
 const platformPerformance = [
-  { name: "هنقرستيشن", orders: 4200, revenue: 420000, percentage: 35, growth: 12 },
+  {
+    name: "هنقرستيشن",
+    orders: 4200,
+    revenue: 420000,
+    percentage: 35,
+    growth: 12,
+  },
   { name: "جاهز", orders: 3600, revenue: 360000, percentage: 30, growth: 8 },
   { name: "مرسول", orders: 2400, revenue: 240000, percentage: 20, growth: 15 },
-  { name: "نون فود", orders: 1200, revenue: 120000, percentage: 10, growth: 22 },
+  {
+    name: "نون فود",
+    orders: 1200,
+    revenue: 120000,
+    percentage: 10,
+    growth: 22,
+  },
   { name: "أخرى", orders: 600, revenue: 60000, percentage: 5, growth: 5 },
 ];
 
 const kpiCards = [
-  { title: "إجمالي الإيرادات", value: "1.2M ر.س", change: "+18.3%", trend: "up", icon: DollarSign, period: "هذا الشهر" },
-  { title: "إجمالي الطلبات", value: "12,847", change: "+12.5%", trend: "up", icon: Package, period: "هذا الشهر" },
-  { title: "السائقين النشطين", value: "2,120", change: "+5.2%", trend: "up", icon: Users, period: "حالياً" },
-  { title: "معدل التسليم", value: "94.8%", change: "+2.1%", trend: "up", icon: Clock, period: "هذا الشهر" },
+  {
+    title: "إجمالي الإيرادات",
+    value: "1.2M ر.س",
+    change: "+18.3%",
+    trend: "up",
+    icon: DollarSign,
+    period: "هذا الشهر",
+  },
+  {
+    title: "إجمالي الطلبات",
+    value: "12,847",
+    change: "+12.5%",
+    trend: "up",
+    icon: Package,
+    period: "هذا الشهر",
+  },
+  {
+    title: "السائقين النشطين",
+    value: "2,120",
+    change: "+5.2%",
+    trend: "up",
+    icon: Users,
+    period: "حالياً",
+  },
+  {
+    title: "معدل التسليم",
+    value: "94.8%",
+    change: "+2.1%",
+    trend: "up",
+    icon: Clock,
+    period: "هذا الشهر",
+  },
 ];
 
 const container = {
@@ -65,12 +111,22 @@ export default function AdminReports() {
   const maxRevenue = Math.max(...monthlyRevenue.map((m) => m.value));
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       {/* العنوان */}
-      <motion.div variants={item} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <motion.div
+        variants={item}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-bold">التقارير والتحليلات</h1>
-          <p className="text-muted-foreground text-sm mt-1">نظرة تحليلية شاملة على أداء العمليات</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            نظرة تحليلية شاملة على أداء العمليات
+          </p>
         </div>
         <div className="flex gap-2">
           <DropdownMenu>
@@ -82,10 +138,22 @@ export default function AdminReports() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem><FileSpreadsheet className="w-3.5 h-3.5 ml-2" />تصدير Excel</DropdownMenuItem>
-              <DropdownMenuItem><FileText className="w-3.5 h-3.5 ml-2" />تصدير PDF</DropdownMenuItem>
-              <DropdownMenuItem><Download className="w-3.5 h-3.5 ml-2" />تصدير CSV</DropdownMenuItem>
-              <DropdownMenuItem><Printer className="w-3.5 h-3.5 ml-2" />طباعة</DropdownMenuItem>
+              <DropdownMenuItem>
+                <FileSpreadsheet className="w-3.5 h-3.5 ml-2" />
+                تصدير Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <FileText className="w-3.5 h-3.5 ml-2" />
+                تصدير PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Download className="w-3.5 h-3.5 ml-2" />
+                تصدير CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Printer className="w-3.5 h-3.5 ml-2" />
+                طباعة
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -99,13 +167,21 @@ export default function AdminReports() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <kpi.icon className="w-5 h-5 text-primary" />
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{kpi.period}</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {kpi.period}
+                  </span>
                 </div>
                 <p className="text-2xl font-bold font-mono">{kpi.value}</p>
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                  <span className={`text-xs font-bold flex items-center gap-0.5 ${kpi.trend === "up" ? "text-emerald-600" : "text-red-500"}`}>
-                    {kpi.trend === "up" ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  <span
+                    className={`text-xs font-bold flex items-center gap-0.5 ${kpi.trend === "up" ? "text-emerald-600" : "text-red-500"}`}
+                  >
+                    {kpi.trend === "up" ? (
+                      <ArrowUpRight className="w-3 h-3" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3" />
+                    )}
                     {kpi.change}
                   </span>
                 </div>
@@ -128,12 +204,16 @@ export default function AdminReports() {
                 <div key={month.month} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium w-20">{month.month}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{(month.value / 1000).toFixed(0)}K ر.س</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {(month.value / 1000).toFixed(0)}K ر.س
+                    </span>
                   </div>
                   <div className="relative h-8 bg-muted/50 rounded-lg overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(month.value / maxRevenue) * 100}%` }}
+                      animate={{
+                        width: `${(month.value / maxRevenue) * 100}%`,
+                      }}
                       transition={{ duration: 0.8, delay: 0.2 }}
                       className="absolute inset-y-0 right-0 bg-gradient-to-l from-primary to-primary/60 rounded-lg flex items-center px-3"
                     >
@@ -153,7 +233,9 @@ export default function AdminReports() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">أداء المنصات</CardTitle>
-              <CardDescription>توزيع الطلبات والإيرادات حسب المنصة</CardDescription>
+              <CardDescription>
+                توزيع الطلبات والإيرادات حسب المنصة
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               {platformPerformance.map((platform) => (
@@ -161,7 +243,10 @@ export default function AdminReports() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold">{platform.name}</span>
-                      <Badge variant="outline" className="text-[10px] font-mono">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-mono"
+                      >
                         {platform.percentage}%
                       </Badge>
                     </div>

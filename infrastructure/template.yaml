@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   FLL Platform — First Line Logistics
@@ -12,10 +12,10 @@ Globals:
     MemorySize: 256
     Environment:
       Variables:
-        SUPABASE_URL: !Sub '{{resolve:secretsmanager:fll/supabase:SecretString:url}}'
-        SUPABASE_SERVICE_KEY: !Sub '{{resolve:secretsmanager:fll/supabase:SecretString:service_key}}'
-        ADMIN_EMAILS: 'm_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA'
-        FROM_EMAIL: 'FLL Platform <no-reply@fll.sa>'
+        SUPABASE_URL: !Sub "{{resolve:secretsmanager:fll/supabase:SecretString:url}}"
+        SUPABASE_SERVICE_KEY: !Sub "{{resolve:secretsmanager:fll/supabase:SecretString:service_key}}"
+        ADMIN_EMAILS: "m_shaikhi@yahoo.com,A.ALZAMIL@FLL.SA"
+        FROM_EMAIL: "FLL Platform <no-reply@fll.sa>"
 
 Parameters:
   Environment:
@@ -33,7 +33,6 @@ Parameters:
 # RESOURCES
 # ============================================================================
 Resources:
-
   # ─── API Gateway ──────────────────────────────────────────────────────────
   FLLPlatformApi:
     Type: AWS::Serverless::HttpApi
@@ -69,12 +68,12 @@ Resources:
           USER_POOL_ID: !Ref CognitoUserPoolId
           COGNITO_CLIENT_ID: !Ref CognitoClientId
           REGION: me-south-1
-          SES_FROM_EMAIL: 'FLL <no-reply@fll.sa>'
+          SES_FROM_EMAIL: "FLL <no-reply@fll.sa>"
       Policies:
         - Statement:
             - Effect: Allow
               Action: [cognito-idp:*, ses:SendEmail, ses:SendRawEmail]
-              Resource: '*'
+              Resource: "*"
       Events:
         Login:
           Type: HttpApi
@@ -141,7 +140,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ses:SendEmail, ses:SendRawEmail, cognito-idp:*]
-              Resource: '*'
+              Resource: "*"
       Events:
         OtpSend:
           Type: HttpApi
@@ -193,7 +192,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ses:SendEmail]
-              Resource: '*'
+              Resource: "*"
       Events:
         Upload:
           Type: HttpApi
@@ -220,7 +219,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
-              Resource: '*'
+              Resource: "*"
       Events:
         Chat:
           Type: HttpApi
@@ -240,7 +239,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ses:SendEmail]
-              Resource: '*'
+              Resource: "*"
       Events:
         Confirm:
           Type: HttpApi
@@ -260,7 +259,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
-              Resource: '*'
+              Resource: "*"
 
   # ─── AI Dashboard API Lambda ──────────────────────────────────────────────
   AIDashboardApiFunction:
@@ -274,7 +273,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
-              Resource: '*'
+              Resource: "*"
 
   # ─── AI Finance Review Lambda ─────────────────────────────────────────────
   AIFinanceReviewFunction:
@@ -289,7 +288,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
-              Resource: '*'
+              Resource: "*"
 
   # ─── Platform API (Node.js) ───────────────────────────────────────────────
   PlatformApiFunction:
@@ -332,7 +331,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [cognito-idp:*, ses:SendEmail]
-              Resource: '*'
+              Resource: "*"
 
   # ─── Generate STC Excel Lambda ────────────────────────────────────────────
   GenerateSTCExcelFunction:
@@ -365,7 +364,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
-          MIGRATION_SECRET: !Sub '{{resolve:secretsmanager:fll/migration:SecretString:secret}}'
+          MIGRATION_SECRET: !Sub "{{resolve:secretsmanager:fll/migration:SecretString:secret}}"
 
   # ─── OTP Service Lambda ───────────────────────────────────────────────────
   OTPServiceFunction:
@@ -378,7 +377,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ses:SendEmail]
-              Resource: '*'
+              Resource: "*"
 
   # ─── SLA Scanner Lambda (Scheduled) ───────────────────────────────────────
   SLAScannerFunction:
@@ -396,7 +395,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ses:SendEmail]
-              Resource: '*'
+              Resource: "*"
       Events:
         HourlySchedule:
           Type: Schedule
@@ -419,9 +418,9 @@ Resources:
           USER_POOL_ID: !Ref CognitoUserPoolId
           KYC_BUCKET: !Ref KYCDocumentsBucket
           CHAT_TABLE: !Ref ChatHistoryTable
-          BATCH_SIZE: '100'
-          LOCATION_RETENTION_HOURS: '48'
-          APPLICATION_EXPIRY_DAYS: '30'
+          BATCH_SIZE: "100"
+          LOCATION_RETENTION_HOURS: "48"
+          APPLICATION_EXPIRY_DAYS: "30"
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ChatHistoryTable
@@ -430,7 +429,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [cognito-idp:*, ses:SendEmail, ses:SendRawEmail]
-              Resource: '*'
+              Resource: "*"
       Events:
         FullSync:
           Type: Schedule
@@ -455,7 +454,7 @@ Resources:
   KYCDocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub 'fll-kyc-documents-${AWS::AccountId}'
+      BucketName: !Sub "fll-kyc-documents-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -493,7 +492,7 @@ Resources:
   FinanceExportsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub 'fll-finance-exports-${AWS::AccountId}'
+      BucketName: !Sub "fll-finance-exports-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -610,7 +609,7 @@ Resources:
 Outputs:
   ApiEndpoint:
     Description: FLL Platform API endpoint
-    Value: !Sub 'https://${FLLPlatformApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Value: !Sub "https://${FLLPlatformApi}.execute-api.${AWS::Region}.amazonaws.com"
 
   KYCBucketName:
     Description: KYC Documents S3 bucket

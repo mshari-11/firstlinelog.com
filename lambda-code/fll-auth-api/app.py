@@ -166,7 +166,7 @@ def handler(event, context):
         return cors(404, {'message': 'Not found'})
 
 def login(body):
-    username = body.get('username', body.get('email', ''))
+    username = body.get('username', body.get('email', '')).strip().lower()
     password = body.get('password', '')
     
     if not username or not password:
@@ -247,7 +247,7 @@ def respond_mfa(body):
     """Handle MFA code verification after login"""
     session = body.get('session', '')
     code = body.get('code', '')
-    username = body.get('username', body.get('email', ''))
+    username = body.get('username', body.get('email', '')).strip().lower()
     challenge = body.get('challenge', 'EMAIL_OTP')
     
     if not session or not code or not username:
@@ -301,7 +301,7 @@ def respond_mfa(body):
         return cors(500, {'message': 'خطأ في النظام'})
 
 def register(body):
-    email = body.get('email', '')
+    email = body.get('email', '').strip().lower()
     password = body.get('password', '')
     name = body.get('name', '')
     
@@ -333,7 +333,7 @@ def register(body):
         return cors(500, {'message': 'خطأ في التسجيل'})
 
 def verify_code(body):
-    email = body.get('email', body.get('username', ''))
+    email = body.get('email', body.get('username', '')).strip().lower()
     code = body.get('code', '')
     
     if not email or not code:
@@ -360,7 +360,7 @@ def verify_code(body):
         return cors(500, {'message': 'خطأ في التحقق'})
 
 def forgot_password(body):
-    email = body.get('email', body.get('username', ''))
+    email = body.get('email', body.get('username', '')).strip().lower()
     
     if not email:
         return cors(400, {'message': 'البريد الإلكتروني مطلوب'})
@@ -381,7 +381,7 @@ def forgot_password(body):
         return cors(200, {'message': 'إذا كان الحساب موجوداً، سيصلك رمز على البريد الإلكتروني'})
 
 def reset_password(body):
-    email = body.get('email', body.get('username', ''))
+    email = body.get('email', body.get('username', '')).strip().lower()
     code = body.get('code', '')
     new_password = body.get('password', body.get('new_password', ''))
     
@@ -412,7 +412,7 @@ def reset_password(body):
         return cors(500, {'message': 'خطأ في إعادة تعيين كلمة المرور'})
 
 def resend_code(body):
-    email = body.get('email', body.get('username', ''))
+    email = body.get('email', body.get('username', '')).strip().lower()
     
     if not email:
         return cors(400, {'message': 'البريد الإلكتروني مطلوب'})

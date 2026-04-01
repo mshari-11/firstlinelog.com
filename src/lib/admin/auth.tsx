@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      const result = await cognitoSignIn(email, password);
+      const result = await cognitoSignIn(email.toLowerCase().trim(), password);
       if (result.error) {
         return {
           error: result.error.includes("Incorrect")

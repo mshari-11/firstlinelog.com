@@ -891,7 +891,7 @@ export default function CourierRegister() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
+          email: form.email.toLowerCase().trim(),
           full_name: form.full_name,
           national_id: form.national_id,
           phone: form.phone,
@@ -923,7 +923,7 @@ export default function CourierRegister() {
       const res = await fetch(`${API_BASE}/driver/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, code: form.otpCode }),
+        body: JSON.stringify({ email: form.email.toLowerCase().trim(), code: form.otpCode }),
       });
       const data = await res.json();
       if (!res.ok) {

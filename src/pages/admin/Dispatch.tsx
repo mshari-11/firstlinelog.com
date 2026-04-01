@@ -477,21 +477,13 @@ export default function Dispatch() {
     }
 
     fetchData();
-<<<<<<< Updated upstream
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchData, 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-=======
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30_000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [refreshTick]);
->>>>>>> Stashed changes
+  }, []);
 
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;

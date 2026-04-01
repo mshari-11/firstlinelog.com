@@ -56,7 +56,7 @@ export default function UnifiedPortal() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) {
+    if (!email.trim().toLowerCase()) {
       setError("أدخل البريد الإلكتروني");
       return;
     }
@@ -68,7 +68,7 @@ export default function UnifiedPortal() {
     setSuccess("");
     setLoading(true);
 
-    const res = await signIn(email.trim(), password);
+    const res = await signIn(email.trim().toLowerCase(), password);
     if (res.error) {
       setError(res.error);
       setLoading(false);
@@ -78,7 +78,7 @@ export default function UnifiedPortal() {
     // Try to send OTP for 2FA
     setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
     try {
-      const otpRes = await sendOtp(email.trim(), "login");
+      const otpRes = await sendOtp(email.trim().toLowerCase(), "login");
       setLoading(false);
       if (otpRes.error) {
         // OTP service unavailable — skip 2FA and go directly to dashboard
@@ -109,7 +109,7 @@ export default function UnifiedPortal() {
     setSuccess("");
     setLoading(true);
 
-    const res = await verifyOtp(email.trim(), otp, "login");
+    const res = await verifyOtp(email.trim().toLowerCase(), otp, "login");
     setLoading(false);
     if (res.error) {
       setError(res.error);
@@ -123,7 +123,7 @@ export default function UnifiedPortal() {
   async function handleLoginOTPResend() {
     setError("");
     setLoading(true);
-    const res = await sendOtp(email.trim(), "login");
+    const res = await sendOtp(email.trim().toLowerCase(), "login");
     setLoading(false);
     if (res.error) {
       setError(res.error);

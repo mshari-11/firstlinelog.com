@@ -165,12 +165,12 @@ export function cognitoSignIn(
   console.log("cognitoSignIn: pool=", USER_POOL_ID, "client=", CLIENT_ID);
   return new Promise((resolve) => {
     const authDetails = new AuthenticationDetails({
-      Username: email,
+      Username: email.toLowerCase().trim(),
       Password: password,
     });
 
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: email.toLowerCase().trim(),
       Pool: userPool,
     });
 
@@ -327,7 +327,7 @@ export function cognitoForgotPassword(
 ): Promise<{ error?: string }> {
   return new Promise((resolve) => {
     try {
-      const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+      const cognitoUser = new CognitoUser({ Username: email.toLowerCase().trim(), Pool: userPool });
       cognitoUser.forgotPassword({
         onSuccess: (data) => {
           console.log("forgotPassword onSuccess:", data);
@@ -365,7 +365,7 @@ export function cognitoConfirmPassword(
   newPassword: string,
 ): Promise<{ error?: string }> {
   return new Promise((resolve) => {
-    const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+    const cognitoUser = new CognitoUser({ Username: email.toLowerCase().trim(), Pool: userPool });
     cognitoUser.confirmPassword(code, newPassword, {
       onSuccess: () => resolve({}),
       onFailure: (err) => {

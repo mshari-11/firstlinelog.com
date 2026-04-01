@@ -133,6 +133,7 @@ const AuditLog = lazy(() => import("@/pages/admin/AuditLog"));
 const Tasks = lazy(() => import("@/pages/admin/Tasks"));
 const AdminNotifications = lazy(() => import("@/pages/admin/Notifications"));
 const Attendance = lazy(() => import("@/pages/admin/Attendance"));
+const AttendanceLive = lazy(() => import("@/pages/admin/AttendanceLive"));
 const FleetManagement = lazy(() => import("@/pages/admin/FleetManagement"));
 const FleetAssignments = lazy(() => import("@/pages/admin/FleetAssignments"));
 const Shipments = lazy(() => import("@/pages/admin/Shipments"));
@@ -499,6 +500,14 @@ export default function App() {
                     departments={["hr"]}
                   >
                     <Attendance />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="attendance-live"
+                element={
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <AttendanceLive />
                   </AccessGuard>
                 }
               />

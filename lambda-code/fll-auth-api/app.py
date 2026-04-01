@@ -27,7 +27,7 @@ client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
-ses = boto3.client('ses', region_name='us-east-1')  # SES verified in us-east-1
+ses = boto3.client('ses', region_name='me-south-1')  # SES domain verified in me-south-1 only
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
@@ -492,30 +492,29 @@ def send_custom_otp(body):
         if result is None:
             return cors(500, {'message': 'خطأ في حفظ رمز التحقق'})
 
-        # 3) Send via SES (don't let failure block the response)
-        try:
-            ses.send_email(
-                Source=SES_FROM,
-                Destination={'ToAddresses': [email]},
-                Message={
-                    'Subject': {
-                        'Data': f'رمز التحقق — FLL | {code}',
-                        'Charset': 'UTF-8'
-                    },
-                    'Body': {
-                        'Html': {
-                            'Data': _build_otp_email_html(code, email),
-                            'Charset': 'UTF-8'
-                        },
-                        'Text': {
-                            'Data': f'رمز التحقق الخاص بك هو: {code}\n\nصالح لمدة 10 دقائق.\n\nFirst Line Logistics',
-                            'Charset': 'UTF-8'
+        # 3) Send via SES in background thread (don't block response)
+        import threading
+        def send_email_async():
+            try:
+                ses.send_email(
+                    Source=SES_FROM,
+                    Destination={'ToAddresses': [email]},
+                    Message={
+                        'Subject': {'Data': f'رمز التحقق — FLL | {code}', 'Charset': 'UTF-8'},
+                        'Body': {
+                            'Html': {'Data': _build_otp_email_html(code, email), 'Charset': 'UTF-8'},
+                            'Text': {'Data': f'رمز التحقق الخاص بك هو: {code}\n\nصالح لمدة 10 دقائق.\n\nFirst Line Logistics', 'Charset': 'UTF-8'}
                         }
                     }
-                }
-            )
-        except Exception as ses_err:
-            print(f"SES send error (non-blocking): {ses_err}")
+                )
+                print(f"SES email sent to {email}")
+            except Exception as ses_err:
+                print(f"SES send error: {ses_err}")
+
+        t = threading.Thread(target=send_email_async)
+        t.start()
+        # Don't wait for thread — return immediately
+        # Lambda will keep running until thread completes
 
         return cors(200, {
             'success': True,

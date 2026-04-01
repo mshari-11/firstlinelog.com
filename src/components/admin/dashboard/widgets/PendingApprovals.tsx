@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Loader2, CheckCheck, FileText, CreditCard, UserPlus, FileSpreadsheet } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -64,10 +64,28 @@ function timeAgo(dateStr: string): string {
   return `منذ ${Math.floor(hours / 24)} يوم`;
 }
 
+const typeIcons: Record<string, { icon: React.ElementType; color: string }> = {
+  excel: { icon: FileSpreadsheet, color: "var(--con-info)" },
+  finance: { icon: CreditCard, color: "var(--con-warning)" },
+  driver: { icon: UserPlus, color: "var(--con-brand)" },
+  payout: { icon: CreditCard, color: "var(--con-success)" },
+  other: { icon: FileText, color: "var(--con-text-muted)" },
+};
+
 export function PendingApprovals() {
   const navigate = useNavigate();
   const [approvals, setApprovals] = useState<ApprovalItem[]>(mockApprovals);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleBulkApprove = async () => {
+    if (approvals.length === 0 || bulkLoading) return;
+    setBulkLoading(true);
+    for (const item of approvals) {
+      await handleAction(item.id, "approve");
+    }
+    setBulkLoading(false);
+  };
 
   useEffect(() => {
     async function fetchApprovals() {
@@ -138,6 +156,33 @@ export function PendingApprovals() {
       icon={Clock}
       iconColor="var(--con-warning)"
       onDrilldown={() => navigate("/admin-panel/approvals")}
+      actions={
+        approvals.length > 1 ? (
+          <button
+            onClick={handleBulkApprove}
+            disabled={bulkLoading}
+            title="اعتماد الكل"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "3px 8px",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: 10,
+              fontWeight: 600,
+              fontFamily: "var(--con-font-primary)",
+              background: "var(--con-success)14",
+              color: "var(--con-success)",
+              border: "1px solid var(--con-success)30",
+              cursor: bulkLoading ? "not-allowed" : "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            <CheckCheck size={11} />
+            اعتماد الكل
+          </button>
+        ) : undefined
+      }
     >
       {approvals.length === 0 ? (
         <div style={{ textAlign: "center", padding: "16px 0" }}>
@@ -172,6 +217,27 @@ export function PendingApprovals() {
                 transition: "opacity 0.2s",
               }}
             >
+              {/* Type icon */}
+              {(() => {
+                const ti = typeIcons[item.type] || typeIcons.other;
+                const TIcon = ti.icon;
+                return (
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "var(--con-radius-sm)",
+                      background: `${ti.color}14`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <TIcon size={13} style={{ color: ti.color }} />
+                  </div>
+                );
+              })()}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{

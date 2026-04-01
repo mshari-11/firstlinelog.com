@@ -1,7 +1,7 @@
 /**
  * System Health Widget — Real health checks via ping endpoints
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Activity,
   Database,
@@ -9,6 +9,7 @@ import {
   Globe,
   Wifi,
   RefreshCw,
+  Timer,
 } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 
@@ -97,6 +98,10 @@ export function SystemHealth() {
     },
   ]);
   const [loading, setLoading] = useState(true);
+  const [nextCheckIn, setNextCheckIn] = useState(120);
+  const [uptimePercent, setUptimePercent] = useState(100);
+  const checkCountRef = useRef(0);
+  const onlineCountRef = useRef(0);
 
   const checkHealth = useCallback(async () => {
     setLoading(true);
@@ -141,12 +146,29 @@ export function SystemHealth() {
       },
     ]);
     setLoading(false);
+
+    // Track uptime
+    checkCountRef.current++;
+    const allOk = apiRes.ok && dbRes.ok && cdnRes.ok;
+    if (allOk) onlineCountRef.current++;
+    setUptimePercent(
+      checkCountRef.current > 0
+        ? Math.round((onlineCountRef.current / checkCountRef.current) * 100)
+        : 100,
+    );
+    setNextCheckIn(120);
   }, []);
 
   useEffect(() => {
     checkHealth();
     const interval = setInterval(checkHealth, 120000);
-    return () => clearInterval(interval);
+    const countdownInterval = setInterval(() => {
+      setNextCheckIn((prev) => (prev > 0 ? prev - 1 : 120));
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(countdownInterval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -161,10 +183,29 @@ export function SystemHealth() {
     <WidgetShell
       id="system-health"
       title="صحة النظام"
+      subtitle={`وقت التشغيل ${uptimePercent}%`}
       icon={Activity}
       iconColor={statusColors[overallStatus]}
       loading={loading}
       onRefresh={checkHealth}
+      actions={
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "2px 8px",
+            borderRadius: 10,
+            background: "var(--con-bg-surface-2)",
+            fontSize: 9,
+            color: "var(--con-text-disabled)",
+            fontFamily: "var(--con-font-mono)",
+          }}
+        >
+          <Timer size={10} />
+          {Math.floor(nextCheckIn / 60)}:{String(nextCheckIn % 60).padStart(2, "0")}
+        </div>
+      }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {/* Overall Status */}
@@ -224,7 +265,42 @@ export function SystemHealth() {
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {svc.latency && (
+              {/* Latency bar */}
+              {svc.latency && svc.latency !== "—" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 3,
+                      borderRadius: 2,
+                      background: "var(--con-bg-surface-2)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.min(100, (parseInt(svc.latency) / 3000) * 100)}%`,
+                        height: "100%",
+                        borderRadius: 2,
+                        background: statusColors[svc.status],
+                        transition: "width 0.5s ease",
+                      }}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "var(--con-text-caption)",
+                      fontFamily: "var(--con-font-mono)",
+                      color: "var(--con-text-muted)",
+                      minWidth: 42,
+                      textAlign: "left",
+                    }}
+                  >
+                    {svc.latency}
+                  </span>
+                </div>
+              )}
+              {svc.latency === "—" && (
                 <span
                   style={{
                     fontSize: "var(--con-text-caption)",

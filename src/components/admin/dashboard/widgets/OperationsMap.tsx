@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map, MapPin } from "lucide-react";
+import { Map, MapPin, ArrowUpDown, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
@@ -24,9 +24,12 @@ const mockCityData: CityMetric[] = [
   { city: "أبها", activeCouriers: 2, todayOrders: 11, avgDeliveryMin: 45 },
 ];
 
+type SortKey = "todayOrders" | "activeCouriers" | "avgDeliveryMin";
+
 export function OperationsMap() {
   const navigate = useNavigate();
   const [cityData, setCityData] = useState<CityMetric[]>(mockCityData);
+  const [sortBy, setSortBy] = useState<SortKey>("todayOrders");
 
   useEffect(() => {
     async function fetchCityData() {
@@ -83,8 +86,11 @@ export function OperationsMap() {
     fetchCityData();
   }, []);
 
+  const sortedCityData = [...cityData].sort((a, b) => b[sortBy] - a[sortBy]);
   const totalActive = cityData.reduce((sum, c) => sum + c.activeCouriers, 0);
   const totalOrders = cityData.reduce((sum, c) => sum + c.todayOrders, 0);
+  const bestCity = sortedCityData[0]?.city;
+  const worstDelivery = [...cityData].sort((a, b) => b.avgDeliveryMin - a.avgDeliveryMin)[0]?.city;
 
   return (
     <WidgetShell
@@ -94,6 +100,34 @@ export function OperationsMap() {
       icon={Map}
       iconColor="var(--con-brand)"
       onDrilldown={() => navigate("/admin-panel/dispatch")}
+      actions={
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {([
+            { key: "todayOrders" as SortKey, label: "طلبات" },
+            { key: "activeCouriers" as SortKey, label: "مناديب" },
+            { key: "avgDeliveryMin" as SortKey, label: "متوسط" },
+          ]).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setSortBy(opt.key)}
+              style={{
+                padding: "2px 6px",
+                borderRadius: "var(--con-radius-sm)",
+                fontSize: 9,
+                fontWeight: 600,
+                fontFamily: "var(--con-font-primary)",
+                border: "none",
+                cursor: "pointer",
+                background: sortBy === opt.key ? "var(--con-brand)20" : "transparent",
+                color: sortBy === opt.key ? "var(--con-brand)" : "var(--con-text-disabled)",
+                transition: "all 0.15s",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {/* Header */}
@@ -147,7 +181,7 @@ export function OperationsMap() {
           </span>
         </div>
 
-        {cityData.map((city) => (
+        {sortedCityData.map((city, idx) => (
           <div
             key={city.city}
             style={{
@@ -156,15 +190,22 @@ export function OperationsMap() {
               gap: 8,
               padding: "6px 0",
               borderBottom: "1px solid var(--con-border-default)",
+              background: idx === 0 ? "var(--con-success)06" : undefined,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <MapPin size={12} style={{ color: "var(--con-brand)" }} />
+              {idx === 0 ? (
+                <Trophy size={12} style={{ color: "var(--con-success)" }} />
+              ) : city.city === worstDelivery ? (
+                <AlertTriangleIcon size={12} style={{ color: "var(--con-warning)" }} />
+              ) : (
+                <MapPin size={12} style={{ color: "var(--con-brand)" }} />
+              )}
               <span
                 style={{
                   fontSize: "var(--con-text-body)",
-                  color: "var(--con-text-primary)",
-                  fontWeight: 500,
+                  color: idx === 0 ? "var(--con-success)" : "var(--con-text-primary)",
+                  fontWeight: idx === 0 ? 600 : 500,
                 }}
               >
                 {city.city}

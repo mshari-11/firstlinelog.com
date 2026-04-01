@@ -3,7 +3,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Radio, Filter } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
@@ -77,9 +77,20 @@ function timeAgo(dateStr: string): string {
   return `منذ ${Math.floor(hours / 24)} يوم`;
 }
 
+const statusFilters = [
+  { key: "all", label: "الكل" },
+  { key: "delivered", label: "تم التسليم" },
+  { key: "on_way", label: "في الطريق" },
+  { key: "picked_up", label: "قيد الاستلام" },
+  { key: "failed", label: "فشل" },
+  { key: "pending", label: "معلق" },
+];
+
 export function RecentActivity() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<OrderRow[]>(mockOrders);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -118,8 +129,88 @@ export function RecentActivity() {
       icon={ClipboardList}
       iconColor="var(--con-info)"
       onDrilldown={() => navigate("/admin-panel/orders")}
+      actions={
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {/* Live indicator */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "2px 8px",
+              borderRadius: 10,
+              background: "var(--con-success)10",
+            }}
+          >
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: "var(--con-success)",
+                animation: "pulse 2s infinite",
+              }}
+            />
+            <span style={{ fontSize: 9, color: "var(--con-success)", fontWeight: 600 }}>
+              مباشر
+            </span>
+          </div>
+          {/* Filter toggle */}
+          <button
+            onClick={() => setShowStatusFilter(!showStatusFilter)}
+            title="تصفية حسب الحالة"
+            style={{
+              background: showStatusFilter ? "var(--con-brand)14" : "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+              borderRadius: "var(--con-radius-sm)",
+              color: showStatusFilter ? "var(--con-brand)" : "var(--con-text-muted)",
+              display: "flex",
+              transition: "all 0.15s",
+            }}
+          >
+            <Filter size={12} />
+          </button>
+        </div>
+      }
       noPadding
     >
+      <>
+      {/* Status filter chips */}
+      {showStatusFilter && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 4,
+            padding: "8px 16px",
+            borderBottom: "1px solid var(--con-border-default)",
+          }}
+        >
+          {statusFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setStatusFilter(f.key)}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "var(--con-font-primary)",
+                border: "1px solid",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                borderColor: statusFilter === f.key ? "var(--con-info)" : "var(--con-border-default)",
+                background: statusFilter === f.key ? "var(--con-info)14" : "transparent",
+                color: statusFilter === f.key ? "var(--con-info)" : "var(--con-text-muted)",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
       <div style={{ overflowX: "auto" }}>
         <table className="con-table">
           <thead>
@@ -132,7 +223,7 @@ export function RecentActivity() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => {
+            {orders.filter((o) => statusFilter === "all" || o.status === statusFilter).map((order) => {
               const badge =
                 orderStatusBadge[order.status] || orderStatusBadge.pending;
               return (
@@ -190,6 +281,7 @@ export function RecentActivity() {
           </tbody>
         </table>
       </div>
+      </>
     </WidgetShell>
   );
 }

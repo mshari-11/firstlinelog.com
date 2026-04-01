@@ -15,9 +15,11 @@ import {
   Bar,
 } from "recharts";
 import { WidgetShell } from "../WidgetShell";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, TrendingUp, BarChart2, LineChart as LineChartIcon } from "lucide-react";
 import { chartTooltipStyle } from "@/components/admin/FinanceUI";
 import { supabase } from "@/lib/supabase";
+
+type ChartViewMode = "area" | "bar";
 
 const DAYS_AR = [
   "الأحد",
@@ -65,6 +67,8 @@ const mockRevenueData = [
 export function ChartsPanel() {
   const [ordersData, setOrdersData] = useState(mockOrdersData);
   const [revenueData, setRevenueData] = useState(mockRevenueData);
+  const [ordersChartMode, setOrdersChartMode] = useState<ChartViewMode>("area");
+  const [revenueChartMode, setRevenueChartMode] = useState<ChartViewMode>("bar");
 
   useEffect(() => {
     async function fetchChartData() {
@@ -151,99 +155,226 @@ export function ChartsPanel() {
       subtitle="الطلبات والإيرادات"
       icon={BarChart3}
       iconColor="var(--con-info)"
+      actions={
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 10, color: "var(--con-text-disabled)", marginLeft: 4 }}>
+            {ordersData.reduce((s, d) => s + d.orders, 0).toLocaleString("ar-SA")} طلب
+          </span>
+        </div>
+      }
     >
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Weekly Orders */}
         <div>
-          <h4
-            style={{
-              fontSize: "var(--con-text-caption)",
-              color: "var(--con-text-muted)",
-              margin: "0 0 10px",
-              fontWeight: 600,
-            }}
-          >
-            طلبات الأسبوع
-          </h4>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <h4
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              طلبات الأسبوع
+            </h4>
+            <div style={{ display: "flex", gap: 2 }}>
+              {([
+                { mode: "area" as ChartViewMode, Icon: TrendingUp, tip: "منحنى" },
+                { mode: "bar" as ChartViewMode, Icon: BarChart2, tip: "أعمدة" },
+              ]).map(({ mode, Icon, tip }) => (
+                <button
+                  key={mode}
+                  onClick={() => setOrdersChartMode(mode)}
+                  title={tip}
+                  style={{
+                    padding: "3px 6px",
+                    borderRadius: "var(--con-radius-sm)",
+                    border: "none",
+                    cursor: "pointer",
+                    background: ordersChartMode === mode ? "var(--con-brand)20" : "transparent",
+                    color: ordersChartMode === mode ? "var(--con-brand)" : "var(--con-text-disabled)",
+                    display: "flex",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <Icon size={12} />
+                </button>
+              ))}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={150}>
-            <AreaChart data={ordersData}>
-              <defs>
-                <linearGradient id="ctOrdersGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-              />
-              <XAxis
-                dataKey="day"
-                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={chartTooltipStyle}
-                labelStyle={{ color: "var(--con-text-muted)" }}
-              />
-              <Area
-                type="monotone"
-                dataKey="orders"
-                name="الطلبات"
-                stroke="#3B82F6"
-                strokeWidth={2}
-                fill="url(#ctOrdersGrad)"
-                dot={false}
-              />
-            </AreaChart>
+            {ordersChartMode === "area" ? (
+              <AreaChart data={ordersData}>
+                <defs>
+                  <linearGradient id="ctOrdersGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  labelStyle={{ color: "var(--con-text-muted)" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="orders"
+                  name="الطلبات"
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  fill="url(#ctOrdersGrad)"
+                  dot={false}
+                />
+              </AreaChart>
+            ) : (
+              <BarChart data={ordersData} barSize={20}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  labelStyle={{ color: "var(--con-text-muted)" }}
+                />
+                <Bar dataKey="orders" name="الطلبات" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            )}
           </ResponsiveContainer>
         </div>
 
         {/* Monthly Revenue */}
         <div>
-          <h4
-            style={{
-              fontSize: "var(--con-text-caption)",
-              color: "var(--con-text-muted)",
-              margin: "0 0 10px",
-              fontWeight: 600,
-            }}
-          >
-            الإيرادات الشهرية
-          </h4>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <h4
+              style={{
+                fontSize: "var(--con-text-caption)",
+                color: "var(--con-text-muted)",
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              الإيرادات الشهرية
+            </h4>
+            <div style={{ display: "flex", gap: 2 }}>
+              {([
+                { mode: "bar" as ChartViewMode, Icon: BarChart2, tip: "أعمدة" },
+                { mode: "area" as ChartViewMode, Icon: TrendingUp, tip: "منحنى" },
+              ]).map(({ mode, Icon, tip }) => (
+                <button
+                  key={mode}
+                  onClick={() => setRevenueChartMode(mode)}
+                  title={tip}
+                  style={{
+                    padding: "3px 6px",
+                    borderRadius: "var(--con-radius-sm)",
+                    border: "none",
+                    cursor: "pointer",
+                    background: revenueChartMode === mode ? "var(--con-success)20" : "transparent",
+                    color: revenueChartMode === mode ? "var(--con-success)" : "var(--con-text-disabled)",
+                    display: "flex",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <Icon size={12} />
+                </button>
+              ))}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={revenueData} barSize={18}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-              />
-              <XAxis
-                dataKey="month"
-                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip
-                contentStyle={chartTooltipStyle}
-                formatter={(v: number) => [
-                  `${v.toLocaleString("ar-SA")} ر.س`,
-                  "الإيراد",
-                ]}
-              />
-              <Bar dataKey="revenue" fill="#16A34A" radius={[4, 4, 0, 0]} />
-            </BarChart>
+            {revenueChartMode === "bar" ? (
+              <BarChart data={revenueData} barSize={18}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(v: number) => [
+                    `${v.toLocaleString("ar-SA")} ر.س`,
+                    "الإيراد",
+                  ]}
+                />
+                <Bar dataKey="revenue" fill="#16A34A" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            ) : (
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="ctRevenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#16A34A" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--con-text-muted)", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(v: number) => [
+                    `${v.toLocaleString("ar-SA")} ر.س`,
+                    "الإيراد",
+                  ]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  name="الإيراد"
+                  stroke="#16A34A"
+                  strokeWidth={2}
+                  fill="url(#ctRevenueGrad)"
+                  dot={false}
+                />
+              </AreaChart>
+            )}
           </ResponsiveContainer>
         </div>
       </div>

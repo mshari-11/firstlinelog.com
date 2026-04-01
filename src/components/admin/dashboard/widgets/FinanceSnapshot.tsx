@@ -14,6 +14,8 @@ import {
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
+type FinancePeriod = "month" | "week" | "today";
+
 interface FinanceMetric {
   label: string;
   value: string;
@@ -55,10 +57,17 @@ function formatSAR(n: number): string {
   return `${n.toLocaleString("ar-SA")} ر.س`;
 }
 
+const periodLabels: Record<FinancePeriod, string> = {
+  today: "اليوم",
+  week: "الأسبوع",
+  month: "الشهر",
+};
+
 export function FinanceSnapshot() {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState<FinanceMetric[]>(MOCK_METRICS);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<FinancePeriod>("month");
 
   useEffect(() => {
     async function fetchFinance() {
@@ -168,6 +177,30 @@ export function FinanceSnapshot() {
       iconColor="var(--con-success)"
       loading={loading}
       onDrilldown={() => navigate("/admin-panel/finance-dashboard")}
+      actions={
+        <div style={{ display: "flex", gap: 2 }}>
+          {(["today", "week", "month"] as FinancePeriod[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              style={{
+                padding: "2px 8px",
+                borderRadius: "var(--con-radius-sm)",
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "var(--con-font-primary)",
+                border: "none",
+                cursor: "pointer",
+                background: period === p ? "var(--con-success)20" : "transparent",
+                color: period === p ? "var(--con-success)" : "var(--con-text-disabled)",
+                transition: "all 0.15s",
+              }}
+            >
+              {periodLabels[p]}
+            </button>
+          ))}
+        </div>
+      }
     >
       <div
         style={{

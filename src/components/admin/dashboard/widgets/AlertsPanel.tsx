@@ -2,7 +2,8 @@
  * Alerts Panel Widget — Active alerts, SLA breaches, escalations
  */
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Bell, ChevronLeft } from "lucide-react";
+import { AlertTriangle, Bell, ChevronLeft, CheckCheck, Filter } from "lucide-react";
+import { useState } from "react";
 import { WidgetShell } from "../WidgetShell";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 
@@ -22,10 +23,26 @@ const typeIcons: Record<string, string> = {
   order: "📦",
 };
 
+const filterTypes = [
+  { key: "all", label: "الكل" },
+  { key: "sla", label: "SLA" },
+  { key: "approval", label: "اعتمادات" },
+  { key: "complaint", label: "شكاوى" },
+  { key: "finance", label: "مالية" },
+  { key: "system", label: "نظام" },
+];
+
 export function AlertsPanel() {
   const navigate = useNavigate();
-  const { notifications, getUnreadCount, markAsRead } = useNotificationStore();
-  const unread = notifications.filter((n) => !n.read).slice(0, 5);
+  const { notifications, getUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const filteredUnread = notifications
+    .filter((n) => !n.read)
+    .filter((n) => activeFilter === "all" || n.type === activeFilter)
+    .slice(0, 5);
+  const unread = filteredUnread;
   const unreadCount = getUnreadCount();
 
   const timeAgo = (dateStr: string) => {
@@ -47,8 +64,83 @@ export function AlertsPanel() {
       icon={AlertTriangle}
       iconColor={unreadCount > 0 ? "var(--con-warning)" : "var(--con-success)"}
       onDrilldown={() => navigate("/admin-panel/notifications")}
+      actions={
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* Filter toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            title="تصفية حسب النوع"
+            style={{
+              background: showFilters ? "var(--con-brand)14" : "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+              borderRadius: "var(--con-radius-sm)",
+              color: showFilters ? "var(--con-brand)" : "var(--con-text-muted)",
+              display: "flex",
+              transition: "all 0.15s",
+            }}
+          >
+            <Filter size={12} />
+          </button>
+          {/* Mark all as read */}
+          {unreadCount > 0 && (
+            <button
+              onClick={() => markAllAsRead()}
+              title="تحديد الكل كمقروء"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                borderRadius: "var(--con-radius-sm)",
+                color: "var(--con-text-muted)",
+                display: "flex",
+                transition: "all 0.15s",
+              }}
+            >
+              <CheckCheck size={13} />
+            </button>
+          )}
+        </div>
+      }
       noPadding
     >
+      <>
+      {/* Filter chips */}
+      {showFilters && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 4,
+            padding: "8px 16px",
+            borderBottom: "1px solid var(--con-border-default)",
+          }}
+        >
+          {filterTypes.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(f.key)}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 12,
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "var(--con-font-primary)",
+                border: "1px solid",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                borderColor: activeFilter === f.key ? "var(--con-brand)" : "var(--con-border-default)",
+                background: activeFilter === f.key ? "var(--con-brand)14" : "transparent",
+                color: activeFilter === f.key ? "var(--con-brand)" : "var(--con-text-muted)",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
       {unread.length === 0 ? (
         <div style={{ padding: "24px 16px", textAlign: "center" }}>
           <Bell
@@ -166,6 +258,7 @@ export function AlertsPanel() {
           )}
         </div>
       )}
+      </>
     </WidgetShell>
   );
 }

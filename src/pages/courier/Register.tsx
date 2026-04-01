@@ -29,10 +29,16 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { API_BASE } from "@/lib/api";
 
-// Driver onboarding Lambda is in me-south-1 — try direct URL first, then platform API
+// Supabase edge functions for OTP (primary), Lambda API as fallback
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://djebhztfewjfyyoortvv.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const EDGE_OTP_SEND = `${SUPABASE_URL}/functions/v1/send-otp-email`;
+const EDGE_OTP_VERIFY = `${SUPABASE_URL}/functions/v1/verify-email-otp`;
+
+// Fallback API bases for /driver/apply
 const DRIVER_API_BASES = [
-  "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
   API_BASE,
+  "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
 ];
 
 const CITIES = [
@@ -551,37 +557,25 @@ export default function CourierRegister() {
   async function sendOtp() {
     if (otpCooldown > 0) return;
     setOtpSending(true);
-    const payload = {
-      email: form.email,
-      full_name: form.full_name,
-      national_id: form.national_id,
-      phone: form.phone,
-      device_fingerprint: getDeviceFingerprint(),
-    };
-    for (const base of DRIVER_API_BASES) {
-      try {
-        const res = await fetch(`${base}/driver/otp/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(15000),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          setOtpSent(true);
-          setOtpCooldown(60);
-          setOtpSending(false);
-          return;
-        }
-        if (res.status === 429 || res.status === 400) {
-          setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
-          setOtpSending(false);
-          return;
-        }
-      } catch { /* try next endpoint */ }
+    try {
+      const res = await fetch(EDGE_OTP_SEND, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email: form.email, full_name: form.full_name }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setOtpSent(true);
+        setOtpCooldown(60);
+      } else {
+        setErrors({ general: data.message || "حدث خطأ أثناء إرسال الرمز" });
+      }
+    } catch {
+      setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
+    } finally {
+      setOtpSending(false);
     }
-    setErrors({ general: "تعذّر الاتصال بخدمة التحقق. حاول مرة أخرى." });
-    setOtpSending(false);
   }
 
   // ── Verify OTP ──────────────────────────────────────────────────────────────
@@ -591,31 +585,25 @@ export default function CourierRegister() {
       return;
     }
     setOtpVerifying(true);
-    const payload = { email: form.email, code: form.otpCode };
-    for (const base of DRIVER_API_BASES) {
-      try {
-        const res = await fetch(`${base}/driver/otp/verify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(15000),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          set("emailVerified", true);
-          setOtpVerifying(false);
-          submitApplication();
-          return;
-        }
-        if (res.status === 400 || res.status === 429) {
-          setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
-          setOtpVerifying(false);
-          return;
-        }
-      } catch { /* try next endpoint */ }
+    try {
+      const res = await fetch(EDGE_OTP_VERIFY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "apikey": SUPABASE_ANON_KEY },
+        body: JSON.stringify({ email: form.email, code: form.otpCode }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        set("emailVerified", true);
+        submitApplication();
+      } else {
+        setErrors({ otpCode: data.message || "رمز التحقق غير صحيح أو منتهي الصلاحية" });
+      }
+    } catch {
+      setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
+    } finally {
+      setOtpVerifying(false);
     }
-    setErrors({ otpCode: "تعذّر التحقق من الرمز حالياً. حاول مرة أخرى." });
-    setOtpVerifying(false);
   }
 
   // ── Step 4 validation ──────────────────────────────────────────────────────

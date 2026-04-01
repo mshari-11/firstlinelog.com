@@ -50,43 +50,56 @@ export async function sendOtp(
       signal: AbortSignal.timeout(10000),
     });
     const data = await response.json();
-    if (response.ok) {
+    if (response.ok && data.success) {
       return {
         success: true,
         message: data.message || "OTP sent to your email",
       };
     }
-    // If server returned an error (not network), check before falling back
-    if (response.status < 500) {
+    // If service is disabled (410) or other client error, fall through to email OTP
+    if (data.disabled) {
+      console.warn("SMS OTP disabled, falling back to email OTP");
+    } else if (response.status < 500 && response.status !== 410) {
       return { error: data.error || "Failed to send OTP" };
     }
   } catch (e) {
-    console.warn("API Gateway OTP failed, trying edge function:", e);
+    console.warn("API Gateway OTP failed, trying email OTP:", e);
   }
 
-  // Attempt 2: Supabase edge function
-  if (SUPABASE_ANON_KEY) {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(10000),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (response.ok && (data.success || data.message)) {
-        return {
-          success: true,
-          message: data.message || "OTP sent to your email",
-        };
-      }
-    } catch (e) {
-      console.warn("Edge function OTP also failed:", e);
+  // Attempt 2: Supabase send-otp-email edge function (sends OTP via AWS SES)
+  try {
+    const emailPayload = {
+      email: payload.email,
+      full_name: "",
+    };
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (SUPABASE_ANON_KEY) {
+      headers["Authorization"] = `Bearer ${SUPABASE_ANON_KEY}`;
+      headers["apikey"] = SUPABASE_ANON_KEY;
     }
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/send-otp-email`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(emailPayload),
+        signal: AbortSignal.timeout(15000),
+      },
+    );
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.success) {
+      return {
+        success: true,
+        message: "تم إرسال رمز التحقق إلى بريدك الإلكتروني",
+      };
+    }
+    if (data.message || data.error) {
+      return { error: data.message || data.error };
+    }
+  } catch (e) {
+    console.warn("Email OTP also failed:", e);
   }
 
   return { error: "تعذّر إرسال رمز التحقق. يرجى المحاولة لاحقاً." };
@@ -119,43 +132,49 @@ export async function verifyOtp(
       signal: AbortSignal.timeout(10000),
     });
     const data = await response.json();
-    if (response.ok) {
+    if (response.ok && (data.success || data.verified)) {
       return {
         success: true,
-        message: data.message || "OTP verified successfully",
+        message: data.message || "تم التحقق بنجاح",
       };
     }
     if (response.status < 500) {
-      return { error: data.error || "رمز التحقق غير صحيح" };
+      return { error: data.error || data.message || "رمز التحقق غير صحيح" };
     }
   } catch (e) {
-    console.warn("API Gateway verify failed, trying edge function:", e);
+    console.warn("API Gateway verify failed, trying email verify:", e);
   }
 
-  // Attempt 2: Supabase edge function
-  if (SUPABASE_ANON_KEY) {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(10000),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (response.ok && (data.success || data.verified)) {
-        return {
-          success: true,
-          message: data.message || "OTP verified successfully",
-        };
-      }
-      if (data.error) return { error: data.error };
-    } catch (e) {
-      console.warn("Edge function verify also failed:", e);
+  // Attempt 2: Supabase verify-email-otp edge function
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (SUPABASE_ANON_KEY) {
+      headers["Authorization"] = `Bearer ${SUPABASE_ANON_KEY}`;
+      headers["apikey"] = SUPABASE_ANON_KEY;
     }
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/verify-email-otp`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email: payload.email, code: payload.code }),
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.success) {
+      return {
+        success: true,
+        message: data.message || "تم التحقق بنجاح",
+      };
+    }
+    if (data.message || data.error) {
+      return { error: data.message || data.error };
+    }
+  } catch (e) {
+    console.warn("Email OTP verify also failed:", e);
   }
 
   return { error: "تعذّر التحقق من الرمز. يرجى المحاولة مرة أخرى." };

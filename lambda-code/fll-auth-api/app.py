@@ -124,6 +124,11 @@ def generate_magic_link_token(email):
     return supabase_auth_admin_request('/admin/generate_link', payload)
 
 def handler(event, context):
+    # ── Lambda Warmer: keep instance hot to avoid cold-start OTP delays ──
+    if event.get('source') == 'aws.events' or event.get('detail-type') == 'Scheduled Event':
+        print('WARM ping received')
+        return {'statusCode': 200, 'body': 'warm'}
+
     print(f"EVENT: path={event.get('rawPath','?')} method={event.get('requestContext',{}).get('http',{}).get('method','?')}")
     method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     path = event.get('rawPath', event.get('path', ''))

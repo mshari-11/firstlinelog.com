@@ -29,10 +29,10 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { API_BASE } from "@/lib/api";
 
-// Fallback API base for driver onboarding (old REST API still works for /driver/* routes)
+// Driver onboarding Lambda is in me-south-1 — try direct URL first, then platform API
 const DRIVER_API_BASES = [
-  API_BASE,
   "https://qihrv9osed.execute-api.me-south-1.amazonaws.com/prod",
+  API_BASE,
 ];
 
 const CITIES = [

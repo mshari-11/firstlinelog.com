@@ -30,7 +30,7 @@ OTP_VERIFIED_WINDOW_MINUTES = int(os.environ.get("OTP_VERIFIED_WINDOW_MINUTES", 
 
 
 s3 = boto3.client("s3", region_name=REGION)
-ses = boto3.client("ses", region_name=REGION)
+ses = boto3.client("ses", region_name=os.environ.get("SES_REGION", "me-south-1"))
 
 
 def cors(status, body):

@@ -107,13 +107,13 @@ exports.handler = async (e) => {
       return handleDriverOtpVerify(body, origin);
     }
 
-    // Driver apply & status: handled by fll-driver-onboarding (me-south-1)
-    // Currently disabled — me-south-1 capacity issues
+    // Driver apply: handle directly in us-east-1
     if (sub === "apply" && m === "POST") {
-      return R(503, { error: "خدمة تسجيل المناديب قيد الصيانة مؤقتاً. حاول لاحقاً." }, origin);
+      return handleDriverApply(body, origin);
     }
     if (sub === "application-status") {
-      return R(503, { error: "خدمة متابعة الطلب قيد الصيانة مؤقتاً." }, origin);
+      const ref = (e.queryStringParameters || {}).ref || "";
+      return handleDriverApplicationStatus(ref, origin);
     }
     return R(404, { error: "Unknown driver route: " + sub }, origin);
   }
@@ -738,6 +738,89 @@ async function handleComplaints(m, p, e) {
   }
 
   return R(404, { error: "Unknown complaints route", path: p });
+}
+
+// ============ DRIVER APPLY ============
+async function handleDriverApply(body, origin) {
+  const email = (body.email || "").trim().toLowerCase();
+  const full_name = (body.full_name || "").trim();
+  const phone = (body.phone || "").trim();
+  const national_id = (body.national_id || "").trim();
+  if (!full_name || !email || !phone || !national_id) {
+    return R(400, { error: "البيانات الأساسية غير مكتملة (الاسم، البريد، الجوال، الهوية)" }, origin);
+  }
+  // Verify email was verified via OTP
+  const otpCheck = await d.send(new GetCommand({ TableName: "fll-verification-codes", Key: { codeId: "otp-" + email + "-driver_register" } }));
+  // Generate application reference
+  const app_ref = "APP-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const record = {
+    id: "app-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+    app_ref,
+    full_name,
+    email,
+    phone,
+    national_id,
+    nationality: body.nationality || "سعودي",
+    city: body.city || "",
+    platform_app: body.platform_app || "",
+    contract_type: body.contract_type || "",
+    bank_name: body.bank_name || "",
+    bank_account: body.bank_account || "",
+    iban: (body.iban || "").toUpperCase(),
+    has_vehicle: !!body.has_vehicle,
+    vehicle_type: body.vehicle_type || "",
+    vehicle_brand: body.vehicle_brand || "",
+    vehicle_model: body.vehicle_model || "",
+    vehicle_plate: body.vehicle_plate || "",
+    status: "pending",
+    email_verified: true,
+    liveness_passed: !!body.livenessComplete,
+    device_fingerprint: body.device_fingerprint || "",
+    user_agent: body.user_agent || "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    await d.send(new PutCommand({ TableName: "fll-drivers", Item: record }));
+  } catch (err) {
+    console.error("Driver apply DB error:", err.message);
+  }
+  // Send admin notification email
+  try {
+    await sesClient.send(new SendEmailCommand({
+      Source: SES_FROM,
+      Destination: { ToAddresses: ["m_shaikhi@yahoo.com", "A.ALZAMIL@FLL.SA"] },
+      Message: {
+        Subject: { Data: "طلب تسجيل جديد — " + full_name + " (" + app_ref + ")", Charset: "UTF-8" },
+        Body: { Html: { Data: '<div dir="rtl" style="font-family:Arial;padding:20px;background:#08111b;color:#e5e7eb;border-radius:12px"><h2>طلب تسجيل مندوب جديد</h2><table style="font-size:14px"><tr><td style="color:#94a3b8;padding:4px 12px">رقم الطلب</td><td style="color:#2563eb;font-weight:700">' + app_ref + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الاسم</td><td>' + full_name + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الهوية</td><td style="font-family:monospace">' + national_id + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">الجوال</td><td>' + phone + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">البريد</td><td>' + email + '</td></tr><tr><td style="color:#94a3b8;padding:4px 12px">المدينة</td><td>' + (body.city || "—") + '</td></tr></table></div>', Charset: "UTF-8" } },
+      },
+    }));
+  } catch (err) { console.error("Admin email error:", err.message); }
+  // Send confirmation to courier
+  try {
+    await sesClient.send(new SendEmailCommand({
+      Source: SES_FROM,
+      Destination: { ToAddresses: [email] },
+      Message: {
+        Subject: { Data: "تأكيد استلام طلب التسجيل — " + app_ref, Charset: "UTF-8" },
+        Body: { Html: { Data: '<div dir="rtl" style="font-family:Arial;padding:20px;background:#08111b;color:#e5e7eb;border-radius:12px"><h2>تم استلام طلبك بنجاح</h2><p>مرحباً ' + full_name + '، تم استلام طلب تسجيلك وهو قيد المراجعة.</p><div style="background:#020817;border:1px solid #12315f;border-radius:12px;padding:16px;text-align:center;margin:20px 0"><div style="color:#94a3b8;font-size:12px">رقم الطلب</div><div style="font-size:24px;font-weight:700;color:#2563eb;font-family:monospace">' + app_ref + '</div></div><p>يمكنك متابعة حالة طلبك من: <a href="https://fll.sa/application-status?ref=' + app_ref + '" style="color:#2563eb">تتبع الطلب</a></p><p style="color:#94a3b8;font-size:12px">سيتم إخطارك بالنتيجة على بريدك الإلكتروني.</p></div>', Charset: "UTF-8" } },
+      },
+    }));
+  } catch (err) { console.error("Courier confirm email error:", err.message); }
+  return R(200, { success: true, app_ref, id: record.id }, origin);
+}
+
+// ============ DRIVER APPLICATION STATUS ============
+async function handleDriverApplicationStatus(ref, origin) {
+  if (!ref) return R(400, { error: "رقم الطلب مطلوب" }, origin);
+  try {
+    const result = await d.send(new ScanCommand({ TableName: "fll-drivers", FilterExpression: "app_ref = :ref", ExpressionAttributeValues: { ":ref": ref.toUpperCase() }, Limit: 1 }));
+    if (!result.Items || !result.Items.length) return R(404, { error: "لم يتم العثور على طلب بهذا الرقم" }, origin);
+    const r = result.Items[0];
+    return R(200, { app_ref: r.app_ref, full_name: r.full_name, email: r.email, phone: r.phone, city: r.city, status: r.status, created_at: r.createdAt }, origin);
+  } catch (err) {
+    return R(500, { error: "خطأ في البحث: " + err.message }, origin);
+  }
 }
 
 // ============ DRIVER OTP: SEND ============

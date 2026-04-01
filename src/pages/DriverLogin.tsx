@@ -73,16 +73,10 @@ export default function DriverLogin() {
       return;
     }
 
-    setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
-    const otpRes = await sendOtp(email.trim().toLowerCase(), "login");
+    // دخول مباشر بدون OTP
     setLoading(false);
-    if (otpRes.error) {
-      setError(otpRes.error);
-      return;
-    }
-
-    setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-    go("otp");
+    setSuccess("تم تسجيل الدخول بنجاح!");
+    setTimeout(() => navigate("/driver"), 800);
   }
 
   async function handleOTPVerify(e: React.FormEvent) {

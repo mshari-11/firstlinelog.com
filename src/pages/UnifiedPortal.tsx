@@ -75,25 +75,9 @@ export default function UnifiedPortal() {
       return;
     }
 
-    // Try to send OTP for 2FA
-    setSuccess("تم التحقق. جارٍ إرسال رمز التحقق...");
-    try {
-      const otpRes = await sendOtp(email.trim().toLowerCase(), "login");
-      setLoading(false);
-      if (otpRes.error) {
-        // OTP service unavailable — skip 2FA and go directly to dashboard
-        console.warn("OTP send failed, skipping 2FA:", otpRes.error);
-        setSuccess("تم تسجيل الدخول بنجاح!");
-        setTimeout(() => navigate("/admin-panel/dashboard"), 800);
-        return;
-      }
-      setSuccess("تم إرسال رمز التحقق إلى بريدك الإلكتروني من no-reply@fll.sa");
-      setOtp("");
-      go("login-otp");
-    } catch {
-      // Network error — skip 2FA and proceed
-      setLoading(false);
-      console.warn("OTP service unreachable, skipping 2FA");
+    // دخول مباشر بعد كلمة المرور — بدون OTP
+    setLoading(false);
+    {
       setSuccess("تم تسجيل الدخول بنجاح!");
       setTimeout(() => navigate("/admin-panel/dashboard"), 800);
     }

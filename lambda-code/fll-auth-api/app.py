@@ -31,7 +31,7 @@ ses = boto3.client('ses', region_name='me-south-1')  # SES verified in me-south-
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
-OTP_EXPIRY_SECONDS = 300  # 5 minutes
+OTP_EXPIRY_SECONDS = 600  # 10 minutes
 OTP_MAX_ATTEMPTS = 5
 
 cognito = boto3.client('cognito-idp', region_name=region)

@@ -139,10 +139,50 @@
   - Staff client: `4rqqpv12h8pco73oice3emavus`
   - Drivers client: `ttlbr78d29vu4hrt7gh5mekqe`
 
-### Legacy Region: me-south-1 (Bahrain) — ⚠️ unstable, do not use for new services
+### Legacy Region: me-south-1 (Bahrain) — ⚠️ DEAD, do not use
+- S3 Buckets: 17 (still active)
+- Everything else: BROKEN or migrated
 
-- SES production: 50k/day, identities: fll.sa, noreply@fll.sa
-- S3 Buckets: 17
-- EventBridge rules: 10 (SLA hourly, backup daily, payout weekly)
-- Old API Gateways (`k8d4arcxu4`, `qihrv9osed`): BROKEN — do not reference
-- Old Cognito (`me-south-1_aJtmQ0QrN`): kept for backward compatibility
+## CRITICAL OPERATIONAL RULES
+
+### Never Do
+- Never delete mock data from admin pages
+- Never modify OTP/auth files without explicit permission (LOCKED section above)
+- Never use me-south-1 for ANY service
+- Never assume DynamoDB key is `id` — each table has unique keys:
+  - `fll-drivers`: `driverId` | `fll-orders`: `orderId` | `fll-complaints`: `complaintId`
+  - `fll-vehicles`: `vehicleId` | `fll-users`: `userId` | `fll-staff-users`: `sub`
+  - `fll-payout-runs`: `runId` | `fll-audit-log`: `auditId` | `fll-accounting-rules`: `ruleId`
+  - `fll-notifications`: `recipient_sub` + `createdAt_id` (composite key)
+
+### SES Email
+- Domain `fll.sa` DKIM verified in us-east-1 (Route53 zone: Z08011502Q9BI0871UM72)
+- Sender: `no-reply@fll.sa` via `boto3.client('ses', region_name='us-east-1')`
+- Always send email **async** (threading) — SES can take 10s+ and cause timeout
+- me-south-1 SES is DEAD
+
+### Cognito
+- Always `.toLowerCase().trim()` on email before ANY auth call
+- OTP verify returns `{verified: true}` not `{success: true}` — check both
+- Auth routes go **directly** to `fll-auth-handler` (not proxied through platform API)
+
+### API Gateway
+- Max timeout: 30s — never proxy slow Lambdas through platform API
+- Auth routes: direct integration `ejc7n20` → `fll-auth-handler`
+- Platform routes: integration `u6r67ur` → `fll-platform-api-prod`
+- AI chat: separate API `agr6khtuu9`
+
+### PageBuilder Sidebar
+- Config: localStorage `fll_page_config_v2` — bump version to force reset
+- `loadConfig()` merges saved + defaults — new pages auto-appear
+
+### Deployment
+- Frontend: `npx vercel --prod` (NOT GitHub Pages — disabled)
+- Lambda zip: platform API = `index.js`, auth = `app.py`
+- Edge Functions: `npx supabase functions deploy <name> --no-verify-jwt`
+- SQL: `npx supabase db query --linked -f <file.sql>`
+- Repo: **PRIVATE** (changed 2026-04-01)
+
+### Edge Functions (39 total)
+- Cron: `pg_cron` + `pg_net` — daily-report 8AM + license-alerts 7AM Saudi time
+- auto-payroll, license-alerts, daily-report, vector-search (deployed + tested)

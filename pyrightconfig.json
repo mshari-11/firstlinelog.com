@@ -1,0 +1,18 @@
+{
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "lambda-code", "supabase", "e2e", "**/*.test.ts"],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedVariable": "warning",
+  "reportUnusedImport": "warning",
+  "reportDuplicateImport": "error",
+  "reportUnnecessaryTypeIgnoreComment": "warning",
+  "pythonVersion": "3.12",
+  "executionEnvironments": [
+    {
+      "root": "src",
+      "extraPaths": ["src"]
+    }
+  ]
+}

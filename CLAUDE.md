@@ -186,3 +186,33 @@
 ### Edge Functions (39 total)
 - Cron: `pg_cron` + `pg_net` — daily-report 8AM + license-alerts 7AM Saudi time
 - auto-payroll, license-alerts, daily-report, vector-search (deployed + tested)
+
+## Testing & Quality (April 2026)
+
+### Playwright E2E Tests
+- Config: `playwright.config.ts` (chromium only)
+- Tests: `e2e/admin/` directory
+- Run: `npm run test:e2e` or `npm run test:e2e:ui`
+- Auth mocking: `e2e/helpers/auth-mock.ts` (localStorage injection)
+- Tested pages: Dashboard, Feedbacks, Settings, Navigation
+
+### Pyright Type Checking
+- Config: `pyrightconfig.json` (basic mode)
+- Scope: `src/` only (excludes lambda-code, supabase, e2e)
+- Run via Pyright LSP in editor
+
+### Custom Commands
+- `/deploy` — Build + commit + push (auto-deploy to Vercel)
+- `/review` — Code review of recent changes
+- `/db-check` — Supabase database health check
+- `/test` — Run full test suite (types + e2e + build)
+
+### API Documentation
+- Location: `docs/admin-panel-api.md`
+- Covers all admin panel API endpoints
+- Arabic descriptions with English endpoint paths
+
+### Code Review Reports
+- Location: `docs/code-review-*.md`
+- Generated per feature/sprint
+- Severity levels: 🔴 Critical, 🟡 Warning, 🟢 Info

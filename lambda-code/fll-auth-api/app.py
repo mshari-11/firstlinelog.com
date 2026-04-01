@@ -27,7 +27,7 @@ client_id = os.environ.get('COGNITO_CLIENT_ID', '')
 client_secret = os.environ.get('COGNITO_CLIENT_SECRET', '')
 
 # SES + Supabase config for custom OTP
-ses = boto3.client('ses', region_name='me-south-1')  # SES domain verified in me-south-1 only
+ses = boto3.client('ses', region_name='us-east-1')  # us-east-1 with verified identity
 SES_FROM = os.environ.get('SES_FROM_EMAIL', 'FLL <no-reply@fll.sa>')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')

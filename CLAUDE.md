@@ -139,3 +139,103 @@ npm run preview      # Preview production build locally
 ---
 
 *Last updated: April 2026 — update this file whenever architecture changes*
+
+## Control Tower Dashboard
+
+- Zone layout: Executive (KPIs) → Operational (Charts+Alerts) → Finance → Infrastructure
+- 11 widgets, each self-contained — `src/components/admin/dashboard/widgets/`
+- Stores: `useDashboardStore`, `useModuleRegistry`, `useNotificationStore`, `usePayoutWorkflowStore`
+- Sidebar v2: collapsible groups, search, dynamic notification badges
+- Governance: 7 pages under `/admin-panel/governance/`
+
+## AWS Account (230811072086)
+
+### Primary Region: us-east-1 (Virginia) — migrated 2026-03-31
+
+- **Platform API**: `https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com`
+  - Lambda: `fll-platform-api-prod` (Node.js 18.x)
+  - 39 DynamoDB tables (PAY_PER_REQUEST)
+- **AI Chatbot**: `https://agr6khtuu9.execute-api.us-east-1.amazonaws.com/ai/chat`
+  - Lambda: `fll-ai-chatbot` (Python 3.12)
+  - Model: Bedrock Claude Haiku 4.5 (`us.anthropic.claude-haiku-4-5-20251001-v1:0`)
+- **Cognito**: `us-east-1_qHMox2NTB` (fll-platform-userpool-prod)
+  - Staff client: `4rqqpv12h8pco73oice3emavus`
+  - Drivers client: `ttlbr78d29vu4hrt7gh5mekqe`
+
+### Legacy Region: me-south-1 (Bahrain) — ⚠️ DEAD, do not use
+- S3 Buckets: 17 (still active)
+- Everything else: BROKEN or migrated
+
+## CRITICAL OPERATIONAL RULES
+
+### Never Do
+- Never delete mock data from admin pages
+- Never modify OTP/auth files without explicit permission (LOCKED section above)
+- Never use me-south-1 for ANY service
+- Never assume DynamoDB key is `id` — each table has unique keys:
+  - `fll-drivers`: `driverId` | `fll-orders`: `orderId` | `fll-complaints`: `complaintId`
+  - `fll-vehicles`: `vehicleId` | `fll-users`: `userId` | `fll-staff-users`: `sub`
+  - `fll-payout-runs`: `runId` | `fll-audit-log`: `auditId` | `fll-accounting-rules`: `ruleId`
+  - `fll-notifications`: `recipient_sub` + `createdAt_id` (composite key)
+
+### SES Email
+- Domain `fll.sa` DKIM verified in us-east-1 (Route53 zone: Z08011502Q9BI0871UM72)
+- Sender: `no-reply@fll.sa` via `boto3.client('ses', region_name='us-east-1')`
+- Always send email **async** (threading) — SES can take 10s+ and cause timeout
+- me-south-1 SES is DEAD
+
+### Cognito
+- Always `.toLowerCase().trim()` on email before ANY auth call
+- OTP verify returns `{verified: true}` not `{success: true}` — check both
+- Auth routes go **directly** to `fll-auth-handler` (not proxied through platform API)
+
+### API Gateway
+- Max timeout: 30s — never proxy slow Lambdas through platform API
+- Auth routes: direct integration `ejc7n20` → `fll-auth-handler`
+- Platform routes: integration `u6r67ur` → `fll-platform-api-prod`
+- AI chat: separate API `agr6khtuu9`
+
+### PageBuilder Sidebar
+- Config: localStorage `fll_page_config_v2` — bump version to force reset
+- `loadConfig()` merges saved + defaults — new pages auto-appear
+
+### Deployment
+- Frontend: `npx vercel --prod` (NOT GitHub Pages — disabled)
+- Lambda zip: platform API = `index.js`, auth = `app.py`
+- Edge Functions: `npx supabase functions deploy <name> --no-verify-jwt`
+- SQL: `npx supabase db query --linked -f <file.sql>`
+- Repo: **PRIVATE** (changed 2026-04-01)
+
+### Edge Functions (39 total)
+- Cron: `pg_cron` + `pg_net` — daily-report 8AM + license-alerts 7AM Saudi time
+- auto-payroll, license-alerts, daily-report, vector-search (deployed + tested)
+
+## Testing & Quality (April 2026)
+
+### Playwright E2E Tests
+- Config: `playwright.config.ts` (chromium only)
+- Tests: `e2e/admin/` directory
+- Run: `npm run test:e2e` or `npm run test:e2e:ui`
+- Auth mocking: `e2e/helpers/auth-mock.ts` (localStorage injection)
+- Tested pages: Dashboard, Feedbacks, Settings, Navigation
+
+### Pyright Type Checking
+- Config: `pyrightconfig.json` (basic mode)
+- Scope: `src/` only (excludes lambda-code, supabase, e2e)
+- Run via Pyright LSP in editor
+
+### Custom Commands
+- `/deploy` — Build + commit + push (auto-deploy to Vercel)
+- `/review` — Code review of recent changes
+- `/db-check` — Supabase database health check
+- `/test` — Run full test suite (types + e2e + build)
+
+### API Documentation
+- Location: `docs/admin-panel-api.md`
+- Covers all admin panel API endpoints
+- Arabic descriptions with English endpoint paths
+
+### Code Review Reports
+- Location: `docs/code-review-*.md`
+- Generated per feature/sprint
+- Severity levels: 🔴 Critical, 🟡 Warning, 🟢 Info

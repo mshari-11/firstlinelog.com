@@ -10,7 +10,10 @@
     "dev": "vite",
     "build": "vite build && mv dist/spa.html dist/index.html",
     "preview": "vite preview",
-    "start": "npm run build && serve dist -s -l 3000"
+    "start": "npm run build && serve dist -s -l 3000",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.700.0",
@@ -97,6 +100,7 @@
     "@babel/traverse": "^7.28.0",
     "@babel/types": "^7.28.0",
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.5.5",

@@ -194,6 +194,18 @@ const DriverClassifications = lazy(
 );
 const PayrollManagement = lazy(() => import("@/pages/admin/PayrollManagement"));
 
+// ── Preview pages (prototype) ──────────────────────────────────────────────
+const PreviewFuel = lazy(() => import("@/pages/admin/preview/FuelManagement"));
+const PreviewProfit = lazy(() => import("@/pages/admin/preview/OrderProfitCalculator"));
+const PreviewSettlement = lazy(() => import("@/pages/admin/preview/DriverSettlement"));
+const PreviewPerformance = lazy(() => import("@/pages/admin/preview/DriverPerformance"));
+const PreviewTracking = lazy(() => import("@/pages/admin/preview/LiveTracking"));
+const PreviewCash = lazy(() => import("@/pages/admin/preview/CashCollection"));
+const PreviewScheduling = lazy(() => import("@/pages/admin/preview/DriverScheduling"));
+const PreviewOrders = lazy(() => import("@/pages/admin/preview/OrderTracking"));
+const PreviewAI = lazy(() => import("@/pages/admin/preview/AIAnalytics"));
+const PreviewCommission = lazy(() => import("@/pages/admin/preview/CommissionSetup"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -511,6 +523,18 @@ export default function App() {
                   </AccessGuard>
                 }
               />
+              {/* ── Preview Pages (prototype — no auth guard) ── */}
+              <Route path="preview-fuel" element={<PreviewFuel />} />
+              <Route path="preview-profit" element={<PreviewProfit />} />
+              <Route path="preview-settlement" element={<PreviewSettlement />} />
+              <Route path="preview-performance" element={<PreviewPerformance />} />
+              <Route path="preview-tracking" element={<PreviewTracking />} />
+              <Route path="preview-cash" element={<PreviewCash />} />
+              <Route path="preview-scheduling" element={<PreviewScheduling />} />
+              <Route path="preview-orders" element={<PreviewOrders />} />
+              <Route path="preview-ai" element={<PreviewAI />} />
+              <Route path="preview-commission" element={<PreviewCommission />} />
+
               <Route
                 path="fleet"
                 element={

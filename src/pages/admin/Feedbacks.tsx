@@ -114,7 +114,7 @@ const MOCK_FEEDBACKS: FeedbackItem[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function Feedbacks() {
-  const { user } = useAuth();
+  useAuth(); // ensure auth context is active
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(MOCK_FEEDBACKS);
   const [loading, setLoading] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null);
@@ -122,8 +122,13 @@ export default function Feedbacks() {
   const fetchFeedbacks = useCallback(async () => {
     setLoading(true);
     try {
+      const session = localStorage.getItem("fll_session");
+      const token = session ? JSON.parse(session)?.token : null;
       const res = await fetch(`${API_BASE}/feedbacks`, {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       if (res.ok) {
         const data = await res.json();
@@ -152,11 +157,12 @@ export default function Feedbacks() {
   const newCount = feedbacks.filter((f) => f.status === "new").length;
 
   const handleExport = () => {
+    const sanitize = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
     const csv = [
       "الاسم,التقييم,التعليق,التصنيف,الحالة,التاريخ",
       ...feedbacks.map(
         (f) =>
-          `"${f.customer_name}",${f.rating},"${f.comment}","${f.category}","${f.status}","${f.created_at}"`
+          `"${sanitize(f.customer_name)}",${f.rating},"${sanitize(f.comment)}","${sanitize(f.category)}","${f.status}","${f.created_at}"`
       ),
     ].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -165,7 +171,7 @@ export default function Feedbacks() {
     a.href = url;
     a.download = `feedbacks-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast.success("تم تصدير التقييمات بنجاح");
   };
 

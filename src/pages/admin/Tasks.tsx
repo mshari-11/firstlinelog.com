@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
+import { PageWrapper, PageHeader } from "@/components/admin/ui";
 
 function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) return;
@@ -173,129 +174,80 @@ export default function Tasks() {
   };
 
   return (
-    <div
-      dir="rtl"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 4,
-            }}
-          >
-            <div
+    <PageWrapper>
+      <PageHeader
+        icon={ListTodo}
+        title="المهام"
+        subtitle="إدارة المهام وتتبع التقدم"
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              className="con-btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              <Plus size={14} /> مهمة جديدة
+            </button>
+            <button
+              className="con-btn-primary"
               style={{
-                background: "rgba(59,130,246,0.12)",
-                borderRadius: 8,
-                padding: 7,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                background: "var(--con-success)",
+                borderColor: "var(--con-success)",
+              }}
+              onClick={() => {
+                const targets = filtered.filter((t) => t.status !== "completed");
+                if (!targets.length) {
+                  toast.info("جميع المهام مكتملة");
+                  return;
+                }
+                setData((prev) =>
+                  prev.map((t) =>
+                    targets.find((tt) => tt.id === t.id)
+                      ? { ...t, status: "completed" as TaskStatus }
+                      : t,
+                  ),
+                );
+                toast.success(`تم إكمال ${targets.length} مهمة`);
               }}
             >
-              <ListTodo size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1
-              style={{
-                fontSize: "var(--con-text-page-title)",
-                fontWeight: 700,
-                color: "var(--con-text-primary)",
-                margin: 0,
-              }}
-            >
-              المهام
-            </h1>
-          </div>
-          <p
-            style={{
-              fontSize: "var(--con-text-body)",
-              color: "var(--con-text-muted)",
-              margin: 0,
-              paddingRight: 44,
-            }}
-          >
-            إدارة المهام وتتبع التقدم
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
-            className="con-btn-primary"
-            onClick={() => setShowModal(true)}
-          >
-            <Plus size={14} /> مهمة جديدة
-          </button>
-          <button
-            className="con-btn-primary"
-            style={{
-              background: "var(--con-success)",
-              borderColor: "var(--con-success)",
-            }}
-            onClick={() => {
-              const targets = filtered.filter((t) => t.status !== "completed");
-              if (!targets.length) {
-                toast.info("جميع المهام مكتملة");
-                return;
+              <CheckCircle2 size={14} /> إكمال المعروضة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() =>
+                downloadCSV(
+                  filtered.map((t) => ({
+                    الرقم: t.id,
+                    العنوان: t.title,
+                    المعيّن: t.assignee,
+                    الأولوية: PRIORITY_MAP[t.priority].label,
+                    الحالة: STATUS_MAP[t.status].label,
+                    التاريخ: t.date,
+                  })),
+                  "tasks.csv",
+                )
               }
-              setData((prev) =>
-                prev.map((t) =>
-                  targets.find((tt) => tt.id === t.id)
-                    ? { ...t, status: "completed" as TaskStatus }
-                    : t,
-                ),
-              );
-              toast.success(`تم إكمال ${targets.length} مهمة`);
-            }}
-          >
-            <CheckCircle2 size={14} /> إكمال المعروضة
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={() =>
-              downloadCSV(
-                filtered.map((t) => ({
-                  الرقم: t.id,
-                  العنوان: t.title,
-                  المعيّن: t.assignee,
-                  الأولوية: PRIORITY_MAP[t.priority].label,
-                  الحالة: STATUS_MAP[t.status].label,
-                  التاريخ: t.date,
-                })),
-                "tasks.csv",
-              )
-            }
-          >
-            <Download size={14} /> تصدير CSV
-          </button>
-          <button className="con-btn-ghost" onClick={() => window.print()}>
-            <Printer size={14} /> طباعة
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={fetchData}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={14}
-              style={{
-                animation: loading ? "spin 1s linear infinite" : "none",
-              }}
-            />{" "}
-            تحديث
-          </button>
-        </div>
-      </div>
+            >
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button className="con-btn-ghost" onClick={() => window.print()}>
+              <Printer size={14} /> طباعة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={fetchData}
+              disabled={loading}
+            >
+              <RefreshCw
+                size={14}
+                style={{
+                  animation: loading ? "spin 1s linear infinite" : "none",
+                }}
+              />{" "}
+              تحديث
+            </button>
+          </div>
+        }
+      />
 
       <div
         style={{
@@ -594,6 +546,6 @@ export default function Tasks() {
           </div>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

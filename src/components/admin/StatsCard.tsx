@@ -3,6 +3,7 @@
  * تُستخدم لعرض مؤشرات الأداء في صفحات الإدارة
  * تتبع نظام التصميم "Obsidian Command" (--con-* CSS variables)
  */
+import React from "react";
 import { motion } from "framer-motion";
 
 interface StatsCardProps {
@@ -20,7 +21,7 @@ const fadeUp = {
   transition: { duration: 0.3, ease: [0.22, 0.68, 0, 1] },
 };
 
-export function StatsCard({
+export const StatsCard = React.memo(function StatsCard({
   icon: Icon,
   title,
   value,
@@ -85,4 +86,4 @@ export function StatsCard({
       </div>
     </motion.div>
   );
-}
+});

@@ -77,6 +77,7 @@ import {
   BellRing,
   CalendarRange,
   Coins,
+  Fingerprint,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -159,6 +160,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   BellRing,
   CalendarRange,
   Coins,
+  Fingerprint,
 };
 
 function NavIcon({ name, size = 16 }: { name: string; size?: number }) {

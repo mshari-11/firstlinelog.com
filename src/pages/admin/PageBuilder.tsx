@@ -696,9 +696,27 @@ const DEFAULT_PAGES: PageConfig[] = [
     enabled: true,
     order: 55,
   },
+  {
+    id: "feedbacks",
+    label: "التقييمات",
+    path: "/admin-panel/feedbacks",
+    group: "التشغيل",
+    icon: "Star",
+    enabled: true,
+    order: 56,
+  },
+  {
+    id: "attendance-live",
+    label: "الحضور المباشر",
+    path: "/admin-panel/attendance-live",
+    group: "الموارد البشرية",
+    icon: "Fingerprint",
+    enabled: true,
+    order: 57,
+  },
 ];
 
-const STORAGE_KEY = "fll_page_config_v3";
+const STORAGE_KEY = "fll_page_config_v4";
 
 function loadConfig(): PageConfig[] {
   try {
@@ -708,6 +726,9 @@ function loadConfig(): PageConfig[] {
     }
     if (localStorage.getItem("fll_page_config_v2")) {
       localStorage.removeItem("fll_page_config_v2");
+    }
+    if (localStorage.getItem("fll_page_config_v3")) {
+      localStorage.removeItem("fll_page_config_v3");
     }
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PAGES;

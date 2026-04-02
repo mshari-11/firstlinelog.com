@@ -19,6 +19,7 @@ import {
   X,
   Save,
 } from "lucide-react";
+import { PageWrapper, PageHeader } from "@/components/admin/ui";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -192,124 +193,75 @@ export default function Approvals() {
   };
 
   return (
-    <div
-      dir="rtl"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 4,
-            }}
-          >
-            <div
+    <PageWrapper>
+      <PageHeader
+        icon={CheckCircle2}
+        title="الاعتمادات"
+        subtitle="إدارة طلبات الاعتماد والموافقات"
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              className="con-btn-primary"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus size={14} /> طلب اعتماد
+            </button>
+            <button
+              className="con-btn-primary"
               style={{
-                background: "rgba(59,130,246,0.12)",
-                borderRadius: 8,
-                padding: 7,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                background: "var(--con-success)",
+                borderColor: "var(--con-success)",
+              }}
+              onClick={() => {
+                const pending = data.filter((a) => a.status === "pending");
+                if (!pending.length) {
+                  toast.info("لا توجد اعتمادات معلقة");
+                  return;
+                }
+                pending.forEach((a) => handleAction(a.id, "approved"));
+                toast.success(`تم اعتماد ${pending.length} طلب`);
               }}
             >
-              <CheckCircle2 size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1
-              style={{
-                fontSize: "var(--con-text-page-title)",
-                fontWeight: 700,
-                color: "var(--con-text-primary)",
-                margin: 0,
-              }}
-            >
-              الاعتمادات
-            </h1>
-          </div>
-          <p
-            style={{
-              fontSize: "var(--con-text-body)",
-              color: "var(--con-text-muted)",
-              margin: 0,
-              paddingRight: 44,
-            }}
-          >
-            إدارة طلبات الاعتماد والموافقات
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
-            className="con-btn-primary"
-            onClick={() => setShowAddModal(true)}
-          >
-            <Plus size={14} /> طلب اعتماد
-          </button>
-          <button
-            className="con-btn-primary"
-            style={{
-              background: "var(--con-success)",
-              borderColor: "var(--con-success)",
-            }}
-            onClick={() => {
-              const pending = data.filter((a) => a.status === "pending");
-              if (!pending.length) {
-                toast.info("لا توجد اعتمادات معلقة");
-                return;
+              <CheckCircle2 size={14} /> اعتماد الكل
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() =>
+                downloadCSV(
+                  filtered.map((a) => ({
+                    الرقم: a.id,
+                    النوع: a.type,
+                    الطالب: a.requester,
+                    الوصف: a.description,
+                    المبلغ: a.amount ?? "",
+                    الحالة: STATUS[a.status].label,
+                    التاريخ: a.createdAt,
+                  })),
+                  "approvals.csv",
+                )
               }
-              pending.forEach((a) => handleAction(a.id, "approved"));
-              toast.success(`تم اعتماد ${pending.length} طلب`);
-            }}
-          >
-            <CheckCircle2 size={14} /> اعتماد الكل
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={() =>
-              downloadCSV(
-                filtered.map((a) => ({
-                  الرقم: a.id,
-                  النوع: a.type,
-                  الطالب: a.requester,
-                  الوصف: a.description,
-                  المبلغ: a.amount ?? "",
-                  الحالة: STATUS[a.status].label,
-                  التاريخ: a.createdAt,
-                })),
-                "approvals.csv",
-              )
-            }
-          >
-            <Download size={14} /> تصدير CSV
-          </button>
-          <button className="con-btn-ghost" onClick={() => window.print()}>
-            <Printer size={14} /> طباعة
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={fetchData}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={14}
-              style={{
-                animation: loading ? "spin 1s linear infinite" : "none",
-              }}
-            />{" "}
-            تحديث
-          </button>
-        </div>
-      </div>
+            >
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button className="con-btn-ghost" onClick={() => window.print()}>
+              <Printer size={14} /> طباعة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={fetchData}
+              disabled={loading}
+            >
+              <RefreshCw
+                size={14}
+                style={{
+                  animation: loading ? "spin 1s linear infinite" : "none",
+                }}
+              />{" "}
+              تحديث
+            </button>
+          </div>
+        }
+      />
 
       <div
         style={{
@@ -703,6 +655,6 @@ export default function Approvals() {
           </div>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

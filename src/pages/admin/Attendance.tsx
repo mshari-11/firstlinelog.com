@@ -15,6 +15,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { PageWrapper, PageHeader } from "@/components/admin/ui";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
   if (!data.length) return;
@@ -160,114 +161,65 @@ export default function Attendance() {
   };
 
   return (
-    <div
-      dir="rtl"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
+    <PageWrapper>
+      <PageHeader
+        icon={Clock}
+        title="الحضور والانصراف"
+        subtitle="متابعة حضور وانصراف الموظفين"
+        actions={
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 10,
-              marginBottom: 4,
+              gap: 8,
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{
-                background: "rgba(59,130,246,0.12)",
-                borderRadius: 8,
-                padding: 7,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+            <button
+              className="con-btn-ghost"
+              onClick={() => {
+                window.print();
               }}
             >
-              <Clock size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1
-              style={{
-                fontSize: "var(--con-text-page-title)",
-                fontWeight: 700,
-                color: "var(--con-text-primary)",
-                margin: 0,
+              <Printer size={14} /> طباعة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => {
+                const rows = data.map((a) => ({
+                  الاسم: a.name,
+                  القسم: a.department,
+                  وقت_الحضور: a.checkIn,
+                  وقت_الانصراف: a.checkOut,
+                  الحالة: STATUS_MAP[a.status].label,
+                }));
+                downloadCSV(rows, "attendance_export");
               }}
             >
-              الحضور والانصراف
-            </h1>
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={fetchData}
+              disabled={loading}
+            >
+              <RefreshCw
+                size={14}
+                style={{
+                  animation: loading ? "spin 1s linear infinite" : "none",
+                }}
+              />{" "}
+              تحديث
+            </button>
+            <button
+              className="con-btn-primary"
+              onClick={() => setShowCheckinModal(true)}
+            >
+              <Plus size={14} /> تسجيل يدوي
+            </button>
           </div>
-          <p
-            style={{
-              fontSize: "var(--con-text-body)",
-              color: "var(--con-text-muted)",
-              margin: 0,
-              paddingRight: 44,
-            }}
-          >
-            متابعة حضور وانصراف الموظفين
-          </p>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            flexWrap: "wrap",
-          }}
-        >
-          <button
-            className="con-btn-ghost"
-            onClick={() => {
-              window.print();
-            }}
-          >
-            <Printer size={14} /> طباعة
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={() => {
-              const rows = data.map((a) => ({
-                الاسم: a.name,
-                القسم: a.department,
-                وقت_الحضور: a.checkIn,
-                وقت_الانصراف: a.checkOut,
-                الحالة: STATUS_MAP[a.status].label,
-              }));
-              downloadCSV(rows, "attendance_export");
-            }}
-          >
-            <Download size={14} /> تصدير CSV
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={fetchData}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={14}
-              style={{
-                animation: loading ? "spin 1s linear infinite" : "none",
-              }}
-            />{" "}
-            تحديث
-          </button>
-          <button
-            className="con-btn-primary"
-            onClick={() => setShowCheckinModal(true)}
-          >
-            <Plus size={14} /> تسجيل يدوي
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div
         style={{
@@ -669,6 +621,6 @@ export default function Attendance() {
           </div>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

@@ -3,7 +3,7 @@
  * يدعم الفلترة والبحث وعرض التفاصيل
  * تتبع نظام التصميم "Obsidian Command" (--con-* CSS variables)
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, Star, ChevronDown, ChevronUp, Eye } from "lucide-react";
 
 export interface FeedbackItem {
@@ -50,7 +50,7 @@ export function FeedbackTable({ data, onView }: FeedbackTableProps) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const filtered = data
+  const filtered = useMemo(() => data
     .filter((item) => {
       const matchSearch =
         !search ||
@@ -64,7 +64,7 @@ export function FeedbackTable({ data, onView }: FeedbackTableProps) {
       const mul = sortDir === "asc" ? 1 : -1;
       if (sortField === "rating") return (a.rating - b.rating) * mul;
       return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * mul;
-    });
+    }), [data, search, filterStatus, sortField, sortDir]);
 
   const toggleSort = (field: "created_at" | "rating") => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -139,6 +139,7 @@ export function FeedbackTable({ data, onView }: FeedbackTableProps) {
           <input
             type="text"
             placeholder="بحث بالاسم أو التعليق أو رقم الطلب..."
+            aria-label="بحث في التقييمات"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -155,6 +156,7 @@ export function FeedbackTable({ data, onView }: FeedbackTableProps) {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
+          aria-label="تصفية حسب الحالة"
           style={{
             background: "var(--con-bg, #07111d)",
             border: "1px solid var(--con-border, #1a3a52)",

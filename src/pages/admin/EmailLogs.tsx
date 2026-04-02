@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
+import { PageWrapper, PageHeader } from "@/components/admin/ui";
 
 function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) return;
@@ -174,99 +175,50 @@ export default function EmailLogs() {
   const total = data.length;
 
   return (
-    <div
-      dir="rtl"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 4,
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(59,130,246,0.12)",
-                borderRadius: 8,
-                padding: 7,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+    <PageWrapper>
+      <PageHeader
+        icon={Mail}
+        title="سجل الإيميلات"
+        subtitle="متابعة حالة الرسائل الإلكترونية المرسلة"
+        actions={
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              className="con-btn-ghost"
+              onClick={() =>
+                downloadCSV(
+                  filtered.map((a) => ({
+                    الرقم: a.id,
+                    التاريخ: a.date,
+                    المستلم: a.recipient,
+                    النوع: TYPE_LABELS[a.type],
+                    الموضوع: a.subject,
+                    الحالة: STATUS[a.status].label,
+                  })),
+                  "email-logs.csv",
+                )
+              }
             >
-              <Mail size={18} style={{ color: "var(--con-brand)" }} />
-            </div>
-            <h1
-              style={{
-                fontSize: "var(--con-text-page-title)",
-                fontWeight: 700,
-                color: "var(--con-text-primary)",
-                margin: 0,
-              }}
+              <Download size={14} /> تصدير CSV
+            </button>
+            <button className="con-btn-ghost" onClick={() => window.print()}>
+              <Printer size={14} /> طباعة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={fetchData}
+              disabled={loading}
             >
-              سجل الإيميلات
-            </h1>
+              <RefreshCw
+                size={14}
+                style={{
+                  animation: loading ? "spin 1s linear infinite" : "none",
+                }}
+              />{" "}
+              تحديث
+            </button>
           </div>
-          <p
-            style={{
-              fontSize: "var(--con-text-body)",
-              color: "var(--con-text-muted)",
-              margin: 0,
-              paddingRight: 44,
-            }}
-          >
-            متابعة حالة الرسائل الإلكترونية المرسلة
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
-            className="con-btn-ghost"
-            onClick={() =>
-              downloadCSV(
-                filtered.map((a) => ({
-                  الرقم: a.id,
-                  التاريخ: a.date,
-                  المستلم: a.recipient,
-                  النوع: TYPE_LABELS[a.type],
-                  الموضوع: a.subject,
-                  الحالة: STATUS[a.status].label,
-                })),
-                "email-logs.csv",
-              )
-            }
-          >
-            <Download size={14} /> تصدير CSV
-          </button>
-          <button className="con-btn-ghost" onClick={() => window.print()}>
-            <Printer size={14} /> طباعة
-          </button>
-          <button
-            className="con-btn-ghost"
-            onClick={fetchData}
-            disabled={loading}
-          >
-            <RefreshCw
-              size={14}
-              style={{
-                animation: loading ? "spin 1s linear infinite" : "none",
-              }}
-            />{" "}
-            تحديث
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div
         style={{
@@ -499,6 +451,6 @@ export default function EmailLogs() {
           </div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

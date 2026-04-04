@@ -108,6 +108,7 @@ export function AdminLayout() {
   const location = useLocation();
   const { fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime } =
     useNotificationStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -200,7 +201,6 @@ export function AdminLayout() {
     );
   }
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!user || !["admin", "owner", "staff"].includes(user.role)) return null;
 

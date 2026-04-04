@@ -31,6 +31,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.click();
 }
 import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 type AttendanceStatus = "present" | "late" | "absent";
@@ -134,15 +135,37 @@ export default function Attendance() {
   }, []);
   async function fetchData() {
     setLoading(true);
+    // Try Supabase first
+    if (supabase) {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: rows, error } = await supabase
+          .from("attendance")
+          .select("*")
+          .gte("date", today)
+          .order("check_in", { ascending: true });
+        if (!error && rows && rows.length > 0) {
+          setData(rows.map((r: any) => ({
+            id: r.id || `ATT-${r.id}`,
+            name: r.employee_name || r.name || "موظف",
+            department: r.department || "غير محدد",
+            checkIn: r.check_in || "—",
+            checkOut: r.check_out || "—",
+            status: r.status || (r.check_in ? (r.check_in > "08:15" ? "late" : "present") : "absent"),
+          })));
+          setLoading(false);
+          return;
+        }
+      } catch { /* fall through */ }
+    }
+    // Fallback to API
     try {
       const res = await fetch(`${API_BASE}/api/attendance`);
       if (res.ok) {
         const d = await res.json();
         if (Array.isArray(d) && d.length) setData(d);
       }
-    } catch {
-      toast.error("فشل تحميل بيانات الحضور");
-    }
+    } catch { /* keep mock */ }
     setLoading(false);
   }
 
@@ -605,6 +628,16 @@ export default function Attendance() {
                       status: "present",
                     };
                     setData((prev) => [next, ...prev]);
+                  }
+                  // Persist to Supabase
+                  if (supabase) {
+                    supabase.from("attendance").insert({
+                      employee_name: checkinForm.name,
+                      check_in: checkinForm.type === "check-in" ? checkinForm.time : null,
+                      check_out: checkinForm.type === "check-out" ? checkinForm.time : null,
+                      date: new Date().toISOString().slice(0, 10),
+                      status: "present",
+                    }).then(() => {});
                   }
                   setShowCheckinModal(false);
                   setCheckinForm({ name: "", time: "", type: "check-in" });

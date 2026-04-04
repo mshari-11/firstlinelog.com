@@ -17,6 +17,7 @@ import {
   Printer,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 type PayoutStatus = "draft" | "approved" | "paid";
@@ -92,6 +93,33 @@ export default function PayoutManagement() {
   }, []);
   async function fetchData() {
     setLoading(true);
+
+    // 1) Try Supabase first
+    if (supabase) {
+      try {
+        const { data: rows, error } = await supabase
+          .from("payout_runs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!error && rows && rows.length > 0) {
+          const mapped: PayoutRun[] = rows.map((r: any) => ({
+            id: r.id ?? r.run_id ?? "",
+            period: r.period ?? "",
+            driverCount: r.driver_count ?? r.driverCount ?? 0,
+            amount: r.amount ?? r.total_amount ?? 0,
+            status: r.status ?? "draft",
+          }));
+          setData(mapped);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        /* fall through to API */
+      }
+    }
+
+    // 2) Fallback to API
     try {
       const res = await fetch(`${API_BASE}/api/payout-runs`);
       if (res.ok) {

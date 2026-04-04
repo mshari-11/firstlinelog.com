@@ -17,6 +17,7 @@ import {
   Printer,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 interface Invoice {
@@ -111,6 +112,34 @@ export default function Invoices() {
   }, []);
   async function fetchData() {
     setLoading(true);
+
+    // 1) Try Supabase first
+    if (supabase) {
+      try {
+        const { data: rows, error } = await supabase
+          .from("invoices")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!error && rows && rows.length > 0) {
+          const mapped: Invoice[] = rows.map((r: any) => ({
+            id: r.id ?? r.invoice_id ?? "",
+            customer: r.customer ?? r.customer_name ?? "",
+            amount: r.amount ?? r.total_amount ?? 0,
+            issueDate: r.issue_date ?? r.issueDate ?? "",
+            dueDate: r.due_date ?? r.dueDate ?? "",
+            status: r.status ?? "draft",
+          }));
+          setData(mapped);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        /* fall through to API */
+      }
+    }
+
+    // 2) Fallback to API
     try {
       const res = await fetch(`${API_BASE}/api/invoices`);
       if (res.ok) {

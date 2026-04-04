@@ -77,6 +77,16 @@ function calcChange(current: number, previous: number): number {
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
+function getRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "الآن";
+  if (mins < 60) return `منذ ${mins} دقيقة`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `منذ ${hours} ساعة`;
+  return `منذ ${Math.floor(hours / 24)} يوم`;
+}
+
 const REFETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export function useDashboardStats(): DashboardStats {
@@ -168,6 +178,49 @@ export function useDashboardStats(): DashboardStats {
         0,
       );
 
+      // Fetch recent orders
+      const { data: recentRows } = await supabase
+        .from("orders")
+        .select("id, customer_name, driver_name, status, created_at, city")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      const recentOrders = (recentRows && recentRows.length > 0)
+        ? recentRows.map((r: any) => ({
+            id: r.id || `FLL-${r.id}`,
+            customer: r.customer_name || r.platform_name || "عميل",
+            driver: r.driver_name || "—",
+            status: r.status || "pending",
+            time: r.created_at ? getRelativeTime(r.created_at) : "—",
+            city: r.city || "غير محدد",
+          }))
+        : MOCK_RECENT_ORDERS;
+
+      // Fetch top cities
+      const { data: cityRows } = await supabase
+        .from("orders")
+        .select("city")
+        .gte("created_at", currentMonth.start)
+        .lt("created_at", currentMonth.end);
+
+      let topCities = MOCK_TOP_CITIES;
+      if (cityRows && cityRows.length > 0) {
+        const cityCounts: Record<string, number> = {};
+        cityRows.forEach((r: any) => {
+          const city = r.city || "أخرى";
+          cityCounts[city] = (cityCounts[city] || 0) + 1;
+        });
+        const total = cityRows.length;
+        topCities = Object.entries(cityCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([name, orders]) => ({
+            name,
+            orders,
+            percentage: Math.round((orders / total) * 100),
+          }));
+      }
+
       setStats({
         totalOrders: currentOrders,
         totalOrdersChange: calcChange(currentOrders, prevOrders),
@@ -178,8 +231,8 @@ export function useDashboardStats(): DashboardStats {
         // avgDeliveryTime kept as mock — no delivery_time column assumed
         avgDeliveryTime: MOCK_STATS.avgDeliveryTime,
         avgDeliveryTimeChange: MOCK_STATS.avgDeliveryTimeChange,
-        recentOrders: MOCK_RECENT_ORDERS,
-        topCities: MOCK_TOP_CITIES,
+        recentOrders: recentOrders,
+        topCities: topCities,
         loading: false,
       });
     } catch (err) {

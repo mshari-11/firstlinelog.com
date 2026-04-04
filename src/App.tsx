@@ -157,6 +157,7 @@ const N8nWorkflows = lazy(() => import("@/pages/admin/N8nWorkflows"));
 const BankAlerts = lazy(() => import("@/pages/admin/BankAlerts"));
 const SLAScanner = lazy(() => import("@/pages/admin/SLAScanner"));
 const TargetTracking = lazy(() => import("@/pages/admin/TargetTracking"));
+const AdminDriverProfile = lazy(() => import("@/pages/admin/DriverProfile"));
 const MarketplaceIntegrations = lazy(
   () => import("@/pages/admin/MarketplaceIntegrations"),
 );
@@ -720,6 +721,14 @@ export default function App() {
                 element={
                   <AccessGuard roles={["admin", "owner", "staff"]}>
                     <SLAScanner />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="driver-profile/:driverId"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <AdminDriverProfile />
                   </AccessGuard>
                 }
               />

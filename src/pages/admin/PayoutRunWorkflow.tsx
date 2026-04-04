@@ -1,8 +1,10 @@
 /**
  * سير عمل الدفعة — Payout Run 5-Stage Approval Workflow
  * Finance Review → Ops → Fleet → HR → Finance Final + STC Bank Excel
+ * + 3-Stage Approval Workflow (المالية → العمليات → الإدارة العامة)
+ * + Salary Breakdown, Payslip Generation, Bank File Export
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import {
@@ -24,6 +26,10 @@ import {
   Loader2,
   Eye,
   ArrowDown,
+  ClipboardList,
+  Printer,
+  RotateCcw,
+  Info,
 } from "lucide-react";
 import {
   PageWrapper,
@@ -41,8 +47,82 @@ import {
   usePayoutWorkflowStore,
   STAGE_DEFS,
   type PayoutStage,
+  type DriverPayoutLine,
 } from "@/stores/usePayoutWorkflowStore";
 import { toast } from "sonner";
+import { exportToExcel, printReport } from "@/lib/exportUtils";
+import { supabase } from "@/lib/supabase";
+
+// ─── 3-Stage Approval Workflow Definition ───────────────────────────────────
+const APPROVAL_STAGES = [
+  { id: 1, name: "إعداد المالية", department: "المالية", icon: "DollarSign" },
+  { id: 2, name: "مراجعة العمليات", department: "العمليات", icon: "ClipboardList" },
+  { id: 3, name: "اعتماد نهائي", department: "الإدارة العامة", icon: "Shield" },
+] as const;
+
+const APPROVAL_ICON_MAP: Record<string, React.ElementType> = {
+  DollarSign,
+  ClipboardList,
+  Shield,
+};
+
+interface ApprovalRecord {
+  stageId: number;
+  status: "pending" | "approved" | "rejected" | "revision";
+  approverName?: string;
+  approvedAt?: string;
+  rejectReason?: string;
+}
+
+// ─── Mock deduction breakdown per driver (for tooltip) ─────────────────────
+const MOCK_DEDUCTION_BREAKDOWN: Record<string, { label: string; amount: number }[]> = {
+  "d1": [
+    { label: "غياب", amount: 400 },
+    { label: "مخالفات", amount: 300 },
+    { label: "صيانة", amount: 320 },
+    { label: "سلف", amount: 200 },
+  ],
+  "d2": [
+    { label: "غياب", amount: 200 },
+    { label: "مخالفات", amount: 150 },
+    { label: "صيانة", amount: 444 },
+    { label: "سلف", amount: 300 },
+  ],
+  "d3": [
+    { label: "غياب", amount: 176 },
+    { label: "مخالفات", amount: 200 },
+    { label: "صيانة", amount: 200 },
+    { label: "سلف", amount: 200 },
+  ],
+  "d4": [
+    { label: "غياب", amount: 354 },
+    { label: "مخالفات", amount: 400 },
+    { label: "صيانة", amount: 350 },
+    { label: "سلف", amount: 350 },
+  ],
+  "d5": [
+    { label: "غياب", amount: 172 },
+    { label: "مخالفات", amount: 100 },
+    { label: "صيانة", amount: 150 },
+    { label: "سلف", amount: 150 },
+  ],
+  "d6": [
+    { label: "غياب", amount: 262 },
+    { label: "مخالفات", amount: 300 },
+    { label: "صيانة", amount: 350 },
+    { label: "سلف", amount: 350 },
+  ],
+};
+
+// ─── Mock order counts per driver ──────────────────────────────────────────
+const MOCK_ORDER_COUNTS: Record<string, number> = {
+  "d1": 142,
+  "d2": 98,
+  "d3": 76,
+  "d4": 163,
+  "d5": 51,
+  "d6": 121,
+};
 
 // ─── Stage Icons & Colors ───────────────────────────────────────────────────
 const STAGE_META: Record<number, { icon: React.ElementType; color: string }> = {
@@ -191,6 +271,489 @@ function StageStepper({
         );
       })}
     </div>
+  );
+}
+
+// ─── 3-Stage Approval Stepper (Visual) ─────────────────────────────────────
+function ApprovalStageStepper({
+  approvals,
+}: {
+  approvals: ApprovalRecord[];
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        gap: 0,
+        padding: "20px 0 12px",
+      }}
+    >
+      {APPROVAL_STAGES.map((stage, idx) => {
+        const record = approvals.find((a) => a.stageId === stage.id);
+        const status = record?.status || "pending";
+        const Icon = APPROVAL_ICON_MAP[stage.icon] || DollarSign;
+        const isDone = status === "approved";
+        const isRejected = status === "rejected";
+        const isRevision = status === "revision";
+        const isCurrent =
+          !isDone &&
+          !isRejected &&
+          !isRevision &&
+          (idx === 0 || approvals.find((a) => a.stageId === stage.id - 1)?.status === "approved");
+
+        const circleColor = isDone
+          ? "var(--con-success)"
+          : isRejected
+            ? "var(--con-danger)"
+            : isRevision
+              ? "var(--con-warning)"
+              : isCurrent
+                ? "var(--con-brand)"
+                : "var(--con-bg-elevated)";
+        const borderColor = isDone
+          ? "var(--con-success)"
+          : isRejected
+            ? "var(--con-danger)"
+            : isRevision
+              ? "var(--con-warning)"
+              : isCurrent
+                ? "var(--con-brand)"
+                : "var(--con-border-default)";
+
+        return (
+          <div key={stage.id} style={{ display: "flex", alignItems: "flex-start" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 6,
+                minWidth: 120,
+              }}
+            >
+              {/* Circle */}
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: circleColor,
+                  border: `2.5px solid ${borderColor}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.3s",
+                  boxShadow: isCurrent ? `0 0 12px ${borderColor}40` : "none",
+                }}
+              >
+                {isDone ? (
+                  <CheckCircle2 size={22} style={{ color: "#fff" }} />
+                ) : isRejected ? (
+                  <XCircle size={22} style={{ color: "#fff" }} />
+                ) : isRevision ? (
+                  <RotateCcw size={18} style={{ color: "#fff" }} />
+                ) : isCurrent ? (
+                  <Icon size={20} style={{ color: "#fff" }} />
+                ) : (
+                  <Icon size={18} style={{ color: "var(--con-text-muted)" }} />
+                )}
+              </div>
+              {/* Label */}
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: isCurrent || isDone
+                      ? "var(--con-text-primary)"
+                      : "var(--con-text-muted)",
+                  }}
+                >
+                  {stage.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--con-text-muted)",
+                    marginTop: 2,
+                  }}
+                >
+                  {stage.department}
+                </div>
+                {record?.approverName && (
+                  <div style={{ fontSize: 10, color: "var(--con-brand)", marginTop: 2, fontWeight: 600 }}>
+                    {record.approverName}
+                  </div>
+                )}
+                {record?.approvedAt && (
+                  <div
+                    style={{
+                      fontSize: 9,
+                      color: "var(--con-text-disabled)",
+                      fontFamily: "var(--con-font-mono)",
+                      marginTop: 1,
+                    }}
+                  >
+                    {new Date(record.approvedAt).toLocaleDateString("ar-SA")}
+                  </div>
+                )}
+                {/* Status badge */}
+                <div style={{ marginTop: 4 }}>
+                  <Badge
+                    variant={
+                      isDone
+                        ? "success"
+                        : isRejected
+                          ? "danger"
+                          : isRevision
+                            ? "warning"
+                            : isCurrent
+                              ? "brand"
+                              : "muted"
+                    }
+                  >
+                    {isDone
+                      ? "معتمد"
+                      : isRejected
+                        ? "مرفوض"
+                        : isRevision
+                          ? "طلب تعديل"
+                          : isCurrent
+                            ? "قيد المراجعة"
+                            : "بانتظار"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            {/* Connector */}
+            {idx < APPROVAL_STAGES.length - 1 && (
+              <div
+                style={{
+                  width: 60,
+                  height: 3,
+                  background: isDone
+                    ? "var(--con-success)"
+                    : "var(--con-border-default)",
+                  marginTop: 23,
+                  borderRadius: 2,
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Approval Actions Panel ────────────────────────────────────────────────
+function ApprovalActionsPanel({
+  approvals,
+  onApprove,
+  onReject,
+  onRequestRevision,
+}: {
+  approvals: ApprovalRecord[];
+  onApprove: () => void;
+  onReject: () => void;
+  onRequestRevision: () => void;
+}) {
+  // Find current approval stage
+  const currentApproval = APPROVAL_STAGES.find((stage) => {
+    const record = approvals.find((a) => a.stageId === stage.id);
+    if (!record || record.status === "pending") {
+      // Check if previous is approved (or this is stage 1)
+      if (stage.id === 1) return true;
+      const prev = approvals.find((a) => a.stageId === stage.id - 1);
+      return prev?.status === "approved";
+    }
+    return false;
+  });
+
+  if (!currentApproval) return null;
+
+  return (
+    <Card title={`إجراءات الاعتماد — ${currentApproval.name}`}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "var(--con-text-secondary)" }}>
+          المرحلة الحالية:{" "}
+          <strong style={{ color: "var(--con-text-primary)" }}>
+            {currentApproval.name}
+          </strong>{" "}
+          — {currentApproval.department}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {currentApproval.id > 1 && (
+            <Button variant="ghost" icon={RotateCcw} onClick={onRequestRevision}>
+              طلب تعديل
+            </Button>
+          )}
+          <Button variant="danger" icon={Ban} onClick={onReject}>
+            رفض
+          </Button>
+          <Button icon={CheckCircle2} onClick={onApprove}>
+            اعتماد
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ─── Deduction Tooltip ─────────────────────────────────────────────────────
+function DeductionTooltip({
+  driverId,
+  totalDeductions,
+}: {
+  driverId: string;
+  totalDeductions: number;
+}) {
+  const [show, setShow] = useState(false);
+  const breakdown = MOCK_DEDUCTION_BREAKDOWN[driverId] || [];
+
+  return (
+    <div
+      style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      <span
+        style={{
+          fontFamily: "var(--con-font-mono)",
+          color: "var(--con-danger)",
+        }}
+      >
+        -{formatSAR(totalDeductions)}
+      </span>
+      <Info
+        size={12}
+        style={{ color: "var(--con-text-muted)", cursor: "pointer" }}
+      />
+      {show && breakdown.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            insetInlineStart: 0,
+            zIndex: 50,
+            minWidth: 200,
+            padding: 10,
+            borderRadius: "var(--con-radius)",
+            background: "var(--con-bg-surface)",
+            border: "1px solid var(--con-border-default)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+            marginTop: 4,
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 6 }}>
+            تفصيل الخصومات
+          </div>
+          {breakdown.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "3px 0",
+                fontSize: 11,
+                color: "var(--con-text-secondary)",
+                borderBottom: i < breakdown.length - 1 ? "1px solid var(--con-border-default)" : "none",
+              }}
+            >
+              <span>{item.label}</span>
+              <span style={{ fontFamily: "var(--con-font-mono)", color: "var(--con-danger)" }}>
+                -{formatSAR(item.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Salary Breakdown Section ──────────────────────────────────────────────
+function SalaryBreakdownSection({
+  drivers,
+  onGeneratePayslip,
+}: {
+  drivers: DriverPayoutLine[];
+  onGeneratePayslip: (driver: DriverPayoutLine) => void;
+}) {
+  const totalOrders = drivers.reduce((s, d) => s + (MOCK_ORDER_COUNTS[d.driver_id] || 0), 0);
+  const totalGross = drivers.reduce((s, d) => s + d.gross_earnings, 0);
+  const totalDeductions = drivers.reduce((s, d) => s + d.deductions, 0);
+  const totalNet = drivers.reduce((s, d) => s + d.net_payout, 0);
+
+  return (
+    <Card title="كشف الرواتب التفصيلي" noPadding>
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: 13,
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                background: "var(--con-bg-surface-2)",
+                borderBottom: "2px solid var(--con-border-default)",
+              }}
+            >
+              {["اسم المندوب", "عدد الطلبات", "الإيرادات الإجمالية", "الخصومات", "صافي المستحق", "كشف الراتب"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: "10px 14px",
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: "var(--con-text-primary)",
+                      fontSize: 12,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {h}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {drivers.map((d) => (
+              <tr
+                key={d.id}
+                style={{
+                  borderBottom: "1px solid var(--con-border-default)",
+                }}
+              >
+                <td style={{ padding: "10px 14px" }}>
+                  <div style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>
+                    {d.driver_name}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--con-text-muted)" }}>
+                    {d.platform} · {d.contract_type}
+                  </div>
+                </td>
+                <td
+                  style={{
+                    padding: "10px 14px",
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-text-secondary)",
+                    textAlign: "center",
+                  }}
+                >
+                  {MOCK_ORDER_COUNTS[d.driver_id] || 0}
+                </td>
+                <td
+                  style={{
+                    padding: "10px 14px",
+                    fontFamily: "var(--con-font-mono)",
+                    color: "var(--con-success)",
+                  }}
+                >
+                  {formatSAR(d.gross_earnings)}
+                </td>
+                <td style={{ padding: "10px 14px" }}>
+                  <DeductionTooltip driverId={d.driver_id} totalDeductions={d.deductions} />
+                </td>
+                <td
+                  style={{
+                    padding: "10px 14px",
+                    fontFamily: "var(--con-font-mono)",
+                    fontWeight: 700,
+                    color: "var(--con-text-primary)",
+                  }}
+                >
+                  {formatSAR(d.net_payout)}
+                </td>
+                <td style={{ padding: "10px 14px" }}>
+                  <Button
+                    variant="ghost"
+                    icon={Printer}
+                    onClick={() => onGeneratePayslip(d)}
+                    style={{ fontSize: 11, padding: "4px 8px" }}
+                  >
+                    إنشاء كشف راتب
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {/* Totals Row */}
+            <tr
+              style={{
+                background: "var(--con-bg-surface-2)",
+                borderTop: "2px solid var(--con-border-default)",
+              }}
+            >
+              <td
+                style={{
+                  padding: "10px 14px",
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                }}
+              >
+                الإجمالي
+              </td>
+              <td
+                style={{
+                  padding: "10px 14px",
+                  fontFamily: "var(--con-font-mono)",
+                  fontWeight: 700,
+                  color: "var(--con-text-primary)",
+                  textAlign: "center",
+                }}
+              >
+                {totalOrders}
+              </td>
+              <td
+                style={{
+                  padding: "10px 14px",
+                  fontFamily: "var(--con-font-mono)",
+                  fontWeight: 700,
+                  color: "var(--con-success)",
+                }}
+              >
+                {formatSAR(totalGross)}
+              </td>
+              <td
+                style={{
+                  padding: "10px 14px",
+                  fontFamily: "var(--con-font-mono)",
+                  fontWeight: 700,
+                  color: "var(--con-danger)",
+                }}
+              >
+                -{formatSAR(totalDeductions)}
+              </td>
+              <td
+                style={{
+                  padding: "10px 14px",
+                  fontFamily: "var(--con-font-mono)",
+                  fontWeight: 700,
+                  color: "var(--con-brand)",
+                }}
+              >
+                {formatSAR(totalNet)}
+              </td>
+              <td />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
 
@@ -818,6 +1381,125 @@ function FinanceFinalPanel() {
   );
 }
 
+// ─── Payslip Generator ─────────────────────────────────────────────────────
+function generatePayslip(driver: DriverPayoutLine, batch: { period_start: string; period_end: string; batch_number: string }) {
+  const breakdown = MOCK_DEDUCTION_BREAKDOWN[driver.driver_id] || [];
+  const additions = driver.components_applied.filter((c) => c.type === "addition");
+  const deductions = driver.components_applied.filter((c) => c.type === "deduction");
+
+  const additionsTotal = additions.reduce((s, c) => s + c.amount, 0);
+  const deductionsTotal = deductions.reduce((s, c) => s + c.amount, 0);
+
+  const html = `
+    <div style="max-width:700px;margin:0 auto;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;">
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+        <tr>
+          <td style="padding:8px 12px;font-weight:600;color:#374151;width:40%;border:1px solid #d1d5db;background:#f3f4f6;">اسم المندوب</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;">${driver.driver_name}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600;color:#374151;border:1px solid #d1d5db;background:#f3f4f6;">رقم الهوية</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;">${driver.national_id}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600;color:#374151;border:1px solid #d1d5db;background:#f3f4f6;">الفترة</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;">${batch.period_start} — ${batch.period_end}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600;color:#374151;border:1px solid #d1d5db;background:#f3f4f6;">رقم الدفعة</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;">${batch.batch_number}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;font-weight:600;color:#374151;border:1px solid #d1d5db;background:#f3f4f6;">المنصة</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;">${driver.platform}</td>
+        </tr>
+      </table>
+
+      <h3 style="font-size:16px;color:#1e3a5f;margin:20px 0 10px;border-bottom:2px solid #3b82f6;padding-bottom:6px;">تفصيل الراتب</h3>
+
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="padding:8px 12px;background:#3b82f6;color:#fff;text-align:right;border:1px solid #d1d5db;">البند</th>
+            <th style="padding:8px 12px;background:#3b82f6;color:#fff;text-align:right;border:1px solid #d1d5db;">المبلغ (ر.س)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px 12px;border:1px solid #d1d5db;font-weight:600;">الراتب الأساسي (إجمالي الإيرادات)</td>
+            <td style="padding:8px 12px;border:1px solid #d1d5db;font-family:monospace;">${driver.gross_earnings.toLocaleString("ar-SA")}</td>
+          </tr>
+          ${additions
+            .map(
+              (a) => `
+          <tr style="background:#f0fdf4;">
+            <td style="padding:8px 12px;border:1px solid #d1d5db;color:#16a34a;">+ ${a.name}</td>
+            <td style="padding:8px 12px;border:1px solid #d1d5db;font-family:monospace;color:#16a34a;">+${a.amount.toLocaleString("ar-SA")}</td>
+          </tr>`
+            )
+            .join("")}
+          ${deductions
+            .map(
+              (d) => `
+          <tr style="background:#fef2f2;">
+            <td style="padding:8px 12px;border:1px solid #d1d5db;color:#dc2626;">- ${d.name}</td>
+            <td style="padding:8px 12px;border:1px solid #d1d5db;font-family:monospace;color:#dc2626;">-${d.amount.toLocaleString("ar-SA")}</td>
+          </tr>`
+            )
+            .join("")}
+          ${breakdown
+            .map(
+              (b) => `
+          <tr style="background:#fef2f2;">
+            <td style="padding:8px 12px;border:1px solid #d1d5db;color:#dc2626;padding-right:24px;">- ${b.label}</td>
+            <td style="padding:8px 12px;border:1px solid #d1d5db;font-family:monospace;color:#dc2626;">-${b.amount.toLocaleString("ar-SA")}</td>
+          </tr>`
+            )
+            .join("")}
+          <tr style="background:#eff6ff;font-weight:700;">
+            <td style="padding:10px 12px;border:2px solid #3b82f6;font-size:15px;">صافي المستحق</td>
+            <td style="padding:10px 12px;border:2px solid #3b82f6;font-family:monospace;font-size:15px;color:#1e3a5f;">${driver.net_payout.toLocaleString("ar-SA")} ر.س</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:30px;padding-top:20px;border-top:1px dashed #d1d5db;display:flex;justify-content:space-between;">
+        <div style="text-align:center;">
+          <div style="font-size:12px;color:#6b7280;">توقيع المندوب</div>
+          <div style="margin-top:30px;border-bottom:1px solid #374151;width:150px;"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:12px;color:#6b7280;">توقيع المالية</div>
+          <div style="margin-top:30px;border-bottom:1px solid #374151;width:150px;"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  printReport(`كشف راتب — ${driver.driver_name}`, html);
+}
+
+// ─── Bank File Export ──────────────────────────────────────────────────────
+function exportBankFile(drivers: DriverPayoutLine[], batchNumber: string) {
+  const rows = drivers
+    .filter((d) => d.stc_bank_phone && d.net_payout > 0 && d.is_active)
+    .map((d) => ({
+      Reference: `${d.driver_name} - ${d.platform} - ${d.contract_type}`,
+      Phone: d.stc_bank_phone.startsWith("966")
+        ? d.stc_bank_phone
+        : `966${d.stc_bank_phone.replace(/^0/, "")}`,
+      Amount: d.net_payout,
+    }));
+
+  if (rows.length === 0) {
+    toast.error("لا يوجد سائقين مؤهلين لتصدير ملف البنك");
+    return;
+  }
+
+  exportToExcel(rows, `STC_Bank_${batchNumber}`, "STC Bank Transfer");
+  toast.success(`تم تصدير ملف البنك — ${rows.length} سائق`);
+}
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export default function PayoutRunWorkflow() {
   const { batchId } = useParams();
@@ -826,6 +1508,7 @@ export default function PayoutRunWorkflow() {
   const {
     batch,
     stages,
+    drivers,
     loading,
     initBatch,
     advanceStage,
@@ -834,6 +1517,15 @@ export default function PayoutRunWorkflow() {
   } = usePayoutWorkflowStore();
   const [rejectModal, setRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [revisionModal, setRevisionModal] = useState(false);
+  const [revisionReason, setRevisionReason] = useState("");
+
+  // 3-stage approval state
+  const [approvals, setApprovals] = useState<ApprovalRecord[]>(
+    APPROVAL_STAGES.map((s) => ({ stageId: s.id, status: "pending" }))
+  );
+  const [approvalRejectModal, setApprovalRejectModal] = useState(false);
+  const [approvalRejectReason, setApprovalRejectReason] = useState("");
 
   useEffect(() => {
     initBatch(batchId);
@@ -844,6 +1536,19 @@ export default function PayoutRunWorkflow() {
   const currentStageDef = stages[currentStage - 1];
   const hasErrors =
     usePayoutWorkflowStore.getState().getStageErrors(currentStage).length > 0;
+
+  // Find current approval stage ID
+  const currentApprovalStageId = (() => {
+    for (const stage of APPROVAL_STAGES) {
+      const record = approvals.find((a) => a.stageId === stage.id);
+      if (!record || record.status === "pending") {
+        if (stage.id === 1) return stage.id;
+        const prev = approvals.find((a) => a.stageId === stage.id - 1);
+        if (prev?.status === "approved") return stage.id;
+      }
+    }
+    return null;
+  })();
 
   const handleApprove = () => {
     advanceStage(undefined, user?.full_name || "admin");
@@ -859,6 +1564,96 @@ export default function PayoutRunWorkflow() {
     setRejectModal(false);
     setRejectReason("");
     toast.error("تم الرفض — أُعيد للمالية للمراجعة");
+  };
+
+  // 3-stage approval handlers
+  const handleApprovalApprove = () => {
+    if (!currentApprovalStageId) return;
+    setApprovals((prev) =>
+      prev.map((a) =>
+        a.stageId === currentApprovalStageId
+          ? {
+              ...a,
+              status: "approved",
+              approverName: user?.full_name || "admin",
+              approvedAt: new Date().toISOString(),
+            }
+          : a
+      )
+    );
+    const stageName = APPROVAL_STAGES.find((s) => s.id === currentApprovalStageId)?.name;
+    toast.success(`تم اعتماد: ${stageName}`);
+
+    // If all 3 approved, log to supabase
+    const allApproved =
+      approvals.filter((a) => a.status === "approved").length === APPROVAL_STAGES.length - 1;
+    if (allApproved && supabase) {
+      try {
+        supabase
+          .from("payout_approval_log" as any)
+          .insert({
+            batch_id: batchId || batch?.id,
+            stage_id: currentApprovalStageId,
+            action: "approved",
+            decided_by: user?.full_name || "admin",
+            decided_at: new Date().toISOString(),
+          })
+          .then(() => {});
+      } catch {
+        /* silent */
+      }
+    }
+  };
+
+  const handleApprovalReject = () => {
+    if (!approvalRejectReason.trim()) {
+      toast.error("يجب كتابة سبب الرفض");
+      return;
+    }
+    if (!currentApprovalStageId) return;
+    setApprovals((prev) =>
+      prev.map((a) =>
+        a.stageId === currentApprovalStageId
+          ? { ...a, status: "rejected", rejectReason: approvalRejectReason }
+          : a
+      )
+    );
+    setApprovalRejectModal(false);
+    setApprovalRejectReason("");
+    toast.error("تم رفض المرحلة");
+  };
+
+  const handleRequestRevision = () => {
+    if (!currentApprovalStageId || currentApprovalStageId <= 1) return;
+    if (!revisionReason.trim()) {
+      // Open modal to get reason
+      setRevisionModal(true);
+      return;
+    }
+    // Send back to previous stage
+    setApprovals((prev) =>
+      prev.map((a) => {
+        if (a.stageId === currentApprovalStageId)
+          return { ...a, status: "revision", rejectReason: revisionReason };
+        if (a.stageId === currentApprovalStageId - 1)
+          return { ...a, status: "pending", approverName: undefined, approvedAt: undefined };
+        return a;
+      })
+    );
+    setRevisionModal(false);
+    setRevisionReason("");
+    toast.info("تم طلب التعديل — أُعيد للمرحلة السابقة");
+  };
+
+  const handleGeneratePayslip = (driver: DriverPayoutLine) => {
+    if (!batch) return;
+    generatePayslip(driver, batch);
+    toast.success(`تم إنشاء كشف راتب: ${driver.driver_name}`);
+  };
+
+  const handleExportBankFile = () => {
+    if (!batch) return;
+    exportBankFile(drivers, batch.batch_number);
   };
 
   if (loading || !batch) {
@@ -886,18 +1681,46 @@ export default function PayoutRunWorkflow() {
         title="سير عمل الدفعة"
         subtitle={`${batch.batch_number} · ${batch.period_start} → ${batch.period_end} · ${batch.total_drivers} سائق`}
         actions={
-          <Button
-            variant="ghost"
-            icon={ChevronLeft}
-            onClick={() => navigate("/admin-panel/payouts")}
-          >
-            العودة للدفعات
-          </Button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button
+              variant="ghost"
+              icon={FileSpreadsheet}
+              onClick={handleExportBankFile}
+            >
+              تصدير ملف البنك
+            </Button>
+            <Button
+              variant="ghost"
+              icon={ChevronLeft}
+              onClick={() => navigate("/admin-panel/payouts")}
+            >
+              العودة للدفعات
+            </Button>
+          </div>
         }
       />
 
-      {/* Stage Stepper */}
-      <Card>
+      {/* 3-Stage Approval Stepper */}
+      <Card title="مراحل الاعتماد">
+        <ApprovalStageStepper approvals={approvals} />
+      </Card>
+
+      {/* Approval Actions */}
+      <ApprovalActionsPanel
+        approvals={approvals}
+        onApprove={handleApprovalApprove}
+        onReject={() => setApprovalRejectModal(true)}
+        onRequestRevision={() => {
+          if (!currentApprovalStageId || currentApprovalStageId <= 1) {
+            toast.error("لا يمكن طلب تعديل من المرحلة الأولى");
+            return;
+          }
+          setRevisionModal(true);
+        }}
+      />
+
+      {/* 5-Stage Pipeline Stepper (existing) */}
+      <Card title="مراحل المعالجة الداخلية">
         <StageStepper stages={stages} currentStage={currentStage} />
       </Card>
 
@@ -907,6 +1730,12 @@ export default function PayoutRunWorkflow() {
       {currentStage === 3 && <FleetReviewPanel />}
       {currentStage === 4 && <HRReviewPanel />}
       {currentStage === 5 && <FinanceFinalPanel />}
+
+      {/* Salary Breakdown Section */}
+      <SalaryBreakdownSection
+        drivers={drivers}
+        onGeneratePayslip={handleGeneratePayslip}
+      />
 
       {/* Action Bar */}
       <Card>
@@ -953,7 +1782,7 @@ export default function PayoutRunWorkflow() {
         </div>
       </Card>
 
-      {/* Reject Modal */}
+      {/* Reject Modal (5-stage pipeline) */}
       <Modal
         open={rejectModal}
         onClose={() => setRejectModal(false)}
@@ -983,6 +1812,74 @@ export default function PayoutRunWorkflow() {
           value={rejectReason}
           onChange={setRejectReason}
           placeholder="سبب الرفض..."
+          rows={3}
+        />
+      </Modal>
+
+      {/* Approval Reject Modal (3-stage approval) */}
+      <Modal
+        open={approvalRejectModal}
+        onClose={() => setApprovalRejectModal(false)}
+        title="رفض الاعتماد"
+        width={420}
+        actions={
+          <>
+            <Button variant="danger" onClick={handleApprovalReject}>
+              تأكيد الرفض
+            </Button>
+            <Button variant="ghost" onClick={() => setApprovalRejectModal(false)}>
+              إلغاء
+            </Button>
+          </>
+        }
+      >
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--con-text-secondary)",
+            marginBottom: 12,
+          }}
+        >
+          سيتم رفض هذه المرحلة من الاعتماد. اكتب سبب الرفض:
+        </p>
+        <TextArea
+          value={approvalRejectReason}
+          onChange={setApprovalRejectReason}
+          placeholder="سبب الرفض..."
+          rows={3}
+        />
+      </Modal>
+
+      {/* Revision Request Modal */}
+      <Modal
+        open={revisionModal}
+        onClose={() => setRevisionModal(false)}
+        title="طلب تعديل"
+        width={420}
+        actions={
+          <>
+            <Button icon={RotateCcw} onClick={handleRequestRevision}>
+              تأكيد طلب التعديل
+            </Button>
+            <Button variant="ghost" onClick={() => setRevisionModal(false)}>
+              إلغاء
+            </Button>
+          </>
+        }
+      >
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--con-text-secondary)",
+            marginBottom: 12,
+          }}
+        >
+          سيتم إرجاع الدفعة للمرحلة السابقة لإجراء التعديلات المطلوبة. اكتب سبب طلب التعديل:
+        </p>
+        <TextArea
+          value={revisionReason}
+          onChange={setRevisionReason}
+          placeholder="سبب طلب التعديل..."
           rows={3}
         />
       </Modal>

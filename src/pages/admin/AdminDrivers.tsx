@@ -3,6 +3,7 @@
  * FirstLine Logistics
  */
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -20,7 +21,12 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
+  Play,
+  Ban,
 } from "lucide-react";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { BulkActions, useBulkSelect } from "@/components/admin/BulkActions";
+import { useAutoRefresh } from "@/lib/hooks/useAutoRefresh";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -177,12 +183,15 @@ const statusConfig: Record<
 const PAGE_SIZE = 5;
 
 export default function AdminDrivers() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [page, setPage] = useState(1);
   const [drivers, setDrivers] = useState(driversData);
   const [loading, setLoading] = useState(true);
+  const bulk = useBulkSelect();
 
   async function fetchDrivers() {
     if (!supabase) { setLoading(false); return; }
@@ -212,6 +221,7 @@ export default function AdminDrivers() {
   }
 
   useEffect(() => { fetchDrivers(); }, []);
+  useAutoRefresh(fetchDrivers, { interval: 30_000 });
 
   const summaryStats = [
     { label: "إجمالي السائقين", value: drivers.length.toLocaleString("ar-SA"), icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
@@ -266,7 +276,10 @@ export default function AdminDrivers() {
       d.city.includes(search);
     const matchStatus = statusFilter === "all" || d.status === statusFilter;
     const matchCity = !cityFilter || d.city === cityFilter;
-    return matchSearch && matchStatus && matchCity;
+    const matchDate =
+      (!dateRange.from || d.joinDate >= dateRange.from.slice(0, 7)) &&
+      (!dateRange.to || d.joinDate <= dateRange.to.slice(0, 7));
+    return matchSearch && matchStatus && matchCity && matchDate;
   });
   const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
   const filteredDrivers = allFiltered.slice(
@@ -359,6 +372,7 @@ export default function AdminDrivers() {
                 emptyMessage="لا توجد"
               />
             </div>
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -388,10 +402,71 @@ export default function AdminDrivers() {
           </div>
         </CardHeader>
         <CardContent>
+          <BulkActions
+            selectedIds={bulk.selected}
+            totalCount={allFiltered.length}
+            onClear={bulk.clear}
+            onSelectAll={() => bulk.selectAll(allFiltered.map((d) => d.id))}
+            actions={[
+              {
+                label: "تفعيل",
+                icon: Play,
+                onClick: (ids) => {
+                  ids.forEach((id) => updateDriverStatus(id, "active"));
+                  bulk.clear();
+                  toast.success(`تم تفعيل ${ids.length} سائق`);
+                },
+              },
+              {
+                label: "إيقاف",
+                icon: Ban,
+                onClick: (ids) => {
+                  ids.forEach((id) => updateDriverStatus(id, "suspended"));
+                  bulk.clear();
+                  toast.success(`تم إيقاف ${ids.length} سائق`);
+                },
+                destructive: true,
+              },
+              {
+                label: "تصدير المحدد",
+                icon: Download,
+                onClick: (ids) => {
+                  const selected = drivers.filter((d) => ids.includes(d.id));
+                  const exportData = selected.map((d) => ({
+                    "الكود": d.id,
+                    "الاسم": d.name,
+                    "الهاتف": d.phone,
+                    "المدينة": d.city,
+                    "المنصة": d.platform,
+                    "الحالة": statusConfig[d.status]?.label || d.status,
+                    "التقييم": d.rating,
+                    "الطلبات": d.orders,
+                    "تاريخ الانضمام": d.joinDate,
+                  }));
+                  exportToExcel(exportData, "السائقين_المحدد", "السائقين");
+                  toast.success(`تم تصدير ${ids.length} سائق`);
+                },
+              },
+            ]}
+          />
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={filteredDrivers.length > 0 && filteredDrivers.every((d) => bulk.isSelected(d.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          bulk.selectAll(allFiltered.map((d) => d.id));
+                        } else {
+                          bulk.clear();
+                        }
+                      }}
+                      className="accent-primary"
+                    />
+                  </TableHead>
                   <TableHead className="text-right">السائق</TableHead>
                   <TableHead className="text-right">المدينة</TableHead>
                   <TableHead className="text-right">المنصة</TableHead>
@@ -406,6 +481,14 @@ export default function AdminDrivers() {
                   const status = statusConfig[driver.status];
                   return (
                     <TableRow key={driver.id} className="hover:bg-muted/30">
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={bulk.isSelected(driver.id)}
+                          onChange={() => bulk.toggle(driver.id)}
+                          className="accent-primary"
+                        />
+                      </TableCell>
                       <TableCell>
                         <HoverCard>
                           <HoverCardTrigger asChild>
@@ -417,7 +500,10 @@ export default function AdminDrivers() {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="font-medium text-sm hover:underline">
+                                <p
+                                  className="font-medium text-sm hover:underline text-primary cursor-pointer"
+                                  onClick={() => navigate(`/admin-panel/driver-profile/${driver.id}`)}
+                                >
                                   {driver.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground font-mono">

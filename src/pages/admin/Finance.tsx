@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { exportFinanceToExcel, exportToPDF } from "@/lib/exportUtils";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { useAutoRefresh } from "@/lib/hooks/useAutoRefresh";
 import {
   DollarSign,
   CheckCircle2,
@@ -620,6 +622,7 @@ export default function Finance() {
   });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">(
     "all",
   );
@@ -713,6 +716,7 @@ export default function Finance() {
   useEffect(() => {
     fetchFinanceData();
   }, []);
+  useAutoRefresh(fetchFinanceData, { interval: 60_000 });
 
   async function fetchFinanceData() {
     setLoading(true);
@@ -817,7 +821,11 @@ export default function Finance() {
     const matchName = r.courier_name?.includes(search) || search === "";
     const matchStatus =
       statusFilter === "all" || r.payment_status === statusFilter;
-    return matchName && matchStatus;
+    const dateField = (r.period_start || r.created_at || "").slice(0, 10);
+    const matchDate =
+      (!dateRange.from || dateField >= dateRange.from) &&
+      (!dateRange.to || dateField <= dateRange.to);
+    return matchName && matchStatus && matchDate;
   });
 
   const totalAll = stats.totalPending + stats.totalApproved + stats.totalPaid;
@@ -976,6 +984,9 @@ export default function Finance() {
             style={{ paddingInlineEnd: 32, width: "100%" }}
           />
         </div>
+
+        {/* Date range filter */}
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
 
         {/* Status filter pills */}
         <div

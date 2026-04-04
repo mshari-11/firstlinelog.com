@@ -65,6 +65,9 @@ import {
 } from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { BulkActions, useBulkSelect } from "@/components/admin/BulkActions";
+import { useAutoRefresh } from "@/lib/hooks/useAutoRefresh";
 import {
   Pagination,
   PaginationContent,
@@ -206,6 +209,8 @@ const emptyOrderForm = {
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const { selected, toggle, selectAll, clear, isSelected } = useBulkSelect();
   const [selectedOrder, setSelectedOrder] = useState<
     (typeof ordersData)[0] | null
   >(null);
@@ -249,6 +254,8 @@ export default function AdminOrders() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  useAutoRefresh(fetchOrders, { interval: 30_000 });
 
   const summaryStats = [
     { label: "طلبات اليوم", value: String(orders.length), icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
@@ -332,7 +339,9 @@ export default function AdminOrders() {
       o.city.includes(search);
     const matchTab = tab === "all" || o.status === tab;
     const matchCity = !cityFilter || o.city === cityFilter;
-    return matchSearch && matchTab && matchCity;
+    const matchDate = !dateRange.from || !dateRange.to ||
+      (o.date >= dateRange.from && o.date <= dateRange.to);
+    return matchSearch && matchTab && matchCity && matchDate;
   });
   const totalPages = Math.ceil(allFiltered.length / PAGE_SIZE);
   const filteredOrders = allFiltered.slice(
@@ -453,13 +462,28 @@ export default function AdminOrders() {
                 emptyMessage="لا توجد مدن"
               />
             </div>
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
           </div>
         </CardHeader>
         <CardContent>
+          <BulkActions
+            selectedIds={selected}
+            totalCount={allFiltered.length}
+            onClear={clear}
+            onSelectAll={() => selectAll(allFiltered.map(o => o.id))}
+            actions={[
+              { label: "تحديث الحالة", icon: RefreshCw, onClick: (ids) => { toast.info(`تحديث ${ids.length} طلب`) } },
+              { label: "تصدير المحدد", icon: Download, onClick: (ids) => { const sel = orders.filter(o => ids.includes(o.id)); exportToExcel(sel.map(o => ({ "رقم الطلب": o.id, المنصة: o.platform, السائق: o.driver, المدينة: o.city, المبلغ: o.amount, الحالة: o.status })), "selected-orders", "الطلبات"); clear(); } },
+              { label: "إلغاء الطلبات", icon: XCircle, onClick: (ids) => { setOrders(prev => prev.map(o => ids.includes(o.id) ? { ...o, status: "cancelled" } : o)); toast.success(`تم إلغاء ${ids.length} طلب`); clear(); }, destructive: true },
+            ]}
+          />
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <input type="checkbox" checked={allFiltered.length > 0 && selected.length === allFiltered.length} onChange={() => selected.length === allFiltered.length ? clear() : selectAll(allFiltered.map(o => o.id))} style={{ accentColor: "var(--con-brand, #3b82f6)" }} />
+                  </TableHead>
                   <TableHead className="text-right">رقم الطلب</TableHead>
                   <TableHead className="text-right">المنصة</TableHead>
                   <TableHead className="text-right">السائق</TableHead>
@@ -475,6 +499,9 @@ export default function AdminOrders() {
                   const status = statusConfig[order.status];
                   return (
                     <TableRow key={order.id} className="hover:bg-muted/30">
+                      <TableCell className="w-10">
+                        <input type="checkbox" checked={isSelected(order.id)} onChange={() => toggle(order.id)} style={{ accentColor: "var(--con-brand, #3b82f6)" }} />
+                      </TableCell>
                       <TableCell className="font-mono text-sm font-bold">
                         {order.id}
                       </TableCell>

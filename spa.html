@@ -9,14 +9,15 @@
       /* Instant background — prevents flash before CSS loads */
       html, body { margin: 0; }
       body { background: #0f2744; }
-      body.fll-dark { background: #0C0E14; }
+      html.fll-dark body { background: #0C0E14; }
     </style>
   </head>
   <body>
     <script>
       // Set dark bg immediately for admin panel routes
+      // Uses documentElement (html) because Vite moves scripts to <head> during build
       if (location.pathname.indexOf('/admin-panel') === 0) {
-        document.body.classList.add('fll-dark');
+        document.documentElement.classList.add('fll-dark');
       }
     </script>
     <div id="root"></div>

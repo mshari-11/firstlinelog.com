@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { API_BASE } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import {
   Settings2,
   User,
@@ -83,7 +84,7 @@ interface SystemSetting {
 /* ── Defaults ──────────────────────────────────────────────────────────── */
 const STORAGE_KEY = "fll_system_settings_v1";
 
-function loadSettings(): Record<string, string | boolean | number> {
+function loadSettingsFromLocalStorage(): Record<string, string | boolean | number> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -92,8 +93,45 @@ function loadSettings(): Record<string, string | boolean | number> {
   }
 }
 
-function persistSettings(s: Record<string, string | boolean | number>) {
+function persistToLocalStorage(s: Record<string, string | boolean | number>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+
+/** Fetch all rows from Supabase system_settings and merge into a flat object */
+async function loadSettingsFromSupabase(): Promise<Record<string, string | boolean | number>> {
+  if (!supabase) return {};
+  try {
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("key, value");
+    if (error || !data) return {};
+    const result: Record<string, string | boolean | number> = {};
+    for (const row of data) {
+      // value is stored as jsonb; unwrap the primitive
+      result[row.key] = row.value as string | boolean | number;
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+/** Upsert all settings to Supabase (fire-and-forget) */
+function persistToSupabase(s: Record<string, string | boolean | number>) {
+  if (!supabase) return;
+  const now = new Date().toISOString();
+  const rows = Object.entries(s).map(([key, value]) => ({
+    key,
+    value: value as unknown,
+    updated_at: now,
+  }));
+  // fire-and-forget — don't await
+  supabase
+    .from("system_settings")
+    .upsert(rows, { onConflict: "key" })
+    .then(({ error }) => {
+      if (error) console.warn("[Settings] Supabase upsert failed:", error.message);
+    });
 }
 
 const ALL_SETTINGS: SystemSetting[] = [
@@ -507,13 +545,31 @@ export default function AdminSettings() {
 
   const canAccess = user?.role === "admin" || user?.role === "owner";
 
+  const supabaseMerged = useRef(false);
+
   useEffect(() => {
-    const stored = loadSettings();
+    // 1. Immediate: load from localStorage (fast)
+    const stored = loadSettingsFromLocalStorage();
     const defaults: Record<string, string | boolean | number> = {};
     ALL_SETTINGS.forEach((s) => {
       defaults[s.key] = s.value;
     });
-    setValues({ ...defaults, ...stored });
+    const merged = { ...defaults, ...stored };
+    setValues(merged);
+
+    // 2. Background: fetch from Supabase and merge (durable store wins for conflicts)
+    if (!supabaseMerged.current) {
+      supabaseMerged.current = true;
+      loadSettingsFromSupabase().then((remote) => {
+        if (Object.keys(remote).length === 0) return;
+        setValues((prev) => {
+          const updated = { ...prev, ...remote };
+          // Sync the merged result back to localStorage
+          persistToLocalStorage(updated);
+          return updated;
+        });
+      });
+    }
   }, []);
 
   function updateValue(key: string, val: string | boolean | number) {
@@ -523,7 +579,11 @@ export default function AdminSettings() {
 
   async function handleSave() {
     setSaving(true);
-    persistSettings(values);
+    // 1. Immediate: persist to localStorage (fast, always works)
+    persistToLocalStorage(values);
+    // 2. Background: persist to Supabase (durable, cross-device)
+    persistToSupabase(values);
+    // 3. Best-effort: also push to API (existing behavior)
     try {
       await fetch(`${API_BASE}/system-settings`, {
         method: "PUT",
@@ -535,7 +595,7 @@ export default function AdminSettings() {
         }),
       });
     } catch {
-      /* saved locally */
+      /* saved locally + Supabase */
     }
     setSaving(false);
     setSaved(true);

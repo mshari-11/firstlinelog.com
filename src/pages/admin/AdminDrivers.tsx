@@ -2,7 +2,7 @@
  * صفحة إدارة السائقين - Admin Drivers Management
  * FirstLine Logistics
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -57,6 +57,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { exportToExcel, exportToPDF } from "@/lib/exportUtils";
 import { Combobox } from "@/components/ui/combobox";
 import {
   Pagination,
@@ -172,37 +174,6 @@ const statusConfig: Record<
   pending: { label: "قيد المراجعة", variant: "outline", icon: Clock },
 };
 
-const summaryStats = [
-  {
-    label: "إجمالي السائقين",
-    value: "2,847",
-    icon: Users,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    label: "نشط الآن",
-    value: "2,120",
-    icon: CheckCircle2,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
-  {
-    label: "قيد المراجعة",
-    value: "83",
-    icon: Clock,
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-  {
-    label: "موقوف",
-    value: "45",
-    icon: XCircle,
-    color: "text-red-600",
-    bg: "bg-red-50",
-  },
-];
-
 const PAGE_SIZE = 5;
 
 export default function AdminDrivers() {
@@ -210,13 +181,85 @@ export default function AdminDrivers() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [drivers, setDrivers] = useState(driversData);
+  const [loading, setLoading] = useState(true);
 
-  const cityOptions = [...new Set(driversData.map((d) => d.city))].map((c) => ({
+  async function fetchDrivers() {
+    if (!supabase) { setLoading(false); return; }
+    try {
+      const { data, error } = await supabase
+        .from("couriers")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!error && data && data.length > 0) {
+        setDrivers(data.map((row: any) => ({
+          id: row.id || row.driver_id || `DRV-${row.id}`,
+          name: row.full_name || row.name || "سائق",
+          phone: row.phone || row.mobile || "—",
+          city: row.city || "غير محدد",
+          platform: row.platform || "FLL",
+          status: row.status || "active",
+          rating: Number(row.rating || 0),
+          orders: Number(row.total_orders || row.orders_count || 0),
+          joinDate: row.created_at?.slice(0, 7) || "2026-01",
+        })));
+      }
+    } catch {
+      console.warn("Drivers fetch failed, using mock");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { fetchDrivers(); }, []);
+
+  const summaryStats = [
+    { label: "إجمالي السائقين", value: drivers.length.toLocaleString("ar-SA"), icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "نشط الآن", value: String(drivers.filter(d => d.status === "active").length), icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "قيد المراجعة", value: String(drivers.filter(d => d.status === "pending").length), icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "موقوف", value: String(drivers.filter(d => d.status === "suspended").length), icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+  ];
+
+  function handleExportExcel() {
+    const exportData = drivers.map(d => ({
+      "الكود": d.id,
+      "الاسم": d.name,
+      "الهاتف": d.phone,
+      "المدينة": d.city,
+      "المنصة": d.platform,
+      "الحالة": statusConfig[d.status]?.label || d.status,
+      "التقييم": d.rating,
+      "الطلبات": d.orders,
+      "تاريخ الانضمام": d.joinDate,
+    }));
+    exportToExcel(exportData, "السائقين", "السائقين");
+    toast.success("تم تصدير Excel");
+  }
+
+  function handleExportPDF() {
+    const headers = ["الكود", "الاسم", "المدينة", "المنصة", "الحالة", "التقييم", "الطلبات"];
+    const rows = drivers.map(d => [
+      d.id, d.name, d.city, d.platform,
+      statusConfig[d.status]?.label || d.status,
+      String(d.rating), String(d.orders),
+    ]);
+    exportToPDF("تقرير السائقين", headers, rows, "السائقين");
+    toast.success("تم تصدير PDF");
+  }
+
+  async function updateDriverStatus(driverId: string, newStatus: string) {
+    if (supabase) {
+      await supabase.from("couriers").update({ status: newStatus }).eq("id", driverId);
+    }
+    setDrivers(prev => prev.map(d => d.id === driverId ? { ...d, status: newStatus } : d));
+  }
+
+  const cityOptions = [...new Set(drivers.map((d) => d.city))].map((c) => ({
     value: c,
     label: c,
   }));
 
-  const allFiltered = driversData.filter((d) => {
+  const allFiltered = drivers.filter((d) => {
     const matchSearch =
       d.name.includes(search) ||
       d.id.includes(search) ||
@@ -255,15 +298,15 @@ export default function AdminDrivers() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
                 <FileSpreadsheet className="w-3.5 h-3.5 ml-2" />
                 تصدير Excel
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF}>
                 <FileText className="w-3.5 h-3.5 ml-2" />
                 تصدير PDF
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
                 <Download className="w-3.5 h-3.5 ml-2" />
                 تصدير CSV
               </DropdownMenuItem>
@@ -494,9 +537,10 @@ export default function AdminDrivers() {
                                   <AlertDialogCancel>إلغاء</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-red-600 hover:bg-red-700"
-                                    onClick={() =>
-                                      toast.success(`تم إيقاف ${driver.name}`)
-                                    }
+                                    onClick={() => {
+                                      updateDriverStatus(driver.id, "suspended");
+                                      toast.success(`تم إيقاف ${driver.name}`);
+                                    }}
                                   >
                                     إيقاف
                                   </AlertDialogAction>

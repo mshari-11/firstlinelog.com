@@ -2,7 +2,9 @@
  * صفحة إدارة الطلبات - Admin Orders Management
  * FirstLine Logistics
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { exportToExcel, exportToPDF } from "@/lib/exportUtils";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -191,36 +193,7 @@ const statusConfig: Record<
   cancelled: { label: "ملغي", variant: "destructive", icon: XCircle },
 };
 
-const summaryStats = [
-  {
-    label: "طلبات اليوم",
-    value: "847",
-    icon: Package,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    label: "تم التسليم",
-    value: "692",
-    icon: CheckCircle2,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
-  {
-    label: "في الطريق",
-    value: "98",
-    icon: Truck,
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-  {
-    label: "ملغي",
-    value: "12",
-    icon: XCircle,
-    color: "text-red-600",
-    bg: "bg-red-50",
-  },
-];
+// summaryStats moved inside component to be computed from orders state
 
 const emptyOrderForm = {
   customer: "",
@@ -240,11 +213,49 @@ export default function AdminOrders() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 5;
   const [orders, setOrders] = useState(ordersData);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<(typeof ordersData)[0] | null>(
     null,
   );
   const [form, setForm] = useState(emptyOrderForm);
+
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    if (!supabase) { setLoading(false); return; }
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (!error && data && data.length > 0) {
+        setOrders(data.map((row: any) => ({
+          id: row.order_id || row.id || `FLL-${row.id}`,
+          platform: row.platform_name || row.platform || "FLL",
+          customer: row.customer_name || row.customer || `عميل #${row.id}`,
+          driver: row.driver_name || row.driver || "—",
+          city: row.city || "غير محدد",
+          status: row.status || "pending",
+          amount: Number(row.amount || row.total_amount || 0),
+          date: row.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+          time: row.created_at?.slice(11, 16) || "00:00",
+        })));
+      }
+    } catch (e) {
+      console.warn("Orders fetch failed, using mock data");
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  const summaryStats = [
+    { label: "طلبات اليوم", value: String(orders.length), icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "تم التسليم", value: String(orders.filter(o => o.status === "delivered").length), icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "في الطريق", value: String(orders.filter(o => o.status === "in_transit").length), icon: Truck, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "ملغي", value: String(orders.filter(o => o.status === "cancelled").length), icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+  ];
 
   function openAdd() {
     setForm(emptyOrderForm);
@@ -291,6 +302,19 @@ export default function AdminOrders() {
         time: new Date().toTimeString().slice(0, 5),
       };
       setOrders((prev) => [newOrder, ...prev]);
+      if (supabase) {
+        supabase.from("orders").insert({
+          platform_name: form.platform,
+          customer_name: form.customer,
+          driver_name: form.driver || null,
+          city: form.city,
+          status: "pending",
+          amount: 0,
+          notes: form.notes || null,
+        }).then(({ error }) => {
+          if (error) console.warn("Failed to save order to Supabase:", error);
+        });
+      }
     }
     setShowAddModal(false);
   }
@@ -340,22 +364,37 @@ export default function AdminOrders() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                exportToExcel(orders.map(o => ({ "رقم الطلب": o.id, المنصة: o.platform, العميل: o.customer, السائق: o.driver, المدينة: o.city, المبلغ: o.amount, الحالة: statusConfig[o.status]?.label || o.status, التاريخ: o.date, الوقت: o.time })), "orders-report", "الطلبات");
+              }}>
                 <FileSpreadsheet className="w-3.5 h-3.5 ml-2" />
                 تصدير Excel
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const headers = ["رقم الطلب", "المنصة", "العميل", "السائق", "المدينة", "المبلغ", "الحالة", "التاريخ", "الوقت"];
+                const rows = orders.map(o => [o.id, o.platform, o.customer, o.driver, o.city, String(o.amount), statusConfig[o.status]?.label || o.status, o.date, o.time]);
+                exportToPDF("تقرير الطلبات", headers, rows, "orders-report");
+              }}>
                 <FileText className="w-3.5 h-3.5 ml-2" />
                 تصدير PDF
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const headers = ["رقم الطلب", "المنصة", "العميل", "السائق", "المدينة", "المبلغ", "الحالة", "التاريخ", "الوقت"];
+                const rows = orders.map(o => [o.id, o.platform, o.customer, o.driver, o.city, String(o.amount), statusConfig[o.status]?.label || o.status, o.date, o.time]);
+                const csv = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "orders-report.csv";
+                link.click();
+              }}>
                 <Download className="w-3.5 h-3.5 ml-2" />
                 تصدير CSV
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 ml-2" />
+          <Button variant="outline" size="sm" onClick={() => fetchOrders()}>
+            <RefreshCw className={`w-4 h-4 ml-2 ${loading ? "animate-spin" : ""}`} />
             تحديث
           </Button>
           <Button size="sm" onClick={openAdd}>
@@ -546,11 +585,13 @@ export default function AdminOrders() {
                                   <AlertDialogCancel>تراجع</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-red-600 hover:bg-red-700"
-                                    onClick={() =>
-                                      toast.success(
-                                        `تم إلغاء الطلب ${order.id}`,
-                                      )
-                                    }
+                                    onClick={() => {
+                                      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o));
+                                      toast.success(`تم إلغاء الطلب ${order.id}`);
+                                      if (supabase) {
+                                        supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id).then(() => {});
+                                      }
+                                    }}
                                   >
                                     إلغاء الطلب
                                   </AlertDialogAction>

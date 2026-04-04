@@ -1,6 +1,7 @@
 /**
- * صفحة إدارة الشكاوى — Enterprise Complaints Management
+ * صفحة تذاكر المناديب — Internal Driver Ticket System
  * Ticket lifecycle: new → assigned → in_progress → resolved/escalated
+ * Drivers submit requests/complaints to the company, routed to departments
  * Backend: platform-api-prod.js /complaints/ endpoints
  */
 import { useEffect, useState, useCallback } from "react";
@@ -63,14 +64,19 @@ interface Complaint {
   id: string;
   title?: string;
   description?: string;
+  /** Driver name (mapped from customer_name for backward compat) */
   customer_name?: string;
+  /** Driver phone */
   customer_phone?: string;
+  /** Driver email */
   customer_email?: string;
   category?: string;
   priority?: string;
   status: ComplaintStatus;
   assigned_to?: string;
   department_id?: string;
+  /** Target department derived from category */
+  target_department?: string;
   platform?: string;
   order_id?: string;
   resolution?: string;
@@ -153,12 +159,27 @@ const PRIORITY_META: Record<string, { label: string; color: string }> = {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  delivery: "مشكلة توصيل",
-  payment: "مشكلة مالية",
-  driver: "سلوك سائق",
-  platform: "مشكلة منصة",
-  quality: "جودة الخدمة",
+  financial: "مستحقات مالية",
+  vehicle_breakdown: "تعطّل مركبة",
+  vehicle_maintenance: "طلب صيانة",
+  cash_advance: "طلب سلفة",
+  fuel_request: "طلب وقود",
+  leave_request: "طلب إجازة",
+  department_complaint: "شكوى على إدارة",
+  salary_dispute: "اعتراض على راتب",
   other: "أخرى",
+};
+
+const TICKET_DEPARTMENT: Record<string, string> = {
+  financial: "المالية",
+  vehicle_breakdown: "الأسطول",
+  vehicle_maintenance: "الأسطول",
+  cash_advance: "المالية",
+  fuel_request: "العمليات",
+  leave_request: "الموارد البشرية",
+  department_complaint: "الإدارة العامة",
+  salary_dispute: "المالية",
+  other: "الإدارة العامة",
 };
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
@@ -186,9 +207,11 @@ export default function Complaints() {
   // Add/Edit complaint modal
   const emptyComplaintForm = {
     customer_name: "",
+    customer_phone: "",
+    customer_email: "",
     order_id: "",
     title: "",
-    category: "delivery",
+    category: "financial",
     priority: "medium",
     description: "",
   };
@@ -204,9 +227,11 @@ export default function Complaints() {
   function openEditComplaint(c: Complaint) {
     setComplaintForm({
       customer_name: c.customer_name || "",
+      customer_phone: c.customer_phone || "",
+      customer_email: c.customer_email || "",
       order_id: c.order_id || "",
       title: c.title || "",
-      category: c.category || "delivery",
+      category: c.category || "financial",
       priority: c.priority || "medium",
       description: c.description || "",
     });
@@ -216,6 +241,7 @@ export default function Complaints() {
   function handleSaveComplaint() {
     if (!complaintForm.customer_name.trim() || !complaintForm.title.trim())
       return;
+    const targetDept = TICKET_DEPARTMENT[complaintForm.category] || TICKET_DEPARTMENT.other;
     if (editingItem) {
       setComplaints((prev) =>
         prev.map((c) =>
@@ -223,11 +249,15 @@ export default function Complaints() {
             ? {
                 ...c,
                 customer_name: complaintForm.customer_name,
+                customer_phone: complaintForm.customer_phone,
+                customer_email: complaintForm.customer_email,
                 order_id: complaintForm.order_id,
                 title: complaintForm.title,
                 category: complaintForm.category,
                 priority: complaintForm.priority,
                 description: complaintForm.description,
+                department_id: targetDept,
+                target_department: targetDept,
                 updatedAt: new Date().toISOString(),
               }
             : c,
@@ -235,14 +265,19 @@ export default function Complaints() {
       );
     } else {
       const newComplaint: Complaint = {
-        id: `CMP-${Date.now().toString().slice(-6)}`,
+        id: `TKT-${Date.now().toString().slice(-6)}`,
         customer_name: complaintForm.customer_name,
+        customer_phone: complaintForm.customer_phone,
+        customer_email: complaintForm.customer_email,
         order_id: complaintForm.order_id,
         title: complaintForm.title,
         category: complaintForm.category,
         priority: complaintForm.priority,
         description: complaintForm.description,
         status: "new",
+        department_id: targetDept,
+        target_department: targetDept,
+        assigned_to: targetDept,
         createdAt: new Date().toISOString(),
       };
       setComplaints((prev) => [newComplaint, ...prev]);
@@ -258,9 +293,10 @@ export default function Complaints() {
       return;
     }
     const headers = [
-      "رقم الشكوى",
-      "العميل",
+      "رقم التذكرة",
+      "المندوب",
       "التصنيف",
+      "القسم المختص",
       "الأولوية",
       "الحالة",
       "التاريخ",
@@ -272,6 +308,7 @@ export default function Complaints() {
           c.id,
           `"${(c.customer_name || "—").replace(/"/g, '""')}"`,
           CATEGORY_LABELS[c.category || "other"] || c.category || "أخرى",
+          TICKET_DEPARTMENT[c.category || "other"] || "—",
           PRIORITY_META[c.priority || "medium"]?.label || c.priority || "—",
           STATUS_META[c.status]?.label || c.status,
           c.createdAt ? new Date(c.createdAt).toLocaleDateString("ar-SA") : "—",
@@ -284,10 +321,10 @@ export default function Complaints() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `complaints_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `driver_tickets_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`تم تصدير ${rows.length} شكوى`);
+    toast.success(`تم تصدير ${rows.length} تذكرة`);
   }
 
   function printPage() {
@@ -304,7 +341,7 @@ export default function Complaints() {
         fetch(`${API_BASE}/api/complaints/stats`),
       ]);
 
-      if (!complaintsRes.ok) throw new Error("فشل تحميل الشكاوى");
+      if (!complaintsRes.ok) throw new Error("فشل تحميل التذاكر");
 
       const complaintsData = await complaintsRes.json();
       const items: Complaint[] = Array.isArray(complaintsData)
@@ -368,9 +405,9 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
-        toast.success("تم تعيين الشكوى بنجاح");
+        toast.success("تم تعيين التذكرة بنجاح");
       } else {
-        toast.error("فشل تعيين الشكوى");
+        toast.error("فشل تعيين التذكرة");
       }
     } catch {
       toast.error("حدث خطأ أثناء التعيين");
@@ -397,9 +434,9 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
-        toast.success("تم حل الشكوى بنجاح");
+        toast.success("تم حل التذكرة بنجاح");
       } else {
-        toast.error("فشل حل الشكوى");
+        toast.error("فشل حل التذكرة");
       }
     } catch {
       toast.error("حدث خطأ");
@@ -425,9 +462,9 @@ export default function Complaints() {
         await fetchComplaints();
         const updated = await res.json();
         setSelectedComplaint(updated);
-        toast.warning("تم تصعيد الشكوى");
+        toast.warning("تم تصعيد التذكرة");
       } else {
-        toast.error("فشل تصعيد الشكوى");
+        toast.error("فشل تصعيد التذكرة");
       }
     } catch {
       toast.error("حدث خطأ أثناء التصعيد");
@@ -483,7 +520,7 @@ export default function Complaints() {
   const kpis = stats
     ? [
         {
-          label: "إجمالي الشكاوى",
+          label: "إجمالي التذاكر",
           value: stats.total,
           accent: "var(--con-text-secondary)",
           icon: <AlertCircle size={15} />,
@@ -551,7 +588,7 @@ export default function Complaints() {
               margin: 0,
             }}
           >
-            إدارة الشكاوى
+            تذاكر المناديب
           </h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -572,7 +609,7 @@ export default function Complaints() {
             }}
           >
             <Plus size={14} />
-            تسجيل شكوى
+            تسجيل تذكرة
           </button>
           <button
             onClick={exportToCSV}
@@ -723,7 +760,7 @@ export default function Complaints() {
           />
           <input
             className="con-input"
-            placeholder="بحث برقم الشكوى أو اسم العميل..."
+            placeholder="بحث برقم التذكرة أو اسم المندوب..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: "100%", paddingInlineEnd: 32, fontSize: 12 }}
@@ -771,9 +808,10 @@ export default function Complaints() {
             <table className="con-table" style={{ width: "100%" }}>
               <thead>
                 <tr>
-                  <th>رقم الشكوى</th>
-                  <th>العميل</th>
+                  <th>رقم التذكرة</th>
+                  <th>المندوب</th>
                   <th>التصنيف</th>
+                  <th>القسم</th>
                   <th>الأولوية</th>
                   <th>الحالة</th>
                   <th>التاريخ</th>
@@ -784,7 +822,7 @@ export default function Complaints() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       style={{
                         textAlign: "center",
                         padding: 40,
@@ -805,14 +843,14 @@ export default function Complaints() {
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       style={{
                         textAlign: "center",
                         padding: 40,
                         color: "var(--con-text-muted)",
                       }}
                     >
-                      لا توجد شكاوى
+                      لا توجد تذاكر
                     </td>
                   </tr>
                 ) : (
@@ -869,6 +907,21 @@ export default function Complaints() {
                             {CATEGORY_LABELS[c.category || "other"] ||
                               c.category ||
                               "أخرى"}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: "2px 8px",
+                              borderRadius: 5,
+                              background: "rgba(59,130,246,0.08)",
+                              color: "var(--con-brand)",
+                              border: "1px solid rgba(59,130,246,0.2)",
+                            }}
+                          >
+                            <Building2 size={10} style={{ display: "inline", marginLeft: 3, verticalAlign: "middle" }} />
+                            {TICKET_DEPARTMENT[c.category || "other"] || "الإدارة العامة"}
                           </span>
                         </td>
                         <td>
@@ -1066,7 +1119,7 @@ export default function Complaints() {
                 </p>
               )}
 
-              {/* Customer Info */}
+              {/* Driver Info */}
               <div
                 style={{
                   display: "flex",
@@ -1084,7 +1137,7 @@ export default function Complaints() {
                       color: "var(--con-text-secondary)",
                     }}
                   >
-                    <User size={12} /> {selectedComplaint.customer_name}
+                    <User size={12} /> المندوب: {selectedComplaint.customer_name}
                   </div>
                 )}
                 {selectedComplaint.customer_phone && (
@@ -1097,6 +1150,19 @@ export default function Complaints() {
                     }}
                   >
                     <Phone size={12} /> {selectedComplaint.customer_phone}
+                  </div>
+                )}
+                {selectedComplaint.category && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "var(--con-brand)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Building2 size={12} /> القسم المختص: {TICKET_DEPARTMENT[selectedComplaint.category] || "الإدارة العامة"}
                   </div>
                 )}
                 {selectedComplaint.platform && (
@@ -1199,7 +1265,7 @@ export default function Complaints() {
                         cursor: "pointer",
                       }}
                     >
-                      <CheckCircle2 size={12} /> حل الشكوى
+                      <CheckCircle2 size={12} /> حل التذكرة
                     </button>
                     <button
                       onClick={() => handleEscalate(selectedComplaint.id)}
@@ -1453,7 +1519,7 @@ export default function Complaints() {
                   margin: 0,
                 }}
               >
-                {editingItem ? "تعديل الشكوى" : "تسجيل شكوى جديدة"}
+                {editingItem ? "تعديل التذكرة" : "تسجيل تذكرة جديدة"}
               </h2>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -1477,7 +1543,7 @@ export default function Complaints() {
                     display: "block",
                   }}
                 >
-                  اسم العميل
+                  اسم المندوب
                 </label>
                 <input
                   className="con-input"
@@ -1488,9 +1554,59 @@ export default function Complaints() {
                       customer_name: e.target.value,
                     }))
                   }
-                  placeholder="اسم العميل"
+                  placeholder="اسم المندوب"
                   style={{ width: "100%", fontSize: 12 }}
                 />
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label
+                    style={{
+                      fontSize: 12,
+                      color: "var(--con-text-secondary)",
+                      marginBottom: 4,
+                      display: "block",
+                    }}
+                  >
+                    هاتف المندوب
+                  </label>
+                  <input
+                    className="con-input"
+                    value={complaintForm.customer_phone}
+                    onChange={(e) =>
+                      setComplaintForm((f) => ({
+                        ...f,
+                        customer_phone: e.target.value,
+                      }))
+                    }
+                    placeholder="05XXXXXXXX"
+                    style={{ width: "100%", fontSize: 12 }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label
+                    style={{
+                      fontSize: 12,
+                      color: "var(--con-text-secondary)",
+                      marginBottom: 4,
+                      display: "block",
+                    }}
+                  >
+                    بريد المندوب
+                  </label>
+                  <input
+                    className="con-input"
+                    value={complaintForm.customer_email}
+                    onChange={(e) =>
+                      setComplaintForm((f) => ({
+                        ...f,
+                        customer_email: e.target.value,
+                      }))
+                    }
+                    placeholder="email@example.com (اختياري)"
+                    style={{ width: "100%", fontSize: 12 }}
+                  />
+                </div>
               </div>
               <div>
                 <label
@@ -1525,7 +1641,7 @@ export default function Complaints() {
                     display: "block",
                   }}
                 >
-                  عنوان الشكوى
+                  عنوان التذكرة
                 </label>
                 <input
                   className="con-input"
@@ -1567,10 +1683,9 @@ export default function Complaints() {
                       color: "var(--con-text-primary)",
                     }}
                   >
-                    <option value="delivery">مشكلة توصيل</option>
-                    <option value="quality">جودة الخدمة</option>
-                    <option value="payment">مشكلة مالية</option>
-                    <option value="other">أخرى</option>
+                    {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1605,8 +1720,26 @@ export default function Complaints() {
                     <option value="low">منخفضة</option>
                     <option value="medium">متوسطة</option>
                     <option value="high">عالية</option>
+                    <option value="urgent">عاجلة</option>
                   </select>
                 </div>
+              </div>
+              {/* Auto department display */}
+              <div
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 7,
+                  background: "rgba(59,130,246,0.06)",
+                  border: "1px solid rgba(59,130,246,0.15)",
+                  fontSize: 12,
+                  color: "var(--con-brand)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Building2 size={13} />
+                <span>القسم المختص: <strong>{TICKET_DEPARTMENT[complaintForm.category] || TICKET_DEPARTMENT.other}</strong></span>
               </div>
               <div>
                 <label
@@ -1617,7 +1750,7 @@ export default function Complaints() {
                     display: "block",
                   }}
                 >
-                  الوصف
+                  تفاصيل الطلب
                 </label>
                 <textarea
                   className="con-input"
@@ -1628,7 +1761,7 @@ export default function Complaints() {
                       description: e.target.value,
                     }))
                   }
-                  placeholder="تفاصيل الشكوى..."
+                  placeholder="تفاصيل الطلب أو الشكوى..."
                   rows={3}
                   style={{ width: "100%", fontSize: 12, resize: "vertical" }}
                 />

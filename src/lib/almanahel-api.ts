@@ -124,7 +124,8 @@ export async function authenticateAlmanahel(
   });
   if (!res.ok) throw new Error("فشل تسجيل الدخول في نظام البصمة");
   const data = await res.json();
-  const token = data.access_token;
+  const token = data.token || data.access_token;
+  if (!token) throw new Error("لم يتم استلام توكن صالح");
   storeToken(token);
   return token;
 }

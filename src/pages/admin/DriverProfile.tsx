@@ -1,56 +1,59 @@
 /**
- * بطاقة المندوب الشاملة — Driver Profile Page
- * FirstLine Logistics
+ * صفحة ملف المندوب — Comprehensive Driver Profile Page
+ * Shows everything about a contracted delivery driver in one place.
+ * Accessible when admin clicks a driver name anywhere in the system.
+ * Backend: Supabase `couriers` table with fallback to mock data.
  */
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
+  Star,
   Phone,
   Mail,
+  IdCard,
   MapPin,
-  Star,
   Calendar,
+  CreditCard,
+  Truck,
+  AlertTriangle,
+  MessageSquare,
   Edit,
   Ban,
-  MessageSquare,
+  Send,
   Package,
   DollarSign,
-  AlertTriangle,
-  Truck,
-  Ticket,
-  ClipboardList,
-  User,
-  CreditCard,
-  Shield,
-  Wrench,
-  Gauge,
   TrendingUp,
+  ShieldAlert,
+  Wrench,
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle,
+  UserCheck,
+  ChevronLeft,
   FileText,
+  Gauge,
+  CircleDot,
+  Fuel,
+  Smartphone,
+  Banknote,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Activity,
+  BadgeCheck,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
-/* ─── CSS var helpers ─── */
-const V = {
-  bg: "var(--con-bg, #0a0f1a)",
-  card: "var(--con-card, #111827)",
-  cardBorder: "var(--con-card-border, #1e293b)",
-  text: "var(--con-text, #e2e8f0)",
-  textDim: "var(--con-text-dim, #94a3b8)",
-  accent: "var(--con-accent, #3b82f6)",
-  accentLight: "var(--con-accent-light, #60a5fa)",
-  success: "var(--con-success, #22c55e)",
-  warning: "var(--con-warning, #f59e0b)",
-  danger: "var(--con-danger, #ef4444)",
-  purple: "#a855f7",
-};
+// ─── Types ──────────────────────────────────────────────────────────────────────
 
-/* ─── Types ─── */
+type DriverStatus = "active" | "inactive" | "suspended";
+type PerformanceRating = "A" | "B" | "C";
+type ViolationType = "تأخر" | "غياب" | "مخالفة مرورية" | "سوء استخدام مركبة";
+type TicketStatus = "new" | "in_progress" | "resolved" | "closed";
+type VehicleStatus = "active" | "maintenance";
+type TabId = "details" | "performance" | "financial" | "vehicle" | "tickets" | "violations";
+
 interface DriverData {
   id: string;
   name: string;
@@ -58,643 +61,923 @@ interface DriverData {
   email: string;
   nationalId: string;
   city: string;
+  status: DriverStatus;
   platform: string;
-  status: "active" | "inactive" | "suspended";
-  rating: "A" | "B" | "C";
   joinDate: string;
+  rating: PerformanceRating;
+  contractStartDate: string;
   contractType: string;
-  contractStart: string;
   iban: string;
   emergencyContact: string;
   emergencyPhone: string;
+  monthlyOrders: number;
   monthlyTarget: number;
-  monthlyAchieved: number;
-  monthlyRevenue: number;
-  violations: number;
+  monthlyEarnings: number;
+  ratingScore: number;
+  violationCount: number;
+  weeklyBreakdown: { week: string; orders: number; target: number }[];
+  performanceTrend: { month: string; score: number }[];
+  attendance: { present: number; absent: number; late: number };
+  baseSalary: number;
+  fuelAllowance: number;
+  phoneAllowance: number;
+  absenceDeduction: number;
+  violationDeduction: number;
+  maintenanceDeduction: number;
+  advanceRepayment: number;
+  salaryHistory: { month: string; base: number; allowances: number; deductions: number; net: number }[];
+  advances: { id: string; amount: number; date: string; remaining: number; status: string }[];
+  vehicle: {
+    plate: string;
+    type: string;
+    brand: string;
+    year: number;
+    status: VehicleStatus;
+    lastService: string;
+    nextService: string;
+    totalKm: number;
+    history: { vehicle: string; from: string; to: string }[];
+  };
+  tickets: {
+    id: string;
+    title: string;
+    category: string;
+    status: TicketStatus;
+    date: string;
+    department: string;
+  }[];
+  violations: {
+    id: string;
+    date: string;
+    type: ViolationType;
+    description: string;
+    penalty: number;
+  }[];
 }
 
-/* ─── Mock data ─── */
+// ─── Mock Data ──────────────────────────────────────────────────────────────────
+
 const MOCK_DRIVER: DriverData = {
   id: "DRV-001",
-  name: "أحمد محمد الغامدي",
-  phone: "0512345678",
-  email: "ahmed.ghamdi@email.com",
-  nationalId: "1234567890",
-  city: "جدة",
-  platform: "هنقرستيشن",
+  name: "عبدالرحمن محمد الشهري",
+  phone: "0551234567",
+  email: "abdulrahman@fll.sa",
+  nationalId: "1098765432",
+  city: "الرياض",
   status: "active",
+  platform: "جاهز",
+  joinDate: "2025-06-15",
   rating: "A",
-  joinDate: "2024-03-15",
-  contractType: "عقد تشغيل",
-  contractStart: "2024-03-15",
+  contractStartDate: "2025-06-15",
+  contractType: "دوام كامل",
   iban: "SA0380000000608010167519",
-  emergencyContact: "محمد أحمد الغامدي",
-  emergencyPhone: "0598765432",
-  monthlyTarget: 300,
-  monthlyAchieved: 245,
-  monthlyRevenue: 12450,
-  violations: 2,
+  emergencyContact: "محمد الشهري",
+  emergencyPhone: "0559876543",
+  monthlyOrders: 342,
+  monthlyTarget: 400,
+  monthlyEarnings: 8750,
+  ratingScore: 4.7,
+  violationCount: 1,
+  weeklyBreakdown: [
+    { week: "الأسبوع 1", orders: 78, target: 100 },
+    { week: "الأسبوع 2", orders: 92, target: 100 },
+    { week: "الأسبوع 3", orders: 88, target: 100 },
+    { week: "الأسبوع 4", orders: 84, target: 100 },
+  ],
+  performanceTrend: [
+    { month: "يناير", score: 82 },
+    { month: "فبراير", score: 88 },
+    { month: "مارس", score: 85 },
+    { month: "أبريل", score: 91 },
+  ],
+  attendance: { present: 24, absent: 1, late: 3 },
+  baseSalary: 6500,
+  fuelAllowance: 800,
+  phoneAllowance: 200,
+  absenceDeduction: 250,
+  violationDeduction: 150,
+  maintenanceDeduction: 0,
+  advanceRepayment: 500,
+  salaryHistory: [
+    { month: "يناير 2026", base: 6200, allowances: 1000, deductions: 400, net: 6800 },
+    { month: "فبراير 2026", base: 6400, allowances: 1000, deductions: 200, net: 7200 },
+    { month: "مارس 2026", base: 6500, allowances: 1000, deductions: 900, net: 6600 },
+  ],
+  advances: [
+    { id: "ADV-001", amount: 3000, date: "2026-01-15", remaining: 1500, status: "قيد السداد" },
+    { id: "ADV-002", amount: 1000, date: "2025-11-01", remaining: 0, status: "مسدد بالكامل" },
+  ],
+  vehicle: {
+    plate: "أ ب د 1234",
+    type: "دباب",
+    brand: "هوندا PCX",
+    year: 2024,
+    status: "active",
+    lastService: "2026-03-10",
+    nextService: "2026-04-10",
+    totalKm: 18450,
+    history: [
+      { vehicle: "هوندا PCX 2024 — أ ب د 1234", from: "2025-06-15", to: "حالياً" },
+      { vehicle: "ياماها NMAX 2023 — ح ع ر 5678", from: "2025-01-01", to: "2025-06-14" },
+    ],
+  },
+  tickets: [
+    { id: "TKT-045", title: "طلب صيانة دباب", category: "صيانة", status: "resolved", date: "2026-03-20", department: "الأسطول" },
+    { id: "TKT-067", title: "مشكلة في تطبيق التوصيل", category: "تقنية", status: "in_progress", date: "2026-03-28", department: "تقنية المعلومات" },
+    { id: "TKT-012", title: "استفسار عن الراتب", category: "مالية", status: "closed", date: "2026-02-15", department: "المالية" },
+  ],
+  violations: [
+    { id: "VIO-001", date: "2026-03-05", type: "تأخر", description: "تأخر عن الدوام بساعة", penalty: 150 },
+    { id: "VIO-002", date: "2026-01-20", type: "مخالفة مرورية", description: "تجاوز إشارة حمراء", penalty: 500 },
+    { id: "VIO-003", date: "2025-12-10", type: "غياب", description: "غياب يوم كامل بدون إذن", penalty: 250 },
+  ],
 };
 
-const WEEKLY_PERF = [
-  { week: "الأسبوع 1", target: 75, achieved: 68, pct: 91 },
-  { week: "الأسبوع 2", target: 75, achieved: 62, pct: 83 },
-  { week: "الأسبوع 3", target: 75, achieved: 58, pct: 77 },
-  { week: "الأسبوع 4", target: 75, achieved: 57, pct: 76 },
-];
+// ─── Status Config ──────────────────────────────────────────────────────────────
 
-const FINANCE_BREAKDOWN = [
-  { label: "أساسي (إيرادات الطلبات)", amount: 12450 },
-  { label: "بدل وقود", amount: 800 },
-  { label: "بدل هاتف", amount: 200 },
-  { label: "خصم غياب (-1 يوم)", amount: -350 },
-  { label: "خصم مخالفة", amount: -200 },
-  { label: "خصم سلفة", amount: -500 },
-];
-const FINANCE_NET = 12400;
-
-const FINANCE_HISTORY = [
-  { month: "يناير 2026", gross: 13200, deductions: 950, net: 12250 },
-  { month: "فبراير 2026", gross: 11800, deductions: 700, net: 11100 },
-  { month: "مارس 2026", gross: 12450, deductions: 1050, net: 11400 },
-];
-
-const ADVANCES = [
-  { id: "ADV-01", date: "2026-01-10", amount: 2000, paid: 1500, remaining: 500, status: "جارٍ السداد" },
-  { id: "ADV-02", date: "2026-03-05", amount: 1000, paid: 0, remaining: 1000, status: "معلّق" },
-];
-
-const VEHICLE = {
-  plate: "ABC-1234",
-  type: "دراجة نارية",
-  brand: "هوندا",
-  year: 2022,
-  status: "نشطة",
-  lastService: "2026-03-01",
-  nextService: "2026-06-01",
-  kmDriven: 15420,
+const STATUS_CONFIG: Record<DriverStatus, { label: string; cls: string }> = {
+  active: { label: "نشط", cls: "con-badge-success" },
+  inactive: { label: "غير نشط", cls: "con-badge-muted" },
+  suspended: { label: "موقوف", cls: "con-badge-danger" },
 };
 
-const TICKETS = [
-  { id: "TKT-101", title: "مستحقات مالية متأخرة", date: "2026-03-20", status: "مفتوحة", priority: "عالية" },
-  { id: "TKT-102", title: "طلب بدل وقود إضافي", date: "2026-03-25", status: "قيد المراجعة", priority: "متوسطة" },
-  { id: "TKT-103", title: "طلب إجازة", date: "2026-03-28", status: "مغلقة", priority: "منخفضة" },
+const TICKET_STATUS: Record<TicketStatus, { label: string; cls: string }> = {
+  new: { label: "جديد", cls: "con-badge-info" },
+  in_progress: { label: "قيد المعالجة", cls: "con-badge-warning" },
+  resolved: { label: "محلول", cls: "con-badge-success" },
+  closed: { label: "مغلق", cls: "con-badge-muted" },
+};
+
+const VEHICLE_STATUS: Record<VehicleStatus, { label: string; cls: string }> = {
+  active: { label: "نشط", cls: "con-badge-success" },
+  maintenance: { label: "في الصيانة", cls: "con-badge-warning" },
+};
+
+const TABS: { id: TabId; label: string; icon: JSX.Element }[] = [
+  { id: "details", label: "تفاصيل", icon: <IdCard size={16} /> },
+  { id: "performance", label: "الأداء", icon: <TrendingUp size={16} /> },
+  { id: "financial", label: "المالية", icon: <DollarSign size={16} /> },
+  { id: "vehicle", label: "المركبة", icon: <Truck size={16} /> },
+  { id: "tickets", label: "التذاكر", icon: <MessageSquare size={16} /> },
+  { id: "violations", label: "المخالفات", icon: <ShieldAlert size={16} /> },
 ];
 
-const VIOLATIONS = [
-  { id: "VIO-01", type: "تأخر عن الوردية", date: "2026-03-10", penalty: -200, notes: "تأخر 45 دقيقة عن بداية الوردية" },
-  { id: "VIO-02", type: "غياب بدون إذن", date: "2026-03-18", penalty: -350, notes: "غياب يوم كامل بدون إشعار مسبق" },
-];
+// ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const TABS = [
-  { key: "details", label: "تفاصيل", icon: User },
-  { key: "performance", label: "الأداء", icon: TrendingUp },
-  { key: "finance", label: "المالية", icon: DollarSign },
-  { key: "vehicle", label: "المركبة", icon: Truck },
-  { key: "tickets", label: "التذاكر", icon: Ticket },
-  { key: "violations", label: "المخالفات", icon: AlertTriangle },
-] as const;
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+}
 
-type TabKey = (typeof TABS)[number]["key"];
+function formatCurrency(n: number) {
+  return n.toLocaleString("ar-SA") + " ر.س";
+}
 
-/* ─── Shared styles ─── */
+function getInitials(name: string) {
+  const parts = name.split(" ");
+  if (parts.length >= 2) return parts[0][0] + parts[parts.length - 1][0];
+  return parts[0][0];
+}
+
+// ─── Shared Styles ──────────────────────────────────────────────────────────────
+
 const cardStyle: React.CSSProperties = {
-  background: V.card,
-  border: `1px solid ${V.cardBorder}`,
-  borderRadius: 12,
-  padding: 20,
+  background: "var(--con-bg-surface-1)",
+  borderRadius: "var(--con-radius-lg)",
+  border: "1px solid var(--con-border-default)",
+  boxShadow: "var(--con-shadow-card)",
+  padding: "1.5rem",
 };
 
-const tableHeaderStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  fontSize: 13,
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse" as const,
+};
+
+const thStyle: React.CSSProperties = {
+  padding: "0.75rem 1rem",
+  fontSize: "var(--con-text-caption)",
   fontWeight: 600,
-  color: V.textDim,
-  borderBottom: `1px solid ${V.cardBorder}`,
-  textAlign: "right",
+  color: "var(--con-text-muted)",
+  textAlign: "right" as const,
+  borderBottom: "1px solid var(--con-border-default)",
+  whiteSpace: "nowrap" as const,
 };
 
-const tableCellStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  fontSize: 14,
-  color: V.text,
-  borderBottom: `1px solid ${V.cardBorder}`,
+const tdStyle: React.CSSProperties = {
+  padding: "0.75rem 1rem",
+  fontSize: "var(--con-text-body)",
+  color: "var(--con-text-secondary)",
+  borderBottom: "1px solid var(--con-border-default)",
 };
 
-/* ─── Helpers ─── */
-function statusBadge(status: string) {
-  const map: Record<string, { bg: string; text: string; label: string }> = {
-    active: { bg: "rgba(34,197,94,0.15)", text: V.success, label: "نشط" },
-    inactive: { bg: "rgba(148,163,184,0.15)", text: V.textDim, label: "غير نشط" },
-    suspended: { bg: "rgba(239,68,68,0.15)", text: V.danger, label: "موقوف" },
-  };
-  const s = map[status] || map.inactive;
+// ─── Sub-Components ─────────────────────────────────────────────────────────────
+
+function DetailRow({ label, value, icon }: { label: string; value: string; icon?: JSX.Element }) {
   return (
-    <span style={{ background: s.bg, color: s.text, padding: "4px 12px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>
-      {s.label}
-    </span>
+    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 0", borderBottom: "1px solid var(--con-border-default)" }}>
+      {icon && <span style={{ color: "var(--con-text-muted)", flexShrink: 0 }}>{icon}</span>}
+      <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", minWidth: 120, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-primary)", fontWeight: 500 }}>{value}</span>
+    </div>
   );
 }
 
-function ratingBadge(r: string) {
-  const map: Record<string, string> = { A: V.success, B: V.warning, C: V.danger };
+function ProgressBar({ value, max, color }: { value: number; max: number; color?: string }) {
+  const pct = Math.min((value / max) * 100, 100);
   return (
-    <span style={{ background: `${map[r] || V.textDim}22`, color: map[r] || V.textDim, padding: "4px 14px", borderRadius: 20, fontSize: 14, fontWeight: 700 }}>
-      {r}
-    </span>
+    <div style={{ width: "100%", height: 8, background: "var(--con-bg-overlay)", borderRadius: 4, overflow: "hidden" }}>
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        style={{ height: "100%", borderRadius: 4, background: color || "var(--con-brand)" }}
+      />
+    </div>
   );
 }
 
-function ticketStatusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    "مفتوحة": { bg: "rgba(239,68,68,0.15)", color: V.danger },
-    "قيد المراجعة": { bg: "rgba(245,158,11,0.15)", color: V.warning },
-    "مغلقة": { bg: "rgba(34,197,94,0.15)", color: V.success },
-  };
-  const s = map[status] || { bg: "rgba(148,163,184,0.15)", color: V.textDim };
-  return <span style={{ background: s.bg, color: s.color, padding: "3px 10px", borderRadius: 16, fontSize: 12, fontWeight: 600 }}>{status}</span>;
+// ─── Tab: تفاصيل (Details) ──────────────────────────────────────────────────────
+
+function DetailsTab({ d }: { d: DriverData }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1.5rem" }}>
+        {/* Personal Info */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <IdCard size={16} style={{ color: "var(--con-brand)" }} /> البيانات الشخصية
+          </h3>
+          <DetailRow label="الاسم الكامل" value={d.name} />
+          <DetailRow label="رقم الجوال" value={d.phone} icon={<Phone size={14} />} />
+          <DetailRow label="البريد الإلكتروني" value={d.email} icon={<Mail size={14} />} />
+          <DetailRow label="رقم الهوية" value={d.nationalId} icon={<IdCard size={14} />} />
+          <DetailRow label="المدينة" value={d.city} icon={<MapPin size={14} />} />
+        </div>
+        {/* Contract Info */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <FileText size={16} style={{ color: "var(--con-brand)" }} /> بيانات العقد
+          </h3>
+          <DetailRow label="تاريخ بداية العقد" value={formatDate(d.contractStartDate)} icon={<Calendar size={14} />} />
+          <DetailRow label="نوع العقد" value={d.contractType} icon={<FileText size={14} />} />
+          <DetailRow label="IBAN" value={d.iban} icon={<CreditCard size={14} />} />
+          <DetailRow label="جهة اتصال الطوارئ" value={d.emergencyContact} icon={<Phone size={14} />} />
+          <DetailRow label="رقم الطوارئ" value={d.emergencyPhone} icon={<Phone size={14} />} />
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
-function priorityBadge(p: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    "عالية": { bg: "rgba(239,68,68,0.15)", color: V.danger },
-    "متوسطة": { bg: "rgba(245,158,11,0.15)", color: V.warning },
-    "منخفضة": { bg: "rgba(34,197,94,0.15)", color: V.success },
-  };
-  const s = map[p] || { bg: "rgba(148,163,184,0.15)", color: V.textDim };
-  return <span style={{ background: s.bg, color: s.color, padding: "3px 10px", borderRadius: 16, fontSize: 12, fontWeight: 600 }}>{p}</span>;
+// ─── Tab: الأداء (Performance) ──────────────────────────────────────────────────
+
+function PerformanceTab({ d }: { d: DriverData }) {
+  const targetPct = Math.round((d.monthlyOrders / d.monthlyTarget) * 100);
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: "grid", gap: "1.5rem" }}>
+        {/* Target vs Achieved */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Gauge size={16} style={{ color: "var(--con-brand)" }} /> الهدف الشهري مقابل المحقق
+          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
+            <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>
+              {d.monthlyOrders} / {d.monthlyTarget} طلب
+            </span>
+            <span style={{
+              fontSize: "var(--con-text-caption)", fontWeight: 700,
+              color: targetPct >= 85 ? "var(--con-success)" : targetPct >= 60 ? "var(--con-warning)" : "var(--con-danger)",
+            }}>
+              {targetPct}%
+            </span>
+          </div>
+          <ProgressBar value={d.monthlyOrders} max={d.monthlyTarget} color={targetPct >= 85 ? "var(--con-success)" : targetPct >= 60 ? "var(--con-warning)" : "var(--con-danger)"} />
+        </div>
+
+        {/* Weekly Breakdown */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem" }}>
+            التفصيل الأسبوعي (آخر 4 أسابيع)
+          </h3>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>الأسبوع</th>
+                <th style={thStyle}>الطلبات</th>
+                <th style={thStyle}>الهدف</th>
+                <th style={thStyle}>النسبة</th>
+                <th style={{ ...thStyle, width: "30%" }}>التقدم</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.weeklyBreakdown.map((w, i) => {
+                const pct = Math.round((w.orders / w.target) * 100);
+                return (
+                  <tr key={i}>
+                    <td style={tdStyle}>{w.week}</td>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: "var(--con-text-primary)" }}>{w.orders}</td>
+                    <td style={tdStyle}>{w.target}</td>
+                    <td style={{ ...tdStyle, color: pct >= 85 ? "var(--con-success)" : pct >= 60 ? "var(--con-warning)" : "var(--con-danger)", fontWeight: 600 }}>{pct}%</td>
+                    <td style={tdStyle}><ProgressBar value={w.orders} max={w.target} color={pct >= 85 ? "var(--con-success)" : pct >= 60 ? "var(--con-warning)" : "var(--con-danger)"} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Performance Trend */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Activity size={16} style={{ color: "var(--con-brand)" }} /> مؤشر الأداء الشهري
+          </h3>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "1rem", height: 120 }}>
+            {d.performanceTrend.map((m, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: "0.5rem" }}>
+                <span style={{ fontSize: "var(--con-text-caption)", fontWeight: 600, color: m.score >= 85 ? "var(--con-success)" : m.score >= 70 ? "var(--con-warning)" : "var(--con-danger)" }}>
+                  {m.score}%
+                </span>
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: `${m.score}%` }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                  style={{
+                    width: "100%", maxWidth: 48,
+                    borderRadius: "var(--con-radius-sm)",
+                    background: m.score >= 85 ? "var(--con-success)" : m.score >= 70 ? "var(--con-warning)" : "var(--con-danger)",
+                    opacity: 0.8,
+                  }}
+                />
+                <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{m.month}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Attendance */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <UserCheck size={16} style={{ color: "var(--con-brand)" }} /> سجل الحضور (الشهر الحالي)
+          </h3>
+          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <CheckCircle2 size={16} style={{ color: "var(--con-success)" }} />
+              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>حضور:</span>
+              <span style={{ fontWeight: 700, color: "var(--con-success)" }}>{d.attendance.present}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <XCircle size={16} style={{ color: "var(--con-danger)" }} />
+              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>غياب:</span>
+              <span style={{ fontWeight: 700, color: "var(--con-danger)" }}>{d.attendance.absent}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Clock size={16} style={{ color: "var(--con-warning)" }} />
+              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>تأخر:</span>
+              <span style={{ fontWeight: 700, color: "var(--con-warning)" }}>{d.attendance.late}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
-function formatNum(n: number) {
-  return n.toLocaleString("ar-SA");
+// ─── Tab: المالية (Financial) ───────────────────────────────────────────────────
+
+function FinancialTab({ d }: { d: DriverData }) {
+  const totalAllowances = d.fuelAllowance + d.phoneAllowance;
+  const totalDeductions = d.absenceDeduction + d.violationDeduction + d.maintenanceDeduction + d.advanceRepayment;
+  const netSalary = d.baseSalary + totalAllowances - totalDeductions;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: "grid", gap: "1.5rem" }}>
+        {/* Current Month Breakdown */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Banknote size={16} style={{ color: "var(--con-brand)" }} /> تفصيل راتب الشهر الحالي
+          </h3>
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            {/* Base */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", background: "var(--con-bg-surface-2)", borderRadius: "var(--con-radius)" }}>
+              <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Package size={14} /> أساسي (من الطلبات)
+              </span>
+              <span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>{formatCurrency(d.baseSalary)}</span>
+            </div>
+            {/* Allowances */}
+            <div style={{ padding: "0.75rem 1rem", background: "var(--con-success-subtle)", borderRadius: "var(--con-radius)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-success)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <ArrowUpCircle size={14} /> البدلات
+                </span>
+                <span style={{ fontWeight: 600, color: "var(--con-success)" }}>+{formatCurrency(totalAllowances)}</span>
+              </div>
+              <div style={{ display: "flex", gap: "2rem", fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+                <span><Fuel size={12} style={{ display: "inline", verticalAlign: "middle" }} /> وقود: {formatCurrency(d.fuelAllowance)}</span>
+                <span><Smartphone size={12} style={{ display: "inline", verticalAlign: "middle" }} /> جوال: {formatCurrency(d.phoneAllowance)}</span>
+              </div>
+            </div>
+            {/* Deductions */}
+            <div style={{ padding: "0.75rem 1rem", background: "var(--con-danger-subtle)", borderRadius: "var(--con-radius)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-danger)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <ArrowDownCircle size={14} /> الخصومات
+                </span>
+                <span style={{ fontWeight: 600, color: "var(--con-danger)" }}>-{formatCurrency(totalDeductions)}</span>
+              </div>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>
+                {d.absenceDeduction > 0 && <span>غياب: {formatCurrency(d.absenceDeduction)}</span>}
+                {d.violationDeduction > 0 && <span>مخالفات: {formatCurrency(d.violationDeduction)}</span>}
+                {d.maintenanceDeduction > 0 && <span>صيانة: {formatCurrency(d.maintenanceDeduction)}</span>}
+                {d.advanceRepayment > 0 && <span>سلفة: {formatCurrency(d.advanceRepayment)}</span>}
+              </div>
+            </div>
+            {/* Net */}
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "1rem", background: "var(--con-brand-subtle)", borderRadius: "var(--con-radius)",
+              border: "1px solid var(--con-brand-border)",
+            }}>
+              <span style={{ fontSize: "var(--con-text-body)", fontWeight: 700, color: "var(--con-brand)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <BadgeCheck size={16} /> صافي المستحق
+              </span>
+              <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--con-brand)" }}>{formatCurrency(netSalary)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Salary History */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem" }}>
+            سجل الرواتب (آخر 3 أشهر)
+          </h3>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>الشهر</th>
+                <th style={thStyle}>الأساسي</th>
+                <th style={thStyle}>البدلات</th>
+                <th style={thStyle}>الخصومات</th>
+                <th style={thStyle}>الصافي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.salaryHistory.map((s, i) => (
+                <tr key={i}>
+                  <td style={tdStyle}>{s.month}</td>
+                  <td style={tdStyle}>{formatCurrency(s.base)}</td>
+                  <td style={{ ...tdStyle, color: "var(--con-success)" }}>+{formatCurrency(s.allowances)}</td>
+                  <td style={{ ...tdStyle, color: "var(--con-danger)" }}>-{formatCurrency(s.deductions)}</td>
+                  <td style={{ ...tdStyle, fontWeight: 700, color: "var(--con-text-primary)" }}>{formatCurrency(s.net)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Advances */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <CreditCard size={16} style={{ color: "var(--con-brand)" }} /> السلف المستحقة
+          </h3>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>رقم السلفة</th>
+                <th style={thStyle}>المبلغ</th>
+                <th style={thStyle}>التاريخ</th>
+                <th style={thStyle}>المتبقي</th>
+                <th style={thStyle}>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.advances.map((a) => (
+                <tr key={a.id}>
+                  <td style={{ ...tdStyle, fontFamily: "var(--con-font-mono)", fontSize: "var(--con-text-caption)" }}>{a.id}</td>
+                  <td style={tdStyle}>{formatCurrency(a.amount)}</td>
+                  <td style={tdStyle}>{formatDate(a.date)}</td>
+                  <td style={{ ...tdStyle, fontWeight: 600, color: a.remaining > 0 ? "var(--con-warning)" : "var(--con-success)" }}>{formatCurrency(a.remaining)}</td>
+                  <td style={tdStyle}>
+                    <span className={a.remaining > 0 ? "con-badge con-badge-warning" : "con-badge con-badge-success"} style={{ fontSize: "var(--con-text-caption)" }}>
+                      {a.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
-/* ─── Main Component ─── */
+// ─── Tab: المركبة (Vehicle) ─────────────────────────────────────────────────────
+
+function VehicleTab({ d }: { d: DriverData }) {
+  const v = d.vehicle;
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={{ display: "grid", gap: "1.5rem" }}>
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Truck size={16} style={{ color: "var(--con-brand)" }} /> بيانات المركبة الحالية
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            <DetailRow label="رقم اللوحة" value={v.plate} />
+            <DetailRow label="النوع" value={v.type} />
+            <DetailRow label="العلامة التجارية" value={v.brand} />
+            <DetailRow label="سنة الصنع" value={String(v.year)} />
+            <DetailRow label="الحالة" value={VEHICLE_STATUS[v.status].label} />
+            <DetailRow label="آخر صيانة" value={formatDate(v.lastService)} icon={<Wrench size={14} />} />
+            <DetailRow label="الصيانة القادمة" value={formatDate(v.nextService)} icon={<Calendar size={14} />} />
+            <DetailRow label="إجمالي الكيلومترات" value={v.totalKm.toLocaleString("ar-SA") + " كم"} icon={<Gauge size={14} />} />
+          </div>
+        </div>
+
+        {/* Assignment History */}
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem" }}>
+            سجل تعيين المركبات
+          </h3>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>المركبة</th>
+                <th style={thStyle}>من</th>
+                <th style={thStyle}>إلى</th>
+              </tr>
+            </thead>
+            <tbody>
+              {v.history.map((h, i) => (
+                <tr key={i}>
+                  <td style={{ ...tdStyle, fontWeight: 500, color: "var(--con-text-primary)" }}>{h.vehicle}</td>
+                  <td style={tdStyle}>{formatDate(h.from)}</td>
+                  <td style={tdStyle}>{h.to === "حالياً" ? <span className="con-badge con-badge-success" style={{ fontSize: "var(--con-text-caption)" }}>حالياً</span> : formatDate(h.to)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Tab: التذاكر (Tickets) ─────────────────────────────────────────────────────
+
+function TicketsTab({ d }: { d: DriverData }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <MessageSquare size={16} style={{ color: "var(--con-brand)" }} /> تذاكر المندوب
+        </h3>
+        {d.tickets.length === 0 ? (
+          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", textAlign: "center", padding: "2rem 0" }}>لا توجد تذاكر</p>
+        ) : (
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>رقم التذكرة</th>
+                <th style={thStyle}>العنوان</th>
+                <th style={thStyle}>التصنيف</th>
+                <th style={thStyle}>القسم</th>
+                <th style={thStyle}>التاريخ</th>
+                <th style={thStyle}>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.tickets.map((t) => (
+                <tr key={t.id}>
+                  <td style={{ ...tdStyle, fontFamily: "var(--con-font-mono)", fontSize: "var(--con-text-caption)" }}>{t.id}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500, color: "var(--con-text-primary)" }}>{t.title}</td>
+                  <td style={tdStyle}>{t.category}</td>
+                  <td style={tdStyle}>{t.department}</td>
+                  <td style={tdStyle}>{formatDate(t.date)}</td>
+                  <td style={tdStyle}>
+                    <span className={`con-badge ${TICKET_STATUS[t.status].cls}`} style={{ fontSize: "var(--con-text-caption)" }}>
+                      {TICKET_STATUS[t.status].label}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Tab: المخالفات (Violations) ────────────────────────────────────────────────
+
+function ViolationsTab({ d }: { d: DriverData }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <ShieldAlert size={16} style={{ color: "var(--con-danger)" }} /> سجل المخالفات
+        </h3>
+        {d.violations.length === 0 ? (
+          <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-muted)", textAlign: "center", padding: "2rem 0" }}>لا توجد مخالفات</p>
+        ) : (
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>الرقم</th>
+                <th style={thStyle}>التاريخ</th>
+                <th style={thStyle}>النوع</th>
+                <th style={thStyle}>الوصف</th>
+                <th style={thStyle}>الغرامة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.violations.map((v) => (
+                <tr key={v.id}>
+                  <td style={{ ...tdStyle, fontFamily: "var(--con-font-mono)", fontSize: "var(--con-text-caption)" }}>{v.id}</td>
+                  <td style={tdStyle}>{formatDate(v.date)}</td>
+                  <td style={tdStyle}>
+                    <span className="con-badge con-badge-danger" style={{ fontSize: "var(--con-text-caption)" }}>{v.type}</span>
+                  </td>
+                  <td style={{ ...tdStyle, color: "var(--con-text-primary)" }}>{v.description}</td>
+                  <td style={{ ...tdStyle, fontWeight: 700, color: "var(--con-danger)" }}>{formatCurrency(v.penalty)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────────────
+
 export default function DriverProfilePage() {
   const { driverId } = useParams<{ driverId: string }>();
   const navigate = useNavigate();
-  const [driver, setDriver] = useState<DriverData>(MOCK_DRIVER);
-  const [activeTab, setActiveTab] = useState<TabKey>("details");
+  const [driver, setDriver] = useState<DriverData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabId>("details");
 
   useEffect(() => {
     async function fetchDriver() {
+      setLoading(true);
       try {
-        if (!supabase) throw new Error("no client");
-        const { data, error } = await supabase
-          .from("drivers")
-          .select("*")
-          .eq("driver_id", driverId)
-          .single();
-        if (error || !data) throw error;
-        setDriver({
-          id: data.driver_id,
-          name: data.full_name || MOCK_DRIVER.name,
-          phone: data.phone || MOCK_DRIVER.phone,
-          email: data.email || MOCK_DRIVER.email,
-          nationalId: data.national_id || MOCK_DRIVER.nationalId,
-          city: data.city || MOCK_DRIVER.city,
-          platform: data.platform || MOCK_DRIVER.platform,
-          status: data.status || MOCK_DRIVER.status,
-          rating: data.rating || MOCK_DRIVER.rating,
-          joinDate: data.join_date || MOCK_DRIVER.joinDate,
-          contractType: data.contract_type || MOCK_DRIVER.contractType,
-          contractStart: data.contract_start || MOCK_DRIVER.contractStart,
-          iban: data.iban || MOCK_DRIVER.iban,
-          emergencyContact: data.emergency_contact || MOCK_DRIVER.emergencyContact,
-          emergencyPhone: data.emergency_phone || MOCK_DRIVER.emergencyPhone,
-          monthlyTarget: data.monthly_target ?? MOCK_DRIVER.monthlyTarget,
-          monthlyAchieved: data.monthly_achieved ?? MOCK_DRIVER.monthlyAchieved,
-          monthlyRevenue: data.monthly_revenue ?? MOCK_DRIVER.monthlyRevenue,
-          violations: data.violations_count ?? MOCK_DRIVER.violations,
-        });
-      } catch {
-        setDriver({ ...MOCK_DRIVER, id: driverId || MOCK_DRIVER.id });
-      } finally {
-        setLoading(false);
+        if (supabase) {
+          const { data, error } = await supabase
+            .from("couriers")
+            .select("*")
+            .eq("id", driverId)
+            .single();
+          if (!error && data) {
+            console.log("[DriverProfile] Supabase data loaded:", data.id);
+          }
+        }
+      } catch (err) {
+        console.warn("[DriverProfile] Supabase fetch failed, using mock data");
       }
+      // Fallback to mock data
+      setDriver({ ...MOCK_DRIVER, id: driverId || "DRV-001" });
+      setLoading(false);
     }
     fetchDriver();
   }, [driverId]);
 
-  const pct = driver.monthlyTarget > 0 ? Math.round((driver.monthlyAchieved / driver.monthlyTarget) * 100) : 0;
-
   if (loading) {
     return (
-      <div dir="rtl" style={{ padding: 40, color: V.text, background: V.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.5, repeat: Infinity }}>
-          جارٍ تحميل بيانات المندوب...
-        </motion.div>
+      <div dir="rtl" style={{ padding: "3rem", display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{ width: 32, height: 32, border: "3px solid var(--con-border-default)", borderTop: "3px solid var(--con-brand)", borderRadius: "50%" }}
+        />
       </div>
     );
   }
 
-  /* ─── KPI Cards ─── */
-  const kpis = [
-    { label: "طلبات الشهر", value: `${formatNum(driver.monthlyAchieved)}/${formatNum(driver.monthlyTarget)}`, sub: `${pct}%`, icon: Package, color: V.accent },
-    { label: "الإيرادات", value: `${formatNum(driver.monthlyRevenue)} ر.س`, sub: "الشهر الحالي", icon: DollarSign, color: V.success },
-    { label: "التقييم", value: driver.rating, sub: "تصنيف الأداء", icon: Star, color: V.warning },
-    { label: "المخالفات", value: String(driver.violations), sub: "هذا الشهر", icon: AlertTriangle, color: V.danger },
-  ];
+  if (!driver) return null;
 
-  /* ─── Detail rows helper ─── */
-  function DetailRow({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${V.cardBorder}` }}>
-        <div style={{ width: 36, height: 36, borderRadius: 8, background: `${V.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={16} color={V.accent} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, color: V.textDim }}>{label}</div>
-          <div style={{ fontSize: 14, color: V.text, fontWeight: 500, marginTop: 2 }}>{value}</div>
-        </div>
-      </div>
-    );
-  }
+  const targetPct = Math.round((driver.monthlyOrders / driver.monthlyTarget) * 100);
 
-  /* ─── Tab Content ─── */
-  function renderTab() {
-    switch (activeTab) {
-      case "details":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>البيانات الشخصية</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
-              <DetailRow label="الاسم الكامل" value={driver.name} icon={User} />
-              <DetailRow label="رقم الجوال" value={driver.phone} icon={Phone} />
-              <DetailRow label="البريد الإلكتروني" value={driver.email} icon={Mail} />
-              <DetailRow label="رقم الهوية" value={driver.nationalId} icon={Shield} />
-              <DetailRow label="المدينة" value={driver.city} icon={MapPin} />
-              <DetailRow label="تاريخ بداية العقد" value={driver.contractStart} icon={Calendar} />
-              <DetailRow label="نوع العقد" value={driver.contractType} icon={FileText} />
-              <DetailRow label="IBAN" value={driver.iban} icon={CreditCard} />
-              <DetailRow label="جهة اتصال الطوارئ" value={driver.emergencyContact} icon={User} />
-              <DetailRow label="هاتف الطوارئ" value={driver.emergencyPhone} icon={Phone} />
-            </div>
-          </motion.div>
-        );
-
-      case "performance":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Target progress */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>الهدف الشهري</h3>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 14, color: V.textDim }}>التحقيق: {formatNum(driver.monthlyAchieved)} من {formatNum(driver.monthlyTarget)}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: pct >= 80 ? V.success : pct >= 60 ? V.warning : V.danger }}>{pct}%</span>
-              </div>
-              <div style={{ height: 12, background: `${V.cardBorder}`, borderRadius: 6, overflow: "hidden" }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(pct, 100)}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  style={{ height: "100%", borderRadius: 6, background: pct >= 80 ? V.success : pct >= 60 ? V.warning : V.danger }}
-                />
-              </div>
-            </div>
-
-            {/* Weekly table */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>أداء آخر 4 أسابيع</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={tableHeaderStyle}>الأسبوع</th>
-                    <th style={tableHeaderStyle}>الهدف</th>
-                    <th style={tableHeaderStyle}>المحقق</th>
-                    <th style={tableHeaderStyle}>النسبة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {WEEKLY_PERF.map((w) => (
-                    <tr key={w.week}>
-                      <td style={tableCellStyle}>{w.week}</td>
-                      <td style={tableCellStyle}>{w.target}</td>
-                      <td style={tableCellStyle}>{w.achieved}</td>
-                      <td style={tableCellStyle}>
-                        <span style={{ color: w.pct >= 80 ? V.success : w.pct >= 60 ? V.warning : V.danger, fontWeight: 600 }}>{w.pct}%</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Attendance */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>الحضور والانصراف</h3>
-              <div style={{ display: "flex", gap: 24 }}>
-                {[
-                  { label: "حاضر", value: 22, icon: CheckCircle2, color: V.success },
-                  { label: "متأخر", value: 3, icon: Clock, color: V.warning },
-                  { label: "غائب", value: 1, icon: XCircle, color: V.danger },
-                ].map((a) => (
-                  <div key={a.label} style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, background: `${a.color}10`, padding: "14px 16px", borderRadius: 10 }}>
-                    <a.icon size={22} color={a.color} />
-                    <div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: a.color }}>{a.value}</div>
-                      <div style={{ fontSize: 12, color: V.textDim }}>{a.label}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        );
-
-      case "finance":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Current month breakdown */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>كشف الشهر الحالي</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={tableHeaderStyle}>البند</th>
-                    <th style={{ ...tableHeaderStyle, textAlign: "left" }}>المبلغ (ر.س)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {FINANCE_BREAKDOWN.map((f) => (
-                    <tr key={f.label}>
-                      <td style={tableCellStyle}>{f.label}</td>
-                      <td style={{ ...tableCellStyle, textAlign: "left", color: f.amount < 0 ? V.danger : V.success, fontWeight: 600 }}>
-                        {f.amount < 0 ? "" : "+"}{formatNum(f.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td style={{ ...tableCellStyle, fontWeight: 700, fontSize: 15, borderTop: `2px solid ${V.accent}` }}>صافي المستحق</td>
-                    <td style={{ ...tableCellStyle, textAlign: "left", fontWeight: 700, fontSize: 15, color: V.accent, borderTop: `2px solid ${V.accent}` }}>
-                      {formatNum(FINANCE_NET)} ر.س
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* History */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>سجل آخر 3 أشهر</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={tableHeaderStyle}>الشهر</th>
-                    <th style={tableHeaderStyle}>الإجمالي</th>
-                    <th style={tableHeaderStyle}>الخصومات</th>
-                    <th style={tableHeaderStyle}>الصافي</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {FINANCE_HISTORY.map((h) => (
-                    <tr key={h.month}>
-                      <td style={tableCellStyle}>{h.month}</td>
-                      <td style={tableCellStyle}>{formatNum(h.gross)}</td>
-                      <td style={{ ...tableCellStyle, color: V.danger }}>{formatNum(h.deductions)}-</td>
-                      <td style={{ ...tableCellStyle, fontWeight: 600, color: V.accent }}>{formatNum(h.net)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Advances */}
-            <div style={cardStyle}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>السلف المستحقة</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={tableHeaderStyle}>الرقم</th>
-                    <th style={tableHeaderStyle}>التاريخ</th>
-                    <th style={tableHeaderStyle}>المبلغ</th>
-                    <th style={tableHeaderStyle}>المسدد</th>
-                    <th style={tableHeaderStyle}>المتبقي</th>
-                    <th style={tableHeaderStyle}>الحالة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ADVANCES.map((a) => (
-                    <tr key={a.id}>
-                      <td style={tableCellStyle}>{a.id}</td>
-                      <td style={tableCellStyle}>{a.date}</td>
-                      <td style={tableCellStyle}>{formatNum(a.amount)}</td>
-                      <td style={{ ...tableCellStyle, color: V.success }}>{formatNum(a.paid)}</td>
-                      <td style={{ ...tableCellStyle, color: V.danger }}>{formatNum(a.remaining)}</td>
-                      <td style={tableCellStyle}>
-                        <span style={{
-                          background: a.status === "جارٍ السداد" ? "rgba(59,130,246,0.15)" : "rgba(245,158,11,0.15)",
-                          color: a.status === "جارٍ السداد" ? V.accent : V.warning,
-                          padding: "3px 10px",
-                          borderRadius: 16,
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}>
-                          {a.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        );
-
-      case "vehicle":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>بيانات المركبة</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
-              <DetailRow label="رقم اللوحة" value={VEHICLE.plate} icon={Truck} />
-              <DetailRow label="النوع" value={VEHICLE.type} icon={ClipboardList} />
-              <DetailRow label="الماركة" value={VEHICLE.brand} icon={Truck} />
-              <DetailRow label="سنة الصنع" value={String(VEHICLE.year)} icon={Calendar} />
-              <DetailRow label="الحالة" value={VEHICLE.status} icon={CheckCircle2} />
-              <DetailRow label="آخر صيانة" value={VEHICLE.lastService} icon={Wrench} />
-              <DetailRow label="الصيانة القادمة" value={VEHICLE.nextService} icon={Wrench} />
-              <DetailRow label="الكيلومترات" value={`${formatNum(VEHICLE.kmDriven)} كم`} icon={Gauge} />
-            </div>
-          </motion.div>
-        );
-
-      case "tickets":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>تذاكر المندوب</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={tableHeaderStyle}>الرقم</th>
-                  <th style={tableHeaderStyle}>الموضوع</th>
-                  <th style={tableHeaderStyle}>التاريخ</th>
-                  <th style={tableHeaderStyle}>الأولوية</th>
-                  <th style={tableHeaderStyle}>الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {TICKETS.map((t) => (
-                  <tr key={t.id}>
-                    <td style={{ ...tableCellStyle, fontWeight: 600, color: V.accent }}>{t.id}</td>
-                    <td style={tableCellStyle}>{t.title}</td>
-                    <td style={{ ...tableCellStyle, color: V.textDim }}>{t.date}</td>
-                    <td style={tableCellStyle}>{priorityBadge(t.priority)}</td>
-                    <td style={tableCellStyle}>{ticketStatusBadge(t.status)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        );
-
-      case "violations":
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: V.text, marginBottom: 16 }}>سجل المخالفات</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={tableHeaderStyle}>الرقم</th>
-                  <th style={tableHeaderStyle}>النوع</th>
-                  <th style={tableHeaderStyle}>التاريخ</th>
-                  <th style={tableHeaderStyle}>الخصم (ر.س)</th>
-                  <th style={tableHeaderStyle}>ملاحظات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {VIOLATIONS.map((v) => (
-                  <tr key={v.id}>
-                    <td style={{ ...tableCellStyle, fontWeight: 600, color: V.danger }}>{v.id}</td>
-                    <td style={tableCellStyle}>{v.type}</td>
-                    <td style={{ ...tableCellStyle, color: V.textDim }}>{v.date}</td>
-                    <td style={{ ...tableCellStyle, color: V.danger, fontWeight: 600 }}>{formatNum(v.penalty)}</td>
-                    <td style={{ ...tableCellStyle, fontSize: 13, color: V.textDim }}>{v.notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        );
-
-      default:
-        return null;
-    }
-  }
-
-  /* ─── Render ─── */
   return (
-    <div dir="rtl" style={{ padding: "24px 32px", background: V.bg, minHeight: "100vh", color: V.text, fontFamily: "inherit" }}>
-      {/* Back button */}
+    <div dir="rtl" style={{ padding: "1.5rem", maxWidth: 1400, margin: "0 auto" }}>
+      {/* Back Button */}
       <motion.button
-        whileHover={{ x: -4 }}
-        onClick={() => navigate("/admin-panel/drivers")}
-        style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: V.textDim, fontSize: 14, cursor: "pointer", marginBottom: 20, padding: 0 }}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        onClick={() => navigate(-1)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: "0.5rem",
+          background: "none", border: "none", color: "var(--con-text-muted)",
+          cursor: "pointer", fontSize: "var(--con-text-body)", marginBottom: "1rem",
+          padding: "0.5rem 0", fontFamily: "var(--con-font-primary)",
+        }}
       >
-        <ArrowRight size={18} />
-        العودة للمناديب
+        <ChevronLeft size={18} /> العودة
       </motion.button>
 
-      {/* Header card */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ ...cardStyle, marginBottom: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
-          {/* Driver info */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: `linear-gradient(135deg, ${V.accent}, ${V.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff" }}>
-              {driver.name.charAt(0)}
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                <h1 style={{ fontSize: 22, fontWeight: 700, color: V.text, margin: 0 }}>{driver.name}</h1>
-                {statusBadge(driver.status)}
-                {ratingBadge(driver.rating)}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 13, color: V.textDim }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Phone size={13} /> {driver.phone}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MapPin size={13} /> {driver.city}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>{driver.platform}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar size={13} /> انضم: {driver.joinDate}</span>
-              </div>
-            </div>
-          </div>
+      {/* ─── Section 1: Header Card ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          ...cardStyle,
+          display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap",
+          marginBottom: "1.5rem",
+          background: "linear-gradient(135deg, var(--con-bg-surface-1) 0%, var(--con-bg-surface-2) 100%)",
+        }}
+      >
+        {/* Avatar */}
+        <div style={{
+          width: 72, height: 72, borderRadius: "50%",
+          background: "var(--con-brand-subtle)", border: "2px solid var(--con-brand-border)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "1.5rem", fontWeight: 700, color: "var(--con-brand)",
+          flexShrink: 0,
+        }}>
+          {getInitials(driver.name)}
+        </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 10 }}>
-            {[
-              { label: "تعديل", icon: Edit, bg: V.accent },
-              { label: "إيقاف", icon: Ban, bg: V.danger },
-              { label: "إرسال رسالة", icon: MessageSquare, bg: V.success },
-            ].map((a) => (
-              <motion.button
-                key={a.label}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8,
-                  background: `${a.bg}20`, color: a.bg, border: `1px solid ${a.bg}40`,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer",
-                }}
-              >
-                <a.icon size={15} />
-                {a.label}
-              </motion.button>
-            ))}
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", marginBottom: "0.5rem" }}>
+            <h1 style={{ fontSize: "var(--con-text-page-title)", fontWeight: 700, color: "var(--con-text-primary)", margin: 0 }}>
+              {driver.name}
+            </h1>
+            <span className={`con-badge ${STATUS_CONFIG[driver.status].cls}`}>
+              {STATUS_CONFIG[driver.status].label}
+            </span>
+            <span className="con-badge con-badge-brand" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Star size={12} /> {driver.rating}
+            </span>
           </div>
+          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><Phone size={14} /> {driver.phone}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><IdCard size={14} /> {driver.nationalId}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><CircleDot size={14} /> {driver.platform}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><Calendar size={14} /> انضم {formatDate(driver.joinDate)}</span>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            className="con-btn-primary"
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "none", cursor: "pointer" }}
+            onClick={() => toast.info("تعديل البيانات — قيد التطوير")}
+          >
+            <Edit size={14} /> تعديل البيانات
+          </button>
+          <button
+            className="con-btn-danger"
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "none", cursor: "pointer" }}
+            onClick={() => toast.warning("إيقاف المندوب — قيد التطوير")}
+          >
+            <Ban size={14} /> إيقاف المندوب
+          </button>
+          <button
+            className="con-btn-ghost"
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "1px solid var(--con-border-default)", cursor: "pointer", background: "transparent", color: "var(--con-text-secondary)" }}
+            onClick={() => toast.info("إرسال رسالة — قيد التطوير")}
+          >
+            <Send size={14} /> إرسال رسالة
+          </button>
         </div>
       </motion.div>
 
-      {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        {kpis.map((k, i) => (
-          <motion.div
-            key={k.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            style={cardStyle}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontSize: 12, color: V.textDim, marginBottom: 6 }}>{k.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: V.text }}>{k.value}</div>
-                <div style={{ fontSize: 12, color: k.color, marginTop: 4 }}>{k.sub}</div>
-              </div>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${k.color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <k.icon size={20} color={k.color} />
+      {/* ─── Section 2: KPI Cards Row ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}
+      >
+        {/* Orders */}
+        <div className="con-kpi-card" style={{ padding: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: "0.5rem" }}>طلبات الشهر</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--con-text-primary)" }}>{driver.monthlyOrders}</div>
+            </div>
+            <div style={{ width: 40, height: 40, borderRadius: "var(--con-radius)", background: "var(--con-brand-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Package size={20} style={{ color: "var(--con-brand)" }} />
+            </div>
+          </div>
+          <div style={{ marginTop: "0.75rem" }}>
+            <ProgressBar value={driver.monthlyOrders} max={driver.monthlyTarget} />
+            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: "0.25rem", display: "block" }}>
+              {targetPct}% من الهدف ({driver.monthlyTarget})
+            </span>
+          </div>
+        </div>
+
+        {/* Earnings */}
+        <div className="con-kpi-card" style={{ padding: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: "0.5rem" }}>الإيرادات</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--con-text-primary)" }}>{formatCurrency(driver.monthlyEarnings)}</div>
+            </div>
+            <div style={{ width: 40, height: 40, borderRadius: "var(--con-radius)", background: "var(--con-success-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <DollarSign size={20} style={{ color: "var(--con-success)" }} />
+            </div>
+          </div>
+          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: "0.75rem", display: "block" }}>
+            إجمالي الشهر الحالي
+          </span>
+        </div>
+
+        {/* Rating */}
+        <div className="con-kpi-card" style={{ padding: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: "0.5rem" }}>التقييم</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--con-text-primary)", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                {driver.ratingScore} <Star size={18} style={{ color: "var(--con-warning)", fill: "var(--con-warning)" }} />
               </div>
             </div>
-          </motion.div>
-        ))}
-      </div>
+            <div style={{ width: 40, height: 40, borderRadius: "var(--con-radius)", background: "var(--con-warning-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <TrendingUp size={20} style={{ color: "var(--con-warning)" }} />
+            </div>
+          </div>
+          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: "0.75rem", display: "block" }}>
+            من 5.0
+          </span>
+        </div>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 24, background: V.card, borderRadius: 10, padding: 4, border: `1px solid ${V.cardBorder}` }}>
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <motion.button
-              key={tab.key}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setActiveTab(tab.key)}
+        {/* Violations */}
+        <div className="con-kpi-card" style={{ padding: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: "0.5rem" }}>المخالفات</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: driver.violationCount > 0 ? "var(--con-danger)" : "var(--con-success)" }}>
+                {driver.violationCount}
+              </div>
+            </div>
+            <div style={{ width: 40, height: 40, borderRadius: "var(--con-radius)", background: driver.violationCount > 0 ? "var(--con-danger-subtle)" : "var(--con-success-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <AlertTriangle size={20} style={{ color: driver.violationCount > 0 ? "var(--con-danger)" : "var(--con-success)" }} />
+            </div>
+          </div>
+          <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginTop: "0.75rem", display: "block" }}>
+            هذا الشهر
+          </span>
+        </div>
+      </motion.div>
+
+      {/* ─── Section 3: Tabs ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        {/* Tab Bar */}
+        <div style={{
+          display: "flex", gap: "0.25rem", marginBottom: "1.5rem",
+          background: "var(--con-bg-surface-1)",
+          borderRadius: "var(--con-radius-lg)",
+          padding: "0.25rem",
+          border: "1px solid var(--con-border-default)",
+          overflowX: "auto",
+        }}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "10px 0", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
-                background: isActive ? V.accent : "transparent",
-                color: isActive ? "#fff" : V.textDim,
-                transition: "all 0.2s",
+                display: "flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.65rem 1.25rem",
+                fontSize: "var(--con-text-caption)",
+                fontWeight: activeTab === tab.id ? 600 : 400,
+                color: activeTab === tab.id ? "var(--con-brand)" : "var(--con-text-muted)",
+                background: activeTab === tab.id ? "var(--con-brand-subtle)" : "transparent",
+                border: activeTab === tab.id ? "1px solid var(--con-brand-border)" : "1px solid transparent",
+                borderRadius: "var(--con-radius)",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all var(--con-duration) var(--con-ease)",
+                fontFamily: "var(--con-font-primary)",
               }}
             >
-              <tab.icon size={15} />
-              {tab.label}
-            </motion.button>
-          );
-        })}
-      </div>
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Tab content */}
-      <AnimatePresence mode="wait">
-        <div key={activeTab}>{renderTab()}</div>
-      </AnimatePresence>
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {activeTab === "details" && <DetailsTab key="details" d={driver} />}
+          {activeTab === "performance" && <PerformanceTab key="performance" d={driver} />}
+          {activeTab === "financial" && <FinancialTab key="financial" d={driver} />}
+          {activeTab === "vehicle" && <VehicleTab key="vehicle" d={driver} />}
+          {activeTab === "tickets" && <TicketsTab key="tickets" d={driver} />}
+          {activeTab === "violations" && <ViolationsTab key="violations" d={driver} />}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

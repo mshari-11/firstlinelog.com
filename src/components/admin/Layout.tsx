@@ -7,11 +7,12 @@ import { useEffect, useState, useMemo } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { useNotificationStore } from "@/stores/useNotificationStore";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { AdminSidebar } from "./Sidebar";
 import { AdminAiAssistant } from "./AiAssistant";
 import { CommandPalette } from "./CommandPalette";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, Menu, X } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -199,12 +200,28 @@ export function AdminLayout() {
     );
   }
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   if (!user || !["admin", "owner", "staff"].includes(user.role)) return null;
 
   return (
     <div className="fll-console" dir="rtl" style={{ display: "flex" }}>
       <CommandPalette />
       <AdminSidebar />
+      {/* Mobile overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="con-sidebar-overlay"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 99,
+            display: "none",
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
       <main className="con-main">
         {/* Top Bar */}
         <div
@@ -221,6 +238,28 @@ export function AdminLayout() {
             backdropFilter: "blur(12px)",
           }}
         >
+          {/* Mobile menu toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="mobile-menu-btn"
+            style={{
+              display: "none",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid var(--con-border-default)",
+              background: "var(--con-bg-surface-2)",
+              cursor: "pointer",
+              marginInlineEnd: 8,
+              flexShrink: 0,
+            }}
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+          <style>{`.mobile-menu-btn { display: none !important; } @media (max-width: 768px) { .mobile-menu-btn { display: flex !important; } }`}</style>
+
           {/* Breadcrumbs */}
           <Breadcrumb>
             <BreadcrumbList>
@@ -299,7 +338,9 @@ export function AdminLayout() {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: [0.22, 0.68, 0, 1] }}
           >
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>

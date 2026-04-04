@@ -22,8 +22,6 @@ import {
   TimerOff,
   Maximize,
   Minimize,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 
 // Widgets

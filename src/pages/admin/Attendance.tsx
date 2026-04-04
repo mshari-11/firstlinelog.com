@@ -4,7 +4,6 @@ import {
   Search,
   RefreshCw,
   AlertCircle,
-  ClockIcon,
   UserCheck,
   UserX,
   Users,
@@ -42,6 +41,7 @@ interface AttendanceEntry {
   checkIn: string;
   checkOut: string;
   status: AttendanceStatus;
+  date: string;
 }
 
 const STATUS_MAP: Record<AttendanceStatus, { label: string; cls: string }> = {
@@ -49,6 +49,9 @@ const STATUS_MAP: Record<AttendanceStatus, { label: string; cls: string }> = {
   late: { label: "متأخر", cls: "con-badge-warning" },
   absent: { label: "غائب", cls: "con-badge-danger" },
 };
+
+const TODAY = new Date().toISOString().slice(0, 10);
+const YESTERDAY = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
 const MOCK: AttendanceEntry[] = [
   {
@@ -58,6 +61,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "07:55",
     checkOut: "16:05",
     status: "present",
+    date: TODAY,
   },
   {
     id: "ATT-002",
@@ -66,6 +70,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "08:00",
     checkOut: "16:00",
     status: "present",
+    date: TODAY,
   },
   {
     id: "ATT-003",
@@ -74,6 +79,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "08:35",
     checkOut: "16:10",
     status: "late",
+    date: TODAY,
   },
   {
     id: "ATT-004",
@@ -82,6 +88,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "07:50",
     checkOut: "16:00",
     status: "present",
+    date: YESTERDAY,
   },
   {
     id: "ATT-005",
@@ -90,6 +97,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "—",
     checkOut: "—",
     status: "absent",
+    date: TODAY,
   },
   {
     id: "ATT-006",
@@ -98,6 +106,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "08:20",
     checkOut: "16:00",
     status: "late",
+    date: YESTERDAY,
   },
   {
     id: "ATT-007",
@@ -106,6 +115,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "07:45",
     checkOut: "16:30",
     status: "present",
+    date: TODAY,
   },
   {
     id: "ATT-008",
@@ -114,6 +124,7 @@ const MOCK: AttendanceEntry[] = [
     checkIn: "—",
     checkOut: "—",
     status: "absent",
+    date: YESTERDAY,
   },
 ];
 
@@ -122,6 +133,8 @@ export default function Attendance() {
   const [data, setData] = useState<AttendanceEntry[]>(MOCK);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<AttendanceStatus | "all">("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [checkinForm, setCheckinForm] = useState({
@@ -152,6 +165,7 @@ export default function Attendance() {
             checkIn: r.check_in || "—",
             checkOut: r.check_out || "—",
             status: r.status || (r.check_in ? (r.check_in > "08:15" ? "late" : "present") : "absent"),
+            date: r.date || new Date().toISOString().slice(0, 10),
           })));
           setLoading(false);
           return;
@@ -173,6 +187,8 @@ export default function Attendance() {
     const matchSearch =
       a.name.includes(search) || a.department.includes(search);
     const matchFilter = filter === "all" || a.status === filter;
+    if (dateFrom && a.date < dateFrom) return false;
+    if (dateTo && a.date > dateTo) return false;
     return matchSearch && matchFilter;
   });
 
@@ -334,6 +350,38 @@ export default function Attendance() {
             placeholder="بحث..."
             className="con-input"
             style={{ paddingInlineEnd: 32, width: "100%" }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <label style={{ fontSize: 12, color: "var(--con-text-muted)", whiteSpace: "nowrap" }}>من</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            style={{
+              background: "var(--con-bg, #07111d)",
+              border: "1px solid var(--con-border, #1a3a52)",
+              borderRadius: 8,
+              padding: "6px 12px",
+              color: "var(--con-text, #e2e8f0)",
+              fontSize: 13,
+              fontFamily: "inherit",
+            }}
+          />
+          <label style={{ fontSize: 12, color: "var(--con-text-muted)", whiteSpace: "nowrap" }}>إلى</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            style={{
+              background: "var(--con-bg, #07111d)",
+              border: "1px solid var(--con-border, #1a3a52)",
+              borderRadius: 8,
+              padding: "6px 12px",
+              color: "var(--con-text, #e2e8f0)",
+              fontSize: 13,
+              fontFamily: "inherit",
+            }}
           />
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -626,6 +674,7 @@ export default function Attendance() {
                           ? checkinForm.time
                           : "—",
                       status: "present",
+                      date: new Date().toISOString().slice(0, 10),
                     };
                     setData((prev) => [next, ...prev]);
                   }

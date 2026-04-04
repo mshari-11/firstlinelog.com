@@ -31,6 +31,7 @@ import {
   X,
   Save,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   KPICard,
   ChartCard,
@@ -634,9 +635,27 @@ export default function RevenueAnalysis() {
                   color: "#fff",
                   gap: 6,
                 }}
-                onClick={() => {
+                onClick={async () => {
                   if (!addForm.platform || !addForm.amount) return;
                   const amt = parseFloat(addForm.amount);
+                  try {
+                    if (supabase) {
+                      const { error } = await supabase
+                        .from("finance.revenue_entries")
+                        .insert({
+                          platform: addForm.platform,
+                          amount: amt,
+                          date: addForm.date || null,
+                          notes: addForm.notes || null,
+                          created_at: new Date().toISOString(),
+                        });
+                      if (error) throw error;
+                      toast.success("تم الحفظ بنجاح");
+                    }
+                  } catch {
+                    toast.error("فشل الحفظ — تم الحفظ محلياً فقط");
+                  }
+                  // Always update local state as fallback
                   setPlatformRevenueData((prev) => {
                     const existing = prev.find(
                       (p) => p.platform === addForm.platform,

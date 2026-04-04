@@ -846,7 +846,12 @@ export default function AdminCouriers() {
                               color: "var(--con-text-primary)",
                             }}
                           >
-                            {courier.full_name}
+                            <span
+                              onClick={() => navigate(`/admin-panel/driver-profile/${courier.id}`)}
+                              style={{ cursor: "pointer", color: "var(--con-brand)", textDecoration: "underline" }}
+                            >
+                              {courier.full_name}
+                            </span>
                           </span>
                         </div>
                       </td>

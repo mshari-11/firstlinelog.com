@@ -154,14 +154,33 @@ function ExpenseModal({
     date: new Date().toISOString().split("T")[0],
   });
 
-  function handleSave() {
+  async function handleSave() {
     const amount = Number(formData.amount);
     if (!formData.description || !amount || amount <= 0) {
       toast.error("يرجى تعبئة جميع الحقول بشكل صحيح");
       return;
     }
+    try {
+      if (supabase) {
+        const { error } = await supabase
+          .from("finance.expense_entries")
+          .insert({
+            category: formData.category,
+            description: formData.description,
+            amount,
+            date: formData.date || null,
+            created_at: new Date().toISOString(),
+          });
+        if (error) throw error;
+        toast.success("تم الحفظ بنجاح");
+      } else {
+        toast.success("تم إضافة المصروف بنجاح");
+      }
+    } catch {
+      toast.error("فشل الحفظ — تم الحفظ محلياً فقط");
+    }
+    // Always update local state as fallback
     onSave({ ...formData, amount });
-    toast.success("تم إضافة المصروف بنجاح");
     onClose();
   }
 

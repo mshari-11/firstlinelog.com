@@ -34,6 +34,7 @@ import {
   X,
   Save,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   KPICard,
   ChartCard,
@@ -1114,9 +1115,28 @@ export default function CashFlowAnalysis() {
                   color: "#fff",
                   gap: 6,
                 }}
-                onClick={() => {
+                onClick={async () => {
                   if (!addForm.amount) return;
                   const amt = parseFloat(addForm.amount);
+                  try {
+                    if (supabase) {
+                      const { error } = await supabase
+                        .from("finance.cashflow_entries")
+                        .insert({
+                          type: addForm.type === "inflow" ? "in" : "out",
+                          category: addForm.category || null,
+                          amount: amt,
+                          date: addForm.date || null,
+                          notes: addForm.description || null,
+                          created_at: new Date().toISOString(),
+                        });
+                      if (error) throw error;
+                      toast.success("تم الحفظ بنجاح");
+                    }
+                  } catch {
+                    toast.error("فشل الحفظ — تم الحفظ محلياً فقط");
+                  }
+                  // Always update local state as fallback
                   setManualTransactions((prev) => [
                     ...prev,
                     {

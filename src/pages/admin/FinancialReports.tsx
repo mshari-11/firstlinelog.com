@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import {
   FileText,
   Download,
@@ -170,6 +171,65 @@ const cityPerformance: ReportData = {
   },
 };
 
+// ─── Export helpers ──────────────────────────────────────────────────────────
+
+function getReportTableData(report: ReportData): { headers: string[]; rows: string[][]; excelData: Record<string, unknown>[] } {
+  const d = report.data;
+  if (report.title === "بيان الدخل") {
+    const headers = ["البند", "المبلغ (ر.س)"];
+    const rows = [
+      ["إيرادات جاهز", d.revenue.platforms.jahez.toLocaleString("ar-SA")],
+      ["إيرادات مرسول", d.revenue.platforms.maroul.toLocaleString("ar-SA")],
+      ["إيرادات نون", d.revenue.platforms.noon.toLocaleString("ar-SA")],
+      ["إيرادات صاحب", d.revenue.platforms.sahib.toLocaleString("ar-SA")],
+      ["إيرادات أخرى", d.revenue.platforms.other.toLocaleString("ar-SA")],
+      ["إجمالي الإيرادات", d.revenue.total.toLocaleString("ar-SA")],
+      ["مدفوعات السائقين", d.expenses.driverPayments.toLocaleString("ar-SA")],
+      ["رسوم المنصات", d.expenses.platformFees.toLocaleString("ar-SA")],
+      ["وقود وصيانة", d.expenses.fuelMaintenance.toLocaleString("ar-SA")],
+      ["تأمين", d.expenses.insurance.toLocaleString("ar-SA")],
+      ["إدارية", d.expenses.admin.toLocaleString("ar-SA")],
+      ["صافي الدخل", d.netIncome.toLocaleString("ar-SA")],
+    ];
+    const excelData = rows.map(([item, amount]) => ({ البند: item, "المبلغ (ر.س)": amount }));
+    return { headers, rows, excelData };
+  }
+  if (report.title === "تقرير الأرباح والخسائر") {
+    const headers = ["البند", "المبلغ (ر.س)", "النسبة"];
+    const rows = [
+      ["الإيرادات", d.revenue.toLocaleString("ar-SA"), "100%"],
+      ["تكلفة المبيعات", d.cogs.toLocaleString("ar-SA"), ""],
+      ["إجمالي الربح", d.grossProfit.toLocaleString("ar-SA"), d.grossMargin],
+      ["المصاريف التشغيلية", d.operatingExpenses.toLocaleString("ar-SA"), ""],
+      ["الدخل التشغيلي", d.operatingIncome.toLocaleString("ar-SA"), d.operatingMargin],
+      ["صافي الدخل", d.netIncome.toLocaleString("ar-SA"), d.netMargin],
+    ];
+    const excelData = rows.map(([item, amount, pct]) => ({ البند: item, "المبلغ (ر.س)": amount, النسبة: pct }));
+    return { headers, rows, excelData };
+  }
+  if (report.title === "تحليل الإيرادات") {
+    const headers = ["المنصة", "الإيرادات (ر.س)", "النسبة", "النمو"];
+    const rows = d.byPlatform.map((p: any) => [p.name, p.revenue.toLocaleString("ar-SA"), `${p.percentage}%`, `${p.growth}%`]);
+    const excelData = rows.map(([name, rev, pct, growth]: string[]) => ({ المنصة: name, "الإيرادات (ر.س)": rev, النسبة: pct, النمو: growth }));
+    return { headers, rows, excelData };
+  }
+  // City performance
+  const headers = ["المدينة", "الإيرادات (ر.س)", "الطلبات", "المناديب", "النمو", "أفضل منصة"];
+  const rows = d.cities.map((c: any) => [c.name, c.revenue.toLocaleString("ar-SA"), String(c.orders), String(c.couriers), `${c.growth}%`, c.topPlatform]);
+  const excelData = rows.map(([city, rev, orders, couriers, growth, platform]: string[]) => ({ المدينة: city, "الإيرادات (ر.س)": rev, الطلبات: orders, المناديب: couriers, النمو: growth, "أفضل منصة": platform }));
+  return { headers, rows, excelData };
+}
+
+function handleReportPDF(report: ReportData) {
+  const { headers, rows } = getReportTableData(report);
+  exportToPDF(report.title + " — " + report.period, headers, rows, report.title);
+}
+
+function handleReportExcel(report: ReportData) {
+  const { excelData } = getReportTableData(report);
+  exportToExcel(excelData, report.title, report.title);
+}
+
 // ─── Report Section Component ─────────────────────────────────────────────────
 interface ReportSectionProps {
   title: string;
@@ -260,6 +320,7 @@ function ReportCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            handleReportPDF(report);
           }}
           style={{
             flex: 1,
@@ -290,6 +351,7 @@ function ReportCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            handleReportExcel(report);
           }}
           style={{
             flex: 1,
@@ -1029,7 +1091,7 @@ export default function FinancialReports() {
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button
-                onClick={() => {}}
+                onClick={() => handleReportPDF(selectedReport)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -1048,7 +1110,7 @@ export default function FinancialReports() {
                 تحميل PDF
               </button>
               <button
-                onClick={() => {}}
+                onClick={() => handleReportExcel(selectedReport)}
                 style={{
                   display: "flex",
                   alignItems: "center",

@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { exportFinanceToExcel, exportToPDF } from "@/lib/exportUtils";
 import {
   DollarSign,
   CheckCircle2,
@@ -1014,14 +1015,40 @@ export default function Finance() {
         </div>
 
         {/* Export */}
-        <button
-          className="con-btn-ghost"
-          style={{ marginInlineStart: "auto" }}
-          onClick={exportFinanceCsv}
-        >
-          <Download size={14} />
-          تصدير
-        </button>
+        <div style={{ marginInlineStart: "auto", display: "flex", gap: 6 }}>
+          <button
+            className="con-btn-ghost"
+            onClick={() => exportFinanceToExcel(filtered as any, "finance-report")}
+          >
+            <Download size={14} />
+            Excel
+          </button>
+          <button
+            className="con-btn-ghost"
+            onClick={() => {
+              const headers = ["المندوب", "بداية الفترة", "نهاية الفترة", "إجمالي الإيرادات", "صافي المستحق", "الحالة"];
+              const rows = filtered.map((r) => [
+                r.courier_name || "",
+                r.period_start,
+                r.period_end,
+                r.gross_revenue.toLocaleString("ar-SA"),
+                r.net_payout.toLocaleString("ar-SA"),
+                r.payment_status,
+              ]);
+              exportToPDF("التقرير المالي", headers, rows, "finance-report");
+            }}
+          >
+            <Download size={14} />
+            PDF
+          </button>
+          <button
+            className="con-btn-ghost"
+            onClick={exportFinanceCsv}
+          >
+            <Download size={14} />
+            CSV
+          </button>
+        </div>
       </div>
 
       {/* Table */}

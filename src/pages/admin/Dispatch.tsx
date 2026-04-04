@@ -485,6 +485,77 @@ export default function Dispatch() {
     };
   }, []);
 
+  // ── Supabase Realtime: live driver location updates ──────────────────────
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel("driver_locations_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "driver_locations" },
+        (payload: any) => {
+          const loc = payload.new;
+          if (!loc) return;
+          setDrivers((prev) =>
+            prev.map((d) =>
+              String(d.id) === String(loc.driver_id)
+                ? {
+                    ...d,
+                    lat: Number(loc.latitude),
+                    lng: Number(loc.longitude),
+                    status: loc.is_online ? d.status === "offline" ? "available" : d.status : "offline",
+                  }
+                : d,
+            ),
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // ── Auto-assign: find nearest available driver for a pending order ───────
+  function findNearestDriver(order: Order): Driver | null {
+    const availableDrivers = drivers.filter((d) => d.status === "available");
+    if (availableDrivers.length === 0) return null;
+    let nearest: Driver | null = null;
+    let minDist = Infinity;
+    for (const d of availableDrivers) {
+      const dlat = d.lat - order.lat;
+      const dlng = d.lng - order.lng;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = d;
+      }
+    }
+    return nearest;
+  }
+
+  async function autoAssignOrder(orderId: string) {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    const nearest = findNearestDriver(order);
+    if (!nearest) {
+      setApiError("لا يوجد سائقين متاحين حالياً");
+      return;
+    }
+    await assignOrder(orderId, nearest.id);
+    flyTo(nearest.lat, nearest.lng);
+  }
+
+  async function autoAssignAllPending() {
+    const pendingOrders = orders.filter((o) => o.status === "pending");
+    for (const order of pendingOrders) {
+      const nearest = findNearestDriver(order);
+      if (nearest) {
+        await assignOrder(order.id, nearest.id);
+      }
+    }
+  }
+
   // KPIs
   const available = drivers.filter((d) => d.status === "available").length;
   const pending = orders.filter((o) => o.status === "pending").length;
@@ -719,6 +790,26 @@ export default function Dispatch() {
           >
             <Plus size={12} /> إنشاء مهمة إرسال
           </button>
+          {pending > 0 && (
+            <button
+              onClick={autoAssignAllPending}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.375rem",
+                padding: "0.3rem 0.625rem",
+                borderRadius: "var(--con-radius-sm)",
+                fontSize: "12px",
+                fontWeight: 600,
+                border: "none",
+                cursor: "pointer",
+                background: "var(--con-success, #16A34A)",
+                color: "#fff",
+              }}
+            >
+              <Zap size={12} /> إسناد تلقائي ({pending})
+            </button>
+          )}
           <button
             onClick={() => setRefreshTick((v) => v + 1)}
             style={{
@@ -1294,20 +1385,46 @@ export default function Dispatch() {
                                 لا يوجد سائق متاح حالياً
                               </p>
                             ) : (
-                              <Combobox
-                                options={drivers
-                                  .filter((d) => d.status === "available")
-                                  .map((d) => ({
-                                    value: d.id,
-                                    label: `${d.name} — ${d.vehicle} (${d.rating})`,
-                                  }))}
-                                placeholder="اختر سائق..."
-                                searchPlaceholder="ابحث عن سائق..."
-                                emptyMessage="لا يوجد سائق مطابق"
-                                onValueChange={(driverId) => {
-                                  if (driverId) assignOrder(order.id, driverId);
-                                }}
-                              />
+                              <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+                                <div style={{ flex: 1 }}>
+                                  <Combobox
+                                    options={drivers
+                                      .filter((d) => d.status === "available")
+                                      .map((d) => ({
+                                        value: d.id,
+                                        label: `${d.name} — ${d.vehicle} (${d.rating})`,
+                                      }))}
+                                    placeholder="اختر سائق..."
+                                    searchPlaceholder="ابحث عن سائق..."
+                                    emptyMessage="لا يوجد سائق مطابق"
+                                    onValueChange={(driverId) => {
+                                      if (driverId) assignOrder(order.id, driverId);
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    autoAssignOrder(order.id);
+                                  }}
+                                  title="إسناد لأقرب سائق تلقائياً"
+                                  style={{
+                                    padding: "0.375rem",
+                                    borderRadius: "var(--con-radius-sm)",
+                                    border: "1px solid var(--con-success, #16A34A)",
+                                    background: "rgba(22,163,74,0.1)",
+                                    color: "var(--con-success, #16A34A)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.25rem",
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  <Zap size={12} /> أقرب
+                                </button>
+                              </div>
                             )}
                           </div>
                         )}

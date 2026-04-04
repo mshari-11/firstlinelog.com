@@ -5,6 +5,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useDashboardStats } from "@/lib/hooks/useDashboardStats";
 import {
   Package,
   Users,
@@ -232,12 +233,63 @@ function QuickActionGroup({
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const dashStats = useDashboardStats();
   const [ordersLoading, setOrdersLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const t = setTimeout(() => setOrdersLoading(false), 800);
+    const t = setTimeout(() => setOrdersLoading(false), dashStats.loading ? 1500 : 800);
     return () => clearTimeout(t);
-  }, []);
+  }, [dashStats.loading]);
+
+  // Build dynamic stats from hook
+  const liveStats = [
+    {
+      title: "إجمالي الطلبات",
+      value: dashStats.totalOrders.toLocaleString("ar-SA"),
+      change: `${dashStats.totalOrdersChange > 0 ? "+" : ""}${dashStats.totalOrdersChange}%`,
+      trend: dashStats.totalOrdersChange >= 0 ? "up" : "down",
+      icon: Package,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      link: "/admin/orders",
+      tip: "عدد الطلبات الكلي من بداية التشغيل",
+    },
+    {
+      title: "السائقين النشطين",
+      value: dashStats.activeDrivers.toLocaleString("ar-SA"),
+      change: `${dashStats.activeDriversChange > 0 ? "+" : ""}${dashStats.activeDriversChange}%`,
+      trend: dashStats.activeDriversChange >= 0 ? "up" : "down",
+      icon: Users,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      link: "/admin/drivers",
+      tip: "السائقين الذين أكملوا طلب واحد على الأقل خلال 30 يوم",
+    },
+    {
+      title: "الإير��دات الشهرية",
+      value: dashStats.monthlyRevenue >= 1_000_000
+        ? `${(dashStats.monthlyRevenue / 1_000_000).toFixed(1)}M ر.س`
+        : `${(dashStats.monthlyRevenue / 1_000).toFixed(0)}K ر.س`,
+      change: `${dashStats.monthlyRevenueChange > 0 ? "+" : ""}${dashStats.monthlyRevenueChange}%`,
+      trend: dashStats.monthlyRevenueChange >= 0 ? "up" : "down",
+      icon: TrendingUp,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      link: "/admin-panel/finance",
+      tip: "إجمالي الإيرادات للشهر الحالي من جميع المنصات",
+    },
+    {
+      title: "متوسط وقت التسليم",
+      value: `${dashStats.avgDeliveryTime} دقيقة`,
+      change: `${dashStats.avgDeliveryTimeChange > 0 ? "+" : ""}${dashStats.avgDeliveryTimeChange}%`,
+      trend: dashStats.avgDeliveryTimeChange <= 0 ? "up" : "down",
+      icon: Clock,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      link: "/admin/reports",
+      tip: "متوسط الوقت من استلام الطلب حتى تسليمه للعميل",
+    },
+  ];
 
   return (
     <motion.div
@@ -273,7 +325,7 @@ export default function AdminDashboard() {
 
       {/* الإحصائيات */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, i) => (
+        {liveStats.map((stat, i) => (
           <motion.div key={stat.title} variants={item}>
             <Card
               className={`hover:shadow-md transition-shadow ${stat.link ? "cursor-pointer hover:border-primary/40" : ""}`}
@@ -555,7 +607,7 @@ export default function AdminDashboard() {
                     <OrderSkeleton />
                   </>
                 ) : (
-                  recentOrders.map((order) => (
+                  dashStats.recentOrders.map((order) => (
                     <div
                       key={order.id}
                       className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
@@ -606,7 +658,7 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              {topCities.map((city) => (
+              {dashStats.topCities.map((city) => (
                 <div key={city.name} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{city.name}</span>

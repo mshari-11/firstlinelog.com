@@ -206,6 +206,9 @@ const PreviewOrders = lazy(() => import("@/pages/admin/preview/OrderTracking"));
 const PreviewAI = lazy(() => import("@/pages/admin/preview/AIAnalytics"));
 const PreviewCommission = lazy(() => import("@/pages/admin/preview/CommissionSetup"));
 
+// ── Staging (dev preview — no auth) ──────────────────────────────────────────
+const StagingDashboard = lazy(() => import("@/pages/staging/Dashboard"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -605,10 +608,21 @@ export default function App() {
                   </PermissionGuard>
                 }
               />
-              <Route path="help-guide" element={<HelpGuide />} />
+              <Route
+                path="help-guide"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <HelpGuide />
+                  </AccessGuard>
+                }
+              />
               <Route
                 path="driver-classifications"
-                element={<DriverClassifications />}
+                element={
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <DriverClassifications />
+                  </AccessGuard>
+                }
               />
               <Route
                 path="payroll-management"
@@ -829,6 +843,20 @@ export default function App() {
             <Route path="/courier/register" element={<CourierRegister />} />
             <Route path="/courier/portal" element={<CourierPortal />} />
             <Route path="/application-status" element={<ApplicationStatus />} />
+
+            {/* ══════════════════════════════════════════════════════════════
+                STAGING (dev preview — no auth, safe sandbox)
+            ══════════════════════════════════════════════════════════════ */}
+            <Route
+              path="/staging"
+              element={
+                <AdminAuthProvider>
+                  <AdminLayout />
+                </AdminAuthProvider>
+              }
+            >
+              <Route path="dashboard" element={<StagingDashboard />} />
+            </Route>
 
             {/* ══════════════════════════════════════════════════════════════
                 FALLBACK

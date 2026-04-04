@@ -6,6 +6,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
+import { useNotificationStore } from "@/stores/useNotificationStore";
 import { AdminSidebar } from "./Sidebar";
 import { AdminAiAssistant } from "./AiAssistant";
 import { CommandPalette } from "./CommandPalette";
@@ -104,6 +105,8 @@ export function AdminLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime } =
+    useNotificationStore();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -113,6 +116,15 @@ export function AdminLayout() {
       navigate(user.role === "courier" ? "/courier/portal" : "/admin/login");
     }
   }, [user, loading, navigate]);
+
+  // Fetch notifications + subscribe to realtime on mount
+  useEffect(() => {
+    if (!loading && user) {
+      fetchNotifications();
+      subscribeToRealtime();
+      return () => unsubscribeFromRealtime();
+    }
+  }, [loading, user, fetchNotifications, subscribeToRealtime, unsubscribeFromRealtime]);
 
   const currentPage = useMemo(() => {
     const seg =

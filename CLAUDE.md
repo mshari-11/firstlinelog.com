@@ -1,144 +1,155 @@
-# CLAUDE.md — FLL Platform (firstlinelog.com)
+# FirstLine Logistics — Project Context
 
-## Project Overview
-First Line Logistics (FLL) web platform — internal operations dashboard for managing delivery riders, orders, and performance tracking.
+## Working Scope — Admin Panel ONLY
 
-- **Repo:** mshari-11/firstlinelog.com
-- **Deployed:** Vercel
-- **Stack:** React + Vite + JavaScript
+### Allowed (Work HERE)
+- `src/pages/admin/*` — All admin panel pages (operations, finance, vehicles, HR, couriers, orders, complaints, staff, dashboard, governance)
+- `src/components/admin/*` — Admin UI components, dashboard widgets, FinanceUI
+- `src/stores/*` — Zustand stores for admin features
+- `src/components/ui/*` — shadcn/ui components (NOT input-otp.tsx)
+- Supabase queries, Edge Functions, SQL migrations for admin features
+- Lambda functions for admin features (NOT auth Lambda)
 
----
+### FORBIDDEN (NEVER touch)
+- `index.html` — Static public website (design, images, content)
+- `public/*` — Static assets for marketing site
+- `src/pages/admin/Login.tsx` — Login page
+- `src/pages/UnifiedLogin.tsx` — Unified login page
+- `src/pages/ForgotPassword.tsx` — Password reset page
+- `src/pages/courier/Register.tsx` — Courier registration
+- `src/lib/otp-service.ts` — OTP service
+- `src/lib/admin/auth.tsx` — Auth context
+- `src/lib/cognito.ts` — Cognito SDK
+- `src/components/ui/input-otp.tsx` — OTP input component
+- `lambda-code/fll-auth-api/app.py` — Auth Lambda
+- `lambda-code/platform-api-prod.js` — Platform proxy
+- `sw.js` — Service worker
+- `vercel.json` — Vercel config (rewrites, headers)
+
+### Safety Rules
+- NEVER delete mock data from any admin page
+- NEVER drop/truncate Supabase tables — only ADD columns or tables
+- NEVER modify Cognito, SES, or IAM configurations
+- NEVER force push to main
+- Always `npm run build` before committing to verify no build errors
+- Always keep fallback mock data when wiring real API data
+
+## Stack
+
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS v4 + shadcn/ui (Radix)
+- **Backend**: Supabase (Auth + DB + Edge Functions) + AWS Lambda + SES
+- **Hosting**: Vercel (static + rewrites)
+- **Repo**: github.com/mshari-11/firstlinelog.com
 
 ## Architecture
 
-### Frontend
-- **Framework:** React + Vite
-- **Language:** JavaScript (JSX)
-- **Styling:** (to be confirmed — likely Tailwind or CSS modules)
-- **Routing:** React Router
-- **Deployment:** Vercel (auto-deploy from main branch)
+- Static public site: `/index.html` (root)
+- React SPA: `/spa.html` → builds to `/dist/`
+- Vercel rewrites admin/courier/login routes to `/dist/index`
+- Supabase handles auth + database
+- AWS Lambda for serverless functions (in `/lambda-code/`)
+- AWS SES for emails
 
-### Backend / Cloud (AWS)
-- **Auth:** AWS Cognito (OTP-based, email via SES)
-- **API:** API Gateway → Lambda functions
-- **Logs:** CloudWatch
-- **Region:** (confirm: me-south-1 or us-east-1?)
+## Key Paths
 
-### Auth Flow
-- User enters email → receives OTP via AWS SES → confirms OTP → Cognito issues tokens
-- Known issues: SES in Sandbox mode, Suppression List blocks some emails, SPF/DKIM/DMARC DNS records need verification
+- `/src/` — React SPA source
+- `/src/lib/supabase.ts` — Supabase client
+- `/src/lib/admin/auth.tsx` — Admin auth context
+- `/src/pages/admin/` — Admin panel pages
+- `/src/pages/courier/` — Courier portal pages
+- `/lambda-code/` — AWS Lambda functions
+- `/vercel.json` — Vercel rewrites & headers
+- `/vite.config.ts` — Vite config with SPA fallback
 
----
+## Commands
 
-## Naming Conventions (Claude-Suggested — confirm or override)
+- `npm run dev` — Start dev server
+- `npm run build` — Build for production
+- `vercel` — Deploy to Vercel
+- `vercel --prod` — Deploy to production
+- `aws lambda list-functions --region me-south-1` — List Lambda functions
+- `supabase status` — Check Supabase status
+- `git push origin main` — Push to GitHub
 
-### Files & Folders
-```
-src/
-├── components/        # Reusable UI pieces
-│   └── Button.jsx     # PascalCase for components
-├── pages/             # Route-level pages
-│   └── Dashboard.jsx  # PascalCase for pages
-├── hooks/             # Custom React hooks
-│   └── useAuth.js     # camelCase with "use" prefix
-├── services/          # API calls & external integrations
-│   └── authService.js # camelCase with "Service" suffix
-├── utils/             # Pure helper functions
-│   └── formatDate.js  # camelCase
-├── constants/         # Static values & config
-│   └── apiConfig.js   # camelCase
-└── context/           # React Context providers
-    └── AuthContext.jsx # PascalCase with "Context" suffix
-```
+## Environment Variables (required in .env.local)
 
-### Component Naming
-| Type | Convention | Example |
-|------|-----------|---------|
-| Component file | PascalCase | `RiderCard.jsx` |
-| Page file | PascalCase + "Page" suffix | `DashboardPage.jsx` |
-| Hook file | camelCase + "use" prefix | `useRiderData.js` |
-| Service file | camelCase + "Service" suffix | `riderService.js` |
-| Utility file | camelCase | `formatOrders.js` |
-| Constant file | camelCase | `riderConfig.js` |
+- `VITE_SUPABASE_URL` — Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` — Supabase anon key
 
-### Variables & Functions
-- Components: `PascalCase` → `RiderTable`
-- Functions: `camelCase` → `fetchRiderOrders()`
-- Constants: `UPPER_SNAKE_CASE` → `MAX_RIDERS_PER_PAGE`
-- Boolean vars: `is/has/can` prefix → `isLoading`, `hasError`, `canEdit`
+## Infrastructure (updated 2026-03-28)
 
----
+- **Lambda Functions**: 16 (Python 3.12 + Node.js 18.x) in `/lambda-code/`
+- **Supabase Edge Functions**: 35 in `/supabase/functions/`
+- **API Gateways**: 2 (HTTP API `k8d4arcxu4` ⚠️ BROKEN + REST API `qihrv9osed` OK)
+- **DynamoDB Tables**: 39 (all Active)
+- **S3 Buckets**: 17
+- **CloudWatch Alarms**: 37 (36 OK, 1 Insufficient data)
+- **Supabase Schemas**: public, finance, master, staging, ops, audit, admin, hr
+- **Admin Pages**: 54+ (all wired to real Supabase/API data with fallback)
+- **Governance Pages**: 7 (PermissionManager, FeatureToggles, WorkflowBuilder, SLAConfig, AuditDashboard, InfrastructureOverview, ApiManagement)
+- **Public Pages**: 20 (marketing + auth + courier)
+- **Legacy HTML**: 9 files → 301 redirects to SPA routes via vercel.json
 
-## Business Domain (FLL-Specific)
+## Conventions
 
-### Rider Categories
-- **كفالة (Kefala):** Sponsored riders — tracked via Ninja Captain CSVs
-- **حر (Freelance):** Freelance riders — tracked via 3PL Hunger Station CSV
+- Arabic RTL UI throughout — `dir="rtl"` on root containers
+- Path alias: `@/` → `./src/`
+- Admin pages use inline styles with `--con-*` CSS variables (NOT Tailwind classes)
+- Admin UI components: `PageWrapper, PageHeader, KPIGrid, Card, Table, Modal` from `@/components/admin/ui`
+- Finance UI: `ChartCard, StatusBadge, DataTable` from `@/components/admin/FinanceUI`
+- Zustand stores persist to localStorage with `fll_` prefix
+- All pages use `try/fetch/catch → keep fallback` pattern — mock data first, Supabase upgrade
+- Supabase client can be null — always guard with `if (!supabase)`
+- After completing any feature: `npm run build` → `git commit` → `git push origin main` (Vercel auto-deploys)
 
-### Key Metrics
-- Orders per rider (daily/weekly)
-- Attendance rate
-- Performance vs target
+## Service Worker Warning
 
-### Data Sources
-- Ninja Captain: cumulative data → use MAX across files
-- 3PL Hunger Station: cumulative data → use subtraction logic for daily increments
-- Kita Excel: attendance & base data
+- `sw.js` at root intercepts GET requests — SPA routes EXCLUDED (network-only)
+- Cache version: `fll-v2` — bump when changing SW behavior
+- Never cache: `/admin*`, `/unified-login`, `/login`, `/courier*`, `/dist/`
 
----
+## OTP System — LOCKED (DO NOT MODIFY)
 
-## Known Issues & Context
-- Cognito OTP emails sometimes blocked → check SES Suppression List first
-- API Gateway has had breaking changes → always verify endpoint URLs in AWS Console
-- Sidebar CSS layout issue → (describe fix here once resolved)
-- Vercel deployment: environment variables must be set in Vercel dashboard, not just .env
+⚠️ **CRITICAL: These files and configurations are LOCKED. DO NOT change, remove, or refactor them.**
+⚠️ **Any modification to OTP flow MUST be approved by the project owner first.**
 
----
+### Protected Files (NEVER modify without explicit permission):
 
-## Claude Behavior Guidelines
+- `src/lib/otp-service.ts` — OTP send/verify with dual fallback (API Gateway → Supabase Edge)
+- `src/lib/admin/auth.tsx` — Auth context, signIn, signOut, hasPermission
+- `src/lib/cognito.ts` — Cognito SDK wrapper (Pool: us-east-1_qHMox2NTB, Client: 4rqqpv12h8pco73oice3emavus)
+- `lambda-code/fll-auth-api/app.py` — Auth Lambda (12 routes, SES OTP, Cognito auth)
+- `lambda-code/platform-api-prod.js` — Proxy logic for /auth/\* → fll-auth-handler
 
-### Always
-- Use JavaScript (JSX), not TypeScript
-- Follow the naming conventions defined above
-- Keep components small and single-responsibility
-- Check if a utility function already exists in `/utils` before creating a new one
-- When touching AWS/Cognito code, note any SES or auth edge cases
+### OTP Configuration (LOCKED):
 
-### Never
-- Don't add TypeScript or convert JS files to TS
-- Don't change the Vite config without explaining why
-- Don't use `var` — use `const` and `let` only
-- Don't create files outside the `src/` structure without asking
+- Lambda: `fll-auth-handler` (Python 3.12, us-east-1)
+- IAM Role: `fll-lambda-execution-role` (SES + Cognito permissions)
+- SES: `no-reply@fll.sa` via me-south-1 (verified domain)
+- Supabase: `admin_otp_codes` table (stores OTP codes, 5-min expiry, rate limited)
+- API Routes: `/auth/send-otp`, `/auth/verify-custom-otp`, `/auth/forgot-password`
+- OTP Types: `login`, `register`, `reset_password`, `verify_email`, `driver_register`, `sensitive_action`
+- Component: `input-otp` (shadcn) — `src/components/ui/input-otp.tsx`
 
-### When Debugging AWS Issues
-1. Check CloudWatch logs first
-2. Verify environment variables in Vercel dashboard
-3. Confirm API Gateway endpoint is deployed (not just saved)
-4. Check Cognito User Pool settings before touching code
+### Pages using OTP (all working, DO NOT break):
 
----
+- `/unified-login` — Admin/Staff login (password → OTP → dashboard)
+- `/login` — Driver login (password → OTP → portal)
+- `/forgot-password` — Password reset (email → OTP → new password)
+- `/courier/register` — New courier registration (email → OTP → verify → submit)
 
-## Environment Variables (Vercel + Local)
-```
-VITE_COGNITO_USER_POOL_ID=
-VITE_COGNITO_CLIENT_ID=
-VITE_API_GATEWAY_URL=
-VITE_AWS_REGION=
-```
-> ⚠️ Never commit actual values. Always use Vercel dashboard for production secrets.
+### Cognito Groups (LOCKED):
 
----
+- `admin` group → role=admin → sees all 47 sidebar pages
+- `staff` group → role=staff → sees pages based on permissions
+- `owner` group → role=owner → sees all pages
 
-## Quick Commands
-```bash
-npm run dev          # Local development
-npm run build        # Production build
-npm run preview      # Preview production build locally
-```
+## Finance Engine (March 2026)
 
----
-
-*Last updated: April 2026 — update this file whenever architecture changes*
+- `finance.accounting_components` — additions/deductions rules (CRUD page)
+- `finance.payout_run_stages` — 5-stage approval (Finance→Ops→Fleet→HR→Final)
+- STC Bank Excel: Lambda `fll-generate-stc-excel`, 3 columns (Reference, Phone 966+, Amount)
+- `stc_bank_phone_local` (9 digits starting with 5) → auto `stc_bank_phone_int` (966XXXXXXXXX)
 
 ## Control Tower Dashboard
 
@@ -209,33 +220,3 @@ npm run preview      # Preview production build locally
 ### Edge Functions (39 total)
 - Cron: `pg_cron` + `pg_net` — daily-report 8AM + license-alerts 7AM Saudi time
 - auto-payroll, license-alerts, daily-report, vector-search (deployed + tested)
-
-## Testing & Quality (April 2026)
-
-### Playwright E2E Tests
-- Config: `playwright.config.ts` (chromium only)
-- Tests: `e2e/admin/` directory
-- Run: `npm run test:e2e` or `npm run test:e2e:ui`
-- Auth mocking: `e2e/helpers/auth-mock.ts` (localStorage injection)
-- Tested pages: Dashboard, Feedbacks, Settings, Navigation
-
-### Pyright Type Checking
-- Config: `pyrightconfig.json` (basic mode)
-- Scope: `src/` only (excludes lambda-code, supabase, e2e)
-- Run via Pyright LSP in editor
-
-### Custom Commands
-- `/deploy` — Build + commit + push (auto-deploy to Vercel)
-- `/review` — Code review of recent changes
-- `/db-check` — Supabase database health check
-- `/test` — Run full test suite (types + e2e + build)
-
-### API Documentation
-- Location: `docs/admin-panel-api.md`
-- Covers all admin panel API endpoints
-- Arabic descriptions with English endpoint paths
-
-### Code Review Reports
-- Location: `docs/code-review-*.md`
-- Generated per feature/sprint
-- Severity levels: 🔴 Critical, 🟡 Warning, 🟢 Info

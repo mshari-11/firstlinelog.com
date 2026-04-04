@@ -11,14 +11,14 @@
       body { background: #0f2744; }
       body.fll-dark { background: #0C0E14; }
     </style>
+  </head>
+  <body>
     <script>
       // Set dark bg immediately for admin panel routes
       if (location.pathname.indexOf('/admin-panel') === 0) {
         document.body.classList.add('fll-dark');
       }
     </script>
-  </head>
-  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

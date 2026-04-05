@@ -535,17 +535,17 @@ export default function App() {
                   </AccessGuard>
                 }
               />
-              {/* ── Preview Pages (prototype — no auth guard) ── */}
-              <Route path="preview-fuel" element={<PreviewFuel />} />
-              <Route path="preview-profit" element={<PreviewProfit />} />
-              <Route path="preview-settlement" element={<PreviewSettlement />} />
-              <Route path="preview-performance" element={<PreviewPerformance />} />
-              <Route path="preview-tracking" element={<PreviewTracking />} />
-              <Route path="preview-cash" element={<PreviewCash />} />
-              <Route path="preview-scheduling" element={<PreviewScheduling />} />
-              <Route path="preview-orders" element={<PreviewOrders />} />
-              <Route path="preview-ai" element={<PreviewAI />} />
-              <Route path="preview-commission" element={<PreviewCommission />} />
+              {/* ── Preview Pages (prototype) ── */}
+              <Route path="preview-fuel" element={<AccessGuard roles={["admin", "owner"]}><PreviewFuel /></AccessGuard>} />
+              <Route path="preview-profit" element={<AccessGuard roles={["admin", "owner"]}><PreviewProfit /></AccessGuard>} />
+              <Route path="preview-settlement" element={<AccessGuard roles={["admin", "owner"]}><PreviewSettlement /></AccessGuard>} />
+              <Route path="preview-performance" element={<AccessGuard roles={["admin", "owner"]}><PreviewPerformance /></AccessGuard>} />
+              <Route path="preview-tracking" element={<AccessGuard roles={["admin", "owner"]}><PreviewTracking /></AccessGuard>} />
+              <Route path="preview-cash" element={<AccessGuard roles={["admin", "owner"]}><PreviewCash /></AccessGuard>} />
+              <Route path="preview-scheduling" element={<AccessGuard roles={["admin", "owner"]}><PreviewScheduling /></AccessGuard>} />
+              <Route path="preview-orders" element={<AccessGuard roles={["admin", "owner"]}><PreviewOrders /></AccessGuard>} />
+              <Route path="preview-ai" element={<AccessGuard roles={["admin", "owner"]}><PreviewAI /></AccessGuard>} />
+              <Route path="preview-commission" element={<AccessGuard roles={["admin", "owner"]}><PreviewCommission /></AccessGuard>} />
 
               <Route
                 path="fleet"

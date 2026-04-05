@@ -174,13 +174,10 @@ function RouterBridge(): null {
         if (data.type === "ROUTE_CONTROL") {
           const { action, path, replace = false } = data;
 
-          console.log("Received route control command:", data);
-
           switch (action) {
             case "navigate":
               if (path) {
                 navigate(path, { replace });
-                console.log(`Navigated to: ${path} (replace: ${replace})`);
               } else {
                 console.error(
                   "Route control: path is required for navigate action",
@@ -190,18 +187,15 @@ function RouterBridge(): null {
 
             case "back":
               navigate(-1);
-              console.log("Navigated back");
               break;
 
             case "forward":
               navigate(1);
-              console.log("Navigated forward");
               break;
 
             case "replace":
               if (path) {
                 navigate(path, { replace: true });
-                console.log(`Replaced route with: ${path}`);
               } else {
                 console.error(
                   "Route control: path is required for replace action",
@@ -214,7 +208,6 @@ function RouterBridge(): null {
           }
         } else if (data.type === "RELOAD") {
           window.location.reload();
-          console.log("Reloaded");
         }
       } catch (error) {
         console.error("Route control error:", error);

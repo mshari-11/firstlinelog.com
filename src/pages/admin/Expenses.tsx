@@ -821,7 +821,7 @@ export default function Expenses() {
         <ExpenseModal
           onClose={() => setShowModal(false)}
           onSave={(data) => {
-            console.log("Expense saved:", data); /* TODO: save to Supabase */
+            setRecentExpenses(prev => [{ ...data, id: Date.now(), date: new Date().toISOString().slice(0, 10) }, ...prev]);
           }}
         />
       )}

@@ -413,7 +413,10 @@ export default function DriverClassifications() {
     setShowForm(false);
   }
 
-  function removeDriver(id: string) {
+  async function removeDriver(id: string) {
+    if (supabase) {
+      await supabase.from("couriers").delete().eq("id", id);
+    }
     setDrivers((prev) => prev.filter((d) => d.id !== id));
     toast.success("تم حذف السائق");
   }
@@ -472,7 +475,7 @@ export default function DriverClassifications() {
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <button
             onClick={openAdd}
-            className="con-btn-primary"
+            className="con-btn con-btn-primary"
             style={{ gap: 6, fontSize: 12 }}
           >
             <Plus size={13} /> إضافة سائق

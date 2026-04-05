@@ -734,11 +734,13 @@ export default function DriverProfilePage() {
             .eq("id", driverId)
             .single();
           if (!error && data) {
-            console.log("[DriverProfile] Supabase data loaded:", data.id);
+            setDriver(data);
+            setLoading(false);
+            return;
           }
         }
-      } catch (err) {
-        console.warn("[DriverProfile] Supabase fetch failed, using mock data");
+      } catch {
+        // Supabase fetch failed — fall back to mock
       }
       // Fallback to mock data
       setDriver({ ...MOCK_DRIVER, id: driverId || "DRV-001" });

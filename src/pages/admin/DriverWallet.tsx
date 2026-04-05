@@ -514,20 +514,9 @@ export default function DriverWallet() {
 
   async function editSelectedWallet() {
     if (!selected) return;
-    if (
-      !window.confirm(
-        selected.is_frozen
-          ? "هل تريد فك تجميد المحفظة؟"
-          : "هل تريد تجميد المحفظة؟",
-      )
-    )
-      return;
     const nextFrozen = !selected.is_frozen;
     const reason = nextFrozen
-      ? window.prompt(
-          "سبب التجميد:",
-          selected.freeze_reason || "مراجعة إدارية",
-        ) || "مراجعة إدارية"
+      ? (selected.freeze_reason || "مراجعة إدارية")
       : undefined;
     if (supabase) {
       const { error } = await supabase
@@ -562,6 +551,7 @@ export default function DriverWallet() {
     setSelected((prev) =>
       prev ? { ...prev, is_frozen: nextFrozen, freeze_reason: reason } : prev,
     );
+    toast.success(nextFrozen ? "تم تجميد المحفظة" : "تم فك تجميد المحفظة");
   }
 
   useEffect(() => {

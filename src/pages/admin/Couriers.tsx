@@ -58,6 +58,11 @@ import {
   Pause,
   GraduationCap,
   Ban,
+  TrendingUp,
+  Wallet,
+  Briefcase,
+  User,
+  AlertTriangle,
 } from "lucide-react";
 import {
   PageWrapper,
@@ -105,6 +110,28 @@ interface Courier {
   admin_notes?: string;
   last_active?: string;
   status_changed_at?: string;
+  app_violations?: { date: string; type: string; amount?: number; notes?: string }[];
+  traffic_violations?: { date: string; type: string; fine_amount?: number; plate?: string; notes?: string }[];
+  has_company_vehicle?: boolean;
+  delivery_success_rate?: number;
+  avg_delivery_time?: number;
+  cancellation_rate?: number;
+  total_earnings?: number;
+  monthly_earnings?: number;
+  pending_payout?: number;
+  completed_orders?: number;
+  failed_orders?: number;
+  joined_platforms?: string[];
+  vehicle_model?: string;
+  vehicle_year?: number;
+  plate_number?: string;
+  license_expiry?: string;
+  insurance_expiry?: string;
+  iban?: string;
+  bank_name?: string;
+  emergency_contact?: string;
+  emergency_name?: string;
+  notes_history?: { date: string; note: string; by: string }[];
 }
 
 interface DriverApplication {
@@ -279,11 +306,31 @@ const mockCouriers: Courier[] = [
     supervisor: "محمد العلي",
     contract_type: "دوام كامل",
     registration_date: "2024-01-15",
+    email: "ahmed.salem@email.com",
+    delivery_success_rate: 96.5, avg_delivery_time: 22, cancellation_rate: 1.2,
+    total_earnings: 8500, monthly_earnings: 3200, pending_payout: 450,
+    completed_orders: 280, failed_orders: 12,
+    joined_platforms: ["jahez", "hungerstation"],
+    vehicle_model: "هيونداي أكسنت", vehicle_year: 2022, plate_number: "أ ب ج 1234",
+    license_expiry: "2026-08-15", insurance_expiry: "2026-12-01",
+    iban: "SA02 8000 0000 6080 1016 7519", bank_name: "بنك الراجحي",
+    emergency_contact: "0551234567", emergency_name: "عبدالله (أخ)",
+    app_violations: [
+      { date: "2026-04-01", type: "تأخر في التوصيل", amount: 50, notes: "تأخر ٤٥ دقيقة عن الموعد المحدد" },
+      { date: "2026-04-03", type: "إلغاء طلب بدون سبب", amount: 100, notes: "إلغاء بعد استلام الطلب" },
+    ],
+    traffic_violations: [], has_company_vehicle: false,
+    notes_history: [
+      { date: "2026-03-15", note: "تم ترقيته إلى مندوب أول بعد تحقيق أداء متميز", by: "محمد العلي" },
+      { date: "2026-02-01", note: "أكمل التدريب على توصيل الطلبات الكبيرة", by: "أحمد الشمري" },
+      { date: "2025-12-10", note: "تنبيه بخصوص التأخر المتكرر — تم التنبيه شفهياً", by: "محمد العلي" },
+    ],
   },
   {
     id: "2",
     full_name: "خالد العمري",
     phone: "0557654321",
+    email: "khalid.amri@email.com",
     status: "on_delivery",
     city: "جدة",
     rating: 4.5,
@@ -298,11 +345,25 @@ const mockCouriers: Courier[] = [
     supervisor: "أحمد الشمري",
     contract_type: "دوام جزئي",
     registration_date: "2024-02-20",
+    delivery_success_rate: 92.1, avg_delivery_time: 28, cancellation_rate: 2.8,
+    total_earnings: 5200, monthly_earnings: 1800, pending_payout: 220,
+    completed_orders: 175, failed_orders: 23,
+    joined_platforms: ["hungerstation", "marsool", "noon"],
+    vehicle_model: "تويوتا كورولا", vehicle_year: 2021, plate_number: "ه و ز 5678",
+    license_expiry: "2026-05-01", insurance_expiry: "2026-04-20",
+    iban: "SA44 1000 0000 0036 0651 1001", bank_name: "بنك الأهلي",
+    emergency_contact: "0559876543", emergency_name: "سعود (صديق)",
+    app_violations: [], traffic_violations: [], has_company_vehicle: false,
+    notes_history: [
+      { date: "2026-04-01", note: "تجديد العقد لمدة 6 أشهر إضافية", by: "أحمد الشمري" },
+      { date: "2026-01-15", note: "تم تحويله من فرع الرياض إلى فرع جدة", by: "محمد العلي" },
+    ],
   },
   {
     id: "3",
     full_name: "فهد الغامدي",
     phone: "0509876543",
+    email: "fahd.ghamdi@email.com",
     status: "on_leave",
     city: "الرياض",
     rating: 4.9,
@@ -319,6 +380,26 @@ const mockCouriers: Courier[] = [
     registration_date: "2023-11-10",
     admin_notes: "إجازة سنوية حتى 2026-04-20",
     last_active: "2026-03-28T14:30:00Z",
+    delivery_success_rate: 98.2, avg_delivery_time: 18, cancellation_rate: 0.5,
+    total_earnings: 14200, monthly_earnings: 4800, pending_payout: 0,
+    completed_orders: 430, failed_orders: 5,
+    joined_platforms: ["marsool", "jahez", "amazon"],
+    vehicle_model: "سوزوكي سويفت", vehicle_year: 2023, plate_number: "ك ل م 9012",
+    license_expiry: "2027-03-01", insurance_expiry: "2027-01-15",
+    iban: "SA03 8000 0000 0640 1067 7219", bank_name: "بنك الراجحي",
+    emergency_contact: "0503456789", emergency_name: "محمد الغامدي (أب)",
+    app_violations: [
+      { date: "2026-03-20", type: "سوء تعامل", amount: 75, notes: "شكوى من العميل بخصوص أسلوب التعامل" },
+    ],
+    traffic_violations: [
+      { date: "2026-03-15", type: "قطع إشارة", fine_amount: 500, plate: "أ ب ج ٥٦٧٨", notes: "مخالفة مرورية مسجلة" },
+    ],
+    has_company_vehicle: true,
+    notes_history: [
+      { date: "2026-03-28", note: "بدأ إجازة سنوية — يعود 2026-04-20", by: "محمد العلي" },
+      { date: "2026-02-14", note: "حصل على جائزة أفضل مندوب للربع الرابع 2025", by: "الإدارة" },
+      { date: "2025-11-01", note: "تم تكليفه بتدريب المناديب الجدد", by: "أحمد الشمري" },
+    ],
   },
   {
     id: "4",
@@ -2529,82 +2610,33 @@ export default function AdminCouriers() {
       </AlertDialog>
 
       {/* View Courier Detail Modal */}
-      <Modal
-        open={!!viewCourier}
-        onClose={() => setViewCourier(null)}
-        title={viewCourier?.full_name ?? "تفاصيل المندوب"}
-        width={700}
-      >
-        {viewCourier && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {viewCourier.photo_url ? (
-                <img
-                  src={viewCourier.photo_url}
-                  alt={viewCourier.full_name}
-                  style={{ width: 48, height: 48, borderRadius: "var(--con-radius)", objectFit: "cover" }}
-                />
-              ) : (
-                <div style={{ width: 48, height: 48, borderRadius: "var(--con-radius)", background: "var(--con-brand-subtle)", color: "var(--con-brand)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18 }}>
-                  {initials(viewCourier.full_name)}
+      <Modal open={!!viewCourier} onClose={() => setViewCourier(null)} title={viewCourier?.full_name ?? "تفاصيل المندوب"} width={750}>
+        {viewCourier && (() => { const _sb: React.CSSProperties = { background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 10, padding: 16, marginBottom: 12 }; const _sh = (Ic: React.ElementType, t: string) => (<div style={{ fontSize: 14, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><Ic size={16} />{t}</div>); const _sc = (l: string, v: string | number, c: string) => (<div style={{ background: `${c}11`, border: `1px solid ${c}33`, borderRadius: 8, padding: "10px 14px", textAlign: "center", minWidth: 0 }}><div style={{ fontSize: 18, fontWeight: 700, color: c, lineHeight: 1.3 }}>{v}</div><div style={{ fontSize: 11, color: "var(--con-text-secondary)", marginTop: 2 }}>{l}</div></div>); const _exp = (d?: string) => { if (!d) return false; return (new Date(d).getTime() - Date.now()) / 864e5 < 30; }; const vc = viewCourier; return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            <div style={{ ..._sb, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              {vc.photo_url ? (<img src={vc.photo_url} alt={vc.full_name} style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", border: "2px solid var(--con-brand)" }} />) : (<div style={{ width: 56, height: 56, borderRadius: 12, background: "var(--con-brand-subtle)", color: "var(--con-brand)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, border: "2px solid var(--con-brand)" }}>{initials(vc.full_name)}</div>)}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: "var(--con-text-primary)" }}>{vc.full_name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                  <Badge variant={courierStatusConfig[vc.status]?.variant ?? "muted"}>{courierStatusConfig[vc.status]?.label ?? vc.status}</Badge>
+                  {vc.rating != null && (<div style={{ display: "flex", alignItems: "center", gap: 3 }}>{[1,2,3,4,5].map((s) => (<Star key={s} size={13} style={{ color: s <= Math.round(vc.rating!) ? "var(--con-warning)" : "var(--con-text-muted)", fill: s <= Math.round(vc.rating!) ? "var(--con-warning)" : "none" }} />))}<span className="con-mono" style={{ fontSize: 12, color: "var(--con-text-secondary)", marginInlineStart: 4 }}>{vc.rating.toFixed(1)}</span></div>)}
                 </div>
-              )}
-              <div>
-                <div style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)" }}>{viewCourier.full_name}</div>
-                <div className="con-mono" style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)" }}>{viewCourier.phone}</div>
               </div>
-              <div style={{ marginRight: "auto" }}>
-                <Badge variant={courierStatusConfig[viewCourier.status]?.variant ?? "muted"}>
-                  {courierStatusConfig[viewCourier.status]?.label ?? viewCourier.status}
-                </Badge>
+              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <button type="button" onClick={() => { setViewCourier(null); setEditCourier({ ...vc }); }} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--con-border-default)", background: "var(--con-bg-elevated)", color: "var(--con-text-primary)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }} title="تعديل"><Edit2 size={13} /></button>
+                <button type="button" onClick={() => sendWhatsApp(vc.phone, `مرحباً ${vc.full_name}`)} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid rgba(37,211,102,0.3)", background: "rgba(37,211,102,0.08)", color: "#25D366", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }} title="واتساب"><MessageSquare size={13} /></button>
+                {vc.email && (<button type="button" onClick={() => sendEmail(vc.email!, "متابعة", "")} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.08)", color: "#3B82F6", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }} title="إيميل"><Mail size={13} /></button>)}
               </div>
             </div>
-
-            <Section title="معلومات أساسية">
-              <DetailGrid>
-                <DetailField icon={Users} label="الاسم الكامل" value={viewCourier.full_name} />
-                <DetailField icon={Phone} label="رقم الجوال" value={viewCourier.phone} mono />
-                <DetailField icon={Mail} label="البريد الإلكتروني" value={viewCourier.email ?? "—"} mono />
-                <DetailField icon={MapPin} label="المدينة" value={viewCourier.city ?? "—"} />
-              </DetailGrid>
-            </Section>
-
-            <Section title="معلومات العمل">
-              <DetailGrid>
-                <DetailField icon={Package} label="التطبيق" value={viewCourier.app_name ? (APP_NAME_OPTIONS.find((o) => o.value === viewCourier.app_name)?.label ?? viewCourier.app_name) : "—"} />
-                <DetailField icon={CreditCard} label="رقم ID التطبيق" value={viewCourier.app_id ?? "—"} mono />
-                <DetailField icon={Bike} label="نوع المركبة" value={viewCourier.vehicle_type ?? "—"} />
-                <DetailField icon={Users} label="المشرف المباشر" value={viewCourier.supervisor ?? "—"} />
-                <DetailField icon={FileText} label="نوع التعاقد" value={viewCourier.contract_type ?? "—"} />
-                <DetailField icon={Shield} label="الحالة" value={courierStatusConfig[viewCourier.status]?.label ?? viewCourier.status} />
-              </DetailGrid>
-            </Section>
-
-            <Section title="معلومات الهوية">
-              <DetailGrid>
-                <DetailField icon={Shield} label="الجنسية" value={viewCourier.nationality ?? "—"} />
-                <DetailField icon={CreditCard} label="رقم الإقامة" value={viewCourier.iqama_number ?? "—"} mono />
-              </DetailGrid>
-            </Section>
-
-            <Section title="إحصائيات">
-              <DetailGrid>
-                <DetailField icon={Star} label="التقييم" value={viewCourier.rating != null ? viewCourier.rating.toFixed(1) : "—"} />
-                <DetailField icon={Package} label="طلبات الشهر" value={String(viewCourier.monthly_orders ?? 0)} />
-                <DetailField icon={Calendar} label="تاريخ التسجيل" value={viewCourier.registration_date ? formatDate(viewCourier.registration_date) : formatDate(viewCourier.created_at)} mono />
-                <DetailField icon={Clock} label="آخر نشاط" value={viewCourier.last_active ? formatDate(viewCourier.last_active) : "—"} mono />
-              </DetailGrid>
-            </Section>
-
-            {viewCourier.admin_notes && (
-              <Section title="ملاحظات إدارية">
-                <p style={{ margin: 0, fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", lineHeight: 1.7 }}>
-                  {viewCourier.admin_notes}
-                </p>
-              </Section>
-            )}
-          </div>
-        )}
+            <div style={_sb}>{_sh(TrendingUp, "الأداء والإحصائيات")}<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>{_sc("نسبة نجاح التوصيل", vc.delivery_success_rate != null ? `${vc.delivery_success_rate}%` : "—", (vc.delivery_success_rate ?? 0) >= 90 ? "#22c55e" : "#ef4444")}{_sc("متوسط وقت التوصيل", vc.avg_delivery_time != null ? `${vc.avg_delivery_time} د` : "—", (vc.avg_delivery_time ?? 99) <= 25 ? "#22c55e" : "#f59e0b")}{_sc("نسبة الإلغاء", vc.cancellation_rate != null ? `${vc.cancellation_rate}%` : "—", (vc.cancellation_rate ?? 99) <= 2 ? "#22c55e" : "#ef4444")}{_sc("طلبات مكتملة", vc.completed_orders ?? "—", "#22c55e")}{_sc("طلبات فاشلة", vc.failed_orders ?? "—", "#ef4444")}{_sc("طلبات الشهر", vc.monthly_orders ?? 0, "#3b82f6")}</div></div>
+            <div style={_sb}>{_sh(Wallet, "المعلومات المالية")}<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 10 }}>{_sc("إجمالي الأرباح", vc.total_earnings != null ? `${vc.total_earnings.toLocaleString("ar-SA")} ر.س` : "—", "#22c55e")}{_sc("أرباح الشهر", vc.monthly_earnings != null ? `${vc.monthly_earnings.toLocaleString("ar-SA")} ر.س` : "—", "#3b82f6")}{_sc("رصيد معلّق", vc.pending_payout != null ? `${vc.pending_payout.toLocaleString("ar-SA")} ر.س` : "—", vc.pending_payout && vc.pending_payout > 0 ? "#f59e0b" : "#22c55e")}</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--con-text-secondary)" }}><CreditCard size={13} style={{ color: "var(--con-text-muted)" }} /><span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>IBAN:</span><span className="con-mono" style={{ fontSize: 12 }}>{vc.iban ?? "—"}</span></div><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--con-text-secondary)" }}><Wallet size={13} style={{ color: "var(--con-text-muted)" }} /><span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>البنك:</span><span>{vc.bank_name ?? "—"}</span></div></div></div>
+            <div style={_sb}>{_sh(Briefcase, "معلومات العمل")}<DetailGrid><DetailField icon={Package} label="التطبيق" value={vc.app_name ? (APP_NAME_OPTIONS.find((o) => o.value === vc.app_name)?.label ?? vc.app_name) : "—"} /><DetailField icon={CreditCard} label="رقم ID التطبيق" value={vc.app_id ?? "—"} mono /><DetailField icon={Users} label="المشرف المباشر" value={vc.supervisor ?? "—"} /><DetailField icon={FileText} label="نوع التعاقد" value={vc.contract_type ?? "—"} /><DetailField icon={Calendar} label="تاريخ التسجيل" value={vc.registration_date ? formatDate(vc.registration_date) : formatDate(vc.created_at)} mono /></DetailGrid>{(vc.joined_platforms?.length ?? 0) > 0 && (<div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}><span style={{ fontSize: 12, color: "var(--con-text-secondary)", fontWeight: 600 }}>المنصات المسجّل فيها:</span>{vc.joined_platforms!.map((p) => (<Badge key={p} variant="info">{APP_NAME_OPTIONS.find((o) => o.value === p)?.label ?? p}</Badge>))}</div>)}</div>
+            <div style={_sb}>{_sh(Car, "المركبة")}<DetailGrid><DetailField icon={Bike} label="نوع المركبة" value={vc.vehicle_type ?? "—"} /><DetailField icon={Car} label="الموديل" value={vc.vehicle_model ?? "—"} /><DetailField icon={Calendar} label="السنة" value={vc.vehicle_year != null ? String(vc.vehicle_year) : "—"} /><DetailField icon={CreditCard} label="اللوحة" value={vc.plate_number ?? "—"} mono /></DetailGrid><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}><Shield size={12} style={{ color: _exp(vc.license_expiry) ? "#ef4444" : "var(--con-text-muted)" }} /><span style={{ color: "var(--con-text-secondary)" }}>الرخصة:</span><span className="con-mono" style={{ color: _exp(vc.license_expiry) ? "#ef4444" : "var(--con-text-primary)", fontWeight: _exp(vc.license_expiry) ? 700 : 400 }}>{vc.license_expiry ?? "—"}</span></div><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}><ShieldCheck size={12} style={{ color: _exp(vc.insurance_expiry) ? "#ef4444" : "var(--con-text-muted)" }} /><span style={{ color: "var(--con-text-secondary)" }}>التأمين:</span><span className="con-mono" style={{ color: _exp(vc.insurance_expiry) ? "#ef4444" : "var(--con-text-primary)", fontWeight: _exp(vc.insurance_expiry) ? 700 : 400 }}>{vc.insurance_expiry ?? "—"}</span></div>{vc.has_company_vehicle && (<div><Badge variant="info">مركبة من الشركة</Badge></div>)}</div></div>
+            <div style={_sb}>{_sh(User, "معلومات شخصية")}<DetailGrid><DetailField icon={Phone} label="الجوال" value={vc.phone} mono /><DetailField icon={Mail} label="البريد الإلكتروني" value={vc.email ?? "—"} mono /><DetailField icon={Shield} label="الجنسية" value={vc.nationality ?? "—"} /><DetailField icon={CreditCard} label="رقم الإقامة" value={vc.iqama_number ?? "—"} mono /><DetailField icon={MapPin} label="المدينة" value={vc.city ?? "—"} /><DetailField icon={Clock} label="آخر نشاط" value={vc.last_active ? formatDate(vc.last_active) : "—"} mono /></DetailGrid>{(vc.emergency_name || vc.emergency_contact) && (<div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, display: "flex", alignItems: "center", gap: 8 }}><AlertCircle size={14} style={{ color: "#ef4444", flexShrink: 0 }} /><span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>جهة الطوارئ: <strong style={{ color: "var(--con-text-primary)" }}>{vc.emergency_name ?? "—"}</strong> — <span className="con-mono">{vc.emergency_contact ?? "—"}</span></span></div>)}</div>
+            <div style={_sb}>{_sh(FileText, "ملاحظات إدارية")}{vc.admin_notes ? (<p style={{ margin: 0, fontSize: 13, color: "var(--con-text-secondary)", lineHeight: 1.7, marginBottom: 10 }}>{vc.admin_notes}</p>) : (<p style={{ margin: 0, fontSize: 13, color: "var(--con-text-muted)", marginBottom: 10 }}>لا توجد ملاحظات</p>)}{(vc.notes_history?.length ?? 0) > 0 && (<div style={{ borderInlineStart: "2px solid var(--con-brand)", paddingInlineStart: 12 }}>{vc.notes_history!.map((n, i) => (<div key={i} style={{ marginBottom: i < vc.notes_history!.length - 1 ? 10 : 0 }}><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}><span className="con-mono" style={{ fontSize: 11, color: "var(--con-text-muted)" }}>{n.date}</span><span style={{ fontSize: 11, color: "var(--con-brand)", fontWeight: 600 }}>{n.by}</span></div><div style={{ fontSize: 12, color: "var(--con-text-secondary)", lineHeight: 1.6 }}>{n.note}</div></div>))}</div>)}</div>
+            <div style={_sb}>{_sh(AlertTriangle, "مخالفات التطبيق")}{(vc.app_violations?.length ?? 0) > 0 ? (<div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--con-text-caption)" }}><thead><tr><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>التاريخ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>نوع المخالفة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>المبلغ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>ملاحظات</th></tr></thead><tbody>{vc.app_violations!.map((v, i) => (<tr key={i}><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.date}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-danger)" }}>{v.type}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.amount != null ? `${v.amount} ر.س` : "—"}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-secondary)" }}>{v.notes ?? "—"}</td></tr>))}</tbody></table></div>) : (<p style={{ margin: 0, fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>لا توجد مخالفات</p>)}</div>
+            {vc.has_company_vehicle === true && (<div style={_sb}>{_sh(AlertTriangle, "مخالفات مرورية")}{(vc.traffic_violations?.length ?? 0) > 0 ? (<div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--con-text-caption)" }}><thead><tr><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>التاريخ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>نوع المخالفة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>المبلغ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>اللوحة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>ملاحظات</th></tr></thead><tbody>{vc.traffic_violations!.map((v, i) => (<tr key={i}><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.date}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-danger)" }}>{v.type}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.fine_amount != null ? `${v.fine_amount} ر.س` : "—"}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.plate ?? "—"}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-secondary)" }}>{v.notes ?? "—"}</td></tr>))}</tbody></table></div>) : (<p style={{ margin: 0, fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>لا توجد مخالفات مرورية</p>)}</div>)}
+          </div>); })()}
       </Modal>
 
       {/* Edit Courier Modal */}

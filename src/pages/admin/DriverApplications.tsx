@@ -551,7 +551,7 @@ export default function DriverApplications() {
                           }}
                         >
                           {app.face_similarity_score != null
-                            ? `${Math.round(Number(app.face_similarity_score))}%`
+                            ? `${Number(app.face_similarity_score) > 1 ? Math.round(Number(app.face_similarity_score)) : Math.round(Number(app.face_similarity_score) * 100)}%`
                             : "—"}
                         </span>
                       </td>
@@ -830,13 +830,13 @@ export default function DriverApplications() {
                       fontWeight: 600,
                       color:
                         selected.face_similarity_score &&
-                        Number(selected.face_similarity_score) > 70
+                        (Number(selected.face_similarity_score) > 1 ? Number(selected.face_similarity_score) : Number(selected.face_similarity_score) * 100) > 70
                           ? "var(--con-success)"
                           : "var(--con-danger)",
                     }}
                   >
                     {selected.face_similarity_score != null
-                      ? `${Math.round(Number(selected.face_similarity_score))}%`
+                      ? `${Number(selected.face_similarity_score) > 1 ? Math.round(Number(selected.face_similarity_score)) : Math.round(Number(selected.face_similarity_score) * 100)}%`
                       : "—"}
                   </span>
                 </div>

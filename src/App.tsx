@@ -123,6 +123,7 @@ const FinancialReports = lazy(() => import("@/pages/admin/FinancialReports"));
 const AIFinanceAnalysis = lazy(() => import("@/pages/admin/AIFinanceAnalysis"));
 const AdminComplaints = lazy(() => import("@/pages/admin/Complaints"));
 const AdminExcel = lazy(() => import("@/pages/admin/Excel"));
+const CourierPerformance = lazy(() => import("@/pages/admin/CourierPerformance"));
 
 const AdminDashboardLegacy = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminDriversLegacy = lazy(() => import("@/pages/admin/AdminDrivers"));
@@ -195,6 +196,11 @@ const DriverClassifications = lazy(
   () => import("@/pages/admin/DriverClassifications"),
 );
 const PayrollManagement = lazy(() => import("@/pages/admin/PayrollManagement"));
+const CourierDocuments = lazy(() => import("@/pages/admin/CourierDocuments"));
+const CourierOperationsLog = lazy(() => import("@/pages/admin/CourierOperationsLog"));
+const CourierRewards = lazy(() => import("@/pages/admin/CourierRewards"));
+const CourierReports = lazy(() => import("@/pages/admin/CourierReports"));
+const CourierInbox = lazy(() => import("@/pages/admin/CourierInbox"));
 
 // ── Preview pages (prototype) ──────────────────────────────────────────────
 const PreviewFuel = lazy(() => import("@/pages/admin/preview/FuelManagement"));
@@ -315,6 +321,14 @@ export default function App() {
                   <PermissionGuard permission="couriers">
                     <AdminCouriers />
                   </PermissionGuard>
+                }
+              />
+              <Route
+                path="courier-performance"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierPerformance />
+                  </AccessGuard>
                 }
               />
               <Route
@@ -754,6 +768,48 @@ export default function App() {
                   <PermissionGuard permission="finance">
                     <MonthlyReport />
                   </PermissionGuard>
+                }
+              />
+
+              {/* ── Courier management pages ── */}
+              <Route
+                path="courier-documents"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierDocuments />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="courier-operations"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierOperationsLog />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="courier-rewards"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierRewards />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="courier-reports"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierReports />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="courier-inbox"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierInbox />
+                  </AccessGuard>
                 }
               />
 

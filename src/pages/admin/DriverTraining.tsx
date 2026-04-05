@@ -117,11 +117,18 @@ export default function DriverTraining() {
   }
 
   async function updateStatus(id: string, status: TrainingStatus) {
-    if (!supabase) return;
     const update: any = { status };
     if (status === "completed") update.completed_at = new Date().toISOString();
-    await supabase.from("driver_training_records").update(update).eq("id", id);
-    setData((prev) => prev.map((r) => (r.id === id ? { ...r, ...update } : r)));
+    try {
+      if (supabase) {
+        const { error } = await supabase.from("driver_training_records").update(update).eq("id", id);
+        if (error) throw error;
+      }
+      setData((prev) => prev.map((r) => (r.id === id ? { ...r, ...update } : r)));
+      toast.success("تم تحديث الحالة");
+    } catch {
+      toast.error("فشل تحديث الحالة");
+    }
   }
 
   const filtered = data.filter((r) => {

@@ -16,8 +16,6 @@ import {
   FileText,
   Shield,
   User,
-  ExternalLink,
-  ChevronDown,
   Download,
   Printer,
 } from "lucide-react";
@@ -724,7 +722,7 @@ export default function KYCManagement() {
                   >
                     {selected.liveness_passed ? "ناجح" : "غير مكتمل"}
                     {selected.face_similarity_score != null
-                      ? ` (${(selected.face_similarity_score * 100).toFixed(0)}%)`
+                      ? ` (${selected.face_similarity_score > 1 ? Math.round(selected.face_similarity_score) : Math.round(selected.face_similarity_score * 100)}%)`
                       : ""}
                   </span>
                 </div>

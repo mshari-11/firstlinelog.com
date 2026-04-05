@@ -19,6 +19,7 @@ import {
   Star,
   Download,
   RefreshCw,
+  Printer,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -299,6 +300,28 @@ export default function TargetTracking() {
     exportToExcel(rows, "target-tracking", "متابعة التارقت");
   };
 
+  const handleCSVExport = () => {
+    const rows = drivers.map((d) => ({
+      "اسم المندوب": d.name,
+      "الجوال": d.phone,
+      "المنصة": d.platform,
+      "المنجز اليوم": d.todayCompleted,
+      "التارقت اليومي": d.todayTarget,
+      "إجمالي الأسبوع": d.weekTotal,
+      "إجمالي الشهر": d.monthTotal,
+      "التصنيف": d.rating,
+      "الحالة": statusLabel(d.status).text,
+    }));
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(","), ...rows.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "target-tracking.csv";
+    a.click();
+  };
+
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
     <div
@@ -382,6 +405,42 @@ export default function TargetTracking() {
           >
             <Download size={15} />
             تصدير Excel
+          </button>
+          <button
+            onClick={handleCSVExport}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "1px solid var(--con-border-default)",
+              background: "var(--con-bg-surface-2)",
+              color: "var(--con-text-primary)",
+              cursor: "pointer",
+              fontSize: "var(--con-text-body)",
+            }}
+          >
+            <Download size={15} />
+            تصدير CSV
+          </button>
+          <button
+            onClick={() => window.print()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "1px solid var(--con-border-default)",
+              background: "var(--con-bg-surface-2)",
+              color: "var(--con-text-primary)",
+              cursor: "pointer",
+              fontSize: "var(--con-text-body)",
+            }}
+          >
+            <Printer size={15} />
+            طباعة
           </button>
         </div>
       </div>

@@ -34,6 +34,8 @@ import {
   Plus,
   X,
   Save,
+  Download,
+  Printer,
 } from "lucide-react";
 import {
   Empty,
@@ -810,6 +812,62 @@ export default function Dispatch() {
               <Zap size={12} /> إسناد تلقائي ({pending})
             </button>
           )}
+          <button
+            onClick={() => {
+              if (!orders.length) return;
+              const rows = orders.map(o => ({
+                "رقم الطلب": o.id,
+                "العميل": o.customer,
+                "العنوان": o.address,
+                "المنصة": o.platform,
+                "المبلغ": o.amount,
+                "الحالة": o.status,
+                "تاريخ الإنشاء": o.createdAt,
+              }));
+              const headers = Object.keys(rows[0]);
+              const csv = [headers.join(","), ...rows.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "dispatch_orders.csv";
+              a.click();
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 500,
+              border: "1px solid var(--con-border-default)",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              background: "transparent",
+              color: "var(--con-text-muted)",
+            }}
+          >
+            <Download size={12} /> تصدير CSV
+          </button>
+          <button
+            onClick={() => window.print()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              padding: "0.3rem 0.625rem",
+              borderRadius: "var(--con-radius-sm)",
+              fontSize: "12px",
+              fontWeight: 500,
+              border: "1px solid var(--con-border-default)",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              background: "transparent",
+              color: "var(--con-text-muted)",
+            }}
+          >
+            <Printer size={12} /> طباعة
+          </button>
           <button
             onClick={() => setRefreshTick((v) => v + 1)}
             style={{

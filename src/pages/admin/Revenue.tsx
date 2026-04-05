@@ -30,6 +30,7 @@ import {
   Plus,
   X,
   Save,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -94,6 +95,7 @@ export default function RevenueAnalysis() {
     dailyAverage: 0,
   });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [courierSearch, setCourierSearch] = useState("");
   const [addForm, setAddForm] = useState({
     platform: "",
     amount: "",
@@ -215,6 +217,11 @@ export default function RevenueAnalysis() {
     }
     fetchRevenue();
   }, []);
+
+  const filteredCouriers = courierPerformanceData.filter((c) => {
+    if (courierSearch && !c.courier.toLowerCase().includes(courierSearch.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div
@@ -424,7 +431,17 @@ export default function RevenueAnalysis() {
       >
         <DataTable
           title="أفضل المناديب"
-          data={courierPerformanceData}
+          data={filteredCouriers}
+          headerAction={
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200,
+              background: "var(--con-bg, #07111d)", border: "1px solid var(--con-border, #1a3a52)",
+              borderRadius: 8, padding: "6px 12px" }}>
+              <Search size={16} color="#94a3b8" />
+              <input type="text" placeholder="بحث..." value={courierSearch} onChange={e => setCourierSearch(e.target.value)}
+                style={{ background: "transparent", border: "none", outline: "none",
+                  color: "var(--con-text, #e2e8f0)", fontSize: 13, width: "100%", fontFamily: "inherit" }} />
+            </div>
+          }
           columns={[
             { key: "courier", label: "اسم المندوب" },
             {

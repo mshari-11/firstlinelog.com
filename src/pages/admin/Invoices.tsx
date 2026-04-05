@@ -387,24 +387,21 @@ export default function Invoices() {
             style={{ paddingInlineEnd: 32, width: "100%" }}
           />
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {(["all", "draft", "sent", "paid", "overdue"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
               style={{
-                padding: "4px 12px",
-                borderRadius: 6,
-                fontSize: "var(--con-text-caption)",
-                fontWeight: 500,
-                border: "1px solid",
+                padding: "6px 14px",
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                border: filter === s ? "1px solid var(--con-brand, #3b82f6)" : "1px solid var(--con-border, #1a3a52)",
+                background: filter === s ? "var(--con-brand-subtle, #1e3a5f)" : "transparent",
+                color: filter === s ? "var(--con-brand, #3b82f6)" : "var(--con-text-secondary, #94a3b8)",
                 cursor: "pointer",
-                background: filter === s ? "var(--con-brand)" : "transparent",
-                borderColor:
-                  filter === s
-                    ? "var(--con-brand)"
-                    : "var(--con-border-strong)",
-                color: filter === s ? "#fff" : "var(--con-text-muted)",
               }}
             >
               {s === "all" ? "الكل" : STATUS[s].label}

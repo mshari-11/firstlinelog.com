@@ -18,6 +18,8 @@ import {
   User,
   ExternalLink,
   ChevronDown,
+  Download,
+  Printer,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -222,15 +224,40 @@ export default function KYCManagement() {
             من {data.length} طلب
           </p>
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="con-btn con-btn-ghost"
-          style={{ gap: 6 }}
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />{" "}
-          تحديث
-        </button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            onClick={() => {
+              if (!filtered.length) return;
+              const headers = ["app_ref", "full_name", "phone", "city", "platform_app", "status", "created_at"];
+              const csv = [headers.join(","), ...filtered.map(r => headers.map(h => `"${(r as any)[h] ?? ""}"`).join(","))].join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "kyc_management.csv";
+              a.click();
+            }}
+            className="con-btn con-btn-ghost"
+            style={{ gap: 6 }}
+          >
+            <Download size={14} /> تصدير CSV
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="con-btn con-btn-ghost"
+            style={{ gap: 6 }}
+          >
+            <Printer size={14} /> طباعة
+          </button>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="con-btn con-btn-ghost"
+            style={{ gap: 6 }}
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />{" "}
+            تحديث
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

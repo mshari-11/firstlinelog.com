@@ -15,6 +15,7 @@ import {
   Clock,
   Search,
   Download,
+  Printer,
   Link2,
   Eye,
   CalendarDays,
@@ -181,6 +182,14 @@ export default function AttendanceLive() {
               cursor: connected ? "pointer" : "not-allowed", fontFamily: "inherit",
             }}>
               <Download size={14} /> تصدير
+            </button>
+            <button onClick={() => window.print()} style={{
+              display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
+              background: "var(--con-card, #0d1926)", border: "1px solid var(--con-border, #1a3a52)",
+              borderRadius: 8, color: "var(--con-text, #e2e8f0)", fontSize: 13,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>
+              <Printer size={14} /> طباعة
             </button>
           </div>
         }

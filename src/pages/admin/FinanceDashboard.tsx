@@ -17,6 +17,7 @@ import {
   Zap,
   Activity,
   Plus,
+  Search,
 } from "lucide-react";
 import {
   BarChart,
@@ -198,6 +199,7 @@ export default function FinanceDashboard() {
     totalOrders: 3125,
   });
   const [loading, setLoading] = useState(true);
+  const [txSearch, setTxSearch] = useState("");
 
   useEffect(() => {
     fetchFinanceStats();
@@ -300,6 +302,11 @@ export default function FinanceDashboard() {
       render: (v: string) => <StatusBadge status={v} />,
     },
   ];
+
+  const filteredTransactions = mockTransactions.filter((tx) => {
+    if (txSearch && !tx.description.toLowerCase().includes(txSearch.toLowerCase()) && !tx.id.toLowerCase().includes(txSearch.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div
@@ -546,7 +553,17 @@ export default function FinanceDashboard() {
         <DataTable
           title="آخر المعاملات"
           columns={transactionColumns}
-          data={mockTransactions}
+          data={filteredTransactions}
+          headerAction={
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 200,
+              background: "var(--con-bg, #07111d)", border: "1px solid var(--con-border, #1a3a52)",
+              borderRadius: 8, padding: "6px 12px" }}>
+              <Search size={16} color="#94a3b8" />
+              <input type="text" placeholder="بحث..." value={txSearch} onChange={e => setTxSearch(e.target.value)}
+                style={{ background: "transparent", border: "none", outline: "none",
+                  color: "var(--con-text, #e2e8f0)", fontSize: 13, width: "100%", fontFamily: "inherit" }} />
+            </div>
+          }
         />
       </div>
     </div>

@@ -334,8 +334,8 @@ export default function DriverApplications() {
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem" }}>
-        <div style={{ position: "relative", flex: 1 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
+        <div style={{ position: "relative" }}>
           <Search
             size={13}
             style={{
@@ -354,19 +354,27 @@ export default function DriverApplications() {
             style={{ paddingInlineEnd: 30, width: "100%" }}
           />
         </div>
-        <select
-          className="con-input"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          style={{ width: 140 }}
-        >
-          <option value="all">جميع الحالات</option>
-          {Object.entries(STATUS_MAP).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v.label}
-            </option>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {(["all", "pending", "under_review", "approved", "rejected", "archived"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                border: statusFilter === s ? "1px solid var(--con-brand, #3b82f6)" : "1px solid var(--con-border, #1a3a52)",
+                background: statusFilter === s ? "var(--con-brand-subtle, #1e3a5f)" : "transparent",
+                color: statusFilter === s ? "var(--con-brand, #3b82f6)" : "var(--con-text-secondary, #94a3b8)",
+                cursor: "pointer",
+              }}
+            >
+              {s === "all" ? "الكل" : STATUS_MAP[s].label}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {error && (

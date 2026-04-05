@@ -315,7 +315,25 @@ export default function JahezPlatform() {
 
   useEffect(() => {
     mountedRef.current = true;
-    const token = getAuthToken();
+
+    // Auto-capture token from URL hash (sent from Saned tab)
+    const hash = window.location.hash;
+    if (hash.includes("saned_token=")) {
+      const tokenFromUrl = decodeURIComponent(hash.split("saned_token=")[1]?.split("&")[0] || "");
+      if (tokenFromUrl && tokenFromUrl.length > 100) {
+        try {
+          const payload = JSON.parse(atob(tokenFromUrl.split(".")[1]));
+          if (payload.exp && Date.now() < payload.exp * 1000) {
+            saveSanedToken(tokenFromUrl);
+            toast.success("تم ربط حساب Saned تلقائياً!");
+            // Clean URL hash
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        } catch { /* invalid token */ }
+      }
+    }
+
+    const token = getSanedToken() || getAuthToken();
     const connected = !!token;
     setIsConnected(connected);
     setTokenValid(connected && isTokenValid(token!));

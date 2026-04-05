@@ -151,37 +151,25 @@ function saveSanedToken(token: string) {
   localStorage.setItem("fll_jahez_last_sync", new Date().toISOString());
 }
 
+const PROXY_URL = "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
+
 async function proxyFetch<T = unknown>(action: string, extra?: Record<string, unknown>): Promise<T> {
   const token = getSanedToken();
   if (!token) throw new Error("TOKEN_MISSING");
 
-  // Direct call to Saned API (works when token is valid — browser makes the request)
-  let url = `${SANED_BASE}/${action === "profile" ? `delivery-providers/${PROVIDER_ID}/details`
-    : action === "stats" ? "delivery-providers/active-inactive"
-    : action === "drivers" ? "delivery-providers/driver-list"
-    : action === "vehicle-types" ? "lookups/vehicle-types"
-    : action === "cities" ? "lookups/cities-by-country-codes"
-    : action}`;
-
-  const params: Record<string, string> = {};
-  if (action === "drivers") {
-    params.page = String((extra as any)?.page ?? 0);
-    params.size = String((extra as any)?.size ?? 100);
-  }
-  if (action === "cities") params.countryCodes = "SA";
-
-  if (Object.keys(params).length) url += "?" + new URLSearchParams(params).toString();
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  const res = await fetch(PROXY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, token, ...extra }),
   });
 
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    if (err.error?.includes("401") || err.error?.includes("403")) {
       localStorage.removeItem(SANED_TOKEN_KEY);
       throw new Error("TOKEN_EXPIRED");
     }
-    throw new Error(`خطأ API: ${res.status}`);
+    throw new Error(err.error || `خطأ: ${res.status}`);
   }
 
   return res.json() as Promise<T>;

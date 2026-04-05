@@ -43,7 +43,7 @@ def supabase_request(method, path, body=None, params=None):
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
-        "Prefer": "return=representation",
+        "Prefer": "resolution=merge-duplicates,return=representation",
     }
 
     data = json.dumps(body, ensure_ascii=False).encode() if body else None
@@ -112,12 +112,12 @@ def sync_stats(token):
         stats["onlineDrivers"] = data.get("onlineDrivers", 0)
         stats["offlineDrivers"] = data.get("offlineDrivers", 0)
 
-        supabase_request("POST", "jahez_sync_data", body={
+        supabase_request("POST", "jahez_sync_data?on_conflict=data_type,external_id", body={
             "data_type": "driver_stats",
             "external_id": PROVIDER_ID,
             "data": data,
             "synced_at": now_utc().isoformat(),
-        }, params={"on_conflict": "data_type,external_id"})
+        })
 
         print(f"[stats] Active: {stats['activeDrivers']}, Online: {stats['onlineDrivers']}")
     except Exception as e:
@@ -153,11 +153,12 @@ def sync_drivers(token):
                     "data": d,
                     "synced_at": now_utc().isoformat(),
                 }
-                supabase_request("POST", "jahez_drivers", body=record,
-                                 params={"on_conflict": "external_id"})
+                supabase_request("POST", "jahez_drivers?on_conflict=external_id", body=record)
                 stats["upserted"] += 1
             except Exception as e:
                 stats["errors"] += 1
+                if stats["errors"] <= 3:
+                    print(f"[drivers] Upsert error for {record.get('external_id')}: {e}")
 
         print(f"[drivers] Fetched {stats['fetched']}, Upserted {stats['upserted']}")
     except Exception as e:
@@ -191,18 +192,17 @@ def sync_payments(token):
                     "data": p,
                     "synced_at": now_utc().isoformat(),
                 }
-                supabase_request("POST", "jahez_payments", body=record,
-                                 params={"on_conflict": "external_id"})
+                supabase_request("POST", "jahez_payments?on_conflict=external_id", body=record)
             except Exception:
                 stats["errors"] += 1
 
         # Also save summary
-        supabase_request("POST", "jahez_sync_data", body={
+        supabase_request("POST", "jahez_sync_data?on_conflict=data_type,external_id", body={
             "data_type": "driver_payments",
             "external_id": PROVIDER_ID,
             "data": data,
             "synced_at": now_utc().isoformat(),
-        }, params={"on_conflict": "data_type,external_id"})
+        })
 
         print(f"[payments] Fetched {stats['fetched']}")
     except Exception as e:

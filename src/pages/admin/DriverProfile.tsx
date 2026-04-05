@@ -831,21 +831,35 @@ export default function DriverProfilePage() {
           <button
             className="con-btn-primary"
             style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "none", cursor: "pointer" }}
-            onClick={() => toast.info("تعديل البيانات — قيد التطوير")}
+            onClick={() => navigate(`/admin-panel/couriers`)}
           >
             <Edit size={14} /> تعديل البيانات
           </button>
           <button
             className="con-btn-danger"
             style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "none", cursor: "pointer" }}
-            onClick={() => toast.warning("إيقاف المندوب — قيد التطوير")}
+            onClick={async () => {
+              if (!driver) return;
+              try {
+                if (supabase) {
+                  await supabase.from("couriers").update({ status: "suspended" }).eq("id", driver.id);
+                }
+                setDriver((prev) => prev ? { ...prev, status: "suspended" } : prev);
+                toast.success("تم إيقاف المندوب");
+              } catch { toast.error("فشل إيقاف المندوب"); }
+            }}
           >
             <Ban size={14} /> إيقاف المندوب
           </button>
           <button
             className="con-btn-ghost"
             style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "var(--con-text-caption)", borderRadius: "var(--con-radius)", border: "1px solid var(--con-border-default)", cursor: "pointer", background: "transparent", color: "var(--con-text-secondary)" }}
-            onClick={() => toast.info("إرسال رسالة — قيد التطوير")}
+            onClick={() => {
+              if (!driver) return;
+              const phone = driver.phone?.replace(/[^0-9]/g, "") || "";
+              const intl = phone.startsWith("0") ? "966" + phone.slice(1) : phone;
+              window.open(`https://wa.me/${intl}?text=${encodeURIComponent(`مرحباً ${driver.name}`)}`, "_blank");
+            }}
           >
             <Send size={14} /> إرسال رسالة
           </button>

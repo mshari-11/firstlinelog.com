@@ -104,8 +104,11 @@ serve(async (req: Request) => {
           if (Array.isArray(batch)) {
             drivers = batch;
           } else if (batch && typeof batch === "object") {
-            drivers = batch.content || batch.drivers || batch.data || [];
-            totalElements = batch.totalElements || batch.total || 0;
+            // Saned wraps: { statusCode, data: { result: [...], rowsCount } }
+            const inner = batch.data || batch;
+            drivers = inner.result || inner.content || inner.drivers || [];
+            if (!Array.isArray(drivers)) drivers = [];
+            totalElements = inner.rowsCount || inner.totalElements || inner.total || 0;
           }
 
           allDrivers.push(...drivers);

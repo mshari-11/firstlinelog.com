@@ -51,6 +51,8 @@ const routeNames: Record<string, string> = {
   "monthly-report": "التقرير المالي الشهري",
   sla: "مراقبة مستويات الخدمة",
   marketplace: "تكاملات المنصات",
+  "jahez-platform": "منصة جاهز",
+  "toyou-platform": "منصة تويو",
   "n8n-workflows": "سير العمل (n8n)",
   approvals: "الاعتمادات",
   "audit-log": "سجل التدقيق",

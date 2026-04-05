@@ -1,1488 +1,2027 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  RefreshCw,
-  Search,
-  Download,
-  Users,
-  UserCheck,
-  UserX,
-  Wifi,
-  WifiOff,
-  Activity,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Link2,
-  Unlink2,
-  Percent,
-  Clock,
-  Truck,
-  DatabaseZap,
-  Key,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import * as XLSX from "xlsx";
+import {
+  Truck, Search, Download, Users, UserCheck, UserX, Wifi, WifiOff,
+  Activity, CheckCircle2, XCircle, AlertTriangle, Loader2,
+  ChevronLeft, ChevronRight, Filter, Link2, Unlink2, Percent,
+  Clock, DatabaseZap, Key, RefreshCw, Eye, X, Bike, Car, Phone,
+  IdCard, Hash,
+} from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════
+   Constants & Types
+   ═══════════════════════════════════════════════════════════════════ */
 
-const SANED_BASE = "https://gateway.saned.io/api/v1/drivers-management-portal";
-const PROVIDER_ID = "20524";
+const PROXY_URL =
+  "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
+const SANED_TOKEN_KEY = "fll_saned_token";
 const PAGE_SIZE = 100;
-const LS_LAST_SYNC = "fll_jahez_last_sync";
-
-// ─── Jahez branding ─────────────────────────────────────────────────────────
 
 const JAHEZ_RED = "#e53e3e";
-const JAHEZ_DARK = "#2d3748";
-const JAHEZ_RED_LIGHT = "#fff5f5";
-const JAHEZ_RED_HOVER = "#c53030";
+const ACCENT_GREEN = "#38a169";
+const ACCENT_GRAY = "#718096";
+const SANED_DARK_BLUE = "#1a365d";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+/* ─── Types ──────────────────────────────────────────────────── */
 
-interface SanedDriver {
-  driverId: number | string;
-  driverName?: string;
-  driverUniqueId?: string;
-  residenceNumber?: string;
-  iqamaNumber?: string;
-  idNumber?: string;
-  firstName?: string;
-  lastName?: string;
-  firstNameAr?: string;
-  lastNameAr?: string;
-  phoneNumber?: string;
-  phone?: string;
-  email?: string;
-  status?: string;
-  driverStatus?: string | boolean;
-  availability?: string | boolean;
-  vehicleType?: string | number;
-  city?: string;
-  nationalId?: string;
-  createdDate?: string;
-  lastLoginDate?: string;
-  [key: string]: unknown;
-}
-
-interface ActiveInactiveStats {
-  totalDrivers: number;
+interface SanedStats {
   activeDrivers: number;
   inactiveDrivers: number;
   onlineDrivers: number;
   offlineDrivers: number;
+  activePercentage: number;
+  inactivePercentage: number;
+  onlinePercentage: number;
+  offlinePercentage: number;
 }
 
-interface ProviderDetails {
-  id: number;
-  name?: string;
-  nameAr?: string;
-  status?: string;
+interface RawDriver {
+  driverID?: number;
+  driverId?: number;
+  idNumber?: string;
+  driverName?: string;
+  phoneNumber?: string;
+  driverStatus?: boolean;
+  availability?: boolean;
+  vehicleType?: number;
+}
+
+interface MappedDriver {
+  driverId: number;
+  iqamaNumber: string;
+  driverName: string;
+  phoneNumber: string;
+  driverStatus: "Active" | "Inactive";
+  availability: "Online" | "Offline";
+  vehicleType: number;
+}
+
+interface ProfileInfo {
+  providerName?: string;
+  providerId?: number;
+  providerStatus?: string;
   [key: string]: unknown;
 }
 
-// ─── Fallback mock data ──────────────────────────────────────────────────────
+type SyncTarget = "drivers" | "stats" | "all";
 
-const MOCK_DRIVERS: SanedDriver[] = [
-  { driverId: 10001, residenceNumber: "2456789012", firstNameAr: "مسعد", lastNameAr: "عقله", phoneNumber: "0551234567", status: "Active", availability: "Online" },
-  { driverId: 10002, residenceNumber: "2456789013", firstNameAr: "حافظ", lastNameAr: "محمد", phoneNumber: "0559876543", status: "Active", availability: "Offline" },
-  { driverId: 10003, residenceNumber: "2456789014", firstNameAr: "محمد", lastNameAr: "شعبان", phoneNumber: "0553456789", status: "Active", availability: "Online" },
-  { driverId: 10004, residenceNumber: "2456789015", firstNameAr: "حمدي", lastNameAr: "محيوب", phoneNumber: "0557654321", status: "Inactive", availability: "Offline" },
-  { driverId: 10005, residenceNumber: "2456789016", firstNameAr: "وليد", lastNameAr: "توفيق", phoneNumber: "0552345678", status: "Active", availability: "Online" },
-  { driverId: 10006, residenceNumber: "2456789017", firstNameAr: "عبدالله", lastNameAr: "الحربي", phoneNumber: "0558765432", status: "Suspended", availability: "Offline" },
-  { driverId: 10007, residenceNumber: "2456789018", firstNameAr: "فهد", lastNameAr: "السالم", phoneNumber: "0554567890", status: "Active", availability: "Online" },
-  { driverId: 10008, residenceNumber: "2456789019", firstNameAr: "سعود", lastNameAr: "المطيري", phoneNumber: "0556543210", status: "Active", availability: "Offline" },
-  { driverId: 10009, residenceNumber: "2456789020", firstNameAr: "ياسر", lastNameAr: "العمري", phoneNumber: "0551122334", status: "Inactive", availability: "Offline" },
-  { driverId: 10010, residenceNumber: "2456789021", firstNameAr: "طارق", lastNameAr: "الزهراني", phoneNumber: "0559988776", status: "Active", availability: "Online" },
-];
+/* ═══════════════════════════════════════════════════════════════════
+   Token Helpers
+   ═══════════════════════════════════════════════════════════════════ */
 
-const MOCK_STATS: ActiveInactiveStats = {
-  totalDrivers: 3132,
-  activeDrivers: 2410,
-  inactiveDrivers: 722,
-  onlineDrivers: 1587,
-  offlineDrivers: 1545,
-};
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getAuthToken(): string | null {
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const raw = localStorage.getItem("authIam");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed?.state?.accessToken || null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(payload));
   } catch {
     return null;
   }
 }
 
-function isTokenValid(token: string): boolean {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1]));
-    const exp = payload.exp;
-    if (!exp) return true; // no exp claim — assume valid
-    return Date.now() < exp * 1000;
-  } catch {
-    return false;
-  }
+function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== "number") return true;
+  return payload.exp * 1000 < Date.now();
 }
 
-const SANED_TOKEN_KEY = "fll_saned_token";
-
 function getSanedToken(): string | null {
-  // Check local stored token first
-  const stored = localStorage.getItem(SANED_TOKEN_KEY);
-  if (stored) {
-    try {
-      const payload = JSON.parse(atob(stored.split(".")[1]));
-      if (payload.exp && Date.now() < payload.exp * 1000) return stored;
-      localStorage.removeItem(SANED_TOKEN_KEY); // expired
-    } catch { /* invalid */ }
+  const token = localStorage.getItem(SANED_TOKEN_KEY);
+  if (!token) return null;
+  if (isTokenExpired(token)) {
+    localStorage.removeItem(SANED_TOKEN_KEY);
+    return null;
   }
-  // Also try authIam (if somehow on same domain)
-  return getAuthToken();
+  return token;
 }
 
 function saveSanedToken(token: string) {
   localStorage.setItem(SANED_TOKEN_KEY, token);
-  localStorage.setItem("fll_jahez_last_sync", new Date().toISOString());
 }
 
-const PROXY_URL = "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
+/* ═══════════════════════════════════════════════════════════════════
+   Proxy Fetch — single gateway to Supabase Edge Function
+   ═══════════════════════════════════════════════════════════════════ */
 
-async function proxyFetch<T = unknown>(action: string, extra?: Record<string, unknown>): Promise<T> {
-  const token = getSanedToken();
-  if (!token) throw new Error("TOKEN_MISSING");
-
-  const res = await fetch(PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, token, ...extra }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    if (err.error?.includes("401") || err.error?.includes("403")) {
-      localStorage.removeItem(SANED_TOKEN_KEY);
-      throw new Error("TOKEN_EXPIRED");
-    }
-    throw new Error(err.error || `خطأ: ${res.status}`);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-// Keep old sanedFetch as fallback (direct call if user has Saned token)
-async function sanedFetch<T = unknown>(
-  endpoint: string,
-  params?: Record<string, string>
-): Promise<T> {
-  const token = getAuthToken();
-  if (!token) throw new Error("لم يتم تسجيل الدخول في Saned");
-  if (!isTokenValid(token)) throw new Error("انتهت صلاحية الجلسة — أعد تسجيل الدخول في Saned");
-
-  let url = `${SANED_BASE}/${endpoint}`;
-  if (params) url += "?" + new URLSearchParams(params).toString();
-
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
-      throw new Error("غير مصرح — تأكد من تسجيل الدخول في Saned");
-    }
-    throw new Error(`خطأ API: ${res.status} ${res.statusText}`);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-function formatDate(d: string | null): string {
-  if (!d) return "—";
+async function proxyFetch(
+  action: string,
+  token: string,
+  extra: Record<string, unknown> = {},
+): Promise<Record<string, unknown> | null> {
   try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(d));
-  } catch {
-    return d;
+    const res = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, token, ...extra }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[jahez-proxy] ${action} HTTP ${res.status}:`, text);
+      return null;
+    }
+    const json = await res.json();
+    if (json.statusCode && json.statusCode !== 200) {
+      console.error(`[jahez-proxy] ${action} statusCode ${json.statusCode}:`, json);
+      return null;
+    }
+    return json;
+  } catch (err) {
+    console.error(`[jahez-proxy] ${action} exception:`, err);
+    return null;
   }
 }
 
-function getDriverName(d: SanedDriver): string {
-  if (d.driverName && d.driverName.trim()) return d.driverName.trim();
-  if (d.firstNameAr || d.lastNameAr) return `${d.firstNameAr || ""} ${d.lastNameAr || ""}`.trim();
-  if (d.firstName || d.lastName) return `${d.firstName || ""} ${d.lastName || ""}`.trim();
-  return `سائق ${d.driverId}`;
+/* ═══════════════════════════════════════════════════════════════════
+   Vehicle Helpers
+   ═══════════════════════════════════════════════════════════════════ */
+
+function vehicleLabel(type: number): string {
+  switch (type) {
+    case 1:
+      return "شاحنة";
+    case 2:
+      return "دراجة";
+    case 3:
+      return "سيارة";
+    default:
+      return "غير محدد";
+  }
 }
 
-// ─── Status badge helper ─────────────────────────────────────────────────────
+function VehicleIcon({ type, size = 16 }: { type: number; size?: number }) {
+  switch (type) {
+    case 1:
+      return <Truck size={size} />;
+    case 2:
+      return <Bike size={size} />;
+    case 3:
+      return <Car size={size} />;
+    default:
+      return <Truck size={size} />;
+  }
+}
 
-function StatusBadge({ value, type }: { value: string; type: "status" | "availability" }) {
-  const statusMap: Record<string, { bg: string; color: string; label: string }> = {
-    Active: { bg: "#c6f6d5", color: "#276749", label: "نشط" },
-    Inactive: { bg: "#feebc8", color: "#c05621", label: "غير نشط" },
-    Suspended: { bg: "#fed7d7", color: "#c53030", label: "معلق" },
-    Online: { bg: "#c6f6d5", color: "#276749", label: "متصل" },
-    Offline: { bg: "#e2e8f0", color: "#4a5568", label: "غير متصل" },
-  };
-  const info = statusMap[value] || { bg: "#e2e8f0", color: "#4a5568", label: value || "—" };
+/* ═══════════════════════════════════════════════════════════════════
+   Style Constants (inline, CSS‑variable themed, dark, RTL)
+   ═══════════════════════════════════════════════════════════════════ */
+
+const colors = {
+  bg: "var(--con-bg, #0f1117)",
+  card: "var(--con-card, #1a1d27)",
+  cardHover: "var(--con-card-hover, #22263a)",
+  border: "var(--con-border, #2d3148)",
+  text: "var(--con-text, #e2e8f0)",
+  textMuted: "var(--con-text-muted, #94a3b8)",
+};
+
+const S = {
+  /* ── Page ── */
+  page: {
+    direction: "rtl" as const,
+    minHeight: "100vh",
+    background: colors.bg,
+    color: colors.text,
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    padding: "24px 28px",
+  },
+
+  /* ── Header ── */
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    marginBottom: "6px",
+  },
+  headerIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: "12px",
+    background: `linear-gradient(135deg, ${JAHEZ_RED}, #fc8181)`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  headerTitle: {
+    fontSize: "26px",
+    fontWeight: 700 as const,
+    color: colors.text,
+    margin: 0,
+  },
+  headerSub: {
+    fontSize: "13px",
+    color: colors.textMuted,
+    margin: "0 0 22px 0",
+    lineHeight: 1.6,
+  },
+
+  /* ── Banner ── */
+  banner: (connected: boolean) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "14px 20px",
+    borderRadius: "10px",
+    marginBottom: "20px",
+    background: connected
+      ? "linear-gradient(135deg, rgba(56,161,105,0.15), rgba(56,161,105,0.05))"
+      : "linear-gradient(135deg, rgba(229,62,62,0.15), rgba(229,62,62,0.05))",
+    border: `1px solid ${
+      connected ? "rgba(56,161,105,0.35)" : "rgba(229,62,62,0.35)"
+    }`,
+  }),
+  bannerText: { fontSize: "14px", fontWeight: 600 as const, color: colors.text },
+  bannerDetail: { fontSize: "12px", color: colors.textMuted, marginTop: "2px" },
+
+  /* ── Token paste ── */
+  tokenBox: {
+    background: colors.card,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "12px",
+    padding: "24px",
+    marginBottom: "22px",
+  },
+  tokenInput: {
+    flex: 1,
+    padding: "12px 16px",
+    borderRadius: "8px",
+    border: `1px solid ${colors.border}`,
+    background: colors.bg,
+    color: colors.text,
+    fontSize: "13px",
+    outline: "none",
+    direction: "ltr" as const,
+    fontFamily: "monospace",
+  },
+
+  /* ── Buttons ── */
+  btn: (bg: string, small = false) =>
+    ({
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: small ? "7px 14px" : "10px 20px",
+      borderRadius: "8px",
+      border: "none",
+      background: bg,
+      color: "#fff",
+      fontSize: small ? "12px" : "13px",
+      fontWeight: 600 as const,
+      cursor: "pointer",
+      transition: "opacity 0.2s",
+      whiteSpace: "nowrap" as const,
+    }) as React.CSSProperties,
+
+  /* ── Sync bar ── */
+  syncBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "22px",
+    flexWrap: "wrap" as const,
+  },
+  progressBar: {
+    height: "6px",
+    borderRadius: "3px",
+    background: colors.border,
+    overflow: "hidden" as const,
+    marginTop: "6px",
+    width: "100%",
+  },
+  progressFill: (pct: number) => ({
+    height: "100%",
+    width: `${pct}%`,
+    background: `linear-gradient(90deg, ${JAHEZ_RED}, #fc8181)`,
+    borderRadius: "3px",
+    transition: "width 0.3s ease",
+  }),
+
+  /* ── KPI grid ── */
+  kpiGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))",
+    gap: "14px",
+    marginBottom: "24px",
+  },
+  kpiCard: {
+    background: colors.card,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "12px",
+    padding: "20px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "8px",
+    transition: "border-color 0.2s, transform 0.15s",
+  },
+  kpiLabel: { fontSize: "12px", color: colors.textMuted, fontWeight: 500 as const },
+  kpiValue: (c: string) =>
+    ({ fontSize: "28px", fontWeight: 700 as const, color: c, margin: 0, lineHeight: 1.2 }),
+
+  /* ── Charts ── */
+  chartsRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+  chartCard: {
+    background: colors.card,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "12px",
+    padding: "20px",
+  },
+  chartTitle: {
+    fontSize: "14px",
+    fontWeight: 600 as const,
+    color: colors.text,
+    marginBottom: "10px",
+  },
+
+  /* ── Table ── */
+  tableWrap: {
+    background: colors.card,
+    border: `1px solid ${colors.border}`,
+    borderRadius: "12px",
+    overflow: "hidden" as const,
+    marginBottom: "24px",
+  },
+  tableToolbar: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "14px 20px",
+    flexWrap: "wrap" as const,
+    borderBottom: `1px solid ${colors.border}`,
+  },
+  searchInput: {
+    flex: 1,
+    minWidth: "200px",
+    padding: "9px 14px 9px 14px",
+    paddingRight: "36px",
+    borderRadius: "8px",
+    border: `1px solid ${colors.border}`,
+    background: colors.bg,
+    color: colors.text,
+    fontSize: "13px",
+    outline: "none",
+  },
+  select: {
+    padding: "9px 12px",
+    borderRadius: "8px",
+    border: `1px solid ${colors.border}`,
+    background: colors.bg,
+    color: colors.text,
+    fontSize: "13px",
+    outline: "none",
+    cursor: "pointer",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse" as const,
+    fontSize: "13px",
+  },
+  th: {
+    padding: "12px 16px",
+    textAlign: "right" as const,
+    fontSize: "12px",
+    fontWeight: 600 as const,
+    color: colors.textMuted,
+    borderBottom: `1px solid ${colors.border}`,
+    background: "rgba(0,0,0,0.2)",
+    whiteSpace: "nowrap" as const,
+  },
+  td: {
+    padding: "11px 16px",
+    textAlign: "right" as const,
+    borderBottom: `1px solid ${colors.border}`,
+    whiteSpace: "nowrap" as const,
+  },
+  trHover: { cursor: "pointer", transition: "background 0.15s" },
+
+  /* ── Badges ── */
+  badge: (bg: string, fg: string) =>
+    ({
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "5px",
+      padding: "4px 10px",
+      borderRadius: "20px",
+      fontSize: "11px",
+      fontWeight: 600 as const,
+      background: bg,
+      color: fg,
+    }) as React.CSSProperties,
+
+  /* ── Pagination ── */
+  pagination: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    padding: "16px 20px",
+    borderTop: `1px solid ${colors.border}`,
+    flexWrap: "wrap" as const,
+  },
+  pageBtn: (active: boolean) => ({
+    width: "34px",
+    height: "34px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "8px",
+    border: active ? `2px solid ${JAHEZ_RED}` : `1px solid ${colors.border}`,
+    background: active ? "rgba(229,62,62,0.15)" : "transparent",
+    color: active ? JAHEZ_RED : colors.textMuted,
+    fontSize: "13px",
+    fontWeight: active ? (700 as const) : (500 as const),
+    cursor: "pointer",
+  }),
+
+  /* ── Side panel ── */
+  overlay: {
+    position: "fixed" as const,
+    inset: 0,
+    background: "rgba(0,0,0,0.55)",
+    zIndex: 999,
+  },
+  sidePanel: {
+    position: "fixed" as const,
+    top: 0,
+    left: 0,
+    width: "430px",
+    maxWidth: "92vw",
+    height: "100vh",
+    background: colors.card,
+    borderRight: `1px solid ${colors.border}`,
+    zIndex: 1000,
+    overflowY: "auto" as const,
+    padding: "24px",
+    direction: "rtl" as const,
+  },
+
+  /* ── Detail rows ── */
+  detailRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "13px 0",
+    borderBottom: `1px solid ${colors.border}`,
+  },
+  detailLabel: { fontSize: "12px", color: colors.textMuted, fontWeight: 500 as const },
+  detailValue: { fontSize: "14px", fontWeight: 600 as const, color: colors.text },
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   Detail Row Sub-component
+   ═══════════════════════════════════════════════════════════════════ */
+
+function DetailRow({
+  icon,
+  label,
+  value,
+  valueColor,
+  ltr,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  valueColor?: string;
+  ltr?: boolean;
+}) {
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        padding: "2px 10px",
-        borderRadius: 9999,
-        fontSize: 12,
-        fontWeight: 600,
-        background: info.bg,
-        color: info.color,
-      }}
-    >
-      {type === "availability" ? (
-        value === "Online" ? <Wifi size={11} /> : <WifiOff size={11} />
-      ) : value === "Active" ? (
-        <CheckCircle2 size={11} />
-      ) : value === "Suspended" ? (
-        <AlertTriangle size={11} />
-      ) : (
-        <XCircle size={11} />
-      )}
-      {info.label}
-    </span>
+    <div style={S.detailRow}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        <span style={S.detailLabel}>{label}</span>
+      </div>
+      <span
+        style={{
+          ...S.detailValue,
+          ...(valueColor ? { color: valueColor } : {}),
+          ...(ltr ? { direction: "ltr" as const, fontFamily: "monospace" } : {}),
+        }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════════
+   Donut Center Label
+   ═══════════════════════════════════════════════════════════════════ */
 
-export default function JahezPlatform() {
-  // ─── State ───────────────────────────────────────────────────────────────
+function DonutCenterLabel({ total, label }: { total: number; label: string }) {
+  return (
+    <g>
+      <text
+        x="50%"
+        y="46%"
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ fontSize: "22px", fontWeight: 700, fill: colors.text }}
+      >
+        {total.toLocaleString("ar-SA")}
+      </text>
+      <text
+        x="50%"
+        y="62%"
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ fontSize: "11px", fill: colors.textMuted }}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
 
-  const [drivers, setDrivers] = useState<SanedDriver[]>([]);
-  const [stats, setStats] = useState<ActiveInactiveStats | null>(null);
-  const [provider, setProvider] = useState<ProviderDetails | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState<"drivers" | "stats" | "all" | null>(null);
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [tokenValid, setTokenValid] = useState(false);
-  const [corsBlocked, setCorsBlocked] = useState(false);
-  const [usingMock, setUsingMock] = useState(false);
+/* ═══════════════════════════════════════════════════════════════════
+   Chart Legend
+   ═══════════════════════════════════════════════════════════════════ */
 
-  // Table state
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterAvail, setFilterAvail] = useState<string>("all");
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalDriverCount, setTotalDriverCount] = useState(0);
-
-  // Supabase sync progress
-  const [syncProgress, setSyncProgress] = useState<{ done: number; total: number } | null>(null);
-
-  const mountedRef = useRef(true);
-
-  // ─── Init ────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    mountedRef.current = true;
-
-    // Auto-capture token from URL hash (sent from Saned tab)
-    const hash = window.location.hash;
-    if (hash.includes("saned_token=")) {
-      const tokenFromUrl = decodeURIComponent(hash.split("saned_token=")[1]?.split("&")[0] || "");
-      if (tokenFromUrl && tokenFromUrl.length > 100) {
-        try {
-          const payload = JSON.parse(atob(tokenFromUrl.split(".")[1]));
-          if (payload.exp && Date.now() < payload.exp * 1000) {
-            saveSanedToken(tokenFromUrl);
-            toast.success("تم ربط حساب Saned تلقائياً!");
-            // Clean URL hash
-            window.history.replaceState(null, "", window.location.pathname);
-          }
-        } catch { /* invalid token */ }
-      }
-    }
-
-    const token = getSanedToken() || getAuthToken();
-    const connected = !!token;
-    setIsConnected(connected);
-    setTokenValid(connected && isTokenValid(token!));
-    setLastSync(localStorage.getItem(LS_LAST_SYNC));
-
-    if (connected && isTokenValid(token!)) {
-      loadProviderDetails();
-      loadDrivers(0);
-      loadStats();
-    } else {
-      // use mock data
-      setUsingMock(true);
-      setDrivers(MOCK_DRIVERS);
-      setStats(MOCK_STATS);
-      setTotalDriverCount(MOCK_DRIVERS.length);
-      setTotalPages(1);
-    }
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // ─── API calls ───────────────────────────────────────────────────────────
-
-  const loadProviderDetails = useCallback(async () => {
-    try {
-      const data = await proxyFetch<ProviderDetails>("profile");
-      if (mountedRef.current) { setProvider(data); setCorsBlocked(false); }
-    } catch (err: unknown) {
-      console.warn("Provider details error:", err);
-      // Fallback to direct fetch
-      try {
-        const data = await sanedFetch<ProviderDetails>(`delivery-providers/${PROVIDER_ID}/details`);
-        if (mountedRef.current) setProvider(data);
-      } catch {
-        setCorsBlocked(true);
-      }
-    }
-  }, []);
-
-  const loadDrivers = useCallback(async (pageNum: number) => {
-    setLoading(true);
-    try {
-      // Saned uses 1-based pages
-      const raw = await proxyFetch<any>("drivers", { page: pageNum + 1, size: PAGE_SIZE });
-
-      if (!mountedRef.current) return;
-
-      // Saned response: { statusCode, data: { currentPage, rowsCount, result: [...] } }
-      const inner = raw?.data || raw;
-      const driverList: SanedDriver[] = inner?.result || inner?.content || inner?.drivers || [];
-      const totalCount = inner?.rowsCount || inner?.totalElements || inner?.total || driverList.length;
-
-      // Map Saned field names to our interface
-      const mapped: SanedDriver[] = driverList.map((d: any) => ({
-        driverId: d.driverID || d.driverId || "",
-        iqamaNumber: d.idNumber || d.iqamaNumber || "",
-        driverName: d.driverName || d.name || "",
-        phoneNumber: d.phoneNumber || d.phone || "",
-        driverStatus: d.driverStatus === true ? "Active" : d.driverStatus === false ? "Inactive" : (d.driverStatus || ""),
-        availability: d.availability === true ? "Online" : d.availability === false ? "Offline" : (d.availability || ""),
-        vehicleType: d.vehicleType || "",
-      }));
-
-      if (mapped.length === 0 && pageNum === 0) {
-        setUsingMock(true);
-        setDrivers(MOCK_DRIVERS);
-        setTotalDriverCount(MOCK_DRIVERS.length);
-        setTotalPages(1);
-      } else {
-        setUsingMock(false);
-        setCorsBlocked(false);
-        setDrivers(mapped);
-        setTotalDriverCount(totalCount);
-        setTotalPages(Math.ceil(totalCount / PAGE_SIZE));
-      }
-      setPage(pageNum);
-    } catch (err: unknown) {
-      console.warn("Driver list error:", err);
-      if (mountedRef.current) {
-        setUsingMock(true);
-        setDrivers(MOCK_DRIVERS);
-        setTotalDriverCount(MOCK_DRIVERS.length);
-        setTotalPages(1);
-        toast.error("تعذر تحميل المناديب — يتم عرض بيانات تجريبية");
-      }
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, []);
-
-  const loadStats = useCallback(async () => {
-    try {
-      const raw = await proxyFetch<any>("stats");
-      if (!mountedRef.current) return;
-      // Saned response: { statusCode, data: { activeDrivers, inactiveDrivers, onlineDrivers, ... } }
-      const s = raw?.data || raw;
-      setStats({
-        activeDrivers: s.activeDrivers ?? 0,
-        activePercentage: s.activePercentage ?? 0,
-        inactiveDrivers: s.inactiveDrivers ?? 0,
-        inactivePercentage: s.inactivePercentage ?? 0,
-        onlineDrivers: s.onlineDrivers ?? 0,
-        onlinePercentage: s.onlinePercentage ?? 0,
-        offlineDrivers: s.offlineDrivers ?? 0,
-        offlinePercentage: s.offlinePercentage ?? 0,
-        totalDrivers: (s.activeDrivers ?? 0) + (s.inactiveDrivers ?? 0),
-      });
-      setCorsBlocked(false);
-    } catch (err: unknown) {
-      console.warn("Stats error:", err);
-      if (mountedRef.current) {
-        setStats(MOCK_STATS);
-      }
-    }
-  }, []);
-
-  // ─── Sync actions ────────────────────────────────────────────────────────
-
-  const handleSyncDrivers = useCallback(async () => {
-    setSyncing("drivers");
-    try {
-      // Use proxy to fetch ALL drivers in one call
-      toast.info("جاري سحب جميع المناديب من Saned...");
-      const data = await proxyFetch<{
-        drivers?: SanedDriver[];
-        total?: number;
-        pages?: number;
-      }>("drivers-all");
-
-      const allDrivers = data?.drivers || [];
-      setSyncProgress({ done: allDrivers.length, total: data?.total || allDrivers.length });
-      toast.info(`تم تحميل ${allDrivers.length} مندوب`);
-
-      // Save to Supabase
-      if (supabase && allDrivers.length > 0) {
-        toast.info("جاري الحفظ في قاعدة البيانات...");
-        const batchSize = 50;
-        for (let i = 0; i < allDrivers.length; i += batchSize) {
-          const batch = allDrivers.slice(i, i + batchSize).map((d) => ({
-            saned_driver_id: d.driverId,
-            driver_unique_id: d.driverUniqueId || null,
-            residence_number: d.residenceNumber || null,
-            first_name_ar: d.firstNameAr || null,
-            last_name_ar: d.lastNameAr || null,
-            first_name: d.firstName || null,
-            last_name: d.lastName || null,
-            phone_number: d.phoneNumber || null,
-            email: d.email || null,
-            status: d.status || null,
-            availability: d.availability || null,
-            vehicle_type: d.vehicleType || null,
-            city: d.city || null,
-            national_id: d.nationalId || null,
-            raw_data: d,
-            synced_at: new Date().toISOString(),
-          }));
-
-          const { error } = await supabase
-            .from("jahez_drivers")
-            .upsert(batch, { onConflict: "saned_driver_id" });
-
-          if (error) {
-            console.warn("Supabase upsert error:", error);
-            // Don't break — continue with remaining batches
-          }
-
-          setSyncProgress({ done: Math.min(i + batchSize, allDrivers.length), total: allDrivers.length });
-        }
-        toast.success(`تم مزامنة ${allDrivers.length} مندوب بنجاح`);
-      } else if (!supabase) {
-        toast.warning("Supabase غير متصل — تم التحميل بدون حفظ");
-      }
-
-      // Update last sync
-      const now = new Date().toISOString();
-      localStorage.setItem(LS_LAST_SYNC, now);
-      setLastSync(now);
-
-      // Refresh table
-      await loadDrivers(0);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "خطأ غير معروف";
-      toast.error(`فشلت مزامنة المناديب: ${msg}`);
-    } finally {
-      setSyncing(null);
-      setSyncProgress(null);
-    }
-  }, [loadDrivers]);
-
-  const handleSyncStats = useCallback(async () => {
-    setSyncing("stats");
-    try {
-      await loadStats();
-      const now = new Date().toISOString();
-      localStorage.setItem(LS_LAST_SYNC, now);
-      setLastSync(now);
-      toast.success("تم تحديث الإحصائيات");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "خطأ غير معروف";
-      toast.error(`فشل تحديث الإحصائيات: ${msg}`);
-    } finally {
-      setSyncing(null);
-    }
-  }, [loadStats]);
-
-  const handleSyncAll = useCallback(async () => {
-    setSyncing("all");
-    try {
-      await Promise.all([handleSyncDrivers(), handleSyncStats()]);
-    } finally {
-      setSyncing(null);
-    }
-  }, [handleSyncDrivers, handleSyncStats]);
-
-  // ─── Export ──────────────────────────────────────────────────────────────
-
-  const handleExport = useCallback(() => {
-    const rows = filteredDrivers.map((d) => ({
-      "هوية السائق": d.driverId,
-      "رقم الإقامة": d.residenceNumber || "—",
-      "اسم السائق": getDriverName(d),
-      "رقم التليفون": d.phoneNumber || "—",
-      "حالة السائق": d.status || "—",
-      "التوافر": d.availability || "—",
-      "المدينة": d.city || "—",
-      "نوع المركبة": d.vehicleType || "—",
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Jahez Drivers");
-    XLSX.writeFile(wb, `jahez_drivers_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    toast.success("تم تصدير الملف بنجاح");
-  }, [drivers, search, filterStatus, filterAvail]);
-
-  // ─── Filtering ───────────────────────────────────────────────────────────
-
-  const filteredDrivers = drivers.filter((d) => {
-    const nameMatch =
-      !search ||
-      getDriverName(d).includes(search) ||
-      d.phoneNumber?.includes(search) ||
-      String(d.driverId).includes(search) ||
-      d.residenceNumber?.includes(search);
-    const statusMatch = filterStatus === "all" || d.status === filterStatus;
-    const availMatch = filterAvail === "all" || d.availability === filterAvail;
-    return nameMatch && statusMatch && availMatch;
-  });
-
-  // ─── KPI computed ────────────────────────────────────────────────────────
-
-  const kpiData = stats || MOCK_STATS;
-  const onlinePercent =
-    kpiData.totalDrivers > 0
-      ? ((kpiData.onlineDrivers / kpiData.totalDrivers) * 100).toFixed(1)
-      : "0";
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  RENDER
-  // ═══════════════════════════════════════════════════════════════════════════
-
+function ChartLegend({
+  items,
+}: {
+  items: { name: string; value: number; color: string }[];
+}) {
   return (
     <div
-      dir="rtl"
       style={{
-        padding: "24px",
-        fontFamily: "var(--con-font, 'Tajawal', sans-serif)",
-        color: "var(--con-text-primary, #1a202c)",
-        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        gap: "24px",
+        marginTop: "10px",
       }}
     >
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 24,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: `linear-gradient(135deg, ${JAHEZ_RED}, ${JAHEZ_DARK})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: `0 4px 14px ${JAHEZ_RED}44`,
-            }}
-          >
-            <Truck size={26} color="#fff" />
-          </div>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "var(--con-text-page-title, 22px)",
-                fontWeight: 700,
-                color: "var(--con-text-primary, #1a202c)",
-              }}
-            >
-              منصة جاهز — Saned
-            </h1>
-            <p
-              style={{
-                margin: "2px 0 0",
-                fontSize: "var(--con-text-body, 14px)",
-                color: "var(--con-text-muted, #718096)",
-              }}
-            >
-              مزامنة بيانات المناديب والتحليلات
-            </p>
-          </div>
-        </div>
-        {usingMock && (
-          <span
-            style={{
-              background: "#fefcbf",
-              color: "#975a16",
-              padding: "4px 12px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <AlertTriangle size={13} />
-            بيانات تجريبية — API غير متصل
-          </span>
-        )}
-      </motion.div>
-
-      {/* ─── Connection Banner ───────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        style={{
-          background: isConnected && tokenValid
-            ? "linear-gradient(135deg, #f0fff4, #c6f6d5)"
-            : corsBlocked
-            ? "linear-gradient(135deg, #fffaf0, #feebc8)"
-            : "linear-gradient(135deg, #fff5f5, #fed7d7)",
-          border: `1px solid ${
-            isConnected && tokenValid
-              ? "#9ae6b4"
-              : corsBlocked
-              ? "#fbd38d"
-              : "#feb2b2"
-          }`,
-          borderRadius: 12,
-          padding: "14px 20px",
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 10,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {isConnected && tokenValid ? (
-            <Link2 size={18} color="#38a169" />
-          ) : (
-            <Unlink2 size={18} color={corsBlocked ? "#dd6b20" : "#e53e3e"} />
-          )}
-          <div>
-            <span
-              style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: isConnected && tokenValid
-                  ? "#276749"
-                  : corsBlocked
-                  ? "#c05621"
-                  : "#c53030",
-              }}
-            >
-              {isConnected && tokenValid
-                ? "متصل بـ Saned"
-                : corsBlocked
-                ? "CORS محظور — مطلوب تسجيل الدخول في Saned"
-                : "غير متصل — سجّل الدخول في Saned أولاً"}
-            </span>
-            {isConnected && tokenValid && provider && (
-              <p
-                style={{
-                  margin: "2px 0 0",
-                  fontSize: 12,
-                  color: "#4a5568",
-                }}
-              >
-                {provider.nameAr || provider.name || "الخطابول بدوام كامل"} — ID:{" "}
-                {PROVIDER_ID} — {provider.status || "Active"}
-              </p>
-            )}
-            {isConnected && tokenValid && !provider && (
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: "#4a5568" }}>
-                الخطابول بدوام كامل — ID: {PROVIDER_ID} — Active
-              </p>
-            )}
-            {corsBlocked && (
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#975a16" }}>
-                يجب أن تكون مسجلاً في بوابة Saned في نافذة أخرى. إذا كنت مسجلاً بالفعل، قد يكون CORS
-                يمنع الطلبات المباشرة من هذا الموقع.
-              </p>
-            )}
-          </div>
-        </div>
-        {lastSync && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 12,
-              color: "var(--con-text-muted, #718096)",
-            }}
-          >
-            <Clock size={13} />
-            آخر مزامنة: {formatDate(lastSync)}
-          </div>
-        )}
-      </motion.div>
-
-      {/* ─── Token Link Section ──────────────────────────────────────────── */}
-      {!getSanedToken() && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}
-          style={{
-            background: "var(--con-bg-surface-1, #0d1926)", border: "1px solid var(--con-border-default, #1a3a52)",
-            borderRadius: 12, padding: "16px 20px", marginBottom: 16,
-          }}
+      {items.map((item) => (
+        <div
+          key={item.name}
+          style={{ display: "flex", alignItems: "center", gap: "6px" }}
         >
-          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-            <Key size={15} color="#e53e3e" /> ربط حساب Saned — الصق التوكن
-          </p>
-          <p style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 10, lineHeight: 1.6 }}>
-            1. افتح <a href="https://sdp-portal.saned.io" target="_blank" rel="noreferrer" style={{ color: "#38bdf8" }}>بوابة Saned</a> وسجل دخول
+          <div
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: item.color,
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: "12px", color: colors.textMuted }}>
+            {item.name}: {item.value.toLocaleString("ar-SA")}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════════ */
+
+export default function JahezPlatform() {
+  /* ─── State ─── */
+  const [token, setToken] = useState<string | null>(getSanedToken);
+  const [tokenInput, setTokenInput] = useState("");
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [stats, setStats] = useState<SanedStats | null>(null);
+  const [drivers, setDrivers] = useState<MappedDriver[]>([]);
+  const [totalDrivers, setTotalDrivers] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [syncing, setSyncing] = useState<SyncTarget | null>(null);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"" | "Active" | "Inactive">(
+    "",
+  );
+  const [filterAvail, setFilterAvail] = useState<"" | "Online" | "Offline">(
+    "",
+  );
+  const [selectedDriver, setSelectedDriver] = useState<MappedDriver | null>(
+    null,
+  );
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const hasToken = !!token;
+
+  /* ─── Auto-capture token from URL hash ─── */
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.includes("saned_token=")) return;
+    const parts = hash.replace("#", "").split("&");
+    for (const part of parts) {
+      const [key, val] = part.split("=");
+      if (key === "saned_token" && val) {
+        saveSanedToken(val);
+        setToken(val);
+        window.location.hash = "";
+        toast.success("تم ربط توكن Saned بنجاح");
+        break;
+      }
+    }
+  }, []);
+
+  /* ─── Map raw drivers ─── */
+  const mapDrivers = useCallback(
+    (rawDrivers: RawDriver[]): MappedDriver[] =>
+      rawDrivers.map((d) => ({
+        driverId: d.driverID || d.driverId || 0,
+        iqamaNumber: d.idNumber || "",
+        driverName: d.driverName || "",
+        phoneNumber: d.phoneNumber || "",
+        driverStatus: d.driverStatus === true ? "Active" : "Inactive",
+        availability: d.availability === true ? "Online" : "Offline",
+        vehicleType: d.vehicleType || 1,
+      })),
+    [],
+  );
+
+  /* ─── Load Profile ─── */
+  const loadProfile = useCallback(async () => {
+    if (!token) return;
+    const raw = await proxyFetch("profile", token);
+    if (!raw) return;
+    const data = (raw.data as ProfileInfo) || (raw as unknown as ProfileInfo);
+    setProfile(data);
+  }, [token]);
+
+  /* ─── Load Stats ─── */
+  const loadStats = useCallback(async () => {
+    if (!token) return;
+    setStatsLoading(true);
+    try {
+      const raw = await proxyFetch("stats", token);
+      if (raw) {
+        const data = (raw.data || raw) as unknown as SanedStats;
+        setStats(data);
+      } else {
+        toast.error("فشل تحميل الإحصائيات");
+      }
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [token]);
+
+  /* ─── Load Drivers (paginated) ─── */
+  const loadDrivers = useCallback(
+    async (page: number) => {
+      if (!token) return;
+      setLoading(true);
+      try {
+        const raw = await proxyFetch("drivers", token, {
+          page,
+          size: PAGE_SIZE,
+        });
+        if (!raw) {
+          toast.error("فشل تحميل بيانات المناديب");
+          return;
+        }
+        const data = raw.data as
+          | { currentPage?: number; rowsCount?: number; result?: RawDriver[] }
+          | undefined;
+        const envelope =
+          data ||
+          (raw as unknown as {
+            currentPage?: number;
+            rowsCount?: number;
+            result?: RawDriver[];
+          });
+        const rawDrivers: RawDriver[] = envelope?.result || [];
+        const mapped = mapDrivers(rawDrivers);
+        setDrivers(mapped);
+        setTotalDrivers(envelope?.rowsCount || mapped.length);
+        setCurrentPage(envelope?.currentPage || page);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token, mapDrivers],
+  );
+
+  /* ─── Initial load on token change ─── */
+  useEffect(() => {
+    if (!token) return;
+    loadProfile();
+    loadStats();
+    loadDrivers(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  /* ─── Sync drivers → Supabase (batched upsert) ─── */
+  const syncDriversToSupabase = useCallback(async () => {
+    if (!token) return;
+    setSyncing("drivers");
+    setSyncProgress(0);
+    try {
+      toast.info("جاري جلب جميع المناديب من Saned...");
+      const raw = await proxyFetch("drivers-all", token);
+      if (!raw) {
+        toast.error("فشل جلب بيانات المناديب");
+        return;
+      }
+
+      /* Normalize response shape — proxy returns { drivers: [...], total } */
+      let allRaw: RawDriver[] = [];
+      if (raw?.drivers && Array.isArray(raw.drivers)) {
+        allRaw = raw.drivers;
+      } else if (raw?.data?.drivers && Array.isArray(raw.data.drivers)) {
+        allRaw = raw.data.drivers;
+      } else if (raw?.data?.result && Array.isArray(raw.data.result)) {
+        allRaw = raw.data.result;
+      } else if (Array.isArray(raw?.data)) {
+        allRaw = raw.data;
+      } else if (Array.isArray(raw)) {
+        allRaw = raw as unknown as RawDriver[];
+      }
+
+      if (allRaw.length === 0) {
+        toast.warning("لا يوجد مناديب لمزامنتهم");
+        return;
+      }
+
+      const BATCH = 200;
+      const total = allRaw.length;
+      let synced = 0;
+
+      for (let i = 0; i < total; i += BATCH) {
+        const batch = allRaw.slice(i, i + BATCH).map((d) => ({
+          platform: "jahez",
+          external_id: String(d.driverID || d.driverId || ""),
+          iqama_number: d.idNumber || "",
+          name: d.driverName || "",
+          phone: d.phoneNumber || "",
+          status: d.driverStatus === true ? "Active" : "Inactive",
+          availability: d.availability === true ? "Online" : "Offline",
+          vehicle_type: String(d.vehicleType || 1),
+          synced_at: new Date().toISOString(),
+        }));
+
+        if (!supabase) { toast.error("Supabase غير متصل"); return; }
+        const { error } = await supabase
+          .from("jahez_drivers")
+          .upsert(batch, { onConflict: "external_id" });
+
+        if (error) {
+          console.error("Supabase upsert batch error:", error);
+          toast.error(
+            `خطأ في مزامنة الدفعة ${Math.floor(i / BATCH) + 1}`,
+          );
+        }
+
+        synced += batch.length;
+        setSyncProgress(Math.round((synced / total) * 100));
+      }
+
+      toast.success(`تم مزامنة ${synced.toLocaleString("ar-SA")} سائق بنجاح`);
+    } catch (err) {
+      console.error("Sync exception:", err);
+      toast.error("حدث خطأ أثناء المزامنة");
+    } finally {
+      setSyncing(null);
+      setSyncProgress(0);
+    }
+  }, [token]);
+
+  /* ─── Sync All ─── */
+  const syncAll = useCallback(async () => {
+    setSyncing("all");
+    setSyncProgress(0);
+    try {
+      await loadStats();
+      setSyncProgress(25);
+      await syncDriversToSupabase();
+      setSyncProgress(90);
+      await loadDrivers(1);
+      setSyncProgress(100);
+      toast.success("اكتملت المزامنة الشاملة");
+    } catch {
+      toast.error("خطأ في المزامنة الشاملة");
+    } finally {
+      setSyncing(null);
+      setSyncProgress(0);
+    }
+  }, [loadStats, syncDriversToSupabase, loadDrivers]);
+
+  /* ─── Token paste submit ─── */
+  const handleTokenSubmit = useCallback(() => {
+    const cleaned = tokenInput.trim();
+    if (!cleaned) {
+      toast.error("الرجاء لصق التوكن أولاً");
+      return;
+    }
+    if (isTokenExpired(cleaned)) {
+      toast.error("التوكن منتهي الصلاحية — أعد تسجيل الدخول إلى Saned");
+      return;
+    }
+    saveSanedToken(cleaned);
+    setToken(cleaned);
+    setTokenInput("");
+    toast.success("تم ربط توكن Saned بنجاح");
+  }, [tokenInput]);
+
+  /* ─── Disconnect ─── */
+  const handleDisconnect = useCallback(() => {
+    localStorage.removeItem(SANED_TOKEN_KEY);
+    setToken(null);
+    setProfile(null);
+    setStats(null);
+    setDrivers([]);
+    setTotalDrivers(0);
+    setCurrentPage(1);
+    toast.info("تم فصل اتصال Saned");
+  }, []);
+
+  /* ─── Filtered drivers (client-side search/filter on current page) ─── */
+  const filteredDrivers = useMemo(() => {
+    let result = drivers;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.driverName.toLowerCase().includes(q) ||
+          d.phoneNumber.includes(q) ||
+          String(d.driverId).includes(q) ||
+          d.iqamaNumber.includes(q),
+      );
+    }
+    if (filterStatus) {
+      result = result.filter((d) => d.driverStatus === filterStatus);
+    }
+    if (filterAvail) {
+      result = result.filter((d) => d.availability === filterAvail);
+    }
+    return result;
+  }, [drivers, searchQuery, filterStatus, filterAvail]);
+
+  /* ─── Pagination helpers ─── */
+  const totalPages = Math.max(1, Math.ceil(totalDrivers / PAGE_SIZE));
+
+  const pageNumbers = useMemo(() => {
+    const MAX_VISIBLE = 7;
+    const pages: number[] = [];
+    let start = Math.max(1, currentPage - Math.floor(MAX_VISIBLE / 2));
+    let end = start + MAX_VISIBLE - 1;
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - MAX_VISIBLE + 1);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }, [currentPage, totalPages]);
+
+  const goToPage = useCallback(
+    (page: number) => {
+      if (page < 1 || page > totalPages || page === currentPage) return;
+      loadDrivers(page);
+    },
+    [loadDrivers, totalPages, currentPage],
+  );
+
+  /* ─── Excel export ─── */
+  const exportExcel = useCallback(() => {
+    if (filteredDrivers.length === 0) {
+      toast.warning("لا يوجد بيانات للتصدير");
+      return;
+    }
+    const rows = filteredDrivers.map((d) => ({
+      "هوية السائق": d.driverId,
+      "رقم الإقامة": d.iqamaNumber,
+      "اسم السائق": d.driverName,
+      "رقم التليفون": d.phoneNumber,
+      "حالة السائق": d.driverStatus === "Active" ? "نشط" : "غير نشط",
+      التوافر: d.availability === "Online" ? "متصل" : "غير متصل",
+      "نوع المركبة": vehicleLabel(d.vehicleType),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "المناديب");
+    XLSX.writeFile(
+      wb,
+      `jahez_drivers_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+    toast.success("تم تصدير الملف بنجاح");
+  }, [filteredDrivers]);
+
+  /* ─── Chart data ─── */
+  const onlineOfflineData = useMemo(() => {
+    if (!stats) return [];
+    return [
+      { name: "متصل", value: stats.onlineDrivers, color: SANED_DARK_BLUE },
+      { name: "غير متصل", value: stats.offlineDrivers, color: "#cbd5e0" },
+    ];
+  }, [stats]);
+
+  const activeInactiveData = useMemo(() => {
+    if (!stats) return [];
+    return [
+      { name: "نشط", value: stats.activeDrivers, color: ACCENT_GREEN },
+      { name: "غير نشط", value: stats.inactiveDrivers, color: JAHEZ_RED },
+    ];
+  }, [stats]);
+
+  /* ─── Token expiry for display ─── */
+  const tokenExpiry = useMemo(() => {
+    if (!token) return null;
+    const payload = decodeJwtPayload(token);
+    if (!payload || typeof payload.exp !== "number") return null;
+    const d = new Date(payload.exp * 1000);
+    return d.toLocaleString("ar-SA", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  }, [token]);
+
+  /* ─── Provider display values ─── */
+  const providerName = profile?.providerName || "الخطابول بدوام كامل";
+  const providerId = profile?.providerId || 20524;
+  const providerStatus = profile?.providerStatus || "Active";
+
+  /* ═══════════════════════════ RENDER ═══════════════════════════ */
+
+  return (
+    <div style={S.page}>
+      {/* ══════════════════ Header ══════════════════ */}
+      <div style={S.header}>
+        <div style={S.headerIcon}>
+          <Truck size={22} color="#fff" />
+        </div>
+        <div>
+          <h1 style={S.headerTitle}>منصة جاهز — Saned</h1>
+        </div>
+      </div>
+      <p style={S.headerSub}>
+        إدارة ومزامنة بيانات المناديب من منصة Saned التابعة لجاهز مع نظام الخط
+        الأول اللوجستي
+      </p>
+
+      {/* ══════════════════ Connection Banner ══════════════════ */}
+      <div style={S.banner(hasToken)}>
+        {hasToken ? (
+          <CheckCircle2 size={20} color={ACCENT_GREEN} />
+        ) : (
+          <XCircle size={20} color={JAHEZ_RED} />
+        )}
+        <div style={{ flex: 1 }}>
+          <div style={S.bannerText}>
+            {hasToken ? "متصل بمنصة Saned" : "غير متصل بمنصة Saned"}
+          </div>
+          {hasToken && (
+            <div style={S.bannerDetail}>
+              {providerName} — ID: {providerId} —{" "}
+              {providerStatus === "Active" ? "نشط" : providerStatus}
+              {tokenExpiry && (
+                <span style={{ marginRight: "14px" }}>
+                  <Clock
+                    size={11}
+                    style={{ verticalAlign: "middle", marginLeft: "4px" }}
+                  />
+                  صلاحية التوكن: {tokenExpiry}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        {hasToken && (
+          <button
+            style={{
+              ...S.btn("rgba(229,62,62,0.2)", true),
+              color: JAHEZ_RED,
+            }}
+            onClick={handleDisconnect}
+            title="فصل الاتصال"
+          >
+            <Unlink2 size={14} />
+            فصل
+          </button>
+        )}
+      </div>
+
+      {/* ══════════════════ Token Paste UI ══════════════════ */}
+      {!hasToken && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={S.tokenBox}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "10px",
+            }}
+          >
+            <Key size={20} color={JAHEZ_RED} />
+            <span style={{ fontSize: "16px", fontWeight: 600 }}>
+              ربط حساب Saned
+            </span>
+          </div>
+          <p
+            style={{
+              fontSize: "13px",
+              color: colors.textMuted,
+              margin: "0 0 12px 0",
+              lineHeight: 1.75,
+            }}
+          >
+            1. افتح بوابة Saned في تبويب آخر وسجّل الدخول
             <br />
-            2. افتح DevTools (F12) → Console → الصق: <code style={{ background: "var(--con-bg-elevated)", padding: "2px 6px", borderRadius: 4, fontSize: 11 }}>JSON.parse(localStorage.getItem('authIam')).state.accessToken</code>
+            2. من أدوات المطوّر (F12) &rarr; Application &rarr; Local Storage
+            &rarr; انسخ التوكن
             <br />
-            3. انسخ التوكن والصقه هنا
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              id="saned-token-input"
-              type="password"
-              placeholder="الصق التوكن هنا..."
+            3. أو سيُلتقط تلقائياً عبر الرابط{" "}
+            <code
               style={{
-                flex: 1, background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default)",
-                borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary)", fontSize: 12,
-                fontFamily: "var(--con-font-mono)", direction: "ltr",
-              }}
-            />
-            <button
-              onClick={() => {
-                const input = document.getElementById("saned-token-input") as HTMLInputElement;
-                const val = input?.value?.trim();
-                if (!val || val.length < 100) { toast.error("التوكن غير صحيح"); return; }
-                try {
-                  const payload = JSON.parse(atob(val.split(".")[1]));
-                  if (!payload.exp || Date.now() > payload.exp * 1000) { toast.error("التوكن منتهي الصلاحية"); return; }
-                  saveSanedToken(val);
-                  toast.success("تم ربط حساب Saned بنجاح!");
-                  setCorsBlocked(false);
-                  setUsingMock(false);
-                  loadProviderDetails();
-                  loadStats();
-                  loadDrivers(0);
-                } catch { toast.error("التوكن غير صالح — تأكد من نسخه كاملاً"); }
-              }}
-              style={{
-                background: "#e53e3e", color: "#fff", border: "none", borderRadius: 8,
-                padding: "8px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 6,
+                color: JAHEZ_RED,
+                background: "rgba(229,62,62,0.08)",
+                padding: "2px 6px",
+                borderRadius: "4px",
+                fontSize: "12px",
               }}
             >
-              <Link2 size={14} /> ربط
+              #saned_token=xxx
+            </code>
+          </p>
+          <div style={{ display: "flex", gap: "10px", alignItems: "stretch" }}>
+            <input
+              style={S.tokenInput}
+              placeholder="الصق توكن Saned هنا..."
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTokenSubmit()}
+            />
+            <button style={S.btn(JAHEZ_RED)} onClick={handleTokenSubmit}>
+              <Link2 size={16} />
+              ربط
             </button>
           </div>
         </motion.div>
       )}
 
-      {/* ─── Sync Actions Bar ────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.15 }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 22,
-          flexWrap: "wrap",
-        }}
-      >
-        <SyncButton
-          label="مزامنة المناديب"
-          icon={<Users size={15} />}
-          loading={syncing === "drivers" || syncing === "all"}
-          onClick={handleSyncDrivers}
-          disabled={!!syncing}
-          primary
-        />
-        <SyncButton
-          label="تحديث الإحصائيات"
-          icon={<Activity size={15} />}
-          loading={syncing === "stats" || syncing === "all"}
-          onClick={handleSyncStats}
-          disabled={!!syncing}
-        />
-        <SyncButton
-          label="مزامنة الكل"
-          icon={<DatabaseZap size={15} />}
-          loading={syncing === "all"}
-          onClick={handleSyncAll}
-          disabled={!!syncing}
-        />
-
-        {syncProgress && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-              color: JAHEZ_RED,
-              fontWeight: 600,
-            }}
+      {/* ══════════════════ Sync Bar ══════════════════ */}
+      {hasToken && (
+        <div style={S.syncBar}>
+          <button
+            style={S.btn(JAHEZ_RED)}
+            disabled={!!syncing}
+            onClick={syncDriversToSupabase}
           >
-            <Loader2 size={14} className="animate-spin" />
-            تم مزامنة {syncProgress.done}/{syncProgress.total}...
-          </div>
-        )}
-      </motion.div>
-
-      {/* ─── KPI Cards ───────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-          gap: 14,
-          marginBottom: 24,
-        }}
-      >
-        <KPICard
-          index={0}
-          label="إجمالي المناديب"
-          value={kpiData.totalDrivers}
-          icon={<Users size={20} />}
-          color={JAHEZ_DARK}
-        />
-        <KPICard
-          index={1}
-          label="نشط"
-          value={kpiData.activeDrivers}
-          icon={<UserCheck size={20} />}
-          color="#38a169"
-        />
-        <KPICard
-          index={2}
-          label="غير نشط"
-          value={kpiData.inactiveDrivers}
-          icon={<UserX size={20} />}
-          color="#dd6b20"
-        />
-        <KPICard
-          index={3}
-          label="متصل"
-          value={kpiData.onlineDrivers}
-          icon={<Wifi size={20} />}
-          color="#3182ce"
-        />
-        <KPICard
-          index={4}
-          label="غير متصل"
-          value={kpiData.offlineDrivers}
-          icon={<WifiOff size={20} />}
-          color="#a0aec0"
-        />
-        <KPICard
-          index={5}
-          label="نسبة الاتصال"
-          value={`${onlinePercent}%`}
-          icon={<Percent size={20} />}
-          color={JAHEZ_RED}
-        />
-      </div>
-
-      {/* ─── Drivers Table Section ───────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.25 }}
-        style={{
-          background: "var(--con-bg-surface-1, #fff)",
-          borderRadius: 14,
-          border: "1px solid var(--con-border, #e2e8f0)",
-          overflow: "hidden",
-        }}
-      >
-        {/* Table header */}
-        <div
-          style={{
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--con-border, #e2e8f0)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Users size={18} color={JAHEZ_RED} />
-            <span style={{ fontWeight: 700, fontSize: 16 }}>
-              قائمة المناديب
-            </span>
-            <span
-              style={{
-                background: JAHEZ_RED_LIGHT,
-                color: JAHEZ_RED,
-                padding: "2px 10px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              {totalDriverCount.toLocaleString("ar-SA")}
-            </span>
-          </div>
+            {syncing === "drivers" ? (
+              <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+            ) : (
+              <DatabaseZap size={16} />
+            )}
+            مزامنة المناديب
+          </button>
 
           <button
-            onClick={handleExport}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 16px",
-              borderRadius: 8,
-              border: `1px solid ${JAHEZ_RED}`,
-              background: "transparent",
-              color: JAHEZ_RED,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = JAHEZ_RED;
-              e.currentTarget.style.color = "#fff";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = JAHEZ_RED;
+            style={S.btn("#2d3748")}
+            disabled={!!syncing}
+            onClick={() => {
+              setSyncing("stats");
+              loadStats().finally(() => setSyncing(null));
             }}
           >
-            <Download size={14} />
-            تصدير Excel
+            {syncing === "stats" || statsLoading ? (
+              <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+            تحديث الإحصائيات
           </button>
-        </div>
 
-        {/* Filters bar */}
-        <div
-          style={{
-            padding: "12px 20px",
-            borderBottom: "1px solid var(--con-border, #e2e8f0)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Search */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              background: "var(--con-bg-surface-2, #f7fafc)",
-              border: "1px solid var(--con-border, #e2e8f0)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              flex: "1 1 220px",
-              maxWidth: 340,
+          <button
+            style={S.btn("#2b6cb0")}
+            disabled={!!syncing}
+            onClick={syncAll}
+          >
+            {syncing === "all" ? (
+              <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+            ) : (
+              <Activity size={16} />
+            )}
+            مزامنة الكل
+          </button>
+
+          {syncing && (
+            <div style={{ flex: 1, minWidth: "160px" }}>
+              <div style={{ fontSize: "11px", color: colors.textMuted }}>
+                {syncing === "drivers" && "مزامنة المناديب..."}
+                {syncing === "stats" && "تحديث الإحصائيات..."}
+                {syncing === "all" && "مزامنة شاملة..."}
+                <span style={{ float: "left", direction: "ltr" as const }}>
+                  {syncProgress}%
+                </span>
+              </div>
+              <div style={S.progressBar}>
+                <div style={S.progressFill(syncProgress)} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════ KPI Cards ══════════════════ */}
+      {hasToken && (
+        <div style={S.kpiGrid}>
+          {/* Total Drivers */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: colors.textMuted,
+              transform: "translateY(-2px)",
             }}
           >
-            <Search size={14} color="var(--con-text-muted, #a0aec0)" />
-            <input
-              type="text"
-              placeholder="بحث بالاسم، الهاتف، الهوية..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              style={{
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                width: "100%",
-                fontSize: 13,
-                color: "var(--con-text-primary, #1a202c)",
-                fontFamily: "inherit",
-              }}
-            />
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <Users size={18} color={colors.textMuted} />
+              <span style={S.kpiLabel}>إجمالي المناديب</span>
+            </div>
+            <p style={S.kpiValue(colors.text)}>
+              {stats
+                ? (
+                    stats.activeDrivers + stats.inactiveDrivers
+                  ).toLocaleString("ar-SA")
+                : "—"}
+            </p>
+          </motion.div>
+
+          {/* Active */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: ACCENT_GREEN,
+              transform: "translateY(-2px)",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <UserCheck size={18} color={ACCENT_GREEN} />
+              <span style={S.kpiLabel}>نشط</span>
+            </div>
+            <p style={S.kpiValue(ACCENT_GREEN)}>
+              {stats ? stats.activeDrivers.toLocaleString("ar-SA") : "—"}
+            </p>
+            {stats && (
+              <span style={{ fontSize: "11px", color: colors.textMuted }}>
+                {stats.activePercentage}%
+              </span>
+            )}
+          </motion.div>
+
+          {/* Inactive */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: JAHEZ_RED,
+              transform: "translateY(-2px)",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <UserX size={18} color={JAHEZ_RED} />
+              <span style={S.kpiLabel}>غير نشط</span>
+            </div>
+            <p style={S.kpiValue(JAHEZ_RED)}>
+              {stats ? stats.inactiveDrivers.toLocaleString("ar-SA") : "—"}
+            </p>
+            {stats && (
+              <span style={{ fontSize: "11px", color: colors.textMuted }}>
+                {stats.inactivePercentage}%
+              </span>
+            )}
+          </motion.div>
+
+          {/* Online */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: ACCENT_GREEN,
+              transform: "translateY(-2px)",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <Wifi size={18} color={ACCENT_GREEN} />
+              <span style={S.kpiLabel}>متصل</span>
+            </div>
+            <p style={S.kpiValue(ACCENT_GREEN)}>
+              {stats ? stats.onlineDrivers.toLocaleString("ar-SA") : "—"}
+            </p>
+            {stats && (
+              <span style={{ fontSize: "11px", color: colors.textMuted }}>
+                {stats.onlinePercentage}%
+              </span>
+            )}
+          </motion.div>
+
+          {/* Offline */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: ACCENT_GRAY,
+              transform: "translateY(-2px)",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <WifiOff size={18} color={ACCENT_GRAY} />
+              <span style={S.kpiLabel}>غير متصل</span>
+            </div>
+            <p style={S.kpiValue(ACCENT_GRAY)}>
+              {stats ? stats.offlineDrivers.toLocaleString("ar-SA") : "—"}
+            </p>
+            {stats && (
+              <span style={{ fontSize: "11px", color: colors.textMuted }}>
+                {stats.offlinePercentage}%
+              </span>
+            )}
+          </motion.div>
+
+          {/* Online % */}
+          <motion.div
+            style={S.kpiCard}
+            whileHover={{
+              borderColor: "#2b6cb0",
+              transform: "translateY(-2px)",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <Percent size={18} color="#2b6cb0" />
+              <span style={S.kpiLabel}>نسبة الاتصال</span>
+            </div>
+            <p style={S.kpiValue("#2b6cb0")}>
+              {stats ? `${stats.onlinePercentage}%` : "—"}
+            </p>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ══════════════════ Insight Charts ══════════════════ */}
+      {hasToken && stats && (
+        <div style={S.chartsRow}>
+          {/* Donut: Online vs Offline */}
+          <div style={S.chartCard}>
+            <div style={S.chartTitle}>المناديب — متصل / غير متصل</div>
+            <ResponsiveContainer width="100%" height={210}>
+              <PieChart>
+                <Pie
+                  data={onlineOfflineData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  strokeWidth={0}
+                >
+                  {onlineOfflineData.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: colors.card,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: "8px",
+                    color: colors.text,
+                    fontSize: "12px",
+                    direction: "rtl",
+                  }}
+                  formatter={(value: number, name: string) => [
+                    value.toLocaleString("ar-SA"),
+                    name,
+                  ]}
+                />
+                <DonutCenterLabel
+                  total={stats.onlineDrivers + stats.offlineDrivers}
+                  label="إجمالي"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <ChartLegend items={onlineOfflineData} />
           </div>
 
-          {/* Status filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Filter size={13} color="var(--con-text-muted, #a0aec0)" />
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                setPage(0);
-              }}
-              style={{
-                border: "1px solid var(--con-border, #e2e8f0)",
-                borderRadius: 8,
-                padding: "6px 10px",
-                fontSize: 13,
-                background: "var(--con-bg-surface-2, #f7fafc)",
-                color: "var(--con-text-primary, #1a202c)",
-                fontFamily: "inherit",
-                cursor: "pointer",
-              }}
+          {/* Donut: Active vs Inactive */}
+          <div style={S.chartCard}>
+            <div style={S.chartTitle}>المناديب — نشط / غير نشط</div>
+            <ResponsiveContainer width="100%" height={210}>
+              <PieChart>
+                <Pie
+                  data={activeInactiveData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  strokeWidth={0}
+                >
+                  {activeInactiveData.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: colors.card,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: "8px",
+                    color: colors.text,
+                    fontSize: "12px",
+                    direction: "rtl",
+                  }}
+                  formatter={(value: number, name: string) => [
+                    value.toLocaleString("ar-SA"),
+                    name,
+                  ]}
+                />
+                <DonutCenterLabel
+                  total={stats.activeDrivers + stats.inactiveDrivers}
+                  label="إجمالي"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <ChartLegend items={activeInactiveData} />
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════ Driver Table ══════════════════ */}
+      {hasToken && (
+        <div style={S.tableWrap}>
+          {/* Toolbar */}
+          <div style={S.tableToolbar}>
+            {/* Search */}
+            <div
+              style={{ position: "relative", flex: 1, minWidth: "200px" }}
             >
-              <option value="all">كل الحالات</option>
+              <Search
+                size={16}
+                color={colors.textMuted}
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "12px",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                ref={searchRef}
+                style={S.searchInput}
+                placeholder="بحث بالاسم، الهاتف، الهوية..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <Filter size={14} color={colors.textMuted} />
+
+            <select
+              style={S.select}
+              value={filterStatus}
+              onChange={(e) =>
+                setFilterStatus(
+                  e.target.value as "" | "Active" | "Inactive",
+                )
+              }
+            >
+              <option value="">كل الحالات</option>
               <option value="Active">نشط</option>
               <option value="Inactive">غير نشط</option>
-              <option value="Suspended">معلق</option>
             </select>
+
+            <select
+              style={S.select}
+              value={filterAvail}
+              onChange={(e) =>
+                setFilterAvail(
+                  e.target.value as "" | "Online" | "Offline",
+                )
+              }
+            >
+              <option value="">كل التوافر</option>
+              <option value="Online">متصل</option>
+              <option value="Offline">غير متصل</option>
+            </select>
+
+            <button style={S.btn("#2d3748", true)} onClick={exportExcel}>
+              <Download size={14} />
+              تصدير Excel
+            </button>
+
+            <div
+              style={{
+                fontSize: "12px",
+                color: colors.textMuted,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {totalDrivers.toLocaleString("ar-SA")} سائق
+            </div>
           </div>
 
-          {/* Availability filter */}
-          <select
-            value={filterAvail}
-            onChange={(e) => {
-              setFilterAvail(e.target.value);
-              setPage(0);
-            }}
-            style={{
-              border: "1px solid var(--con-border, #e2e8f0)",
-              borderRadius: 8,
-              padding: "6px 10px",
-              fontSize: 13,
-              background: "var(--con-bg-surface-2, #f7fafc)",
-              color: "var(--con-text-primary, #1a202c)",
-              fontFamily: "inherit",
-              cursor: "pointer",
-            }}
-          >
-            <option value="all">كل التوافر</option>
-            <option value="Online">متصل</option>
-            <option value="Offline">غير متصل</option>
-          </select>
-
-          {/* Refresh */}
-          <button
-            onClick={() => loadDrivers(page)}
-            disabled={loading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: "1px solid var(--con-border, #e2e8f0)",
-              background: "var(--con-bg-surface-2, #f7fafc)",
-              color: "var(--con-text-muted, #718096)",
-              fontSize: 13,
-              cursor: loading ? "not-allowed" : "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {loading ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <RefreshCw size={13} />
-            )}
-            تحديث
-          </button>
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: 13,
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  background: "var(--con-bg-surface-2, #f7fafc)",
-                  borderBottom: "1px solid var(--con-border, #e2e8f0)",
-                }}
-              >
-                {[
-                  "هوية السائق",
-                  "رقم الإقامة",
-                  "اسم السائق",
-                  "رقم التليفون",
-                  "حالة السائق",
-                  "التوافر",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      padding: "10px 14px",
-                      textAlign: "start",
-                      fontWeight: 700,
-                      color: "var(--con-text-muted, #718096)",
-                      fontSize: 12,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {h}
+          {/* Table body */}
+          <div style={{ overflowX: "auto" }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <Hash size={12} /> هوية السائق
+                    </span>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence mode="wait">
+                  <th style={S.th}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <IdCard size={12} /> رقم الإقامة
+                    </span>
+                  </th>
+                  <th style={S.th}>اسم السائق</th>
+                  <th style={S.th}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <Phone size={12} /> رقم التليفون
+                    </span>
+                  </th>
+                  <th style={S.th}>حالة السائق</th>
+                  <th style={S.th}>التوافر</th>
+                  <th style={S.th}>المركبة</th>
+                  <th style={S.th}></th>
+                </tr>
+              </thead>
+              <tbody>
                 {loading ? (
-                  <tr key="loading">
-                    <td colSpan={6} style={{ textAlign: "center", padding: 48 }}>
+                  <tr>
+                    <td
+                      colSpan={8}
+                      style={{
+                        ...S.td,
+                        textAlign: "center",
+                        padding: "52px 16px",
+                      }}
+                    >
                       <Loader2
                         size={28}
                         color={JAHEZ_RED}
-                        className="animate-spin"
-                        style={{ margin: "0 auto" }}
-                      />
-                      <p
                         style={{
-                          marginTop: 8,
-                          color: "var(--con-text-muted, #718096)",
-                          fontSize: 13,
+                          animation: "spin 1s linear infinite",
+                          display: "block",
+                          margin: "0 auto 10px",
                         }}
+                      />
+                      <div
+                        style={{ color: colors.textMuted, fontSize: "13px" }}
                       >
                         جاري تحميل المناديب...
-                      </p>
+                      </div>
                     </td>
                   </tr>
                 ) : filteredDrivers.length === 0 ? (
-                  <tr key="empty">
+                  <tr>
                     <td
-                      colSpan={6}
+                      colSpan={8}
                       style={{
+                        ...S.td,
                         textAlign: "center",
-                        padding: 48,
-                        color: "var(--con-text-muted, #718096)",
+                        padding: "52px 16px",
                       }}
                     >
-                      لا توجد نتائج مطابقة
+                      <AlertTriangle
+                        size={24}
+                        color={colors.textMuted}
+                        style={{ display: "block", margin: "0 auto 10px" }}
+                      />
+                      <div
+                        style={{ color: colors.textMuted, fontSize: "13px" }}
+                      >
+                        {searchQuery || filterStatus || filterAvail
+                          ? "لا يوجد نتائج مطابقة للبحث"
+                          : "لا يوجد مناديب"}
+                      </div>
                     </td>
                   </tr>
                 ) : (
-                  filteredDrivers.map((d, idx) => (
-                    <motion.tr
+                  filteredDrivers.map((d) => (
+                    <tr
                       key={d.driverId}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: idx * 0.02, duration: 0.2 }}
                       style={{
-                        borderBottom: "1px solid var(--con-border, #edf2f7)",
-                        cursor: "pointer",
-                        transition: "background 0.15s",
+                        ...S.trHover,
+                        background:
+                          hoveredRow === d.driverId
+                            ? colors.cardHover
+                            : "transparent",
                       }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.background =
-                          "var(--con-bg-hover, #f7fafc)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.background =
-                          "transparent";
-                      }}
+                      onMouseEnter={() => setHoveredRow(d.driverId)}
+                      onMouseLeave={() => setHoveredRow(null)}
+                      onClick={() => setSelectedDriver(d)}
                     >
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          fontWeight: 600,
-                          color: JAHEZ_RED,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {d.driverId}
+                      <td style={S.td}>
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {d.driverId}
+                        </span>
+                      </td>
+                      <td style={S.td}>
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {d.iqamaNumber || "—"}
+                        </span>
+                      </td>
+                      <td style={S.td}>
+                        <span style={{ fontWeight: 600 }}>
+                          {d.driverName || "—"}
+                        </span>
                       </td>
                       <td
                         style={{
-                          padding: "10px 14px",
-                          whiteSpace: "nowrap",
-                          fontFamily: "monospace",
-                          fontSize: 12,
-                        }}
-                      >
-                        {d.iqamaNumber || d.idNumber || d.residenceNumber || d.nationalId || "—"}
-                      </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {getDriverName(d)}
-                      </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
+                          ...S.td,
                           direction: "ltr",
-                          textAlign: "start",
-                          fontFamily: "monospace",
-                          fontSize: 12,
-                          whiteSpace: "nowrap",
+                          textAlign: "right",
                         }}
                       >
-                        {d.phoneNumber || "—"}
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "12px",
+                          }}
+                        >
+                          {d.phoneNumber || "—"}
+                        </span>
                       </td>
-                      <td style={{ padding: "10px 14px" }}>
-                        <StatusBadge value={d.status || "—"} type="status" />
+                      <td style={S.td}>
+                        {d.driverStatus === "Active" ? (
+                          <span
+                            style={S.badge(
+                              "rgba(56,161,105,0.15)",
+                              ACCENT_GREEN,
+                            )}
+                          >
+                            <CheckCircle2 size={12} /> نشط
+                          </span>
+                        ) : (
+                          <span
+                            style={S.badge(
+                              "rgba(229,62,62,0.15)",
+                              JAHEZ_RED,
+                            )}
+                          >
+                            <XCircle size={12} /> غير نشط
+                          </span>
+                        )}
                       </td>
-                      <td style={{ padding: "10px 14px" }}>
-                        <StatusBadge
-                          value={d.availability || "—"}
-                          type="availability"
-                        />
+                      <td style={S.td}>
+                        {d.availability === "Online" ? (
+                          <span
+                            style={S.badge(
+                              "rgba(56,161,105,0.15)",
+                              ACCENT_GREEN,
+                            )}
+                          >
+                            <Wifi size={12} /> متصل
+                          </span>
+                        ) : (
+                          <span
+                            style={S.badge(
+                              "rgba(113,128,150,0.15)",
+                              ACCENT_GRAY,
+                            )}
+                          >
+                            <WifiOff size={12} /> غير متصل
+                          </span>
+                        )}
                       </td>
-                    </motion.tr>
+                      <td style={S.td}>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            fontSize: "12px",
+                            color: colors.textMuted,
+                          }}
+                        >
+                          <VehicleIcon type={d.vehicleType} size={14} />
+                          {vehicleLabel(d.vehicleType)}
+                        </span>
+                      </td>
+                      <td style={S.td}>
+                        <button
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: colors.textMuted,
+                            padding: "4px",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDriver(d);
+                          }}
+                          title="عرض التفاصيل"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div
-            style={{
-              padding: "12px 20px",
-              borderTop: "1px solid var(--con-border, #e2e8f0)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 12,
-                color: "var(--con-text-muted, #718096)",
-              }}
-            >
-              صفحة {(page + 1).toLocaleString("ar-SA")} من{" "}
-              {totalPages.toLocaleString("ar-SA")} — إجمالي{" "}
-              {totalDriverCount.toLocaleString("ar-SA")} مندوب
-            </span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <PaginationButton
-                disabled={page === 0 || loading}
-                onClick={() => loadDrivers(page - 1)}
-              >
-                <ChevronRight size={14} />
-                السابق
-              </PaginationButton>
-              <PaginationButton
-                disabled={page >= totalPages - 1 || loading}
-                onClick={() => loadDrivers(page + 1)}
-              >
-                التالي
-                <ChevronLeft size={14} />
-              </PaginationButton>
-            </div>
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <div style={S.pagination}>
+              {/* Prev (RTL: ChevronRight = prev) */}
+              <button
+                style={{
+                  ...S.pageBtn(false),
+                  opacity: currentPage <= 1 ? 0.35 : 1,
+                  cursor: currentPage <= 1 ? "default" : "pointer",
+                }}
+                disabled={currentPage <= 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                <ChevronRight size={16} />
+              </button>
+
+              {/* First page shortcut */}
+              {pageNumbers[0] > 1 && (
+                <>
+                  <button
+                    style={S.pageBtn(currentPage === 1)}
+                    onClick={() => goToPage(1)}
+                  >
+                    1
+                  </button>
+                  {pageNumbers[0] > 2 && (
+                    <span
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: "12px",
+                        padding: "0 2px",
+                      }}
+                    >
+                      ...
+                    </span>
+                  )}
+                </>
+              )}
+
+              {/* Visible pages */}
+              {pageNumbers.map((p) => (
+                <button
+                  key={p}
+                  style={S.pageBtn(p === currentPage)}
+                  onClick={() => goToPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+
+              {/* Last page shortcut */}
+              {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                <>
+                  {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                    <span
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: "12px",
+                        padding: "0 2px",
+                      }}
+                    >
+                      ...
+                    </span>
+                  )}
+                  <button
+                    style={S.pageBtn(currentPage === totalPages)}
+                    onClick={() => goToPage(totalPages)}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+
+              {/* Next (RTL: ChevronLeft = next) */}
+              <button
+                style={{
+                  ...S.pageBtn(false),
+                  opacity: currentPage >= totalPages ? 0.35 : 1,
+                  cursor: currentPage >= totalPages ? "default" : "pointer",
+                }}
+                disabled={currentPage >= totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: colors.textMuted,
+                  marginRight: "14px",
+                }}
+              >
+                صفحة {currentPage} من {totalPages}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════ Driver Detail Side Panel ══════════════════ */}
+      <AnimatePresence>
+        {selectedDriver && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={S.overlay}
+              onClick={() => setSelectedDriver(null)}
+            />
+
+            {/* Panel */}
+            <motion.div
+              initial={{ x: -440 }}
+              animate={{ x: 0 }}
+              exit={{ x: -440 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              style={S.sidePanel}
+            >
+              {/* Close / Title */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "24px",
+                }}
+              >
+                <h2
+                  style={{ fontSize: "18px", fontWeight: 700, margin: 0 }}
+                >
+                  تفاصيل السائق
+                </h2>
+                <button
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: colors.textMuted,
+                    padding: "4px",
+                  }}
+                  onClick={() => setSelectedDriver(null)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Avatar + Name */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "24px",
+                  paddingBottom: "22px",
+                  borderBottom: `1px solid ${colors.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    width: 66,
+                    height: 66,
+                    borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${JAHEZ_RED}, #fc8181)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "26px",
+                    fontWeight: 700,
+                    color: "#fff",
+                  }}
+                >
+                  {selectedDriver.driverName
+                    ? selectedDriver.driverName.charAt(0).toUpperCase()
+                    : "?"}
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "17px", fontWeight: 700 }}>
+                    {selectedDriver.driverName || "غير معروف"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: colors.textMuted,
+                      marginTop: "4px",
+                    }}
+                  >
+                    ID: {selectedDriver.driverId}
+                  </div>
+                </div>
+
+                {/* Status badges */}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {selectedDriver.driverStatus === "Active" ? (
+                    <span
+                      style={S.badge(
+                        "rgba(56,161,105,0.15)",
+                        ACCENT_GREEN,
+                      )}
+                    >
+                      <CheckCircle2 size={12} /> نشط
+                    </span>
+                  ) : (
+                    <span
+                      style={S.badge("rgba(229,62,62,0.15)", JAHEZ_RED)}
+                    >
+                      <XCircle size={12} /> غير نشط
+                    </span>
+                  )}
+                  {selectedDriver.availability === "Online" ? (
+                    <span
+                      style={S.badge(
+                        "rgba(56,161,105,0.15)",
+                        ACCENT_GREEN,
+                      )}
+                    >
+                      <Wifi size={12} /> متصل
+                    </span>
+                  ) : (
+                    <span
+                      style={S.badge(
+                        "rgba(113,128,150,0.15)",
+                        ACCENT_GRAY,
+                      )}
+                    >
+                      <WifiOff size={12} /> غير متصل
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Info rows */}
+              <div>
+                <DetailRow
+                  icon={<Hash size={16} color={colors.textMuted} />}
+                  label="هوية السائق"
+                  value={String(selectedDriver.driverId)}
+                />
+                <DetailRow
+                  icon={<IdCard size={16} color={colors.textMuted} />}
+                  label="رقم الإقامة"
+                  value={selectedDriver.iqamaNumber || "—"}
+                />
+                <DetailRow
+                  icon={<Users size={16} color={colors.textMuted} />}
+                  label="اسم السائق"
+                  value={selectedDriver.driverName || "—"}
+                />
+                <DetailRow
+                  icon={<Phone size={16} color={colors.textMuted} />}
+                  label="رقم التليفون"
+                  value={selectedDriver.phoneNumber || "—"}
+                  ltr
+                />
+                <DetailRow
+                  icon={
+                    <UserCheck size={16} color={colors.textMuted} />
+                  }
+                  label="حالة السائق"
+                  value={
+                    selectedDriver.driverStatus === "Active"
+                      ? "نشط"
+                      : "غير نشط"
+                  }
+                  valueColor={
+                    selectedDriver.driverStatus === "Active"
+                      ? ACCENT_GREEN
+                      : JAHEZ_RED
+                  }
+                />
+                <DetailRow
+                  icon={<Wifi size={16} color={colors.textMuted} />}
+                  label="التوافر"
+                  value={
+                    selectedDriver.availability === "Online"
+                      ? "متصل"
+                      : "غير متصل"
+                  }
+                  valueColor={
+                    selectedDriver.availability === "Online"
+                      ? ACCENT_GREEN
+                      : ACCENT_GRAY
+                  }
+                />
+                <DetailRow
+                  icon={
+                    <VehicleIcon
+                      type={selectedDriver.vehicleType}
+                      size={16}
+                    />
+                  }
+                  label="نوع المركبة"
+                  value={vehicleLabel(selectedDriver.vehicleType)}
+                />
+              </div>
+
+              {/* Actions */}
+              <div
+                style={{
+                  marginTop: "30px",
+                  display: "flex",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  style={{
+                    ...S.btn(JAHEZ_RED, true),
+                    flex: 1,
+                    justifyContent: "center",
+                  }}
+                  onClick={() => {
+                    if (selectedDriver.phoneNumber) {
+                      navigator.clipboard.writeText(
+                        selectedDriver.phoneNumber,
+                      );
+                      toast.success("تم نسخ رقم الهاتف");
+                    }
+                  }}
+                >
+                  <Phone size={14} />
+                  نسخ الهاتف
+                </button>
+                <button
+                  style={{
+                    ...S.btn("#2d3748", true),
+                    flex: 1,
+                    justifyContent: "center",
+                  }}
+                  onClick={() => setSelectedDriver(null)}
+                >
+                  <X size={14} />
+                  إغلاق
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
-      </motion.div>
+      </AnimatePresence>
+
+      {/* ══════════════════ Keyframe for spinner ══════════════════ */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function SyncButton({
-  label,
-  icon,
-  loading,
-  onClick,
-  disabled,
-  primary,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  loading: boolean;
-  onClick: () => void;
-  disabled: boolean;
-  primary?: boolean;
-}) {
-  const [hover, setHover] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "8px 18px",
-        borderRadius: 10,
-        border: primary ? "none" : `1px solid var(--con-border, #e2e8f0)`,
-        background: primary
-          ? hover
-            ? JAHEZ_RED_HOVER
-            : JAHEZ_RED
-          : hover
-          ? "var(--con-bg-surface-2, #f7fafc)"
-          : "var(--con-bg-surface-1, #fff)",
-        color: primary ? "#fff" : "var(--con-text-primary, #1a202c)",
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled && !loading ? 0.6 : 1,
-        transition: "all 0.2s",
-        fontFamily: "inherit",
-        boxShadow: primary ? `0 2px 8px ${JAHEZ_RED}33` : "none",
-      }}
-    >
-      {loading ? <Loader2 size={15} className="animate-spin" /> : icon}
-      {label}
-    </button>
-  );
-}
-
-function KPICard({
-  label,
-  value,
-  icon,
-  color,
-  index,
-}: {
-  label: string;
-  value: number | string;
-  icon: React.ReactNode;
-  color: string;
-  index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.1 + index * 0.05 }}
-      style={{
-        background: "var(--con-bg-surface-1, #fff)",
-        border: "1px solid var(--con-border, #e2e8f0)",
-        borderRadius: 14,
-        padding: "18px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        transition: "box-shadow 0.2s, transform 0.2s",
-        cursor: "default",
-      }}
-      whileHover={{
-        boxShadow: `0 4px 20px ${color}22`,
-        scale: 1.02,
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 12,
-          background: `${color}15`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color,
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div>
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 800,
-            color: "var(--con-text-primary, #1a202c)",
-            lineHeight: 1.2,
-          }}
-        >
-          {typeof value === "number" ? value.toLocaleString("ar-SA") : value}
-        </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--con-text-muted, #718096)",
-            marginTop: 2,
-          }}
-        >
-          {label}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function PaginationButton({
-  children,
-  disabled,
-  onClick,
-}: {
-  children: React.ReactNode;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 4,
-        padding: "5px 12px",
-        borderRadius: 8,
-        border: "1px solid var(--con-border, #e2e8f0)",
-        background: "var(--con-bg-surface-1, #fff)",
-        color: disabled
-          ? "var(--con-text-muted, #a0aec0)"
-          : "var(--con-text-primary, #1a202c)",
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        fontFamily: "inherit",
-        transition: "all 0.15s",
-      }}
-    >
-      {children}
-    </button>
   );
 }

@@ -166,6 +166,32 @@ export const DEFAULT_MODULES: ModuleDefinition[] = [
     version: "1.0.0",
     features: [],
   },
+  {
+    id: "jahez-platform",
+    labelAr: "منصة جاهز",
+    label: "Jahez Platform",
+    group: "operations",
+    icon: "Truck",
+    path: "/admin-panel/jahez-platform",
+    enabled: true,
+    isCore: false,
+    order: 8,
+    version: "1.0.0",
+    features: [],
+  },
+  {
+    id: "toyou-platform",
+    labelAr: "منصة تويو",
+    label: "ToYou Platform",
+    group: "operations",
+    icon: "Package",
+    path: "/admin-panel/toyou-platform",
+    enabled: true,
+    isCore: false,
+    order: 9,
+    version: "1.0.0",
+    features: [],
+  },
 
   // ── Finance ──
   {

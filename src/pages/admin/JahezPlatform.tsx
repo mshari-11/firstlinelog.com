@@ -129,6 +129,24 @@ function isTokenValid(token: string): boolean {
   }
 }
 
+const PROXY_URL = "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
+
+async function proxyFetch<T = unknown>(action: string, extra?: Record<string, unknown>): Promise<T> {
+  const res = await fetch(PROXY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...extra }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `خطأ API: ${res.status}`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+// Keep old sanedFetch as fallback (direct call if user has Saned token)
 async function sanedFetch<T = unknown>(
   endpoint: string,
   params?: Record<string, string>
@@ -284,13 +302,15 @@ export default function JahezPlatform() {
 
   const loadProviderDetails = useCallback(async () => {
     try {
-      const data = await sanedFetch<ProviderDetails>(
-        `delivery-providers/${PROVIDER_ID}/details`
-      );
-      if (mountedRef.current) setProvider(data);
+      const data = await proxyFetch<ProviderDetails>("profile");
+      if (mountedRef.current) { setProvider(data); setCorsBlocked(false); }
     } catch (err: unknown) {
       console.warn("Provider details error:", err);
-      if (err instanceof TypeError && err.message.includes("Failed to fetch")) {
+      // Fallback to direct fetch
+      try {
+        const data = await sanedFetch<ProviderDetails>(`delivery-providers/${PROVIDER_ID}/details`);
+        if (mountedRef.current) setProvider(data);
+      } catch {
         setCorsBlocked(true);
       }
     }
@@ -299,42 +319,38 @@ export default function JahezPlatform() {
   const loadDrivers = useCallback(async (pageNum: number) => {
     setLoading(true);
     try {
-      const data = await sanedFetch<{
+      const data = await proxyFetch<{
         content?: SanedDriver[];
+        drivers?: SanedDriver[];
         totalElements?: number;
+        total?: number;
         totalPages?: number;
-      }>("delivery-providers/driver-list", {
-        page: String(pageNum),
-        size: String(PAGE_SIZE),
-      });
+      }>("drivers", { page: pageNum, size: PAGE_SIZE });
 
       if (!mountedRef.current) return;
 
-      const driverList = data?.content || [];
+      const driverList = data?.content || data?.drivers || [];
       if (driverList.length === 0 && pageNum === 0) {
-        // API returned empty — use mock
         setUsingMock(true);
         setDrivers(MOCK_DRIVERS);
         setTotalDriverCount(MOCK_DRIVERS.length);
         setTotalPages(1);
       } else {
         setUsingMock(false);
+        setCorsBlocked(false);
         setDrivers(driverList);
-        setTotalDriverCount(data?.totalElements || driverList.length);
-        setTotalPages(data?.totalPages || 1);
+        setTotalDriverCount(data?.totalElements || data?.total || driverList.length);
+        setTotalPages(data?.totalPages || Math.ceil((data?.totalElements || data?.total || driverList.length) / PAGE_SIZE));
       }
       setPage(pageNum);
     } catch (err: unknown) {
       console.warn("Driver list error:", err);
-      if (err instanceof TypeError && err.message.includes("Failed to fetch")) {
-        setCorsBlocked(true);
-      }
       if (mountedRef.current) {
         setUsingMock(true);
         setDrivers(MOCK_DRIVERS);
         setTotalDriverCount(MOCK_DRIVERS.length);
         setTotalPages(1);
-        toast.error("تعذر تحميل المناديب من API — يتم عرض بيانات تجريبية");
+        toast.error("تعذر تحميل المناديب — يتم عرض بيانات تجريبية");
       }
     } finally {
       if (mountedRef.current) setLoading(false);
@@ -343,11 +359,10 @@ export default function JahezPlatform() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await sanedFetch<ActiveInactiveStats>(
-        "delivery-providers/active-inactive"
-      );
+      const data = await proxyFetch<ActiveInactiveStats>("stats");
       if (!mountedRef.current) return;
       setStats(data);
+      setCorsBlocked(false);
     } catch (err: unknown) {
       console.warn("Stats error:", err);
       if (mountedRef.current) {
@@ -361,33 +376,17 @@ export default function JahezPlatform() {
   const handleSyncDrivers = useCallback(async () => {
     setSyncing("drivers");
     try {
-      // Fetch all pages
-      let allDrivers: SanedDriver[] = [];
-      let currentPage = 0;
-      let hasMore = true;
+      // Use proxy to fetch ALL drivers in one call
+      toast.info("جاري سحب جميع المناديب من Saned...");
+      const data = await proxyFetch<{
+        drivers?: SanedDriver[];
+        total?: number;
+        pages?: number;
+      }>("drivers-all");
 
-      while (hasMore) {
-        const data = await sanedFetch<{
-          content?: SanedDriver[];
-          totalElements?: number;
-          totalPages?: number;
-          last?: boolean;
-        }>("delivery-providers/driver-list", {
-          page: String(currentPage),
-          size: String(PAGE_SIZE),
-        });
-
-        const pageDrivers = data?.content || [];
-        allDrivers = [...allDrivers, ...pageDrivers];
-        setSyncProgress({ done: allDrivers.length, total: data?.totalElements || allDrivers.length });
-        toast.info(`تم تحميل ${allDrivers.length}/${data?.totalElements || "?"} مندوب...`);
-
-        if (data?.last || pageDrivers.length < PAGE_SIZE) {
-          hasMore = false;
-        } else {
-          currentPage++;
-        }
-      }
+      const allDrivers = data?.drivers || [];
+      setSyncProgress({ done: allDrivers.length, total: data?.total || allDrivers.length });
+      toast.info(`تم تحميل ${allDrivers.length} مندوب`);
 
       // Save to Supabase
       if (supabase && allDrivers.length > 0) {

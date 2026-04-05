@@ -1,0 +1,315 @@
+{
+  "name": "FLL - Jahez/Saned Auto Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'stats', token: $('Get Saned Token').item.json.token }) }}"
+      },
+      "id": "fetch-stats",
+      "name": "Fetch Jahez Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'drivers', token: $('Get Saned Token').item.json.token, page: 1, size: 100 }) }}"
+      },
+      "id": "fetch-drivers",
+      "name": "Fetch Jahez Drivers (Page 1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'driver-payments', token: $('Get Saned Token').item.json.token, page: 1, size: 50 }) }}"
+      },
+      "id": "fetch-payments",
+      "name": "Fetch Driver Payments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/rest/v1/jahez_sync_data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data_type: 'driver_stats', external_id: '20524', data: $('Fetch Jahez Stats').item.json, synced_at: new Date().toISOString() }) }}"
+      },
+      "id": "save-stats",
+      "name": "Save Stats to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/rest/v1/jahez_sync_data",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data_type: 'driver_payments', external_id: '20524', data: $('Fetch Driver Payments').item.json, synced_at: new Date().toISOString() }) }}"
+      },
+      "id": "save-payments",
+      "name": "Save Payments to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/rest/v1/sync_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ sync_type: 'n8n_jahez_auto', status: 'success', results: { stats: 'synced', payments: 'synced', drivers_page1: 'synced' }, synced_at: new Date().toISOString() }) }}"
+      },
+      "id": "log-sync",
+      "name": "Log Sync Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://djebhztfewjfyyoortvv.supabase.co/rest/v1/rpc/get_saned_token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "id": "get-token",
+      "name": "Get Saned Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 400],
+      "notes": "Gets the stored Saned token from Supabase. Token must be refreshed manually via the admin panel."
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Saned Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Saned Token": {
+      "main": [
+        [
+          {
+            "node": "Fetch Jahez Stats",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Jahez Drivers (Page 1)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Driver Payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jahez Stats": {
+      "main": [
+        [
+          {
+            "node": "Save Stats to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Driver Payments": {
+      "main": [
+        [
+          {
+            "node": "Save Payments to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Stats to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Log Sync Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Payments to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Log Sync Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "jahez",
+      "id": "1"
+    },
+    {
+      "name": "auto-sync",
+      "id": "2"
+    }
+  ]
+}

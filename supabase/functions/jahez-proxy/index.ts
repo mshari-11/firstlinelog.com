@@ -132,6 +132,43 @@ serve(async (req: Request) => {
         result = await sanedRequest("lookups/cities-by-country-codes", token, { CountryCodes: "SA" });
         break;
 
+      // ── Payment / Financial endpoints ──
+      case "driver-payments": {
+        const pParams: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
+        if (page) pParams.page = String(page);
+        if (size) pParams.pageSize = String(size);
+        result = await sanedRequest("payment/driver-payments", token, pParams);
+        break;
+      }
+
+      case "payment-summary": {
+        result = await sanedRequest("payment/summary", token, { DeliveryProviderId: PROVIDER_ID });
+        break;
+      }
+
+      case "accountant-report": {
+        const rParams: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
+        if (body.startDate) rParams.startDate = body.startDate;
+        if (body.endDate) rParams.endDate = body.endDate;
+        result = await sanedRequest("payment/accountant-report", token, rParams);
+        break;
+      }
+
+      // ── Analytics endpoints ──
+      case "delivery-insights": {
+        result = await sanedRequest("analytics/delivery-insights", token, { DeliveryProviderId: PROVIDER_ID });
+        break;
+      }
+
+      // ── Generic passthrough (discover new endpoints) ──
+      case "raw": {
+        const rawEndpoint = body.endpoint as string;
+        const rawParams = body.params as Record<string, string> || {};
+        if (!rawEndpoint) throw new Error("endpoint required for raw action");
+        result = await sanedRequest(rawEndpoint, token, { DeliveryProviderId: PROVIDER_ID, ...rawParams });
+        break;
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: `Unknown action: ${action}` }),

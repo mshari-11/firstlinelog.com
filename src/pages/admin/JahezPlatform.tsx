@@ -102,6 +102,12 @@ function getSanedToken(): string | null {
 
 function saveSanedToken(token: string) {
   localStorage.setItem(SANED_TOKEN_KEY, token);
+  // Also save to Supabase for n8n automation
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const expiresAt = payload.exp ? new Date(payload.exp * 1000).toISOString() : null;
+    supabase?.rpc("save_saned_token", { p_token: token, p_expires_at: expiresAt });
+  } catch { /* ignore */ }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

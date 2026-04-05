@@ -366,18 +366,28 @@ export default function JahezPlatform() {
   const loadDrivers = useCallback(async (pageNum: number) => {
     setLoading(true);
     try {
-      const data = await proxyFetch<{
-        content?: SanedDriver[];
-        drivers?: SanedDriver[];
-        totalElements?: number;
-        total?: number;
-        totalPages?: number;
-      }>("drivers", { page: pageNum, size: PAGE_SIZE });
+      // Saned uses 1-based pages
+      const raw = await proxyFetch<any>("drivers", { page: pageNum + 1, size: PAGE_SIZE });
 
       if (!mountedRef.current) return;
 
-      const driverList = data?.content || data?.drivers || [];
-      if (driverList.length === 0 && pageNum === 0) {
+      // Saned response: { statusCode, data: { currentPage, rowsCount, result: [...] } }
+      const inner = raw?.data || raw;
+      const driverList: SanedDriver[] = inner?.result || inner?.content || inner?.drivers || [];
+      const totalCount = inner?.rowsCount || inner?.totalElements || inner?.total || driverList.length;
+
+      // Map Saned field names to our interface
+      const mapped: SanedDriver[] = driverList.map((d: any) => ({
+        driverId: d.driverID || d.driverId || "",
+        iqamaNumber: d.idNumber || d.iqamaNumber || "",
+        driverName: d.driverName || d.name || "",
+        phoneNumber: d.phoneNumber || d.phone || "",
+        driverStatus: d.driverStatus === true ? "Active" : d.driverStatus === false ? "Inactive" : (d.driverStatus || ""),
+        availability: d.availability === true ? "Online" : d.availability === false ? "Offline" : (d.availability || ""),
+        vehicleType: d.vehicleType || "",
+      }));
+
+      if (mapped.length === 0 && pageNum === 0) {
         setUsingMock(true);
         setDrivers(MOCK_DRIVERS);
         setTotalDriverCount(MOCK_DRIVERS.length);
@@ -385,9 +395,9 @@ export default function JahezPlatform() {
       } else {
         setUsingMock(false);
         setCorsBlocked(false);
-        setDrivers(driverList);
-        setTotalDriverCount(data?.totalElements || data?.total || driverList.length);
-        setTotalPages(data?.totalPages || Math.ceil((data?.totalElements || data?.total || driverList.length) / PAGE_SIZE));
+        setDrivers(mapped);
+        setTotalDriverCount(totalCount);
+        setTotalPages(Math.ceil(totalCount / PAGE_SIZE));
       }
       setPage(pageNum);
     } catch (err: unknown) {
@@ -406,9 +416,21 @@ export default function JahezPlatform() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await proxyFetch<ActiveInactiveStats>("stats");
+      const raw = await proxyFetch<any>("stats");
       if (!mountedRef.current) return;
-      setStats(data);
+      // Saned response: { statusCode, data: { activeDrivers, inactiveDrivers, onlineDrivers, ... } }
+      const s = raw?.data || raw;
+      setStats({
+        activeDrivers: s.activeDrivers ?? 0,
+        activePercentage: s.activePercentage ?? 0,
+        inactiveDrivers: s.inactiveDrivers ?? 0,
+        inactivePercentage: s.inactivePercentage ?? 0,
+        onlineDrivers: s.onlineDrivers ?? 0,
+        onlinePercentage: s.onlinePercentage ?? 0,
+        offlineDrivers: s.offlineDrivers ?? 0,
+        offlinePercentage: s.offlinePercentage ?? 0,
+        totalDrivers: (s.activeDrivers ?? 0) + (s.inactiveDrivers ?? 0),
+      });
       setCorsBlocked(false);
     } catch (err: unknown) {
       console.warn("Stats error:", err);

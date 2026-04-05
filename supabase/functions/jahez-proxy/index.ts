@@ -66,15 +66,19 @@ serve(async (req: Request) => {
         break;
 
       case "stats":
-        result = await sanedRequest("delivery-providers/active-inactive", token);
+        result = await sanedRequest("delivery-providers/active-inactive", token, {
+          DeliveryProviderId: PROVIDER_ID,
+        });
         break;
 
       case "drivers": {
         const params: Record<string, string> = {
-          page: String(page ?? 0),
-          size: String(size ?? 100),
+          DeliveryProviderId: PROVIDER_ID,
+          page: String(page ?? 1),
+          pageSize: String(size ?? 100),
+          driverId: "",
         };
-        if (status) params.status = status;
+        if (status) params.driverStatus = status;
         if (availability) params.availability = availability;
         result = await sanedRequest("delivery-providers/driver-list", token, params);
         break;
@@ -82,14 +86,16 @@ serve(async (req: Request) => {
 
       case "drivers-all": {
         const allDrivers: any[] = [];
-        let currentPage = 0;
+        let currentPage = 1;
         const pageSize = 100;
         let hasMore = true;
 
         while (hasMore) {
           const batch = await sanedRequest("delivery-providers/driver-list", token, {
+            DeliveryProviderId: PROVIDER_ID,
             page: String(currentPage),
-            size: String(pageSize),
+            pageSize: String(pageSize),
+            driverId: "",
           });
 
           let drivers: any[] = [];
@@ -120,7 +126,7 @@ serve(async (req: Request) => {
         break;
 
       case "cities":
-        result = await sanedRequest("lookups/cities-by-country-codes", token, { countryCodes: "SA" });
+        result = await sanedRequest("lookups/cities-by-country-codes", token, { CountryCodes: "SA" });
         break;
 
       default:

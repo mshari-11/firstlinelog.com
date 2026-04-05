@@ -159,6 +159,7 @@ const BankAlerts = lazy(() => import("@/pages/admin/BankAlerts"));
 const SLAScanner = lazy(() => import("@/pages/admin/SLAScanner"));
 const TargetTracking = lazy(() => import("@/pages/admin/TargetTracking"));
 const AdminDriverProfile = lazy(() => import("@/pages/admin/DriverProfile"));
+const ToYouPlatform = lazy(() => import("@/pages/admin/ToYouPlatform"));
 const MarketplaceIntegrations = lazy(
   () => import("@/pages/admin/MarketplaceIntegrations"),
 );
@@ -736,6 +737,14 @@ export default function App() {
                 element={
                   <AccessGuard roles={["admin", "owner", "staff"]}>
                     <AdminDriverProfile />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="toyou-platform"
+                element={
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <ToYouPlatform />
                   </AccessGuard>
                 }
               />

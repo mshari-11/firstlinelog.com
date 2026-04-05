@@ -724,6 +724,28 @@ export default function DriverProfilePage() {
   const [activeTab, setActiveTab] = useState<TabId>("details");
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<DriverData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Close modal on Escape
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape" && editMode) setEditMode(false); };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [editMode]);
+
+  function validateEditData(d: DriverData): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!d.name.trim()) errs.name = "الاسم مطلوب";
+    if (!/^05\d{8}$/.test(d.phone)) errs.phone = "الجوال يجب أن يبدأ بـ 05 ويكون 10 أرقام";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) errs.email = "الإيميل غير صحيح";
+    if (!/^\d{10}$/.test(d.nationalId)) errs.nationalId = "رقم الهوية يجب أن يكون 10 أرقام";
+    if (!d.city.trim()) errs.city = "المدينة مطلوبة";
+    if (d.iban && !/^SA\d{22}$/.test(d.iban.replace(/\s/g, ""))) errs.iban = "IBAN يجب أن يبدأ بـ SA ويكون 24 حرف";
+    if (d.emergencyPhone && !/^05\d{8}$/.test(d.emergencyPhone)) errs.emergencyPhone = "رقم الطوارئ غير صحيح";
+    if (d.baseSalary < 0) errs.baseSalary = "الراتب لا يمكن أن يكون سالب";
+    return errs;
+  }
 
   useEffect(() => {
     async function fetchDriver() {
@@ -998,44 +1020,48 @@ export default function DriverProfilePage() {
       </motion.div>
 
       {/* ─── Edit Modal ─── */}
+      <AnimatePresence>
       {editMode && editData && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={() => setEditMode(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
-          <div style={{ position: "relative", background: "var(--con-bg-surface, #0d1926)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 12, padding: 24, width: "90%", maxWidth: 650, maxHeight: "85vh", overflowY: "auto", zIndex: 1001 }} dir="rtl">
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 16 }}>تعديل بيانات {editData.name}</h2>
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <div onClick={() => { if (!saving) setEditMode(false); }} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ duration: 0.25 }}
+            style={{ position: "relative", background: "var(--con-bg-surface, #0d1926)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 12, padding: 24, width: "90%", maxWidth: 700, maxHeight: "85vh", overflowY: "auto", zIndex: 1001 }} dir="rtl"
+          >
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+              <Edit size={18} /> تعديل بيانات {editData.name}
+            </h2>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {/* الاسم */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الاسم</label>
-                <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* الجوال */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الجوال</label>
-                <input value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* الإيميل */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الإيميل</label>
-                <input value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* المدينة */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المدينة</label>
-                <input value={editData.city} onChange={(e) => setEditData({ ...editData, city: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* رقم الهوية */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>رقم الهوية</label>
-                <input value={editData.nationalId} onChange={(e) => setEditData({ ...editData, nationalId: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* المنصة */}
-              <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المنصة</label>
-                <input value={editData.platform} onChange={(e) => setEditData({ ...editData, platform: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
-              </div>
-              {/* نوع التعاقد */}
+            {/* ── البيانات الشخصية ── */}
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--con-accent, #38bdf8)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>البيانات الشخصية</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {([
+                { key: "name", label: "الاسم", type: "text" },
+                { key: "phone", label: "الجوال", type: "text", placeholder: "05XXXXXXXX" },
+                { key: "email", label: "الإيميل", type: "email" },
+                { key: "city", label: "المدينة", type: "text" },
+                { key: "nationalId", label: "رقم الهوية", type: "text", placeholder: "10 أرقام" },
+                { key: "platform", label: "المنصة", type: "text" },
+              ] as const).map(({ key, label, type, placeholder }) => (
+                <div key={key}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>{label}</label>
+                  <input
+                    type={type} placeholder={placeholder}
+                    value={(editData as Record<string, unknown>)[key] as string}
+                    onChange={(e) => { setEditData({ ...editData, [key]: e.target.value }); setErrors((p) => { const n = { ...p }; delete n[key]; return n; }); }}
+                    style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors[key] ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                  />
+                  {errors[key] && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors[key]}</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* ── العقد والحالة ── */}
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--con-accent, #38bdf8)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>العقد والحالة</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div>
                 <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>نوع التعاقد</label>
                 <select value={editData.contractType} onChange={(e) => setEditData({ ...editData, contractType: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}>
@@ -1045,62 +1071,120 @@ export default function DriverProfilePage() {
                   <option value="حر">حر</option>
                 </select>
               </div>
-              {/* الحالة */}
               <div>
                 <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الحالة</label>
                 <select value={editData.status} onChange={(e) => setEditData({ ...editData, status: e.target.value as DriverStatus })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}>
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                  <option value="suspended">suspended</option>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                  <option value="suspended">موقوف</option>
                 </select>
               </div>
-              {/* IBAN */}
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>تاريخ بداية العقد</label>
+                <input type="date" value={editData.contractStartDate} onChange={(e) => setEditData({ ...editData, contractStartDate: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>تاريخ الانضمام</label>
+                <input type="date" value={editData.joinDate} onChange={(e) => setEditData({ ...editData, joinDate: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
+              </div>
+            </div>
+
+            {/* ── المالية ── */}
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--con-accent, #38bdf8)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>البيانات المالية</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {([
+                { key: "baseSalary", label: "الراتب الأساسي" },
+                { key: "fuelAllowance", label: "بدل البنزين" },
+                { key: "phoneAllowance", label: "بدل الجوال" },
+              ] as const).map(({ key, label }) => (
+                <div key={key}>
+                  <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>{label}</label>
+                  <input
+                    type="number" min={0}
+                    value={editData[key]}
+                    onChange={(e) => { setEditData({ ...editData, [key]: Number(e.target.value) }); setErrors((p) => { const n = { ...p }; delete n[key]; return n; }); }}
+                    style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors[key] ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
+                  />
+                  {errors[key] && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors[key]}</span>}
+                </div>
+              ))}
               <div style={{ gridColumn: "1 / -1" }}>
                 <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>IBAN</label>
-                <input value={editData.iban} onChange={(e) => setEditData({ ...editData, iban: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
+                <input
+                  value={editData.iban}
+                  onChange={(e) => { setEditData({ ...editData, iban: e.target.value }); setErrors((p) => { const n = { ...p }; delete n.iban; return n; }); }}
+                  placeholder="SA0380000000608010167519"
+                  style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors.iban ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box", direction: "ltr", textAlign: "left" }}
+                />
+                {errors.iban && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors.iban}</span>}
               </div>
-              {/* جهة الطوارئ */}
+            </div>
+
+            {/* ── الطوارئ ── */}
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--con-accent, #38bdf8)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>جهة الطوارئ</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>جهة الطوارئ</label>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الاسم</label>
                 <input value={editData.emergencyContact} onChange={(e) => setEditData({ ...editData, emergencyContact: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
               </div>
-              {/* رقم الطوارئ */}
               <div>
-                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>رقم الطوارئ</label>
-                <input value={editData.emergencyPhone} onChange={(e) => setEditData({ ...editData, emergencyPhone: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} />
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>رقم الجوال</label>
+                <input
+                  value={editData.emergencyPhone} placeholder="05XXXXXXXX"
+                  onChange={(e) => { setEditData({ ...editData, emergencyPhone: e.target.value }); setErrors((p) => { const n = { ...p }; delete n.emergencyPhone; return n; }); }}
+                  style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors.emergencyPhone ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
+                />
+                {errors.emergencyPhone && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors.emergencyPhone}</span>}
               </div>
             </div>
 
             {/* Save / Cancel */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20, borderTop: "1px solid var(--con-border-default, #1a3a52)", paddingTop: 16 }}>
               <button
                 onClick={() => setEditMode(false)}
-                style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--con-border-default, #1a3a52)", background: "transparent", color: "var(--con-text-secondary, #94a3b8)", fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}
+                disabled={saving}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--con-border-default, #1a3a52)", background: "transparent", color: "var(--con-text-secondary, #94a3b8)", fontSize: 13, fontFamily: "inherit", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1 }}
               >
                 إلغاء
               </button>
               <button
+                disabled={saving}
                 onClick={async () => {
+                  const validationErrors = validateEditData(editData);
+                  if (Object.keys(validationErrors).length > 0) {
+                    setErrors(validationErrors);
+                    toast.error("يرجى تصحيح الأخطاء أولاً");
+                    return;
+                  }
+                  setSaving(true);
                   try {
                     if (supabase) {
-                      await supabase.from("couriers").update(editData).eq("id", editData.id);
+                      const { name, phone, email, city, nationalId, platform, contractType, status, iban, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance } = editData;
+                      await supabase.from("couriers").update({ name, phone, email, city, nationalId, platform, contractType, status, iban, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance }).eq("id", editData.id);
                     }
                     setDriver(editData);
                     toast.success("تم تحديث البيانات بنجاح");
                     setEditMode(false);
                   } catch {
                     toast.error("فشل تحديث البيانات");
+                  } finally {
+                    setSaving(false);
                   }
                 }}
                 className="con-btn-primary"
-                style={{ padding: "8px 20px", borderRadius: 8, border: "none", fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "none", fontSize: 13, fontFamily: "inherit", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.9 : 1, display: "inline-flex", alignItems: "center", gap: 6, minWidth: 130, justifyContent: "center" }}
               >
-                حفظ التعديلات
+                {saving ? (
+                  <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} /> جاري الحفظ...</>
+                ) : (
+                  <>حفظ التعديلات</>
+                )}
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

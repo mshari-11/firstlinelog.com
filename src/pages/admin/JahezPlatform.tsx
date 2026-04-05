@@ -132,10 +132,15 @@ function isTokenValid(token: string): boolean {
 const PROXY_URL = "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
 
 async function proxyFetch<T = unknown>(action: string, extra?: Record<string, unknown>): Promise<T> {
+  // Try to get Saned token from browser (if user logged into Saned portal)
+  const sanedToken = getAuthToken();
+  const payload: Record<string, unknown> = { action, ...extra };
+  if (sanedToken) payload.token = sanedToken;
+
   const res = await fetch(PROXY_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, ...extra }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {

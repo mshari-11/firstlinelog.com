@@ -67,8 +67,9 @@ async function getAccessToken(): Promise<string> {
   return cachedToken.token;
 }
 
-async function sanedRequest(endpoint: string, params?: Record<string, string>): Promise<any> {
-  const token = await getAccessToken();
+async function sanedRequest(endpoint: string, params?: Record<string, string>, passedToken?: string): Promise<any> {
+  // Use passed token (from browser) or fall back to Keycloak auth
+  const token = passedToken || await getAccessToken();
 
   let url = `${GATEWAY_BASE}/${endpoint}`;
   if (params) {
@@ -98,30 +99,36 @@ serve(async (req: Request) => {
   }
 
   try {
-    if (!JAHEZ_USERNAME || !JAHEZ_PASSWORD) {
+    const { action, page, size, status, availability, token: clientToken } = await req.json();
+
+    // Use client-provided token (from browser Saned session) or server-side Keycloak auth
+    const useToken = clientToken || undefined;
+
+    if (!clientToken && (!JAHEZ_USERNAME || !JAHEZ_PASSWORD)) {
       return new Response(
-        JSON.stringify({ error: "Jahez credentials not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({ error: "أرسل token من المتصفح أو اضبط بيانات Keycloak" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-
-    const { action, page, size, status, availability } = await req.json();
 
     let result: any;
 
     switch (action) {
       case "auth":
-        // Just test authentication
-        const token = await getAccessToken();
-        result = { authenticated: true, tokenLength: token.length };
+        if (clientToken) {
+          result = { authenticated: true, mode: "client_token", tokenLength: clientToken.length };
+        } else {
+          const token = await getAccessToken();
+          result = { authenticated: true, mode: "keycloak", tokenLength: token.length };
+        }
         break;
 
       case "profile":
-        result = await sanedRequest(`delivery-providers/${PROVIDER_ID}/details`);
+        result = await sanedRequest(`delivery-providers/${PROVIDER_ID}/details`, undefined, useToken);
         break;
 
       case "stats":
-        result = await sanedRequest("delivery-providers/active-inactive");
+        result = await sanedRequest("delivery-providers/active-inactive", undefined, useToken);
         break;
 
       case "drivers": {
@@ -131,12 +138,11 @@ serve(async (req: Request) => {
         };
         if (status) params.status = status;
         if (availability) params.availability = availability;
-        result = await sanedRequest("delivery-providers/driver-list", params);
+        result = await sanedRequest("delivery-providers/driver-list", params, useToken);
         break;
       }
 
       case "drivers-all": {
-        // Fetch ALL drivers in batches
         const allDrivers: any[] = [];
         let currentPage = 0;
         const pageSize = 100;
@@ -147,7 +153,7 @@ serve(async (req: Request) => {
           const batch = await sanedRequest("delivery-providers/driver-list", {
             page: String(currentPage),
             size: String(pageSize),
-          });
+          }, useToken);
 
           let drivers: any[] = [];
           let totalElements = 0;
@@ -164,12 +170,9 @@ serve(async (req: Request) => {
           totalFetched += drivers.length;
           currentPage++;
 
-          // Stop if no more data
           if (drivers.length < pageSize || (totalElements > 0 && totalFetched >= totalElements)) {
             hasMore = false;
           }
-
-          // Safety limit
           if (currentPage > 50) break;
         }
 
@@ -182,11 +185,11 @@ serve(async (req: Request) => {
       }
 
       case "vehicle-types":
-        result = await sanedRequest("lookups/vehicle-types");
+        result = await sanedRequest("lookups/vehicle-types", undefined, useToken);
         break;
 
       case "cities":
-        result = await sanedRequest("lookups/cities-by-country-codes", { countryCodes: "SA" });
+        result = await sanedRequest("lookups/cities-by-country-codes", { countryCodes: "SA" }, useToken);
         break;
 
       default:

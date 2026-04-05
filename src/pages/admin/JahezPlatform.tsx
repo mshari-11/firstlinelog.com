@@ -22,6 +22,7 @@ import {
   Clock,
   Truck,
   DatabaseZap,
+  Key,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -129,23 +130,58 @@ function isTokenValid(token: string): boolean {
   }
 }
 
-const PROXY_URL = "https://djebhztfewjfyyoortvv.supabase.co/functions/v1/jahez-proxy";
+const SANED_TOKEN_KEY = "fll_saned_token";
+
+function getSanedToken(): string | null {
+  // Check local stored token first
+  const stored = localStorage.getItem(SANED_TOKEN_KEY);
+  if (stored) {
+    try {
+      const payload = JSON.parse(atob(stored.split(".")[1]));
+      if (payload.exp && Date.now() < payload.exp * 1000) return stored;
+      localStorage.removeItem(SANED_TOKEN_KEY); // expired
+    } catch { /* invalid */ }
+  }
+  // Also try authIam (if somehow on same domain)
+  return getAuthToken();
+}
+
+function saveSanedToken(token: string) {
+  localStorage.setItem(SANED_TOKEN_KEY, token);
+  localStorage.setItem("fll_jahez_last_sync", new Date().toISOString());
+}
 
 async function proxyFetch<T = unknown>(action: string, extra?: Record<string, unknown>): Promise<T> {
-  // Try to get Saned token from browser (if user logged into Saned portal)
-  const sanedToken = getAuthToken();
-  const payload: Record<string, unknown> = { action, ...extra };
-  if (sanedToken) payload.token = sanedToken;
+  const token = getSanedToken();
+  if (!token) throw new Error("TOKEN_MISSING");
 
-  const res = await fetch(PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+  // Direct call to Saned API (works when token is valid — browser makes the request)
+  let url = `${SANED_BASE}/${action === "profile" ? `delivery-providers/${PROVIDER_ID}/details`
+    : action === "stats" ? "delivery-providers/active-inactive"
+    : action === "drivers" ? "delivery-providers/driver-list"
+    : action === "vehicle-types" ? "lookups/vehicle-types"
+    : action === "cities" ? "lookups/cities-by-country-codes"
+    : action}`;
+
+  const params: Record<string, string> = {};
+  if (action === "drivers") {
+    params.page = String((extra as any)?.page ?? 0);
+    params.size = String((extra as any)?.size ?? 100);
+  }
+  if (action === "cities") params.countryCodes = "SA";
+
+  if (Object.keys(params).length) url += "?" + new URLSearchParams(params).toString();
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `خطأ API: ${res.status}`);
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem(SANED_TOKEN_KEY);
+      throw new Error("TOKEN_EXPIRED");
+    }
+    throw new Error(`خطأ API: ${res.status}`);
   }
 
   return res.json() as Promise<T>;
@@ -694,6 +730,65 @@ export default function JahezPlatform() {
           </div>
         )}
       </motion.div>
+
+      {/* ─── Token Link Section ──────────────────────────────────────────── */}
+      {!getSanedToken() && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}
+          style={{
+            background: "var(--con-bg-surface-1, #0d1926)", border: "1px solid var(--con-border-default, #1a3a52)",
+            borderRadius: 12, padding: "16px 20px", marginBottom: 16,
+          }}
+        >
+          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--con-text-primary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+            <Key size={15} color="#e53e3e" /> ربط حساب Saned — الصق التوكن
+          </p>
+          <p style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 10, lineHeight: 1.6 }}>
+            1. افتح <a href="https://sdp-portal.saned.io" target="_blank" rel="noreferrer" style={{ color: "#38bdf8" }}>بوابة Saned</a> وسجل دخول
+            <br />
+            2. افتح DevTools (F12) → Console → الصق: <code style={{ background: "var(--con-bg-elevated)", padding: "2px 6px", borderRadius: 4, fontSize: 11 }}>JSON.parse(localStorage.getItem('authIam')).state.accessToken</code>
+            <br />
+            3. انسخ التوكن والصقه هنا
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              id="saned-token-input"
+              type="password"
+              placeholder="الصق التوكن هنا..."
+              style={{
+                flex: 1, background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default)",
+                borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary)", fontSize: 12,
+                fontFamily: "var(--con-font-mono)", direction: "ltr",
+              }}
+            />
+            <button
+              onClick={() => {
+                const input = document.getElementById("saned-token-input") as HTMLInputElement;
+                const val = input?.value?.trim();
+                if (!val || val.length < 100) { toast.error("التوكن غير صحيح"); return; }
+                try {
+                  const payload = JSON.parse(atob(val.split(".")[1]));
+                  if (!payload.exp || Date.now() > payload.exp * 1000) { toast.error("التوكن منتهي الصلاحية"); return; }
+                  saveSanedToken(val);
+                  toast.success("تم ربط حساب Saned بنجاح!");
+                  setCorsBlocked(false);
+                  setUsingMock(false);
+                  loadProviderDetails();
+                  loadStats();
+                  loadDrivers(0);
+                } catch { toast.error("التوكن غير صالح — تأكد من نسخه كاملاً"); }
+              }}
+              style={{
+                background: "#e53e3e", color: "#fff", border: "none", borderRadius: 8,
+                padding: "8px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <Link2 size={14} /> ربط
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── Sync Actions Bar ────────────────────────────────────────────── */}
       <motion.div

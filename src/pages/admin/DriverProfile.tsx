@@ -67,6 +67,7 @@ interface DriverData {
   rating: PerformanceRating;
   contractStartDate: string;
   contractType: string;
+  supervisor: string;
   iban: string;
   stcBankPhone: string;
   emergencyContact: string;
@@ -131,6 +132,7 @@ const MOCK_DRIVER: DriverData = {
   rating: "A",
   contractStartDate: "2025-06-15",
   contractType: "دوام كامل",
+  supervisor: "محمد العلي",
   iban: "SA0380000000608010167519",
   stcBankPhone: "966551234567",
   emergencyContact: "محمد الشهري",
@@ -321,6 +323,7 @@ function DetailsTab({ d }: { d: DriverData }) {
           <h3 style={{ fontSize: "var(--con-text-card-title)", fontWeight: 600, color: "var(--con-text-primary)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileText size={16} style={{ color: "var(--con-brand)" }} /> بيانات العقد
           </h3>
+          <DetailRow label="المشرف المباشر" value={d.supervisor || "—"} icon={<UserCheck size={14} />} />
           <DetailRow label="تاريخ بداية العقد" value={formatDate(d.contractStartDate)} icon={<Calendar size={14} />} />
           <DetailRow label="نوع العقد" value={d.contractType} icon={<FileText size={14} />} />
           {/* IBAN / STC Bank Toggle */}
@@ -870,6 +873,11 @@ export default function DriverProfilePage() {
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><Phone size={14} /> {driver.phone}</span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><IdCard size={14} /> {driver.nationalId}</span>
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><CircleDot size={14} /> {driver.platform}</span>
+            {driver.supervisor && (
+              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(34, 197, 94, 0.1)", padding: "2px 8px", borderRadius: 6, color: "#22c55e", fontWeight: 500 }}>
+                <UserCheck size={14} /> {driver.supervisor}
+              </span>
+            )}
             <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><Calendar size={14} /> انضم {formatDate(driver.joinDate)}</span>
           </div>
         </div>
@@ -1086,6 +1094,15 @@ export default function DriverProfilePage() {
             {/* ── العقد والحالة ── */}
             <p style={{ fontSize: 11, fontWeight: 600, color: "var(--con-accent, #38bdf8)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>العقد والحالة</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}><UserCheck size={12} /> المشرف المباشر</label>
+                <input
+                  value={editData.supervisor}
+                  onChange={(e) => setEditData({ ...editData, supervisor: e.target.value })}
+                  placeholder="اسم المشرف"
+                  style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
+                />
+              </div>
               <div>
                 <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>نوع التعاقد</label>
                 <select value={editData.contractType} onChange={(e) => setEditData({ ...editData, contractType: e.target.value })} style={{ background: "var(--con-bg-elevated, #0a1628)", border: "1px solid var(--con-border-default, #1a3a52)", borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}>
@@ -1193,8 +1210,8 @@ export default function DriverProfilePage() {
                   setSaving(true);
                   try {
                     if (supabase) {
-                      const { name, phone, email, city, nationalId, platform, contractType, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance } = editData;
-                      await supabase.from("couriers").update({ name, phone, email, city, nationalId, platform, contractType, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance }).eq("id", editData.id);
+                      const { name, phone, email, city, nationalId, platform, contractType, supervisor, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance } = editData;
+                      await supabase.from("couriers").update({ name, phone, email, city, nationalId, platform, contractType, supervisor, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance }).eq("id", editData.id);
                     }
                     setDriver(editData);
                     toast.success("تم تحديث البيانات بنجاح");

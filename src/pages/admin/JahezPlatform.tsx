@@ -1013,7 +1013,7 @@ export default function JahezPlatform() {
       </div>
 
       {/* ══════════════════ Token Paste UI ══════════════════ */}
-      {!hasToken && (
+      {(
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1075,7 +1075,7 @@ export default function JahezPlatform() {
       )}
 
       {/* ══════════════════ Sync Bar ══════════════════ */}
-      {hasToken && (
+      {(
         <div style={S.syncBar}>
           <button
             style={S.btn(JAHEZ_RED)}

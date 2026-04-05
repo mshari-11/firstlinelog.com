@@ -697,15 +697,6 @@ const DEFAULT_PAGES: PageConfig[] = [
     order: 55,
   },
   {
-    id: "feedbacks",
-    label: "التقييمات",
-    path: "/admin-panel/feedbacks",
-    group: "التشغيل",
-    icon: "Star",
-    enabled: true,
-    order: 56,
-  },
-  {
     id: "attendance-live",
     label: "الحضور المباشر",
     path: "/admin-panel/attendance-live",

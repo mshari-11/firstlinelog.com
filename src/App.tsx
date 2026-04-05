@@ -123,7 +123,7 @@ const FinancialReports = lazy(() => import("@/pages/admin/FinancialReports"));
 const AIFinanceAnalysis = lazy(() => import("@/pages/admin/AIFinanceAnalysis"));
 const AdminComplaints = lazy(() => import("@/pages/admin/Complaints"));
 const AdminExcel = lazy(() => import("@/pages/admin/Excel"));
-const AdminFeedbacks = lazy(() => import("@/pages/admin/Feedbacks"));
+
 const AdminDashboardLegacy = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminDriversLegacy = lazy(() => import("@/pages/admin/AdminDrivers"));
 
@@ -424,14 +424,6 @@ export default function App() {
                 element={
                   <AccessGuard roles={["admin", "owner"]}>
                     <AdminSettings />
-                  </AccessGuard>
-                }
-              />
-              <Route
-                path="feedbacks"
-                element={
-                  <AccessGuard roles={["admin", "owner", "staff"]}>
-                    <AdminFeedbacks />
                   </AccessGuard>
                 }
               />

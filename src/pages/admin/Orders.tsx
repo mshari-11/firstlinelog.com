@@ -25,8 +25,6 @@ import {
   AlertTriangle,
   Star,
   FileSpreadsheet,
-  ArrowUpRight,
-  ArrowDownRight,
   Users,
   Target,
 } from "lucide-react";
@@ -139,261 +137,119 @@ const CHART_COLORS = ["#e53e3e", "#ff6b00", "#38a169", "#805ad5", "#6b46c1", "#e
 
 const cities = ["الكل", "الرياض", "جدة", "الدمام", "مكة", "المدينة"];
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Mock Data Generator ─────────────────────────────────────────────────────
 
 const _TODAY = new Date().toISOString().slice(0, 10);
-const _YESTERDAY = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-const mockOrders: Order[] = [
-  {
-    id: "#10240",
-    courier_name: "أحمد محمد",
-    platform: "jahez",
-    customer_name: "محمد علي",
-    customer_phone: "0501234567",
-    address: "الرياض، حي النزهة",
-    status: "on_way",
-    amount: 45,
-    created_at: "14:23",
-    created_date: _TODAY,
-    city: "الرياض",
-    delivery_time: 28,
-    courier_rating: 4.8,
-    profit: 12,
-  },
-  {
-    id: "#10239",
-    courier_name: "خالد العمري",
-    platform: "marsool",
-    customer_name: "فاطمة السالم",
-    customer_phone: "0557654321",
-    address: "جدة، حي الروضة",
-    status: "delivered",
-    amount: 30,
-    created_at: "13:55",
-    created_date: _TODAY,
-    city: "جدة",
-    delivery_time: 22,
-    courier_rating: 4.5,
-    profit: 8,
-  },
-  {
-    id: "#10238",
-    courier_name: "فهد الغامدي",
-    platform: "noon",
-    customer_name: "علي أحمد",
-    customer_phone: "0509876543",
-    address: "الرياض، حي الملقا",
-    status: "picked_up",
-    amount: 65,
-    created_at: "13:40",
-    created_date: _TODAY,
-    city: "الرياض",
-    delivery_time: 35,
-    courier_rating: 4.2,
-    profit: 18,
-  },
-  {
-    id: "#10237",
-    courier_name: "سعد الزهراني",
-    platform: "marsool",
-    customer_name: "هند محمد",
-    customer_phone: "0551112233",
-    address: "الدمام، حي الفيصلية",
-    status: "pending",
-    amount: 25,
-    created_at: "13:10",
-    created_date: _YESTERDAY,
-    city: "الدمام",
-    delivery_time: undefined,
-    courier_rating: 4.0,
-    profit: 7,
-  },
-  {
-    id: "#10236",
-    courier_name: "عمر الشمري",
-    platform: "amazon",
-    customer_name: "عبدالله خالد",
-    customer_phone: "0503334455",
-    address: "الرياض، حي العليا",
-    status: "delivered",
-    amount: 80,
-    created_at: "12:45",
-    created_date: _YESTERDAY,
-    city: "الرياض",
-    delivery_time: 19,
-    courier_rating: 4.9,
-    profit: 22,
-  },
-  {
-    id: "#10235",
-    courier_name: "محمد القحطاني",
-    platform: "jahez",
-    customer_name: "نورة العتيبي",
-    customer_phone: "0556667788",
-    address: "مكة، حي العزيزية",
-    status: "failed",
-    amount: 55,
-    created_at: "12:20",
-    created_date: _YESTERDAY,
-    city: "مكة",
-    delivery_time: undefined,
-    courier_rating: 3.2,
-    profit: 0,
-  },
-  {
-    id: "#10234",
-    courier_name: "أحمد محمد",
-    platform: "marsool",
-    customer_name: "سلمى الشريف",
-    customer_phone: "0509998877",
-    address: "الرياض، حي السلام",
-    status: "returned",
-    amount: 40,
-    created_at: "11:55",
-    created_date: _YESTERDAY,
-    city: "الرياض",
-    delivery_time: undefined,
-    courier_rating: 4.8,
-    profit: 0,
-  },
-  // ─── Additional mock orders (8 more → total 15) ────────────────────────────
-  {
-    id: "#10233",
-    courier_name: "يوسف الدوسري",
-    platform: "hungerstation",
-    customer_name: "ريم الحربي",
-    customer_phone: "0512345678",
-    address: "جدة، حي الحمراء",
-    status: "delivered",
-    amount: 120,
-    created_at: "11:30",
-    created_date: _TODAY,
-    city: "جدة",
-    delivery_time: 18,
-    courier_rating: 4.7,
-    profit: 32,
-  },
-  {
-    id: "#10232",
-    courier_name: "عبدالرحمن السبيعي",
-    platform: "jahez",
-    customer_name: "سارة الفهد",
-    customer_phone: "0559871234",
-    address: "الرياض، حي الياسمين",
-    status: "delivered",
-    amount: 95,
-    created_at: "11:10",
-    created_date: _TODAY,
-    city: "الرياض",
-    delivery_time: 24,
-    courier_rating: 4.6,
-    profit: 25,
-  },
-  {
-    id: "#10231",
-    courier_name: "تركي المطيري",
-    platform: "hungerstation",
-    customer_name: "لمياء العنزي",
-    customer_phone: "0501239876",
-    address: "الدمام، حي الشاطئ",
-    status: "failed",
-    amount: 210,
-    created_at: "10:45",
-    created_date: _TODAY,
-    city: "الدمام",
-    delivery_time: undefined,
-    courier_rating: 3.0,
-    profit: 0,
-  },
-  {
-    id: "#10230",
-    courier_name: "ناصر الحازمي",
-    platform: "toyor",
-    customer_name: "خالد الشهري",
-    customer_phone: "0554443322",
-    address: "المدينة، حي العزيزية",
-    status: "delivered",
-    amount: 35,
-    created_at: "10:20",
-    created_date: _YESTERDAY,
-    city: "المدينة",
-    delivery_time: 30,
-    courier_rating: 4.3,
-    profit: 9,
-  },
-  {
-    id: "#10229",
-    courier_name: "بندر العتيبي",
-    platform: "amazon",
-    customer_name: "منى الغامدي",
-    customer_phone: "0507776655",
-    address: "الرياض، حي النخيل",
-    status: "delivered",
-    amount: 350,
-    created_at: "09:50",
-    created_date: _YESTERDAY,
-    city: "الرياض",
-    delivery_time: 15,
-    courier_rating: 4.9,
-    profit: 45,
-  },
-  {
-    id: "#10228",
-    courier_name: "محمد القحطاني",
-    platform: "mrsool",
-    customer_name: "عائشة البلوي",
-    customer_phone: "0553216549",
-    address: "جدة، حي السلامة",
-    status: "returned",
-    amount: 75,
-    created_at: "09:30",
-    created_date: _YESTERDAY,
-    city: "جدة",
-    delivery_time: undefined,
-    courier_rating: 3.2,
-    profit: 0,
-  },
-  {
-    id: "#10227",
-    courier_name: "يوسف الدوسري",
-    platform: "hungerstation",
-    customer_name: "فيصل المالكي",
-    customer_phone: "0508887766",
-    address: "الرياض، حي الربيع",
-    status: "on_way",
-    amount: 58,
-    created_at: "09:15",
-    created_date: _TODAY,
-    city: "الرياض",
-    delivery_time: undefined,
-    courier_rating: 4.7,
-    profit: 15,
-  },
-  {
-    id: "#10226",
-    courier_name: "خالد العمري",
-    platform: "jahez",
-    customer_name: "هدى الزهراني",
-    customer_phone: "0551114477",
-    address: "مكة، حي الشوقية",
-    status: "delivered",
-    amount: 42,
-    created_at: "08:50",
-    created_date: _YESTERDAY,
-    city: "مكة",
-    delivery_time: 26,
-    courier_rating: 4.5,
-    profit: 11,
-  },
+function generateMockOrders(): Order[] {
+  const couriers = ["أحمد محمد", "خالد العمري", "فهد الغامدي", "سعد الزهراني", "عمر الشمري", "محمد القحطاني", "يوسف الدوسري", "عبدالرحمن السبيعي", "تركي المطيري", "ناصر الحازمي", "بندر العتيبي"];
+  const customers = ["محمد علي", "فاطمة السالم", "علي أحمد", "هند محمد", "عبدالله خالد", "نورة العتيبي", "سلمى الشريف", "ريم الحربي", "سارة الفهد", "لمياء العنزي", "خالد الشهري", "منى الغامدي", "عائشة البلوي", "فيصل المالكي", "هدى الزهراني"];
+  const platformKeys = ["jahez", "hungerstation", "toyor", "marsool", "mrsool", "noon", "amazon"];
+  const cityList = ["الرياض", "جدة", "الدمام", "مكة", "المدينة"];
+  const statuses: Order["status"][] = ["pending", "picked_up", "on_way", "delivered", "delivered", "delivered", "delivered", "failed", "returned"];
+  const addresses: Record<string, string[]> = {
+    "الرياض": ["حي النزهة", "حي الملقا", "حي العليا", "حي السلام", "حي الياسمين", "حي النخيل", "حي الربيع"],
+    "جدة": ["حي الروضة", "حي الحمراء", "حي السلامة", "حي الصفا", "حي المحمدية"],
+    "الدمام": ["حي الفيصلية", "حي الشاطئ", "حي الجلوية", "حي المزروعية"],
+    "مكة": ["حي العزيزية", "حي الشوقية", "حي النسيم", "حي العوالي"],
+    "المدينة": ["حي العزيزية", "حي قباء", "حي العنابس", "حي الحرة الشرقية"],
+  };
+
+  // Platform weight distribution (jahez/hungerstation are bigger)
+  const platformWeights = [25, 22, 10, 18, 8, 9, 8]; // jahez heavy
+
+  const orders: Order[] = [];
+  const now = new Date();
+  let idCounter = 10000;
+
+  // Generate 6 months of data
+  for (let monthOffset = 5; monthOffset >= 0; monthOffset--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
+    const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+    // More orders in recent months (growth trend)
+    const baseOrdersPerMonth = 40 + (5 - monthOffset) * 8;
+
+    for (let i = 0; i < baseOrdersPerMonth; i++) {
+      const day = Math.floor(Math.random() * daysInMonth) + 1;
+      const d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+      if (d > now) continue;
+
+      // Weighted platform selection
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      let pIdx = 0;
+      for (let p = 0; p < platformWeights.length; p++) {
+        cumulative += platformWeights[p];
+        if (rand <= cumulative) { pIdx = p; break; }
+      }
+      const platform = platformKeys[pIdx];
+      const city = cityList[Math.floor(Math.random() * cityList.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const isDelivered = status === "delivered";
+      const amount = Math.round(20 + Math.random() * 330);
+      const hour = 7 + Math.floor(Math.random() * 14);
+      const minute = Math.floor(Math.random() * 60);
+
+      orders.push({
+        id: `#${idCounter++}`,
+        courier_name: couriers[Math.floor(Math.random() * couriers.length)],
+        platform,
+        customer_name: customers[Math.floor(Math.random() * customers.length)],
+        customer_phone: `05${String(Math.floor(Math.random() * 100000000)).padStart(8, "0")}`,
+        address: `${city}، ${addresses[city][Math.floor(Math.random() * addresses[city].length)]}`,
+        status,
+        amount,
+        created_at: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+        created_date: d.toISOString().slice(0, 10),
+        city,
+        delivery_time: isDelivered ? 12 + Math.floor(Math.random() * 35) : undefined,
+        courier_rating: isDelivered ? +(3 + Math.random() * 2).toFixed(1) : +(2 + Math.random() * 3).toFixed(1),
+        profit: isDelivered ? Math.round(amount * (0.08 + Math.random() * 0.15)) : 0,
+      });
+    }
+  }
+
+  return orders.sort((a, b) => (b.created_date + b.created_at).localeCompare(a.created_date + a.created_at));
+}
+
+const mockOrders = generateMockOrders();
+
+// ─── Period Presets ──────────────────────────────────────────────────────────
+
+type PeriodPreset = "today" | "yesterday" | "this_week" | "this_month" | "last_month" | "last_3m" | "last_6m" | "this_year" | "custom";
+
+const periodPresets: { key: PeriodPreset; label: string }[] = [
+  { key: "today", label: "اليوم" },
+  { key: "yesterday", label: "أمس" },
+  { key: "this_week", label: "هذا الأسبوع" },
+  { key: "this_month", label: "هذا الشهر" },
+  { key: "last_month", label: "الشهر الماضي" },
+  { key: "last_3m", label: "آخر 3 أشهر" },
+  { key: "last_6m", label: "آخر 6 أشهر" },
+  { key: "this_year", label: "هذه السنة" },
+  { key: "custom", label: "مخصص" },
 ];
 
-// ─── Comparison mock data ─────────────────────────────────────────────────────
+function getDateRange(preset: PeriodPreset): { from: string; to: string } {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  switch (preset) {
+    case "today": return { from: today, to: today };
+    case "yesterday": { const y = new Date(now); y.setDate(y.getDate() - 1); return { from: fmt(y), to: fmt(y) }; }
+    case "this_week": { const d = new Date(now); d.setDate(d.getDate() - d.getDay()); return { from: fmt(d), to: today }; }
+    case "this_month": return { from: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`, to: today };
+    case "last_month": { const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1); const lme = new Date(now.getFullYear(), now.getMonth(), 0); return { from: fmt(lm), to: fmt(lme) }; }
+    case "last_3m": { const d = new Date(now); d.setMonth(d.getMonth() - 3); return { from: fmt(d), to: today }; }
+    case "last_6m": { const d = new Date(now); d.setMonth(d.getMonth() - 6); return { from: fmt(d), to: today }; }
+    case "this_year": return { from: `${now.getFullYear()}-01-01`, to: today };
+    case "custom": return { from: "", to: "" };
+  }
+}
 
-const periodComparison = {
-  current: { orders: 15, revenue: 1325, successRate: 53.3 },
-  previous: { orders: 13, revenue: 1210, successRate: 51.0 },
-};
+// ─── Month label helper ─────────────────────────────────────────────────────
+
+const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -403,8 +259,9 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("الكل");
   const [cityFilter, setCityFilter] = useState("الكل");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("last_3m");
+  const [dateFrom, setDateFrom] = useState(() => getDateRange("last_3m").from);
+  const [dateTo, setDateTo] = useState(() => getDateRange("last_3m").to);
   const [amountFrom, setAmountFrom] = useState("");
   const [amountTo, setAmountTo] = useState("");
   const [orders, setOrders] = useState<Order[]>(mockOrders);
@@ -415,9 +272,9 @@ export default function AdminOrders() {
 
   // Collapsible sections
   const [showPlatformAnalytics, setShowPlatformAnalytics] = useState(true);
+  const [showMonthlyBreakdown, setShowMonthlyBreakdown] = useState(true);
   const [showCharts, setShowCharts] = useState(true);
   const [showFailureAnalysis, setShowFailureAnalysis] = useState(true);
-  const [showPeriodComparison, setShowPeriodComparison] = useState(false);
   const [showCourierPerformance, setShowCourierPerformance] = useState(true);
 
   async function fetchOrders() {
@@ -508,6 +365,49 @@ export default function AdminOrders() {
     });
     return stats;
   }, [orders]);
+
+  // ─── Monthly Breakdown per Platform ────────────────────────────────────
+
+  const monthlyPlatformData = useMemo(() => {
+    const map: Record<string, Record<string, { orders: number; amount: number; delivered: number; failed: number }>> = {};
+    filtered.forEach((o) => {
+      const monthKey = o.created_date.slice(0, 7); // "YYYY-MM"
+      if (!map[monthKey]) map[monthKey] = {};
+      if (!map[monthKey][o.platform]) map[monthKey][o.platform] = { orders: 0, amount: 0, delivered: 0, failed: 0 };
+      map[monthKey][o.platform].orders++;
+      map[monthKey][o.platform].amount += o.amount;
+      if (o.status === "delivered") map[monthKey][o.platform].delivered++;
+      if (o.status === "failed" || o.status === "returned") map[monthKey][o.platform].failed++;
+    });
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, platforms]) => ({ month, platforms }));
+  }, [filtered]);
+
+  const monthlyChartData = useMemo(() =>
+    monthlyPlatformData.map(({ month, platforms }) => {
+      const [y, m] = month.split("-");
+      const row: Record<string, string | number> = { name: `${monthNames[Number(m) - 1]} ${y}` };
+      Object.entries(platforms).forEach(([p, v]) => {
+        row[platformLabels[p] ?? p] = v.orders;
+      });
+      return row;
+    }), [monthlyPlatformData]);
+
+  // Per-platform monthly totals for the summary table
+  const platformMonthlyTotals = useMemo(() => {
+    const totals: Record<string, { orders: number; amount: number; delivered: number; failed: number }> = {};
+    monthlyPlatformData.forEach(({ platforms }) => {
+      Object.entries(platforms).forEach(([p, v]) => {
+        if (!totals[p]) totals[p] = { orders: 0, amount: 0, delivered: 0, failed: 0 };
+        totals[p].orders += v.orders;
+        totals[p].amount += v.amount;
+        totals[p].delivered += v.delivered;
+        totals[p].failed += v.failed;
+      });
+    });
+    return totals;
+  }, [monthlyPlatformData]);
 
   // ─── Chart Data ───────────────────────────────────────────────────────────
 
@@ -653,16 +553,6 @@ export default function AdminOrders() {
     XLSX.writeFile(wb, `orders_report_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
-  // ─── Period Comparison helpers ────────────────────────────────────────────
-
-  const compOrdersChange = periodComparison.previous.orders > 0
-    ? (((periodComparison.current.orders - periodComparison.previous.orders) / periodComparison.previous.orders) * 100).toFixed(1)
-    : "0";
-  const compRevenueChange = periodComparison.previous.revenue > 0
-    ? (((periodComparison.current.revenue - periodComparison.previous.revenue) / periodComparison.previous.revenue) * 100).toFixed(1)
-    : "0";
-  const compSuccessChange = (periodComparison.current.successRate - periodComparison.previous.successRate).toFixed(1);
-
   // ─── Section Toggle Button ────────────────────────────────────────────────
 
   function SectionToggle({ label, open, onToggle }: { label: string; open: boolean; onToggle: () => void }) {
@@ -773,54 +663,43 @@ export default function AdminOrders() {
         />
       </KPIGrid>
 
-      {/* ── Period Comparison Toggle ───────────────────────────────────────── */}
+      {/* ── Quick Period Filters ──────────────────────────────────────────── */}
 
-      <SectionToggle label="مقارنة الفترات" open={showPeriodComparison} onToggle={() => setShowPeriodComparison(!showPeriodComparison)} />
-      {showPeriodComparison && (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 12,
-        }}>
-          {[
-            { label: "الطلبات", current: periodComparison.current.orders, previous: periodComparison.previous.orders, change: Number(compOrdersChange), unit: "" },
-            { label: "الإيرادات", current: periodComparison.current.revenue, previous: periodComparison.previous.revenue, change: Number(compRevenueChange), unit: "ر.س" },
-            { label: "نسبة النجاح", current: periodComparison.current.successRate, previous: periodComparison.previous.successRate, change: Number(compSuccessChange), unit: "%" },
-          ].map((item) => {
-            const isUp = item.change >= 0;
-            return (
-              <Card key={item.label}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 6 }}>{item.label}</div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "var(--con-text-primary)", fontFamily: "var(--con-font-mono)" }}>
-                      {item.current.toLocaleString("ar-SA")} {item.unit}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--con-text-muted)", marginTop: 4 }}>
-                      الفترة السابقة: {item.previous.toLocaleString("ar-SA")} {item.unit}
-                    </div>
-                  </div>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "4px 10px",
-                    borderRadius: 8,
-                    background: isUp ? "rgba(56,161,105,0.12)" : "rgba(229,62,62,0.12)",
-                    color: isUp ? "#38a169" : "#e53e3e",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    fontFamily: "var(--con-font-mono)",
-                  }}>
-                    {isUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                    {isUp ? "+" : ""}{item.change}%
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: 6, padding: "12px 0",
+      }}>
+        {periodPresets.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => {
+              setPeriodPreset(p.key);
+              if (p.key !== "custom") {
+                const range = getDateRange(p.key);
+                setDateFrom(range.from);
+                setDateTo(range.to);
+              }
+            }}
+            style={{
+              padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, fontFamily: "inherit",
+              border: periodPreset === p.key ? "1px solid var(--con-brand, #38bdf8)" : "1px solid var(--con-border-default, #1a3a52)",
+              background: periodPreset === p.key ? "rgba(56, 189, 248, 0.12)" : "transparent",
+              color: periodPreset === p.key ? "var(--con-brand, #38bdf8)" : "var(--con-text-secondary, #94a3b8)",
+              cursor: "pointer", transition: "all 0.2s",
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+        {periodPreset === "custom" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginInlineStart: 8 }}>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+              style={{ background: "var(--con-bg, #07111d)", border: "1px solid var(--con-border, #1a3a52)", borderRadius: 8, padding: "5px 10px", color: "var(--con-text, #e2e8f0)", fontSize: 12, fontFamily: "inherit" }} />
+            <span style={{ color: "var(--con-text-muted)", fontSize: 12 }}>—</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+              style={{ background: "var(--con-bg, #07111d)", border: "1px solid var(--con-border, #1a3a52)", borderRadius: 8, padding: "5px 10px", color: "var(--con-text, #e2e8f0)", fontSize: 12, fontFamily: "inherit" }} />
+          </div>
+        )}
+      </div>
 
       {/* ── Platform Analytics ─────────────────────────────────────────────── */}
 
@@ -863,6 +742,122 @@ export default function AdminOrders() {
             );
           })}
         </div>
+      )}
+
+      {/* ── Monthly Breakdown per Platform ─────────────────────────────────── */}
+
+      <SectionToggle label="التحليل الشهري لكل تطبيق" open={showMonthlyBreakdown} onToggle={() => setShowMonthlyBreakdown(!showMonthlyBreakdown)} />
+      {showMonthlyBreakdown && (
+        <>
+          {/* Monthly Stacked Bar Chart */}
+          {monthlyChartData.length > 1 && (
+            <Card title="الطلبات الشهرية حسب التطبيق">
+              <div style={{ width: "100%", height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyChartData} margin={{ right: 10, left: 10, top: 10 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend formatter={(value: string) => <span style={{ color: "#94a3b8", fontSize: 11 }}>{value}</span>} />
+                    {Object.keys(platformLabels).filter((k) => k !== "الكل").map((key) => (
+                      <Bar key={key} dataKey={platformLabels[key]} stackId="a" fill={platformColors[key] || "#8884d8"} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+          {/* Platform Summary Table */}
+          <Card title="ملخص إجمالي لكل تطبيق في الفترة المحددة" noPadding>
+            <Table
+              headers={["التطبيق", "إجمالي الطلبات", "تم التسليم", "فشل / مرتجع", "نسبة النجاح", "الإيرادات (ر.س)", "متوسط الطلب (ر.س)"]}
+              isEmpty={Object.keys(platformMonthlyTotals).length === 0}
+              emptyIcon={Package}
+              emptyText="لا توجد بيانات"
+            >
+              {Object.entries(platformMonthlyTotals)
+                .sort(([, a], [, b]) => b.orders - a.orders)
+                .map(([key, v]) => {
+                  const sRate = v.orders > 0 ? ((v.delivered / v.orders) * 100).toFixed(1) : "0";
+                  const avgOrd = v.orders > 0 ? Math.round(v.amount / v.orders) : 0;
+                  return (
+                    <tr key={key}>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: platformColors[key] || "#8884d8", flexShrink: 0 }} />
+                          <span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>{platformLabels[key] ?? key}</span>
+                        </div>
+                      </td>
+                      <td className="con-td-mono" style={{ fontWeight: 700 }}>{v.orders}</td>
+                      <td className="con-td-mono" style={{ color: "var(--con-success)" }}>{v.delivered}</td>
+                      <td className="con-td-mono" style={{ color: "var(--con-danger)" }}>{v.failed}</td>
+                      <td>
+                        <span style={{ color: Number(sRate) >= 70 ? "#38a169" : Number(sRate) >= 50 ? "#ecc94b" : "#e53e3e", fontWeight: 600, fontFamily: "var(--con-font-mono)" }}>
+                          {sRate}%
+                        </span>
+                      </td>
+                      <td className="con-td-mono">{v.amount.toLocaleString("ar-SA")}</td>
+                      <td className="con-td-mono">{avgOrd.toLocaleString("ar-SA")}</td>
+                    </tr>
+                  );
+                })}
+              {/* Totals row */}
+              {Object.keys(platformMonthlyTotals).length > 0 && (
+                <tr style={{ background: "rgba(56, 189, 248, 0.05)", fontWeight: 700 }}>
+                  <td style={{ color: "var(--con-brand)", fontWeight: 700 }}>الإجمالي</td>
+                  <td className="con-td-mono" style={{ fontWeight: 700 }}>
+                    {Object.values(platformMonthlyTotals).reduce((s, v) => s + v.orders, 0)}
+                  </td>
+                  <td className="con-td-mono" style={{ color: "var(--con-success)", fontWeight: 700 }}>
+                    {Object.values(platformMonthlyTotals).reduce((s, v) => s + v.delivered, 0)}
+                  </td>
+                  <td className="con-td-mono" style={{ color: "var(--con-danger)", fontWeight: 700 }}>
+                    {Object.values(platformMonthlyTotals).reduce((s, v) => s + v.failed, 0)}
+                  </td>
+                  <td>
+                    {(() => {
+                      const totalO = Object.values(platformMonthlyTotals).reduce((s, v) => s + v.orders, 0);
+                      const totalD = Object.values(platformMonthlyTotals).reduce((s, v) => s + v.delivered, 0);
+                      const r = totalO > 0 ? ((totalD / totalO) * 100).toFixed(1) : "0";
+                      return <span style={{ color: Number(r) >= 70 ? "#38a169" : "#ecc94b", fontWeight: 700, fontFamily: "var(--con-font-mono)" }}>{r}%</span>;
+                    })()}
+                  </td>
+                  <td className="con-td-mono" style={{ fontWeight: 700 }}>
+                    {Object.values(platformMonthlyTotals).reduce((s, v) => s + v.amount, 0).toLocaleString("ar-SA")}
+                  </td>
+                  <td className="con-td-mono">—</td>
+                </tr>
+              )}
+            </Table>
+          </Card>
+
+          {/* Per-Month Detail Table */}
+          {monthlyPlatformData.length > 0 && (
+            <Card title="تفصيل شهري" noPadding>
+              <Table
+                headers={["الشهر", ...Object.keys(platformLabels).filter((k) => k !== "الكل" && platformMonthlyTotals[k]).map((k) => platformLabels[k]), "الإجمالي"]}
+                isEmpty={false}
+                emptyIcon={Package}
+                emptyText=""
+              >
+                {monthlyPlatformData.map(({ month, platforms }) => {
+                  const [y, m] = month.split("-");
+                  const total = Object.values(platforms).reduce((s, v) => s + v.orders, 0);
+                  return (
+                    <tr key={month}>
+                      <td style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>{monthNames[Number(m) - 1]} {y}</td>
+                      {Object.keys(platformLabels).filter((k) => k !== "الكل" && platformMonthlyTotals[k]).map((k) => (
+                        <td key={k} className="con-td-mono">{platforms[k]?.orders ?? 0}</td>
+                      ))}
+                      <td className="con-td-mono" style={{ fontWeight: 700, color: "var(--con-brand)" }}>{total}</td>
+                    </tr>
+                  );
+                })}
+              </Table>
+            </Card>
+          )}
+        </>
       )}
 
       {/* ── Charts ─────────────────────────────────────────────────────────── */}
@@ -1128,38 +1123,6 @@ export default function AdminOrders() {
           options={cities.map((c) => ({ value: c, label: c }))}
           style={{ minWidth: 130 }}
         />
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <label style={{ fontSize: 12, color: "var(--con-text-muted)", whiteSpace: "nowrap" }}>من</label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            style={{
-              background: "var(--con-bg, #07111d)",
-              border: "1px solid var(--con-border, #1a3a52)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              color: "var(--con-text, #e2e8f0)",
-              fontSize: 13,
-              fontFamily: "inherit",
-            }}
-          />
-          <label style={{ fontSize: 12, color: "var(--con-text-muted)", whiteSpace: "nowrap" }}>إلى</label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            style={{
-              background: "var(--con-bg, #07111d)",
-              border: "1px solid var(--con-border, #1a3a52)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              color: "var(--con-text, #e2e8f0)",
-              fontSize: 13,
-              fontFamily: "inherit",
-            }}
-          />
-        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <label style={{ fontSize: 12, color: "var(--con-text-muted)", whiteSpace: "nowrap" }}>مبلغ من</label>
           <input

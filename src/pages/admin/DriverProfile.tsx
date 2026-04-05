@@ -68,6 +68,7 @@ interface DriverData {
   contractStartDate: string;
   contractType: string;
   iban: string;
+  stcBankPhone: string;
   emergencyContact: string;
   emergencyPhone: string;
   monthlyOrders: number;
@@ -131,6 +132,7 @@ const MOCK_DRIVER: DriverData = {
   contractStartDate: "2025-06-15",
   contractType: "دوام كامل",
   iban: "SA0380000000608010167519",
+  stcBankPhone: "966551234567",
   emergencyContact: "محمد الشهري",
   emergencyPhone: "0559876543",
   monthlyOrders: 342,
@@ -299,6 +301,7 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color?
 // ─── Tab: تفاصيل (Details) ──────────────────────────────────────────────────────
 
 function DetailsTab({ d }: { d: DriverData }) {
+  const [showStc, setShowStc] = useState(false);
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "1.5rem" }}>
@@ -320,7 +323,27 @@ function DetailsTab({ d }: { d: DriverData }) {
           </h3>
           <DetailRow label="تاريخ بداية العقد" value={formatDate(d.contractStartDate)} icon={<Calendar size={14} />} />
           <DetailRow label="نوع العقد" value={d.contractType} icon={<FileText size={14} />} />
-          <DetailRow label="IBAN" value={d.iban} icon={<CreditCard size={14} />} />
+          {/* IBAN / STC Bank Toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 0", borderBottom: "1px solid var(--con-border-default)" }}>
+            <span style={{ color: "var(--con-text-muted)", flexShrink: 0 }}>{showStc ? <Smartphone size={14} /> : <CreditCard size={14} />}</span>
+            <span style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", minWidth: 120, flexShrink: 0 }}>{showStc ? "STC Bank" : "IBAN"}</span>
+            <span style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-primary)", fontWeight: 500, direction: "ltr", unicodeBidi: "embed" }}>
+              {showStc ? (d.stcBankPhone || "—") : d.iban}
+            </span>
+            <button
+              onClick={() => setShowStc(!showStc)}
+              title={showStc ? "عرض IBAN" : "عرض رقم STC Bank"}
+              style={{
+                marginInlineStart: "auto", background: showStc ? "rgba(124, 58, 237, 0.15)" : "rgba(56, 189, 248, 0.15)",
+                border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+                fontSize: 11, fontWeight: 600, fontFamily: "inherit",
+                color: showStc ? "#a78bfa" : "#38bdf8",
+                display: "inline-flex", alignItems: "center", gap: 4, transition: "all 0.2s",
+              }}
+            >
+              {showStc ? <><CreditCard size={12} /> IBAN</> : <><Smartphone size={12} /> STC</>}
+            </button>
+          </div>
           <DetailRow label="جهة اتصال الطوارئ" value={d.emergencyContact} icon={<Phone size={14} />} />
           <DetailRow label="رقم الطوارئ" value={d.emergencyPhone} icon={<Phone size={14} />} />
         </div>
@@ -743,6 +766,7 @@ export default function DriverProfilePage() {
     if (!d.city.trim()) errs.city = "المدينة مطلوبة";
     if (d.iban && !/^SA\d{22}$/.test(d.iban.replace(/\s/g, ""))) errs.iban = "IBAN يجب أن يبدأ بـ SA ويكون 24 حرف";
     if (d.emergencyPhone && !/^05\d{8}$/.test(d.emergencyPhone)) errs.emergencyPhone = "رقم الطوارئ غير صحيح";
+    if (d.stcBankPhone && !/^966[5]\d{8}$/.test(d.stcBankPhone)) errs.stcBankPhone = "رقم STC Bank يجب أن يكون 966 + 5XXXXXXXX";
     if (d.baseSalary < 0) errs.baseSalary = "الراتب لا يمكن أن يكون سالب";
     return errs;
   }
@@ -1108,7 +1132,7 @@ export default function DriverProfilePage() {
                   {errors[key] && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors[key]}</span>}
                 </div>
               ))}
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div>
                 <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>IBAN</label>
                 <input
                   value={editData.iban}
@@ -1117,6 +1141,16 @@ export default function DriverProfilePage() {
                   style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors.iban ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box", direction: "ltr", textAlign: "left" }}
                 />
                 {errors.iban && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors.iban}</span>}
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}><Smartphone size={12} /> رقم STC Bank</label>
+                <input
+                  value={editData.stcBankPhone}
+                  onChange={(e) => { setEditData({ ...editData, stcBankPhone: e.target.value }); setErrors((p) => { const n = { ...p }; delete n.stcBankPhone; return n; }); }}
+                  placeholder="966XXXXXXXXX"
+                  style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors.stcBankPhone ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box", direction: "ltr", textAlign: "left" }}
+                />
+                {errors.stcBankPhone && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors.stcBankPhone}</span>}
               </div>
             </div>
 
@@ -1159,8 +1193,8 @@ export default function DriverProfilePage() {
                   setSaving(true);
                   try {
                     if (supabase) {
-                      const { name, phone, email, city, nationalId, platform, contractType, status, iban, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance } = editData;
-                      await supabase.from("couriers").update({ name, phone, email, city, nationalId, platform, contractType, status, iban, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance }).eq("id", editData.id);
+                      const { name, phone, email, city, nationalId, platform, contractType, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance } = editData;
+                      await supabase.from("couriers").update({ name, phone, email, city, nationalId, platform, contractType, status, iban, stcBankPhone, emergencyContact, emergencyPhone, contractStartDate, joinDate, baseSalary, fuelAllowance, phoneAllowance }).eq("id", editData.id);
                     }
                     setDriver(editData);
                     toast.success("تم تحديث البيانات بنجاح");

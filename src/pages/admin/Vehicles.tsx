@@ -16,6 +16,9 @@ import {
   X,
   Download,
   Printer,
+  CheckSquare,
+  Square,
+  MinusSquare,
 } from "lucide-react";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
@@ -121,6 +124,7 @@ export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(FALLBACK_VEHICLES);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newVehicle, setNewVehicle] = useState({
     plate: "",
     type: "سيارة",
@@ -129,6 +133,48 @@ export default function Vehicles() {
     city: "الرياض",
     year: "2024",
   });
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((v) => String(v.id))));
+    }
+  }
+
+  function bulkChangeStatus(newStatus: VehicleStatus) {
+    setVehicles((prev) =>
+      prev.map((v) =>
+        selectedIds.has(String(v.id)) ? { ...v, status: newStatus } : v,
+      ),
+    );
+    setSelectedIds(new Set());
+  }
+
+  function exportSelected() {
+    const selected = vehicles.filter((v) => selectedIds.has(String(v.id)));
+    const rows = selected.map((v) => ({
+      النوع: v.type,
+      رقم_اللوحة: v.plate,
+      الماركة: v.brand,
+      السنة: v.year,
+      المندوب: v.courier,
+      المدينة: v.city,
+      الحالة: STATUS_META[v.status]?.label ?? v.status,
+      آخر_صيانة: v.lastService,
+    }));
+    downloadCSV(rows, "vehicles_selected_export");
+    setSelectedIds(new Set());
+  }
 
   function addVehicle() {
     if (!newVehicle.plate) return;
@@ -438,6 +484,53 @@ export default function Vehicles() {
         </div>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          background: "var(--con-brand-subtle, #1e3a5f)",
+          border: "1px solid var(--con-brand, #3b82f6)",
+          borderRadius: 10, padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ color: "var(--con-brand, #3b82f6)", fontSize: 13, fontWeight: 600 }}>
+            {selectedIds.size} محدد
+          </span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  bulkChangeStatus(e.target.value as VehicleStatus);
+                  e.target.value = "";
+                }
+              }}
+              defaultValue=""
+              style={{
+                background: "var(--con-bg-surface-2, #1a2332)",
+                color: "var(--con-text-primary, #e2e8f0)",
+                border: "1px solid var(--con-border-strong, #334155)",
+                borderRadius: 6,
+                padding: "4px 10px",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <option value="" disabled>تغيير الحالة</option>
+              <option value="active">نشط</option>
+              <option value="maintenance">صيانة</option>
+              <option value="inactive">غير نشط</option>
+            </select>
+            <button
+              className="con-btn-ghost"
+              style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={exportSelected}
+            >
+              <Download size={13} /> تصدير المحدد
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Fleet Table */}
       <div
         style={{
@@ -457,6 +550,18 @@ export default function Vehicles() {
             <table className="con-table">
               <thead>
                 <tr>
+                  <th style={{ width: 36, textAlign: "center" }}>
+                    <span
+                      onClick={toggleSelectAll}
+                      style={{ cursor: "pointer", display: "inline-flex", color: "var(--con-text-muted)" }}
+                    >
+                      {selectedIds.size === filtered.length && filtered.length > 0
+                        ? <CheckSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                        : selectedIds.size > 0
+                          ? <MinusSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                          : <Square size={15} />}
+                    </span>
+                  </th>
                   <th>النوع</th>
                   <th>رقم اللوحة</th>
                   <th>الماركة / السنة</th>
@@ -469,6 +574,17 @@ export default function Vehicles() {
               <tbody>
                 {filtered.map((v) => (
                   <tr key={v.id}>
+                    {/* Checkbox */}
+                    <td style={{ textAlign: "center" }}>
+                      <span
+                        onClick={() => toggleSelect(String(v.id))}
+                        style={{ cursor: "pointer", display: "inline-flex", color: "var(--con-text-muted)" }}
+                      >
+                        {selectedIds.has(String(v.id))
+                          ? <CheckSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                          : <Square size={15} />}
+                      </span>
+                    </td>
                     {/* Type */}
                     <td>
                       <div

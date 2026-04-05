@@ -36,6 +36,7 @@ import {
   type ModuleGroup,
 } from "@/lib/admin/moduleRegistry";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 const ALL_ACTIONS: PermissionAction[] = [
   "view",
@@ -160,13 +161,59 @@ export default function PermissionManager() {
     {} as Record<string, typeof DEFAULT_MODULES>,
   );
 
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!supabase) {
+      toast.error("لا يمكن الحفظ — قاعدة البيانات غير متصلة");
+      return;
+    }
+
+    // Only save non-system roles (system roles have implicit full access)
+    const customRoles = roles.filter((r) => !r.isSystem);
+    if (customRoles.length === 0) {
+      toast.success("تم حفظ الصلاحيات بنجاح");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Build upsert rows — one row per role+module combination
+      const rows = customRoles.flatMap((role) =>
+        role.modules.map((mod) => ({
+          role_name: role.name,
+          module_id: mod.moduleId,
+          actions: JSON.stringify(mod.actions),
+          updated_at: new Date().toISOString(),
+        })),
+      );
+
+      if (rows.length > 0) {
+        const { error } = await supabase
+          .schema("admin")
+          .from("role_permissions")
+          .upsert(rows, { onConflict: "role_name,module_id" });
+
+        if (error) throw error;
+      }
+
+      toast.success("تم حفظ الصلاحيات بنجاح");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "حدث خطأ أثناء الحفظ";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <PageWrapper>
       <PageHeader
         icon={Shield}
         title="إدارة الصلاحيات"
         subtitle="تحكّم في صلاحيات كل دور على مستوى الوحدات والإجراءات"
-        actions={<Button icon={Save}>حفظ التغييرات</Button>}
+        actions={<Button icon={Save} onClick={handleSave} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ التغييرات"}</Button>}
       />
 
       <KPIGrid cols="repeat(4, 1fr)">

@@ -16,6 +16,9 @@ import {
   Download,
   Printer,
   X,
+  CheckSquare,
+  Square,
+  MinusSquare,
 } from "lucide-react";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
@@ -115,6 +118,7 @@ export default function FleetManagement() {
   const [filter, setFilter] = useState<VehicleStatus | "all">("all");
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newVehicle, setNewVehicle] = useState({
     name: "",
     type: "فان",
@@ -137,6 +141,57 @@ export default function FleetManagement() {
       /* keep mock */
     }
     setLoading(false);
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((v) => v.id)));
+    }
+  }
+
+  function bulkMaintenance() {
+    const ids = selectedIds;
+    setData((prev) =>
+      prev.map((v) =>
+        ids.has(v.id)
+          ? { ...v, status: "maintenance" as VehicleStatus, lastMaintenance: new Date().toISOString().slice(0, 10) }
+          : v,
+      ),
+    );
+    ids.forEach((id) => {
+      fetch(`${API_BASE}/fleet/vehicles/${id}/maintenance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: new Date().toISOString() }),
+      }).catch(() => {});
+    });
+    setSelectedIds(new Set());
+  }
+
+  function exportSelected() {
+    const selected = data.filter((v) => selectedIds.has(v.id));
+    const rows = selected.map((v) => ({
+      المعرف: v.id,
+      المركبة: v.name,
+      النوع: v.type,
+      السائق: v.driver,
+      الحالة: STATUS_MAP[v.status].label,
+      آخر_صيانة: v.lastMaintenance,
+      الموقع: v.location,
+    }));
+    downloadCSV(rows, "fleet_selected_export");
+    setSelectedIds(new Set());
   }
 
   async function handleMaintenance(id: string) {
@@ -408,6 +463,36 @@ export default function FleetManagement() {
         </div>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div style={{
+          background: "var(--con-brand-subtle, #1e3a5f)",
+          border: "1px solid var(--con-brand, #3b82f6)",
+          borderRadius: 10, padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ color: "var(--con-brand, #3b82f6)", fontSize: 13, fontWeight: 600 }}>
+            {selectedIds.size} محدد
+          </span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="con-btn-ghost"
+              style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={bulkMaintenance}
+            >
+              <Wrench size={13} /> صيانة جماعية
+            </button>
+            <button
+              className="con-btn-ghost"
+              style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={exportSelected}
+            >
+              <Download size={13} /> تصدير المحدد
+            </button>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           background: "var(--con-bg-surface-1)",
@@ -429,6 +514,18 @@ export default function FleetManagement() {
             <table className="con-table">
               <thead>
                 <tr>
+                  <th style={{ width: 36, textAlign: "center" }}>
+                    <span
+                      onClick={toggleSelectAll}
+                      style={{ cursor: "pointer", display: "inline-flex", color: "var(--con-text-muted)" }}
+                    >
+                      {selectedIds.size === filtered.length && filtered.length > 0
+                        ? <CheckSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                        : selectedIds.size > 0
+                          ? <MinusSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                          : <Square size={15} />}
+                    </span>
+                  </th>
                   <th>المركبة</th>
                   <th>النوع</th>
                   <th>السائق</th>
@@ -441,6 +538,16 @@ export default function FleetManagement() {
               <tbody>
                 {filtered.map((a) => (
                   <tr key={a.id}>
+                    <td style={{ textAlign: "center" }}>
+                      <span
+                        onClick={() => toggleSelect(a.id)}
+                        style={{ cursor: "pointer", display: "inline-flex", color: "var(--con-text-muted)" }}
+                      >
+                        {selectedIds.has(a.id)
+                          ? <CheckSquare size={15} style={{ color: "var(--con-brand, #3b82f6)" }} />
+                          : <Square size={15} />}
+                      </span>
+                    </td>
                     <td>
                       <span style={{ fontWeight: 600 }}>{a.name}</span>
                       <br />

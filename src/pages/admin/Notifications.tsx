@@ -160,6 +160,8 @@ export default function Notifications() {
   const [data, setData] = useState<Notification[]>(MOCK);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<NotifType | "all">("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -225,6 +227,11 @@ export default function Notifications() {
     const matchFilter = filter === "all" || a.type === filter;
     return matchSearch && matchFilter;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => setPage(1), [search, filter]);
 
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * 86400000)
@@ -517,7 +524,7 @@ export default function Notifications() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((a) => (
+                {paginated.map((a) => (
                   <tr
                     key={a.id}
                     style={{
@@ -582,6 +589,30 @@ export default function Notifications() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {filtered.length > 0 && totalPages > 1 && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 16px", borderTop: "1px solid var(--con-border, #1a3a52)",
+          }}>
+            <span style={{ fontSize: 12, color: "#94a3b8" }}>
+              صفحة {page} من {totalPages} — إجمالي {filtered.length}
+            </span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--con-border, #1a3a52)",
+                  background: "var(--con-card, #0d1926)", color: page === 1 ? "#475569" : "var(--con-text, #e2e8f0)",
+                  cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 12 }}>
+                السابق
+              </button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--con-border, #1a3a52)",
+                  background: "var(--con-card, #0d1926)", color: page === totalPages ? "#475569" : "var(--con-text, #e2e8f0)",
+                  cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 12 }}>
+                التالي
+              </button>
+            </div>
           </div>
         )}
       </div>

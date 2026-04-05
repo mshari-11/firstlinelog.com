@@ -191,6 +191,8 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   async function fetchOrders() {
     setLoading(true);
@@ -241,6 +243,11 @@ export default function AdminOrders() {
     if (dateTo && o.created_date > dateTo) return false;
     return matchSearch && matchStatus && matchPlatform;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => setPage(1), [search, statusFilter, platformFilter, dateFrom, dateTo]);
 
   const stats = {
     total: orders.length,
@@ -409,7 +416,7 @@ export default function AdminOrders() {
           {loading ? (
             <SkeletonRows rows={5} cols={8} />
           ) : (
-            filtered.map((order) => {
+            paginated.map((order) => {
               const sc = statusConfig[order.status];
               return (
                 <tr key={order.id} onClick={() => setSelectedOrder(order)} style={{ cursor: "pointer" }}>
@@ -533,6 +540,30 @@ export default function AdminOrders() {
                 {totalAmount.toFixed(0)} ر.س
               </span>
             </span>
+          </div>
+        )}
+        {!loading && filtered.length > 0 && totalPages > 1 && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 16px", borderTop: "1px solid var(--con-border, #1a3a52)",
+          }}>
+            <span style={{ fontSize: 12, color: "#94a3b8" }}>
+              صفحة {page} من {totalPages} — إجمالي {filtered.length}
+            </span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--con-border, #1a3a52)",
+                  background: "var(--con-card, #0d1926)", color: page === 1 ? "#475569" : "var(--con-text, #e2e8f0)",
+                  cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 12 }}>
+                السابق
+              </button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--con-border, #1a3a52)",
+                  background: "var(--con-card, #0d1926)", color: page === totalPages ? "#475569" : "var(--con-text, #e2e8f0)",
+                  cursor: page === totalPages ? "not-allowed" : "pointer", fontSize: 12 }}>
+                التالي
+              </button>
+            </div>
           </div>
         )}
       </Card>

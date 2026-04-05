@@ -13,10 +13,12 @@ import {
   X,
   Download,
   Printer,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
-import { PageWrapper, PageHeader } from "@/components/admin/ui";
+import { PageWrapper, PageHeader, Modal } from "@/components/admin/ui";
 
 function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) return;
@@ -114,11 +116,14 @@ export default function Tasks() {
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     assignee: "",
     priority: "medium" as Priority,
+    status: "pending" as TaskStatus,
   });
 
   useEffect(() => {
@@ -136,6 +141,28 @@ export default function Tasks() {
       /* keep mock */
     }
     setLoading(false);
+  }
+
+  function resetForm() {
+    setForm({ title: "", description: "", assignee: "", priority: "medium", status: "pending" });
+  }
+
+  function openCreate() {
+    setEditingTask(null);
+    resetForm();
+    setShowModal(true);
+  }
+
+  function openEdit(task: Task) {
+    setEditingTask(task);
+    setForm({
+      title: task.title,
+      description: task.description || "",
+      assignee: task.assignee,
+      priority: task.priority,
+      status: task.status,
+    });
+    setShowModal(true);
   }
 
   async function handleAdd() {
@@ -156,8 +183,69 @@ export default function Tasks() {
       });
     } catch {}
     setData((prev) => [newTask, ...prev]);
-    setForm({ title: "", description: "", assignee: "", priority: "medium" });
+    resetForm();
     setShowModal(false);
+    toast.success("تم إضافة المهمة");
+  }
+
+  async function handleEdit() {
+    if (!editingTask) return;
+    const updated: Task = {
+      ...editingTask,
+      title: form.title,
+      description: form.description,
+      assignee: form.assignee,
+      priority: form.priority,
+      status: form.status,
+    };
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (url && key) {
+        const supabase = createClient(url, key);
+        if (supabase) {
+          await supabase
+            .schema("admin" as any)
+            .from("tasks")
+            .update({
+              title: updated.title,
+              description: updated.description,
+              assignee: updated.assignee,
+              priority: updated.priority,
+              status: updated.status,
+            })
+            .eq("id", updated.id);
+        }
+      }
+    } catch { /* keep local */ }
+    setData((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    resetForm();
+    setEditingTask(null);
+    setShowModal(false);
+    toast.success("تم تحديث المهمة");
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (url && key) {
+        const supabase = createClient(url, key);
+        if (supabase) {
+          await supabase
+            .schema("admin" as any)
+            .from("tasks")
+            .delete()
+            .eq("id", deleteTarget.id);
+        }
+      }
+    } catch { /* keep local */ }
+    setData((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    toast.success("تم حذف المهمة");
   }
 
   const filtered = data.filter((a) => {
@@ -183,7 +271,7 @@ export default function Tasks() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button
               className="con-btn-primary"
-              onClick={() => setShowModal(true)}
+              onClick={openCreate}
             >
               <Plus size={14} /> مهمة جديدة
             </button>
@@ -395,6 +483,7 @@ export default function Tasks() {
                   <th>الأولوية</th>
                   <th>الحالة</th>
                   <th>التاريخ</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
@@ -433,6 +522,26 @@ export default function Tasks() {
                         {new Date(a.date).toLocaleDateString("ar-SA")}
                       </span>
                     </td>
+                    <td>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button
+                          className="con-btn-ghost"
+                          style={{ padding: 4, borderRadius: 6 }}
+                          title="تعديل"
+                          onClick={() => openEdit(a)}
+                        >
+                          <Edit2 size={14} style={{ color: "var(--con-brand)" }} />
+                        </button>
+                        <button
+                          className="con-btn-ghost"
+                          style={{ padding: 4, borderRadius: 6 }}
+                          title="حذف"
+                          onClick={() => setDeleteTarget(a)}
+                        >
+                          <Trash2 size={14} style={{ color: "var(--con-danger)" }} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -441,111 +550,125 @@ export default function Tasks() {
         )}
       </div>
 
-      {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            style={{
-              background: "var(--con-bg-surface-1)",
-              borderRadius: 12,
-              padding: 24,
-              width: "90%",
-              maxWidth: 450,
-              border: "1px solid var(--con-border-default)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 20,
-              }}
+      <Modal
+        open={showModal}
+        onClose={() => { setShowModal(false); setEditingTask(null); resetForm(); }}
+        title={editingTask ? "تعديل المهمة" : "مهمة جديدة"}
+        width={450}
+        actions={
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-start" }}>
+            <button
+              className="con-btn-primary"
+              onClick={editingTask ? handleEdit : handleAdd}
+              disabled={!form.title || !form.assignee}
             >
-              <h2
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  margin: 0,
-                  color: "var(--con-text-primary)",
-                }}
-              >
-                مهمة جديدة
-              </h2>
-              <button
-                className="con-btn-ghost"
-                onClick={() => setShowModal(false)}
-                style={{ padding: 4 }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input
-                className="con-input"
-                placeholder="العنوان"
-                value={form.title}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, title: e.target.value }))
-                }
-                style={{ width: "100%" }}
-              />
-              <textarea
-                className="con-input"
-                placeholder="الوصف"
-                value={form.description}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, description: e.target.value }))
-                }
-                style={{ width: "100%", minHeight: 70, resize: "vertical" }}
-              />
-              <input
-                className="con-input"
-                placeholder="المعيّن"
-                value={form.assignee}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, assignee: e.target.value }))
-                }
-                style={{ width: "100%" }}
-              />
+              {editingTask ? (
+                <><Edit2 size={14} /> حفظ التعديلات</>
+              ) : (
+                <><Plus size={14} /> إضافة</>
+              )}
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => { setShowModal(false); setEditingTask(null); resetForm(); }}
+            >
+              إلغاء
+            </button>
+          </div>
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>العنوان</label>
+            <input
+              className="con-input"
+              placeholder="العنوان"
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الوصف</label>
+            <textarea
+              className="con-input"
+              placeholder="الوصف"
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              style={{ width: "100%", minHeight: 70, resize: "vertical" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>المعيّن</label>
+            <input
+              className="con-input"
+              placeholder="المعيّن"
+              value={form.assignee}
+              onChange={(e) => setForm((f) => ({ ...f, assignee: e.target.value }))}
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الأولوية</label>
+            <select
+              className="con-input"
+              value={form.priority}
+              onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as Priority }))}
+              style={{ width: "100%" }}
+            >
+              <option value="high">عالية</option>
+              <option value="medium">متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+          </div>
+          {editingTask && (
+            <div>
+              <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>الحالة</label>
               <select
                 className="con-input"
-                value={form.priority}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    priority: e.target.value as Priority,
-                  }))
-                }
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as TaskStatus }))}
                 style={{ width: "100%" }}
               >
-                <option value="high">عالية</option>
-                <option value="medium">متوسطة</option>
-                <option value="low">منخفضة</option>
+                <option value="pending">معلقة</option>
+                <option value="in_progress">قيد التنفيذ</option>
+                <option value="completed">مكتملة</option>
+                <option value="overdue">متأخرة</option>
               </select>
-              <button
-                className="con-btn-primary"
-                onClick={handleAdd}
-                disabled={!form.title || !form.assignee}
-                style={{ marginTop: 8 }}
-              >
-                <Plus size={14} /> إضافة
-              </button>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
+
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="تأكيد الحذف"
+        width={400}
+        actions={
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-start" }}>
+            <button
+              className="con-btn-primary"
+              style={{ background: "var(--con-danger)", borderColor: "var(--con-danger)" }}
+              onClick={handleDelete}
+            >
+              <Trash2 size={14} /> حذف
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => setDeleteTarget(null)}
+            >
+              إلغاء
+            </button>
+          </div>
+        }
+      >
+        <p style={{ color: "var(--con-text-secondary)", margin: 0, lineHeight: 1.7 }}>
+          هل أنت متأكد من حذف المهمة <strong style={{ color: "var(--con-text-primary)" }}>{deleteTarget?.title}</strong>؟
+          <br />
+          لا يمكن التراجع عن هذا الإجراء.
+        </p>
+      </Modal>
     </PageWrapper>
   );
 }

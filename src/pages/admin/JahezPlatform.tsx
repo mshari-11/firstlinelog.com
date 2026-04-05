@@ -46,18 +46,23 @@ const JAHEZ_RED_HOVER = "#c53030";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SanedDriver {
-  driverId: number;
+  driverId: number | string;
+  driverName?: string;
   driverUniqueId?: string;
   residenceNumber?: string;
+  iqamaNumber?: string;
+  idNumber?: string;
   firstName?: string;
   lastName?: string;
   firstNameAr?: string;
   lastNameAr?: string;
   phoneNumber?: string;
+  phone?: string;
   email?: string;
   status?: string;
-  availability?: string;
-  vehicleType?: string;
+  driverStatus?: string | boolean;
+  availability?: string | boolean;
+  vehicleType?: string | number;
   city?: string;
   nationalId?: string;
   createdDate?: string;
@@ -220,12 +225,9 @@ function formatDate(d: string | null): string {
 }
 
 function getDriverName(d: SanedDriver): string {
-  if (d.firstNameAr || d.lastNameAr) {
-    return `${d.firstNameAr || ""} ${d.lastNameAr || ""}`.trim();
-  }
-  if (d.firstName || d.lastName) {
-    return `${d.firstName || ""} ${d.lastName || ""}`.trim();
-  }
+  if (d.driverName && d.driverName.trim()) return d.driverName.trim();
+  if (d.firstNameAr || d.lastNameAr) return `${d.firstNameAr || ""} ${d.lastNameAr || ""}`.trim();
+  if (d.firstName || d.lastName) return `${d.firstName || ""} ${d.lastName || ""}`.trim();
   return `سائق ${d.driverId}`;
 }
 
@@ -1234,7 +1236,7 @@ export default function JahezPlatform() {
                           fontSize: 12,
                         }}
                       >
-                        {d.residenceNumber || "—"}
+                        {d.iqamaNumber || d.idNumber || d.residenceNumber || d.nationalId || "—"}
                       </td>
                       <td
                         style={{

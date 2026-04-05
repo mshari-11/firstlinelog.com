@@ -201,6 +201,7 @@ const CourierOperationsLog = lazy(() => import("@/pages/admin/CourierOperationsL
 const CourierRewards = lazy(() => import("@/pages/admin/CourierRewards"));
 const CourierReports = lazy(() => import("@/pages/admin/CourierReports"));
 const CourierInbox = lazy(() => import("@/pages/admin/CourierInbox"));
+const CourierMap = lazy(() => import("@/pages/admin/CourierMap"));
 
 // ── Preview pages (prototype) ──────────────────────────────────────────────
 const PreviewFuel = lazy(() => import("@/pages/admin/preview/FuelManagement"));
@@ -809,6 +810,14 @@ export default function App() {
                 element={
                   <AccessGuard roles={["admin", "owner", "staff"]}>
                     <CourierInbox />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="courier-map"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <CourierMap />
                   </AccessGuard>
                 }
               />

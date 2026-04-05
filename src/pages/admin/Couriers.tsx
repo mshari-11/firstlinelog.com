@@ -63,6 +63,10 @@ import {
   Briefcase,
   User,
   AlertTriangle,
+  Filter,
+  ChevronUp,
+  ChevronDown,
+  Columns,
 } from "lucide-react";
 import {
   PageWrapper,
@@ -315,6 +319,7 @@ const mockCouriers: Courier[] = [
     license_expiry: "2026-08-15", insurance_expiry: "2026-12-01",
     iban: "SA02 8000 0000 6080 1016 7519", bank_name: "بنك الراجحي",
     emergency_contact: "0551234567", emergency_name: "عبدالله (أخ)",
+    last_active: new Date(Date.now() - 15 * 60000).toISOString(),
     app_violations: [
       { date: "2026-04-01", type: "تأخر في التوصيل", amount: 50, notes: "تأخر ٤٥ دقيقة عن الموعد المحدد" },
       { date: "2026-04-03", type: "إلغاء طلب بدون سبب", amount: 100, notes: "إلغاء بعد استلام الطلب" },
@@ -353,6 +358,7 @@ const mockCouriers: Courier[] = [
     license_expiry: "2026-05-01", insurance_expiry: "2026-04-20",
     iban: "SA44 1000 0000 0036 0651 1001", bank_name: "بنك الأهلي",
     emergency_contact: "0559876543", emergency_name: "سعود (صديق)",
+    last_active: new Date(Date.now() - 5 * 60000).toISOString(),
     app_violations: [], traffic_violations: [], has_company_vehicle: false,
     notes_history: [
       { date: "2026-04-01", note: "تجديد العقد لمدة 6 أشهر إضافية", by: "أحمد الشمري" },
@@ -542,6 +548,17 @@ const mockApplications: DriverApplication[] = [
   },
 ];
 
+function getOnlineStatus(lastActive?: string): { color: string; label: string } {
+  if (!lastActive) return { color: "#64748b", label: "غير متصل" };
+  const diff = Date.now() - new Date(lastActive).getTime();
+  const minutes = diff / 60000;
+  if (minutes < 60) return { color: "#22c55e", label: `منذ ${Math.round(minutes)} دقيقة` };
+  const hours = minutes / 60;
+  if (hours < 24) return { color: "#f59e0b", label: `منذ ${Math.round(hours)} ساعة` };
+  const days = hours / 24;
+  return { color: "#64748b", label: `منذ ${Math.round(days)} يوم` };
+}
+
 function initials(name: string) {
   return name.trim().charAt(0);
 }
@@ -597,6 +614,59 @@ function DocBadge({
   );
 }
 
+const ALL_COLUMNS = [
+  { key: "name", label: "المندوب", default: true },
+  { key: "phone", label: "الجوال", default: true },
+  { key: "city", label: "المدينة", default: true },
+  { key: "vehicle", label: "المركبة", default: true },
+  { key: "app", label: "التطبيق", default: true },
+  { key: "nationality", label: "الجنسية", default: false },
+  { key: "supervisor", label: "المشرف", default: false },
+  { key: "contract", label: "التعاقد", default: false },
+  { key: "registration", label: "التسجيل", default: false },
+  { key: "rating", label: "التقييم", default: true },
+  { key: "orders", label: "طلبات الشهر", default: true },
+  { key: "status", label: "الحالة", default: true },
+  { key: "classification", label: "التصنيف", default: true },
+  { key: "iqama", label: "الإقامة", default: false },
+  { key: "violations", label: "المخالفات", default: true },
+  { key: "actions", label: "إجراءات", default: true },
+];
+
+const CLASSIFICATION_OPTIONS = [
+  { value: "نجم", label: "نجم" },
+  { value: "ذهبي", label: "ذهبي" },
+  { value: "فضي", label: "فضي" },
+  { value: "برونزي", label: "برونزي" },
+];
+
+function getClassification(c: Courier): string {
+  const r = c.rating ?? 0;
+  const o = c.monthly_orders ?? 0;
+  if (r >= 4.8 && o >= 50) return "نجم";
+  if (r >= 4.5 && o >= 30) return "ذهبي";
+  if (r >= 4.0 && o >= 15) return "فضي";
+  return "برونزي";
+}
+
+function getClassificationVariant(cls: string): "success" | "warning" | "info" | "muted" {
+  if (cls === "نجم") return "success";
+  if (cls === "ذهبي") return "warning";
+  if (cls === "فضي") return "info";
+  return "muted";
+}
+
+function loadSavedColumns(): Set<string> {
+  try {
+    const saved = localStorage.getItem("fll_courier_columns");
+    if (saved) {
+      const arr = JSON.parse(saved) as string[];
+      if (Array.isArray(arr) && arr.length > 0) return new Set(arr);
+    }
+  } catch {}
+  return new Set(ALL_COLUMNS.filter((c) => c.default).map((c) => c.key));
+}
+
 export default function AdminCouriers() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -638,6 +708,27 @@ export default function AdminCouriers() {
   // Extra filters
   const [contractTypeFilter, setContractTypeFilter] = useState<string>("all");
   const [appNameFilter, setAppNameFilter] = useState<string>("all");
+
+  // Advanced filter popup
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    ratingMin: "", ratingMax: "",
+    ordersMin: "", ordersMax: "",
+    cities: [] as string[],
+    apps: [] as string[],
+    classifications: [] as string[],
+    dateFrom: "", dateTo: "",
+  });
+  const advancedFilterRef = useRef<HTMLDivElement>(null);
+
+  // Column sorting
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Column visibility
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(loadSavedColumns);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const columnPickerRef = useRef<HTMLDivElement>(null);
 
   // Add Courier Modal state
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -720,6 +811,25 @@ export default function AdminCouriers() {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  // Persist column visibility
+  useEffect(() => {
+    localStorage.setItem("fll_courier_columns", JSON.stringify([...visibleColumns]));
+  }, [visibleColumns]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (advancedFilterRef.current && !advancedFilterRef.current.contains(e.target as Node)) {
+        setShowAdvancedFilter(false);
+      }
+      if (columnPickerRef.current && !columnPickerRef.current.contains(e.target as Node)) {
+        setShowColumnPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     if (!selectedApp) return;
@@ -952,7 +1062,7 @@ export default function AdminCouriers() {
     }
   }
 
-  const filteredCouriers = couriers.filter((c) => {
+  const basicFilteredCouriers = couriers.filter((c) => {
     const q = courierSearch.toLowerCase();
     const matchSearch =
       !q ||
@@ -971,6 +1081,63 @@ export default function AdminCouriers() {
       appNameFilter === "all" || c.app_name === appNameFilter;
     return matchSearch && matchStatus && matchContract && matchApp;
   });
+
+  const advancedFilterCount = [
+    advancedFilters.ratingMin || advancedFilters.ratingMax,
+    advancedFilters.ordersMin || advancedFilters.ordersMax,
+    advancedFilters.cities.length > 0,
+    advancedFilters.apps.length > 0,
+    advancedFilters.classifications.length > 0,
+    advancedFilters.dateFrom || advancedFilters.dateTo,
+  ].filter(Boolean).length;
+
+  const filteredCouriers = (() => {
+    let result = basicFilteredCouriers.filter((c) => {
+      const af = advancedFilters;
+      if (af.ratingMin && (c.rating ?? 0) < Number(af.ratingMin)) return false;
+      if (af.ratingMax && (c.rating ?? 0) > Number(af.ratingMax)) return false;
+      if (af.ordersMin && (c.monthly_orders ?? 0) < Number(af.ordersMin)) return false;
+      if (af.ordersMax && (c.monthly_orders ?? 0) > Number(af.ordersMax)) return false;
+      if (af.cities.length > 0 && !af.cities.includes(c.city ?? "")) return false;
+      if (af.apps.length > 0 && !af.apps.includes(c.app_name ?? "")) return false;
+      if (af.classifications.length > 0 && !af.classifications.includes(getClassification(c))) return false;
+      if (af.dateFrom) { const rd = c.registration_date || c.created_at; if (rd < af.dateFrom) return false; }
+      if (af.dateTo) { const rd = c.registration_date || c.created_at; if (rd > af.dateTo) return false; }
+      return true;
+    });
+    if (sortColumn) {
+      result = [...result].sort((a, b) => {
+        let va: string | number = 0, vb: string | number = 0;
+        switch (sortColumn) {
+          case "name": va = a.full_name; vb = b.full_name; break;
+          case "rating": va = a.rating ?? 0; vb = b.rating ?? 0; break;
+          case "orders": va = a.monthly_orders ?? 0; vb = b.monthly_orders ?? 0; break;
+          case "city": va = a.city ?? ""; vb = b.city ?? ""; break;
+          case "registration": va = a.registration_date || a.created_at; vb = b.registration_date || b.created_at; break;
+          case "violations": va = (a.app_violations?.length ?? 0) + (a.traffic_violations?.length ?? 0); vb = (b.app_violations?.length ?? 0) + (b.traffic_violations?.length ?? 0); break;
+          default: return 0;
+        }
+        if (typeof va === "string" && typeof vb === "string") { const cmp = va.localeCompare(vb, "ar"); return sortDirection === "asc" ? cmp : -cmp; }
+        return sortDirection === "asc" ? (va as number) - (vb as number) : (vb as number) - (va as number);
+      });
+    }
+    return result;
+  })();
+
+  function handleSort(col: string) {
+    if (sortColumn === col) {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else { setSortColumn(null); setSortDirection("asc"); }
+    } else { setSortColumn(col); setSortDirection("asc"); }
+  }
+
+  function toggleColumnVisibility(key: string) {
+    setVisibleColumns((prev) => { const next = new Set(prev); if (next.has(key)) next.delete(key); else next.add(key); return next; });
+  }
+
+  function clearAdvancedFilters() {
+    setAdvancedFilters({ ratingMin: "", ratingMax: "", ordersMin: "", ordersMax: "", cities: [], apps: [], classifications: [], dateFrom: "", dateTo: "" });
+  }
 
   const courierStats = {
     total: couriers.length,
@@ -1391,245 +1558,244 @@ export default function AdminCouriers() {
               ]}
               style={{ minWidth: 140 }}
             />
+            {/* Advanced Filter Button */}
+            <div style={{ position: "relative" }} ref={advancedFilterRef}>
+              <button
+                type="button"
+                onClick={() => setShowAdvancedFilter(!showAdvancedFilter)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.375rem",
+                  padding: "0.45rem 0.75rem", borderRadius: "var(--con-radius)",
+                  border: `1px solid ${advancedFilterCount > 0 ? "var(--con-border-brand)" : "var(--con-border-default)"}`,
+                  background: advancedFilterCount > 0 ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)",
+                  color: advancedFilterCount > 0 ? "var(--con-brand)" : "var(--con-text-secondary)",
+                  fontSize: "var(--con-text-caption)", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                <Filter size={14} />
+                فلتر متقدم{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ""}
+              </button>
+              {showAdvancedFilter && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50,
+                  background: "var(--con-bg-card)", border: "1px solid var(--con-border-default)",
+                  borderRadius: "var(--con-radius)", padding: "1rem", minWidth: 380, maxWidth: 420,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                }}>
+                  <div style={{ fontSize: "var(--con-text-card-title)", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.75rem" }}>فلتر متقدم</div>
+                  {/* Rating */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>التقييم</label>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <input className="con-input" type="number" min={0} max={5} step={0.1} placeholder="من" value={advancedFilters.ratingMin} onChange={(e) => setAdvancedFilters((p) => ({ ...p, ratingMin: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                      <span style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)" }}>—</span>
+                      <input className="con-input" type="number" min={0} max={5} step={0.1} placeholder="إلى" value={advancedFilters.ratingMax} onChange={(e) => setAdvancedFilters((p) => ({ ...p, ratingMax: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                    </div>
+                  </div>
+                  {/* Orders */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>عدد طلبات الشهر</label>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <input className="con-input" type="number" min={0} placeholder="من" value={advancedFilters.ordersMin} onChange={(e) => setAdvancedFilters((p) => ({ ...p, ordersMin: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                      <span style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)" }}>—</span>
+                      <input className="con-input" type="number" min={0} placeholder="إلى" value={advancedFilters.ordersMax} onChange={(e) => setAdvancedFilters((p) => ({ ...p, ordersMax: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                    </div>
+                  </div>
+                  {/* Cities */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>المدينة</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                      {["الرياض", "جدة", "الدمام", "مكة", "المدينة"].map((city) => (
+                        <label key={city} style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "var(--con-radius)", border: `1px solid ${advancedFilters.cities.includes(city) ? "var(--con-border-brand)" : "var(--con-border-default)"}`, background: advancedFilters.cities.includes(city) ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", fontSize: "var(--con-text-caption)", color: advancedFilters.cities.includes(city) ? "var(--con-brand)" : "var(--con-text-secondary)", cursor: "pointer" }}>
+                          <input type="checkbox" checked={advancedFilters.cities.includes(city)} onChange={() => setAdvancedFilters((p) => ({ ...p, cities: p.cities.includes(city) ? p.cities.filter((x) => x !== city) : [...p.cities, city] }))} style={{ display: "none" }} />
+                          {city}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Apps */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>التطبيق</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                      {APP_NAME_OPTIONS.map((app) => (
+                        <label key={app.value} style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "var(--con-radius)", border: `1px solid ${advancedFilters.apps.includes(app.value) ? "var(--con-border-brand)" : "var(--con-border-default)"}`, background: advancedFilters.apps.includes(app.value) ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", fontSize: "var(--con-text-caption)", color: advancedFilters.apps.includes(app.value) ? "var(--con-brand)" : "var(--con-text-secondary)", cursor: "pointer" }}>
+                          <input type="checkbox" checked={advancedFilters.apps.includes(app.value)} onChange={() => setAdvancedFilters((p) => ({ ...p, apps: p.apps.includes(app.value) ? p.apps.filter((x) => x !== app.value) : [...p.apps, app.value] }))} style={{ display: "none" }} />
+                          {app.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Classification */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>التصنيف</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                      {CLASSIFICATION_OPTIONS.map((cls) => (
+                        <label key={cls.value} style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "var(--con-radius)", border: `1px solid ${advancedFilters.classifications.includes(cls.value) ? "var(--con-border-brand)" : "var(--con-border-default)"}`, background: advancedFilters.classifications.includes(cls.value) ? "var(--con-brand-subtle)" : "var(--con-bg-elevated)", fontSize: "var(--con-text-caption)", color: advancedFilters.classifications.includes(cls.value) ? "var(--con-brand)" : "var(--con-text-secondary)", cursor: "pointer" }}>
+                          <input type="checkbox" checked={advancedFilters.classifications.includes(cls.value)} onChange={() => setAdvancedFilters((p) => ({ ...p, classifications: p.classifications.includes(cls.value) ? p.classifications.filter((x) => x !== cls.value) : [...p.classifications, cls.value] }))} style={{ display: "none" }} />
+                          {cls.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Date range */}
+                  <div style={{ marginBottom: "0.75rem" }}>
+                    <label style={{ fontSize: "var(--con-text-caption)", color: "var(--con-text-secondary)", fontWeight: 600, marginBottom: "0.25rem", display: "block" }}>تاريخ التسجيل</label>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <input className="con-input" type="date" value={advancedFilters.dateFrom} onChange={(e) => setAdvancedFilters((p) => ({ ...p, dateFrom: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                      <span style={{ color: "var(--con-text-muted)", fontSize: "var(--con-text-caption)" }}>—</span>
+                      <input className="con-input" type="date" value={advancedFilters.dateTo} onChange={(e) => setAdvancedFilters((p) => ({ ...p, dateTo: e.target.value }))} style={{ width: "100%", fontSize: "var(--con-text-caption)" }} />
+                    </div>
+                  </div>
+                  {/* Buttons */}
+                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", borderTop: "1px solid var(--con-border-default)", paddingTop: "0.75rem", marginTop: "0.5rem" }}>
+                    <button type="button" onClick={() => { clearAdvancedFilters(); }} style={{ padding: "0.4rem 0.75rem", borderRadius: "var(--con-radius)", border: "1px solid var(--con-border-default)", background: "var(--con-bg-elevated)", color: "var(--con-text-secondary)", fontSize: "var(--con-text-caption)", cursor: "pointer" }}>مسح الفلاتر</button>
+                    <button type="button" onClick={() => setShowAdvancedFilter(false)} style={{ padding: "0.4rem 0.75rem", borderRadius: "var(--con-radius)", border: "none", background: "var(--con-brand)", color: "#fff", fontSize: "var(--con-text-caption)", cursor: "pointer", fontWeight: 600 }}>تطبيق الفلتر</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Column Visibility Button */}
+            <div style={{ position: "relative" }} ref={columnPickerRef}>
+              <button
+                type="button"
+                onClick={() => setShowColumnPicker(!showColumnPicker)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.375rem",
+                  padding: "0.45rem 0.75rem", borderRadius: "var(--con-radius)",
+                  border: "1px solid var(--con-border-default)",
+                  background: "var(--con-bg-elevated)",
+                  color: "var(--con-text-secondary)",
+                  fontSize: "var(--con-text-caption)", fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                <Columns size={14} />
+                الأعمدة
+              </button>
+              {showColumnPicker && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50,
+                  background: "var(--con-bg-card)", border: "1px solid var(--con-border-default)",
+                  borderRadius: "var(--con-radius)", padding: "0.75rem", minWidth: 200,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                }}>
+                  <div style={{ fontSize: "var(--con-text-caption)", fontWeight: 700, color: "var(--con-text-primary)", marginBottom: "0.5rem" }}>إظهار/إخفاء الأعمدة</div>
+                  {ALL_COLUMNS.map((col) => (
+                    <label key={col.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.25rem", fontSize: "var(--con-text-caption)", color: visibleColumns.has(col.key) ? "var(--con-text-primary)" : "var(--con-text-muted)", cursor: "pointer" }}>
+                      <input type="checkbox" checked={visibleColumns.has(col.key)} onChange={() => toggleColumnVisibility(col.key)} style={{ accentColor: "var(--con-brand)" }} />
+                      {col.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </Toolbar>
 
           <Card noPadding>
-            <Table
-              headers={[
-                "المندوب",
-                "رقم الجوال",
-                "المدينة",
-                "المركبة",
-                "التطبيق",
-                "الجنسية",
-                "المشرف المباشر",
-                "نوع التعاقد",
-                "تاريخ التسجيل",
-                "التقييم",
-                "طلبات الشهر",
-                "الحالة",
-                "إجراءات",
-              ]}
-              isEmpty={!courierLoading && filteredCouriers.length === 0}
-              emptyIcon={Users}
-              emptyText="لا توجد نتائج تطابق المعايير المحددة"
-            >
-              {courierLoading ? (
-                <SkeletonRows rows={4} cols={13} />
-              ) : (
-                filteredCouriers.map((courier) => {
-                  const sc = courierStatusConfig[courier.status];
-                  return (
-                    <tr key={courier.id}>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.625rem",
-                          }}
+            {!courierLoading && filteredCouriers.length === 0 ? (
+              <div className="con-empty">
+                <Users size={40} />
+                <p style={{ fontSize: "var(--con-text-body)" }}>لا توجد نتائج تطابق المعايير المحددة</p>
+              </div>
+            ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="con-table">
+                <thead>
+                  <tr>
+                    {ALL_COLUMNS.filter((col) => visibleColumns.has(col.key)).map((col) => {
+                      const sortable = ["name", "rating", "orders", "city", "registration", "violations"].includes(col.key);
+                      const isActive = sortColumn === col.key;
+                      return (
+                        <th
+                          key={col.key}
+                          onClick={sortable ? () => handleSort(col.key) : undefined}
+                          style={{ cursor: sortable ? "pointer" : "default", userSelect: "none", whiteSpace: "nowrap" }}
                         >
-                          {courier.photo_url ? (
-                            <img
-                              src={courier.photo_url}
-                              alt={courier.full_name}
-                              style={{
-                                width: "2rem",
-                                height: "2rem",
-                                borderRadius: "var(--con-radius)",
-                                objectFit: "cover",
-                                flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: "2rem",
-                                height: "2rem",
-                                borderRadius: "var(--con-radius)",
-                                background: "var(--con-brand-subtle)",
-                                color: "var(--con-brand)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "var(--con-text-caption)",
-                                fontWeight: 600,
-                                flexShrink: 0,
-                              }}
-                            >
-                              {initials(courier.full_name)}
-                            </div>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                            {col.label}
+                            {sortable && isActive && (sortDirection === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+                          </span>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {courierLoading ? (
+                    <SkeletonRows rows={4} cols={ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)).length} />
+                  ) : (
+                    filteredCouriers.map((courier) => {
+                      const sc = courierStatusConfig[courier.status];
+                      const onlineStatus = getOnlineStatus(courier.last_active);
+                      const cls = getClassification(courier);
+                      const violationCount = (courier.app_violations?.length ?? 0) + (courier.traffic_violations?.length ?? 0);
+                      return (
+                        <tr key={courier.id}>
+                          {visibleColumns.has("name") && (
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                                {courier.photo_url ? (
+                                  <img src={courier.photo_url} alt={courier.full_name} style={{ width: "2rem", height: "2rem", borderRadius: "var(--con-radius)", objectFit: "cover", flexShrink: 0 }} />
+                                ) : (
+                                  <div style={{ width: "2rem", height: "2rem", borderRadius: "var(--con-radius)", background: "var(--con-brand-subtle)", color: "var(--con-brand)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--con-text-caption)", fontWeight: 600, flexShrink: 0 }}>{initials(courier.full_name)}</div>
+                                )}
+                                <span style={{ width: 8, height: 8, borderRadius: "50%", background: onlineStatus.color, flexShrink: 0, boxShadow: onlineStatus.color === "#22c55e" ? "0 0 6px rgba(34,197,94,0.5)" : "none" }} title={onlineStatus.label} />
+                                <span style={{ fontWeight: 500, color: "var(--con-text-primary)" }}>
+                                  <span onClick={() => navigate(`/admin-panel/driver-profile/${courier.id}`)} style={{ cursor: "pointer", color: "var(--con-brand)", textDecoration: "underline" }}>{courier.full_name}</span>
+                                </span>
+                              </div>
+                            </td>
                           )}
-                          <span
-                            style={{
-                              fontWeight: 500,
-                              color: "var(--con-text-primary)",
-                            }}
-                          >
-                            <span
-                              onClick={() => navigate(`/admin-panel/driver-profile/${courier.id}`)}
-                              style={{ cursor: "pointer", color: "var(--con-brand)", textDecoration: "underline" }}
-                            >
-                              {courier.full_name}
-                            </span>
-                          </span>
-                        </div>
-                      </td>
-                      <td className="con-td-mono">{courier.phone}</td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                            color: "var(--con-text-secondary)",
-                          }}
-                        >
-                          <MapPin
-                            size={12}
-                            style={{ color: "var(--con-text-muted)" }}
-                          />
-                          {courier.city ?? "—"}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.375rem",
-                          }}
-                        >
-                          {courier.vehicle_type === "سيارة" ? (
-                            <Truck
-                              size={13}
-                              style={{ color: "var(--con-text-muted)" }}
-                            />
-                          ) : courier.vehicle_type === "شاحنة صغيرة" ? (
-                            <Truck
-                              size={13}
-                              style={{ color: "var(--con-text-muted)" }}
-                            />
-                          ) : (
-                            <Bike
-                              size={13}
-                              style={{ color: "var(--con-text-muted)" }}
-                            />
+                          {visibleColumns.has("phone") && <td className="con-td-mono">{courier.phone}</td>}
+                          {visibleColumns.has("city") && (
+                            <td><div style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "var(--con-text-secondary)" }}><MapPin size={12} style={{ color: "var(--con-text-muted)" }} />{courier.city ?? "—"}</div></td>
                           )}
-                          <span style={{ color: "var(--con-text-secondary)" }}>
-                            {courier.vehicle_type ?? "—"}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ color: "var(--con-text-secondary)", fontSize: "var(--con-text-table)" }}>
-                          {courier.app_name
-                            ? APP_NAME_OPTIONS.find((o) => o.value === courier.app_name)?.label ?? courier.app_name
-                            : "—"}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ color: "var(--con-text-secondary)" }}>
-                          {courier.nationality ?? "—"}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ color: "var(--con-text-secondary)" }}>
-                          {courier.supervisor ?? "—"}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ color: "var(--con-text-secondary)" }}>
-                          {courier.contract_type ?? "—"}
-                        </span>
-                      </td>
-                      <td className="con-td-mono">
-                        {courier.registration_date ? formatDate(courier.registration_date) : formatDate(courier.created_at)}
-                      </td>
-                      <td>
-                        {courier.rating != null ? (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.25rem",
-                            }}
-                          >
-                            <Star
-                              size={12}
-                              style={{
-                                color: "var(--con-warning)",
-                                fill: "var(--con-warning)",
-                              }}
-                            />
-                            <span
-                              className="con-mono"
-                              style={{ color: "var(--con-text-primary)" }}
-                            >
-                              {courier.rating.toFixed(1)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span style={{ color: "var(--con-text-muted)" }}>
-                            —
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.375rem",
-                          }}
-                        >
-                          <Package
-                            size={12}
-                            style={{ color: "var(--con-text-muted)" }}
-                          />
-                          <span
-                            className="con-mono"
-                            style={{ color: "var(--con-text-secondary)" }}
-                          >
-                            {(courier.monthly_orders ?? 0).toLocaleString(
-                              "ar-SA",
-                            )}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <select
-                          value={courier.status}
-                          onChange={(e) => handleQuickStatusChange(courier.id, e.target.value as Courier["status"])}
-                          className="con-input"
-                          style={{
-                            fontSize: "var(--con-text-caption)",
-                            padding: "0.25rem 0.4rem",
-                            minWidth: 110,
-                            background: "var(--con-bg-elevated)",
-                            border: "1px solid var(--con-border-default)",
-                            borderRadius: "var(--con-radius)",
-                            color: "var(--con-text-primary)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {Object.entries(courierStatusConfig).map(([k, v]) => (
-                            <option key={k} value={k}>{v.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td>
-                        <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
-                          <IconButton icon={Eye} title="عرض التفاصيل" onClick={() => setViewCourier(courier)} variant="brand" />
-                          <IconButton icon={Edit2} title="تعديل" onClick={() => setEditCourier({ ...courier })} />
-                          <IconButton icon={Trash2} title="حذف" onClick={() => setDeleteCourierId(courier.id)} variant="danger" />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </Table>
+                          {visibleColumns.has("vehicle") && (
+                            <td><div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>{courier.vehicle_type === "سيارة" || courier.vehicle_type === "شاحنة صغيرة" ? <Truck size={13} style={{ color: "var(--con-text-muted)" }} /> : <Bike size={13} style={{ color: "var(--con-text-muted)" }} />}<span style={{ color: "var(--con-text-secondary)" }}>{courier.vehicle_type ?? "—"}</span></div></td>
+                          )}
+                          {visibleColumns.has("app") && (
+                            <td><span style={{ color: "var(--con-text-secondary)", fontSize: "var(--con-text-table)" }}>{courier.app_name ? APP_NAME_OPTIONS.find((o) => o.value === courier.app_name)?.label ?? courier.app_name : "—"}</span></td>
+                          )}
+                          {visibleColumns.has("nationality") && <td><span style={{ color: "var(--con-text-secondary)" }}>{courier.nationality ?? "—"}</span></td>}
+                          {visibleColumns.has("supervisor") && <td><span style={{ color: "var(--con-text-secondary)" }}>{courier.supervisor ?? "—"}</span></td>}
+                          {visibleColumns.has("contract") && <td><span style={{ color: "var(--con-text-secondary)" }}>{courier.contract_type ?? "—"}</span></td>}
+                          {visibleColumns.has("registration") && <td className="con-td-mono">{courier.registration_date ? formatDate(courier.registration_date) : formatDate(courier.created_at)}</td>}
+                          {visibleColumns.has("rating") && (
+                            <td>{courier.rating != null ? (<div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Star size={12} style={{ color: "var(--con-warning)", fill: "var(--con-warning)" }} /><span className="con-mono" style={{ color: "var(--con-text-primary)" }}>{courier.rating.toFixed(1)}</span></div>) : (<span style={{ color: "var(--con-text-muted)" }}>—</span>)}</td>
+                          )}
+                          {visibleColumns.has("orders") && (
+                            <td><div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}><Package size={12} style={{ color: "var(--con-text-muted)" }} /><span className="con-mono" style={{ color: "var(--con-text-secondary)" }}>{(courier.monthly_orders ?? 0).toLocaleString("ar-SA")}</span></div></td>
+                          )}
+                          {visibleColumns.has("status") && (
+                            <td>
+                              <select value={courier.status} onChange={(e) => handleQuickStatusChange(courier.id, e.target.value as Courier["status"])} className="con-input" style={{ fontSize: "var(--con-text-caption)", padding: "0.25rem 0.4rem", minWidth: 110, background: "var(--con-bg-elevated)", border: "1px solid var(--con-border-default)", borderRadius: "var(--con-radius)", color: "var(--con-text-primary)", cursor: "pointer" }}>
+                                {Object.entries(courierStatusConfig).map(([k, v]) => (<option key={k} value={k}>{v.label}</option>))}
+                              </select>
+                            </td>
+                          )}
+                          {visibleColumns.has("classification") && (
+                            <td><Badge variant={getClassificationVariant(cls)}>{cls}</Badge></td>
+                          )}
+                          {visibleColumns.has("iqama") && <td className="con-td-mono"><span style={{ color: "var(--con-text-secondary)" }}>{courier.iqama_number ?? "—"}</span></td>}
+                          {visibleColumns.has("violations") && (
+                            <td><span className="con-mono" style={{ color: violationCount > 0 ? "var(--con-danger)" : "var(--con-text-muted)" }}>{violationCount}</span></td>
+                          )}
+                          {visibleColumns.has("actions") && (
+                            <td>
+                              <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+                                <IconButton icon={Eye} title="عرض التفاصيل" onClick={() => setViewCourier(courier)} variant="brand" />
+                                <IconButton icon={Edit2} title="تعديل" onClick={() => setEditCourier({ ...courier })} />
+                                <IconButton icon={Trash2} title="حذف" onClick={() => setDeleteCourierId(courier.id)} variant="danger" />
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+            )}
             {!courierLoading && filteredCouriers.length > 0 && (
               <div
                 style={{
@@ -2619,6 +2785,7 @@ export default function AdminCouriers() {
                 <div style={{ fontSize: 17, fontWeight: 700, color: "var(--con-text-primary)" }}>{vc.full_name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
                   <Badge variant={courierStatusConfig[vc.status]?.variant ?? "muted"}>{courierStatusConfig[vc.status]?.label ?? vc.status}</Badge>
+                  {(() => { const _os = getOnlineStatus(vc.last_active); return (<div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: _os.color, display: "inline-block", boxShadow: _os.color === "#22c55e" ? "0 0 6px rgba(34,197,94,0.5)" : "none" }} /><span style={{ fontSize: 11, color: _os.color, fontWeight: 500 }}>{_os.label}</span></div>); })()}
                   {vc.rating != null && (<div style={{ display: "flex", alignItems: "center", gap: 3 }}>{[1,2,3,4,5].map((s) => (<Star key={s} size={13} style={{ color: s <= Math.round(vc.rating!) ? "var(--con-warning)" : "var(--con-text-muted)", fill: s <= Math.round(vc.rating!) ? "var(--con-warning)" : "none" }} />))}<span className="con-mono" style={{ fontSize: 12, color: "var(--con-text-secondary)", marginInlineStart: 4 }}>{vc.rating.toFixed(1)}</span></div>)}
                 </div>
               </div>
@@ -2632,7 +2799,7 @@ export default function AdminCouriers() {
             <div style={_sb}>{_sh(Wallet, "المعلومات المالية")}<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 10 }}>{_sc("إجمالي الأرباح", vc.total_earnings != null ? `${vc.total_earnings.toLocaleString("ar-SA")} ر.س` : "—", "#22c55e")}{_sc("أرباح الشهر", vc.monthly_earnings != null ? `${vc.monthly_earnings.toLocaleString("ar-SA")} ر.س` : "—", "#3b82f6")}{_sc("رصيد معلّق", vc.pending_payout != null ? `${vc.pending_payout.toLocaleString("ar-SA")} ر.س` : "—", vc.pending_payout && vc.pending_payout > 0 ? "#f59e0b" : "#22c55e")}</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--con-text-secondary)" }}><CreditCard size={13} style={{ color: "var(--con-text-muted)" }} /><span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>IBAN:</span><span className="con-mono" style={{ fontSize: 12 }}>{vc.iban ?? "—"}</span></div><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--con-text-secondary)" }}><Wallet size={13} style={{ color: "var(--con-text-muted)" }} /><span style={{ fontWeight: 600, color: "var(--con-text-primary)" }}>البنك:</span><span>{vc.bank_name ?? "—"}</span></div></div></div>
             <div style={_sb}>{_sh(Briefcase, "معلومات العمل")}<DetailGrid><DetailField icon={Package} label="التطبيق" value={vc.app_name ? (APP_NAME_OPTIONS.find((o) => o.value === vc.app_name)?.label ?? vc.app_name) : "—"} /><DetailField icon={CreditCard} label="رقم ID التطبيق" value={vc.app_id ?? "—"} mono /><DetailField icon={Users} label="المشرف المباشر" value={vc.supervisor ?? "—"} /><DetailField icon={FileText} label="نوع التعاقد" value={vc.contract_type ?? "—"} /><DetailField icon={Calendar} label="تاريخ التسجيل" value={vc.registration_date ? formatDate(vc.registration_date) : formatDate(vc.created_at)} mono /></DetailGrid>{(vc.joined_platforms?.length ?? 0) > 0 && (<div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}><span style={{ fontSize: 12, color: "var(--con-text-secondary)", fontWeight: 600 }}>المنصات المسجّل فيها:</span>{vc.joined_platforms!.map((p) => (<Badge key={p} variant="info">{APP_NAME_OPTIONS.find((o) => o.value === p)?.label ?? p}</Badge>))}</div>)}</div>
             <div style={_sb}>{_sh(Car, "المركبة")}<DetailGrid><DetailField icon={Bike} label="نوع المركبة" value={vc.vehicle_type ?? "—"} /><DetailField icon={Car} label="الموديل" value={vc.vehicle_model ?? "—"} /><DetailField icon={Calendar} label="السنة" value={vc.vehicle_year != null ? String(vc.vehicle_year) : "—"} /><DetailField icon={CreditCard} label="اللوحة" value={vc.plate_number ?? "—"} mono /></DetailGrid><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}><Shield size={12} style={{ color: _exp(vc.license_expiry) ? "#ef4444" : "var(--con-text-muted)" }} /><span style={{ color: "var(--con-text-secondary)" }}>الرخصة:</span><span className="con-mono" style={{ color: _exp(vc.license_expiry) ? "#ef4444" : "var(--con-text-primary)", fontWeight: _exp(vc.license_expiry) ? 700 : 400 }}>{vc.license_expiry ?? "—"}</span></div><div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}><ShieldCheck size={12} style={{ color: _exp(vc.insurance_expiry) ? "#ef4444" : "var(--con-text-muted)" }} /><span style={{ color: "var(--con-text-secondary)" }}>التأمين:</span><span className="con-mono" style={{ color: _exp(vc.insurance_expiry) ? "#ef4444" : "var(--con-text-primary)", fontWeight: _exp(vc.insurance_expiry) ? 700 : 400 }}>{vc.insurance_expiry ?? "—"}</span></div>{vc.has_company_vehicle && (<div><Badge variant="info">مركبة من الشركة</Badge></div>)}</div></div>
-            <div style={_sb}>{_sh(User, "معلومات شخصية")}<DetailGrid><DetailField icon={Phone} label="الجوال" value={vc.phone} mono /><DetailField icon={Mail} label="البريد الإلكتروني" value={vc.email ?? "—"} mono /><DetailField icon={Shield} label="الجنسية" value={vc.nationality ?? "—"} /><DetailField icon={CreditCard} label="رقم الإقامة" value={vc.iqama_number ?? "—"} mono /><DetailField icon={MapPin} label="المدينة" value={vc.city ?? "—"} /><DetailField icon={Clock} label="آخر نشاط" value={vc.last_active ? formatDate(vc.last_active) : "—"} mono /></DetailGrid>{(vc.emergency_name || vc.emergency_contact) && (<div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, display: "flex", alignItems: "center", gap: 8 }}><AlertCircle size={14} style={{ color: "#ef4444", flexShrink: 0 }} /><span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>جهة الطوارئ: <strong style={{ color: "var(--con-text-primary)" }}>{vc.emergency_name ?? "—"}</strong> — <span className="con-mono">{vc.emergency_contact ?? "—"}</span></span></div>)}</div>
+            <div style={_sb}>{_sh(User, "معلومات شخصية")}<DetailGrid><DetailField icon={Phone} label="الجوال" value={vc.phone} mono /><DetailField icon={Mail} label="البريد الإلكتروني" value={vc.email ?? "—"} mono /><DetailField icon={Shield} label="الجنسية" value={vc.nationality ?? "—"} /><DetailField icon={CreditCard} label="رقم الإقامة" value={vc.iqama_number ?? "—"} mono /><DetailField icon={MapPin} label="المدينة" value={vc.city ?? "—"} /><DetailField icon={Clock} label="آخر نشاط" value={(() => { const s = getOnlineStatus(vc.last_active); return vc.last_active ? `${s.label} (${formatDate(vc.last_active)})` : "غير متصل"; })()} mono /></DetailGrid>{(vc.emergency_name || vc.emergency_contact) && (<div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, display: "flex", alignItems: "center", gap: 8 }}><AlertCircle size={14} style={{ color: "#ef4444", flexShrink: 0 }} /><span style={{ fontSize: 12, color: "var(--con-text-secondary)" }}>جهة الطوارئ: <strong style={{ color: "var(--con-text-primary)" }}>{vc.emergency_name ?? "—"}</strong> — <span className="con-mono">{vc.emergency_contact ?? "—"}</span></span></div>)}</div>
             <div style={_sb}>{_sh(FileText, "ملاحظات إدارية")}{vc.admin_notes ? (<p style={{ margin: 0, fontSize: 13, color: "var(--con-text-secondary)", lineHeight: 1.7, marginBottom: 10 }}>{vc.admin_notes}</p>) : (<p style={{ margin: 0, fontSize: 13, color: "var(--con-text-muted)", marginBottom: 10 }}>لا توجد ملاحظات</p>)}{(vc.notes_history?.length ?? 0) > 0 && (<div style={{ borderInlineStart: "2px solid var(--con-brand)", paddingInlineStart: 12 }}>{vc.notes_history!.map((n, i) => (<div key={i} style={{ marginBottom: i < vc.notes_history!.length - 1 ? 10 : 0 }}><div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}><span className="con-mono" style={{ fontSize: 11, color: "var(--con-text-muted)" }}>{n.date}</span><span style={{ fontSize: 11, color: "var(--con-brand)", fontWeight: 600 }}>{n.by}</span></div><div style={{ fontSize: 12, color: "var(--con-text-secondary)", lineHeight: 1.6 }}>{n.note}</div></div>))}</div>)}</div>
             <div style={_sb}>{_sh(AlertTriangle, "مخالفات التطبيق")}{(vc.app_violations?.length ?? 0) > 0 ? (<div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--con-text-caption)" }}><thead><tr><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>التاريخ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>نوع المخالفة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>المبلغ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>ملاحظات</th></tr></thead><tbody>{vc.app_violations!.map((v, i) => (<tr key={i}><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.date}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-danger)" }}>{v.type}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.amount != null ? `${v.amount} ر.س` : "—"}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-secondary)" }}>{v.notes ?? "—"}</td></tr>))}</tbody></table></div>) : (<p style={{ margin: 0, fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>لا توجد مخالفات</p>)}</div>
             {vc.has_company_vehicle === true && (<div style={_sb}>{_sh(AlertTriangle, "مخالفات مرورية")}{(vc.traffic_violations?.length ?? 0) > 0 ? (<div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--con-text-caption)" }}><thead><tr><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>التاريخ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>نوع المخالفة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>المبلغ</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>اللوحة</th><th style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", textAlign: "start", color: "var(--con-text-secondary)", fontWeight: 600 }}>ملاحظات</th></tr></thead><tbody>{vc.traffic_violations!.map((v, i) => (<tr key={i}><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.date}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-danger)" }}>{v.type}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.fine_amount != null ? `${v.fine_amount} ر.س` : "—"}</td><td className="con-mono" style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-primary)" }}>{v.plate ?? "—"}</td><td style={{ padding: "0.45rem 0.75rem", borderBottom: "1px solid var(--con-border-default)", color: "var(--con-text-secondary)" }}>{v.notes ?? "—"}</td></tr>))}</tbody></table></div>) : (<p style={{ margin: 0, fontSize: "var(--con-text-body)", color: "var(--con-text-muted)" }}>لا توجد مخالفات مرورية</p>)}</div>)}

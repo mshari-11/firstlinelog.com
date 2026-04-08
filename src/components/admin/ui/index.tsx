@@ -15,6 +15,7 @@ import {
   Filter,
   Download,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 
 // ─── Transitions ──────────────────────────────────────────────────────────────
@@ -489,8 +490,12 @@ export function Tabs({ items, active, onChange }: TabsProps) {
 
 // ─── Table Wrapper ────────────────────────────────────────────────────────────
 interface TableProps {
-  headers: string[];
-  children: React.ReactNode;
+  headers?: string[];
+  /** alias for headers */
+  columns?: string[];
+  children?: React.ReactNode;
+  /** rows array for declarative usage: each row is an array of cells */
+  rows?: React.ReactNode[][];
   emptyIcon?: React.ElementType;
   emptyText?: string;
   isEmpty?: boolean;
@@ -498,11 +503,14 @@ interface TableProps {
 
 export function Table({
   headers,
+  columns,
   children,
+  rows,
   emptyIcon: EmptyIcon,
   emptyText,
   isEmpty,
 }: TableProps) {
+  const headings = headers ?? columns ?? [];
   if (isEmpty) {
     return (
       <div className="con-empty">
@@ -518,12 +526,22 @@ export function Table({
       <table className="con-table">
         <thead>
           <tr>
-            {headers.map((h) => (
-              <th key={h}>{h}</th>
+            {headings.map((h) => (
+              <th key={String(h)}>{h}</th>
             ))}
           </tr>
         </thead>
-        <tbody>{children}</tbody>
+        <tbody>
+          {rows
+            ? rows.map((row, ri) => (
+                <tr key={ri}>
+                  {row.map((cell, ci) => (
+                    <td key={ci}>{cell}</td>
+                  ))}
+                </tr>
+              ))
+            : children}
+        </tbody>
       </table>
     </div>
   );
@@ -619,6 +637,7 @@ interface ButtonProps {
   icon?: React.ElementType;
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
   style?: React.CSSProperties;
   type?: "button" | "submit";
 }
@@ -629,23 +648,25 @@ export function Button({
   icon: Icon,
   onClick,
   disabled,
+  loading,
   style,
   type = "button",
 }: ButtonProps) {
   const cls = `con-btn-${variant}`;
+  const isDisabled = disabled || loading;
   return (
     <button
       className={cls}
       onClick={onClick}
-      disabled={disabled}
+      disabled={isDisabled}
       type={type}
       style={{
-        opacity: disabled ? 0.5 : 1,
-        pointerEvents: disabled ? "none" : undefined,
+        opacity: isDisabled ? 0.5 : 1,
+        pointerEvents: isDisabled ? "none" : undefined,
         ...style,
       }}
     >
-      {Icon && <Icon size={14} />}
+      {loading ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : Icon && <Icon size={14} />}
       {children}
     </button>
   );
@@ -838,7 +859,7 @@ export function Section({
   children,
   style,
 }: {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   style?: React.CSSProperties;
 }) {
@@ -999,10 +1020,13 @@ export function EmptyState({
   icon: Icon,
   title,
   description,
+  message,
 }: {
   icon: React.ElementType;
   title: string;
   description?: string;
+  /** alias for description */
+  message?: string;
 }) {
   return (
     <div className="con-empty" style={{ padding: "3rem 2rem" }}>
@@ -1016,7 +1040,7 @@ export function EmptyState({
       >
         {title}
       </p>
-      {description && (
+      {(description ?? message) && (
         <p
           style={{
             fontSize: "var(--con-text-caption)",
@@ -1024,7 +1048,7 @@ export function EmptyState({
             maxWidth: 280,
           }}
         >
-          {description}
+          {description ?? message}
         </p>
       )}
     </div>

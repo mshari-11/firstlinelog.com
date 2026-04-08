@@ -354,7 +354,7 @@ export default function AttendanceLive() {
 
       {/* Employee Detail Modal */}
       {selectedEmployee && (
-        <Modal onClose={() => setSelectedEmployee(null)} title="تفاصيل الموظف" width={550}>
+        <Modal open={true} onClose={() => setSelectedEmployee(null)} title="تفاصيل الموظف" width={550}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0.5rem 0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#3b82f618",
@@ -391,7 +391,7 @@ export default function AttendanceLive() {
 
       {/* Login Modal */}
       {showLogin && (
-        <Modal onClose={() => setShowLogin(false)} title="الاتصال بنظام البصمة" width={400}>
+        <Modal open={true} onClose={() => setShowLogin(false)} title="الاتصال بنظام البصمة" width={400}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "0.5rem 0" }}>
             <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>أدخل بيانات الدخول لنظام AlManahel</p>
             <input type="text" value={loginUser} onChange={(e) => setLoginUser(e.target.value)}

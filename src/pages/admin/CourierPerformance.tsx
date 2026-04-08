@@ -299,6 +299,7 @@ export default function CourierPerformance() {
   return (
     <PageWrapper>
       <PageHeader
+        icon={TrendingUp}
         title="أداء المناديب"
         subtitle="لوحة تحليلية شاملة لمؤشرات أداء المناديب"
       />

@@ -106,15 +106,15 @@ const statusConfig = {
 export function InfrastructurePanel() {
   const navigate = useNavigate();
 
-  const byProvider = Object.groupBy
-    ? Object.groupBy(services, (s) => s.provider)
+  const byProvider: Record<string, InfraService[]> = ((Object as any).groupBy
+    ? (Object as any).groupBy(services, (s: InfraService) => s.provider)
     : services.reduce(
-        (acc, s) => {
+        (acc: Record<string, InfraService[]>, s) => {
           (acc[s.provider] = acc[s.provider] || []).push(s);
           return acc;
         },
-        {} as Record<string, InfraService[]>,
-      );
+        {},
+      )) as Record<string, InfraService[]>;
 
   const providerLabels: Record<string, string> = {
     aws: "Amazon Web Services",

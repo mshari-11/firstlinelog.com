@@ -131,6 +131,7 @@ interface DriverPayroll {
   vehicle_cost: number;
   total_additions: number;
   total_deductions: number;
+  vat_amount: number;
   net_payout: number;
 }
 
@@ -208,6 +209,7 @@ function emptyDriver(fields: CustomField[], id?: string): DriverPayroll {
     vehicle_cost: 0,
     total_additions: 0,
     total_deductions: 0,
+    vat_amount: 0,
     net_payout: 0,
   };
 }
@@ -227,6 +229,10 @@ function recalc(d: DriverPayroll, fields: CustomField[]): DriverPayroll {
     ? VEHICLE_MONTHLY_COST[d.vehicle_type] || 0
     : 0;
   deductions += vehicleCost;
+  const vatField = fields.find((f) => f.id === "vat");
+  const vatAmount = vatField
+    ? Math.round((gross * (d.customValues["vat"] || 0)) / 100)
+    : 0;
   const net = gross + additions - deductions;
   return {
     ...d,
@@ -234,6 +240,7 @@ function recalc(d: DriverPayroll, fields: CustomField[]): DriverPayroll {
     vehicle_cost: vehicleCost,
     total_additions: additions,
     total_deductions: deductions,
+    vat_amount: vatAmount,
     net_payout: net,
   };
 }

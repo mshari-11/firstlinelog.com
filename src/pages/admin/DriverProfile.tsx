@@ -1077,18 +1077,18 @@ export default function DriverProfilePage() {
                 { key: "city", label: "المدينة", type: "text" },
                 { key: "nationalId", label: "رقم الهوية", type: "text", placeholder: "10 أرقام" },
                 { key: "platform", label: "المنصة", type: "text" },
-              ] as const).map(({ key, label, type, placeholder }) => (
+              ] as const).map((field) => { const { key, label, type } = field; const placeholder = (field as any).placeholder as string | undefined; return (
                 <div key={key}>
                   <label style={{ fontSize: 12, color: "var(--con-text-muted)", marginBottom: 4, display: "block" }}>{label}</label>
                   <input
                     type={type} placeholder={placeholder}
-                    value={(editData as Record<string, unknown>)[key] as string}
+                    value={(editData as unknown as Record<string, string>)[key] ?? ""}
                     onChange={(e) => { setEditData({ ...editData, [key]: e.target.value }); setErrors((p) => { const n = { ...p }; delete n[key]; return n; }); }}
                     style={{ background: "var(--con-bg-elevated, #0a1628)", border: `1px solid ${errors[key] ? "#ef4444" : "var(--con-border-default, #1a3a52)"}`, borderRadius: 8, padding: "8px 12px", color: "var(--con-text-primary, #e2e8f0)", fontSize: 13, fontFamily: "inherit", width: "100%", boxSizing: "border-box", transition: "border-color 0.2s" }}
                   />
                   {errors[key] && <span style={{ fontSize: 11, color: "#ef4444", marginTop: 2, display: "block" }}>{errors[key]}</span>}
                 </div>
-              ))}
+              ); })}
             </div>
 
             {/* ── العقد والحالة ── */}

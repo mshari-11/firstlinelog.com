@@ -738,16 +738,17 @@ export default function JahezPlatform() {
 
       /* Normalize response shape — proxy returns { drivers: [...], total } */
       let allRaw: RawDriver[] = [];
-      if (raw?.drivers && Array.isArray(raw.drivers)) {
-        allRaw = raw.drivers;
-      } else if (raw?.data?.drivers && Array.isArray(raw.data.drivers)) {
-        allRaw = raw.data.drivers;
-      } else if (raw?.data?.result && Array.isArray(raw.data.result)) {
-        allRaw = raw.data.result;
-      } else if (Array.isArray(raw?.data)) {
-        allRaw = raw.data;
-      } else if (Array.isArray(raw)) {
-        allRaw = raw as unknown as RawDriver[];
+      const rawAny = raw as any;
+      if (rawAny?.drivers && Array.isArray(rawAny.drivers)) {
+        allRaw = rawAny.drivers;
+      } else if (rawAny?.data?.drivers && Array.isArray(rawAny.data.drivers)) {
+        allRaw = rawAny.data.drivers;
+      } else if (rawAny?.data?.result && Array.isArray(rawAny.data.result)) {
+        allRaw = rawAny.data.result;
+      } else if (Array.isArray(rawAny?.data)) {
+        allRaw = rawAny.data;
+      } else if (Array.isArray(rawAny)) {
+        allRaw = rawAny as RawDriver[];
       }
 
       if (allRaw.length === 0) {

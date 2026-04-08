@@ -821,7 +821,7 @@ export default function Expenses() {
         <ExpenseModal
           onClose={() => setShowModal(false)}
           onSave={(data) => {
-            setRecentExpenses(prev => [{ ...data, id: Date.now(), date: new Date().toISOString().slice(0, 10) }, ...prev]);
+            setRecentExpenses(prev => [{ ...data, id: String(Date.now()), date: new Date().toISOString().slice(0, 10), status: "pending" }, ...prev]);
           }}
         />
       )}

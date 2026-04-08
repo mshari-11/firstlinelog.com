@@ -868,7 +868,7 @@ export default function DriverApplications() {
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: selected.email_verified
+                      color: (selected as any).email_verified
                         ? "var(--con-success)"
                         : "var(--con-text-muted)",
                     }}

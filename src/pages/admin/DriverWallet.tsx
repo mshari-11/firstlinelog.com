@@ -75,7 +75,7 @@ interface PayoutBatch {
 
 const EVENT_META: Record<
   string,
-  { label: string; icon: React.ElementType; color: string; sign: "+" | "-" }
+  { label: string; icon: React.ElementType; color: string; sign: "+" | "-" | "±" }
 > = {
   order_payment: {
     label: "أرباح طلب",

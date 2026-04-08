@@ -417,20 +417,23 @@ export default function FinanceDashboard() {
 
         <ChartCard title="توزيع المصروفات" subtitle="حسب الفئة">
           <ResponsiveContainer width="100%" height={280}>
-            <RechartsPie
-              data={mockExpenseData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={2}
-            >
-              {mockExpenseData.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={colorPalette[index % colorPalette.length]}
-                />
-              ))}
+            <RechartsPie>
+              <Pie
+                data={mockExpenseData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {mockExpenseData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colorPalette[index % colorPalette.length]}
+                  />
+                ))}
+              </Pie>
               <Tooltip
                 contentStyle={chartTooltipStyle}
                 formatter={(value: number) => formatSAR(value)}

@@ -482,7 +482,7 @@ export default function AdminOrders() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10">
-                    <input type="checkbox" checked={allFiltered.length > 0 && selected.length === allFiltered.length} onChange={() => selected.length === allFiltered.length ? clear() : selectAll(allFiltered.map(o => o.id))} style={{ accentColor: "var(--con-brand, #3b82f6)" }} />
+                    <input type="checkbox" checked={allFiltered.length > 0 && selected.size === allFiltered.length} onChange={() => selected.size === allFiltered.length ? clear() : selectAll(allFiltered.map(o => o.id))} style={{ accentColor: "var(--con-brand, #3b82f6)" }} />
                   </TableHead>
                   <TableHead className="text-right">رقم الطلب</TableHead>
                   <TableHead className="text-right">المنصة</TableHead>

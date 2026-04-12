@@ -43,84 +43,9 @@ interface Conversation {
   last_activity: string;
 }
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "conv1",
-    courier_id: "C001",
-    courier_name: "أحمد العتيبي",
-    unread_count: 2,
-    is_important: true,
-    last_activity: "2026-04-05T14:30:00",
-    messages: [
-      { id: "m1", sender: "courier", text: "السلام عليكم، أحتاج تحديث بيانات الحساب البنكي", timestamp: "2026-04-05T14:00:00" },
-      { id: "m2", sender: "admin", text: "وعليكم السلام، تفضل أرسل البيانات الجديدة", timestamp: "2026-04-05T14:10:00" },
-      { id: "m3", sender: "courier", text: "IBAN: SA02 8000 0000 6080 1016 7519", timestamp: "2026-04-05T14:15:00" },
-      { id: "m4", sender: "courier", text: "الاسم: أحمد محمد العتيبي - بنك الراجحي", timestamp: "2026-04-05T14:16:00" },
-      { id: "m5", sender: "admin", text: "تم استلام البيانات، سيتم التحديث خلال 24 ساعة", timestamp: "2026-04-05T14:30:00" },
-    ],
-  },
-  {
-    id: "conv2",
-    courier_id: "C002",
-    courier_name: "فهد القحطاني",
-    unread_count: 1,
-    is_important: false,
-    last_activity: "2026-04-05T12:00:00",
-    messages: [
-      { id: "m6", sender: "admin", text: "فهد، تم ترقيتك لمندوب VIP ابتداءً من اليوم", timestamp: "2026-04-05T10:00:00" },
-      { id: "m7", sender: "courier", text: "شكراً جزيلاً! ما المزايا الجديدة؟", timestamp: "2026-04-05T10:30:00" },
-      { id: "m8", sender: "admin", text: "أولوية في الطلبات + بونص 10% على كل طلب", timestamp: "2026-04-05T11:00:00" },
-      { id: "m9", sender: "courier", text: "ممتاز! جزاكم الله خير", timestamp: "2026-04-05T12:00:00" },
-    ],
-  },
-  {
-    id: "conv3",
-    courier_id: "C003",
-    courier_name: "سعد الدوسري",
-    unread_count: 0,
-    is_important: false,
-    last_activity: "2026-04-04T16:45:00",
-    messages: [
-      { id: "m10", sender: "courier", text: "متى موعد صرف الرواتب هذا الشهر؟", timestamp: "2026-04-04T15:00:00" },
-      { id: "m11", sender: "admin", text: "يوم 28 من كل شهر كالعادة", timestamp: "2026-04-04T15:30:00" },
-      { id: "m12", sender: "courier", text: "تمام، شكراً", timestamp: "2026-04-04T16:45:00" },
-    ],
-  },
-  {
-    id: "conv4",
-    courier_id: "C006",
-    courier_name: "عمر المالكي",
-    unread_count: 3,
-    is_important: true,
-    last_activity: "2026-04-05T09:20:00",
-    messages: [
-      { id: "m13", sender: "admin", text: "عمر، لديك إنذار بسبب تأخيرات متكررة الأسبوع الماضي", timestamp: "2026-04-04T08:00:00" },
-      { id: "m14", sender: "courier", text: "عذراً، كانت السيارة في الصيانة", timestamp: "2026-04-04T09:00:00" },
-      { id: "m15", sender: "admin", text: "يرجى إحضار إثبات من الورشة", timestamp: "2026-04-04T10:00:00" },
-      { id: "m16", sender: "courier", text: "سأرسل الفاتورة اليوم", timestamp: "2026-04-05T09:00:00" },
-      { id: "m17", sender: "courier", text: "هل يمكن رفع الإنذار بعد تقديم الإثبات؟", timestamp: "2026-04-05T09:10:00" },
-      { id: "m18", sender: "courier", text: "أرسلت صورة الفاتورة على الإيميل", timestamp: "2026-04-05T09:20:00" },
-    ],
-  },
-  {
-    id: "conv5",
-    courier_id: "C005",
-    courier_name: "محمد الشهري",
-    unread_count: 0,
-    is_important: false,
-    last_activity: "2026-04-03T18:00:00",
-    messages: [
-      { id: "m19", sender: "courier", text: "أبي أطلب إجازة يوم الخميس القادم", timestamp: "2026-04-03T14:00:00" },
-      { id: "m20", sender: "admin", text: "تم الموافقة على طلب الإجازة", timestamp: "2026-04-03T16:00:00" },
-      { id: "m21", sender: "courier", text: "شكراً لكم", timestamp: "2026-04-03T18:00:00" },
-    ],
-  },
-];
-
 export default function CourierInbox() {
-  const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
-  const [selectedId, setSelectedId] = useState<string>(MOCK_CONVERSATIONS[0].id);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [newMessage, setNewMessage] = useState("");

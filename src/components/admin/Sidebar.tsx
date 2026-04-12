@@ -292,29 +292,35 @@ export function AdminSidebar() {
         }}
       >
         <motion.div
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.06 }}
           transition={{ duration: 0.2 }}
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: "var(--con-radius)",
-            background: "var(--con-bg-elevated)",
-            border: "1px solid var(--con-border-default)",
+            width: collapsed ? 36 : 40,
+            height: collapsed ? 36 : 40,
+            borderRadius: 10,
+            background: "linear-gradient(135deg, var(--con-bg-elevated) 0%, var(--con-bg-surface) 100%)",
+            border: "1.5px solid var(--con-border-default)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+            transition: "all 0.3s ease",
           }}
         >
           <img
-            src="/images/first_line_professional_english_1.png"
-            alt="FL"
-            style={{ width: 22, height: 22, objectFit: "contain" }}
+            src="/images/logo.webp"
+            alt="First Line"
+            style={{ width: collapsed ? 28 : 32, height: collapsed ? 28 : 32, objectFit: "contain" }}
             onError={(e) => {
               const el = e.target as HTMLImageElement;
-              el.style.display = "none";
-              (el.parentElement as HTMLElement).innerHTML =
-                '<span style="font-size:11px;font-weight:700;color:var(--con-brand)">FL</span>';
+              el.src = "/images/first_line_professional_english_1.png";
+              el.onerror = () => {
+                el.style.display = "none";
+                (el.parentElement as HTMLElement).innerHTML =
+                  '<span style="font-size:13px;font-weight:800;color:var(--con-brand);letter-spacing:-0.5px">FL</span>';
+              };
             }}
           />
         </motion.div>
@@ -323,24 +329,28 @@ export function AdminSidebar() {
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1, duration: 0.2 }}
+            style={{ display: "flex", flexDirection: "column", gap: 1 }}
           >
             <p
               style={{
-                fontSize: 13,
-                fontWeight: 700,
+                fontSize: 14,
+                fontWeight: 800,
                 color: "var(--con-text-primary)",
                 lineHeight: 1.2,
                 margin: 0,
+                letterSpacing: "-0.3px",
               }}
             >
-              فيرست لاين
+              FIRST LINE
             </p>
             <p
               style={{
-                fontSize: 11,
-                color: "var(--con-text-muted)",
+                fontSize: 10.5,
+                color: "var(--con-brand)",
                 lineHeight: 1.4,
                 margin: 0,
+                fontWeight: 600,
+                letterSpacing: "0.5px",
               }}
             >
               لوحة الإدارة

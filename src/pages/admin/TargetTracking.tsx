@@ -249,7 +249,7 @@ export default function TargetTracking() {
           // Build driver stats from real data
           // For now, fall through to mock if not enough data
           if (Object.keys(platformStats).length >= 2) {
-            setDrivers(mockDriverData());
+            setDrivers([]);
             setLoading(false);
             return;
           }
@@ -259,9 +259,9 @@ export default function TargetTracking() {
       /* fall through to mock */
     }
 
-    // Mock fallback
-    setPlatforms(mockPlatformData());
-    setDrivers(mockDriverData());
+    // No data available
+    setPlatforms([]);
+    setDrivers([]);
     setLoading(false);
   }, []);
 

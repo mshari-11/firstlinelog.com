@@ -116,7 +116,7 @@ const MOCK: RiskRule[] = [
 
 export default function RiskManagement() {
   const navigate = useNavigate();
-  const [data, setData] = useState<RiskRule[]>(MOCK);
+  const [data, setData] = useState<RiskRule[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RuleStatus | "all">("all");
   const [loading, setLoading] = useState(false);

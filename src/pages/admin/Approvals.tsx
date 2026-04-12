@@ -110,7 +110,7 @@ const MOCK: Approval[] = [
 
 export default function Approvals() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Approval[]>(MOCK);
+  const [data, setData] = useState<Approval[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ApprovalStatus | "all">("all");
   const [loading, setLoading] = useState(false);

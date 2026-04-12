@@ -89,7 +89,7 @@ const MOCK: ReactivationRequest[] = [
 
 export default function AccountReactivation() {
   const navigate = useNavigate();
-  const [data, setData] = useState<ReactivationRequest[]>(MOCK);
+  const [data, setData] = useState<ReactivationRequest[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RequestStatus | "all">("all");
   const [loading, setLoading] = useState(false);

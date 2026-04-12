@@ -138,7 +138,7 @@ const MOCK: EmailLog[] = [
 
 export default function EmailLogs() {
   const navigate = useNavigate();
-  const [data, setData] = useState<EmailLog[]>(MOCK);
+  const [data, setData] = useState<EmailLog[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<EmailType | "all">("all");
   const [loading, setLoading] = useState(false);

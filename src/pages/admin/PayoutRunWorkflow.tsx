@@ -74,55 +74,11 @@ interface ApprovalRecord {
   rejectReason?: string;
 }
 
-// ─── Mock deduction breakdown per driver (for tooltip) ─────────────────────
-const MOCK_DEDUCTION_BREAKDOWN: Record<string, { label: string; amount: number }[]> = {
-  "d1": [
-    { label: "غياب", amount: 400 },
-    { label: "مخالفات", amount: 300 },
-    { label: "صيانة", amount: 320 },
-    { label: "سلف", amount: 200 },
-  ],
-  "d2": [
-    { label: "غياب", amount: 200 },
-    { label: "مخالفات", amount: 150 },
-    { label: "صيانة", amount: 444 },
-    { label: "سلف", amount: 300 },
-  ],
-  "d3": [
-    { label: "غياب", amount: 176 },
-    { label: "مخالفات", amount: 200 },
-    { label: "صيانة", amount: 200 },
-    { label: "سلف", amount: 200 },
-  ],
-  "d4": [
-    { label: "غياب", amount: 354 },
-    { label: "مخالفات", amount: 400 },
-    { label: "صيانة", amount: 350 },
-    { label: "سلف", amount: 350 },
-  ],
-  "d5": [
-    { label: "غياب", amount: 172 },
-    { label: "مخالفات", amount: 100 },
-    { label: "صيانة", amount: 150 },
-    { label: "سلف", amount: 150 },
-  ],
-  "d6": [
-    { label: "غياب", amount: 262 },
-    { label: "مخالفات", amount: 300 },
-    { label: "صيانة", amount: 350 },
-    { label: "سلف", amount: 350 },
-  ],
-};
+// ─── Deduction breakdown per driver (populated from real data) ─────────────
+const MOCK_DEDUCTION_BREAKDOWN: Record<string, { label: string; amount: number }[]> = {};
 
-// ─── Mock order counts per driver ──────────────────────────────────────────
-const MOCK_ORDER_COUNTS: Record<string, number> = {
-  "d1": 142,
-  "d2": 98,
-  "d3": 76,
-  "d4": 163,
-  "d5": 51,
-  "d6": 121,
-};
+// ─── Order counts per driver (populated from real data) ────────────────────
+const MOCK_ORDER_COUNTS: Record<string, number> = {};
 
 // ─── Stage Icons & Colors ───────────────────────────────────────────────────
 const STAGE_META: Record<number, { icon: React.ElementType; color: string }> = {

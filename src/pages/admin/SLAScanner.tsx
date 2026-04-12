@@ -184,8 +184,8 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 }
 
 export default function SLAScanner() {
-  const [metrics, setMetrics] = useState<SLAMetric[]>(MOCK_METRICS);
-  const [violations, setViolations] = useState<SLAViolation[]>(MOCK_VIOLATIONS);
+  const [metrics, setMetrics] = useState<SLAMetric[]>([]);
+  const [violations, setViolations] = useState<SLAViolation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"metrics" | "violations">("metrics");

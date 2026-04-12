@@ -83,7 +83,7 @@ const MOCK: PayoutRun[] = [
 
 export default function PayoutManagement() {
   const navigate = useNavigate();
-  const [data, setData] = useState<PayoutRun[]>(MOCK);
+  const [data, setData] = useState<PayoutRun[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<PayoutStatus | "all">("all");
   const [loading, setLoading] = useState(false);

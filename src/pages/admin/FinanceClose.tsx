@@ -102,7 +102,7 @@ const MOCK_RECORDS: FinanceCloseRecord[] = [
 ];
 
 export default function FinanceClose() {
-  const [records, setRecords] = useState<FinanceCloseRecord[]>(MOCK_RECORDS);
+  const [records, setRecords] = useState<FinanceCloseRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [triggering, setTriggering] = useState(false);

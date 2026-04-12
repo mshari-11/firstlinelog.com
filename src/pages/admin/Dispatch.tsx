@@ -357,8 +357,8 @@ function OrderPin({
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Dispatch() {
   const mapRef = useRef<MapRef>(null);
-  const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);

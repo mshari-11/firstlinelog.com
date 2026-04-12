@@ -85,35 +85,10 @@ const PENALTY_COLORS: Record<PenaltyType, string> = {
   termination: "var(--con-danger)",
 };
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_REWARDS: Reward[] = [
-  { id: "r1", date: "2026-04-01", courier_name: "أحمد العتيبي", courier_id: "C001", type: "courier_of_month", amount: 1500, description: "أفضل مندوب لشهر مارس", issued_by: "مشاري" },
-  { id: "r2", date: "2026-04-02", courier_name: "فهد القحطاني", courier_id: "C002", type: "performance_bonus", amount: 800, description: "تجاوز 500 طلب في الشهر", issued_by: "مشاري" },
-  { id: "r3", date: "2026-03-28", courier_name: "سعد الدوسري", courier_id: "C003", type: "commitment_bonus", amount: 500, description: "التزام 100% لمدة 3 أشهر", issued_by: "عبدالله" },
-  { id: "r4", date: "2026-03-25", courier_name: "خالد الحربي", courier_id: "C004", type: "referral_bonus", amount: 300, description: "إحالة مندوب جديد - محمد", issued_by: "مشاري" },
-  { id: "r5", date: "2026-03-20", courier_name: "محمد الشهري", courier_id: "C005", type: "performance_bonus", amount: 600, description: "أعلى تقييم عملاء", issued_by: "عبدالله" },
-  { id: "r6", date: "2026-03-18", courier_name: "عمر المالكي", courier_id: "C006", type: "courier_of_month", amount: 1500, description: "أفضل مندوب لشهر فبراير", issued_by: "مشاري" },
-  { id: "r7", date: "2026-03-15", courier_name: "يوسف الغامدي", courier_id: "C007", type: "commitment_bonus", amount: 500, description: "لا غياب لمدة 6 أشهر", issued_by: "عبدالله" },
-  { id: "r8", date: "2026-03-10", courier_name: "أحمد العتيبي", courier_id: "C001", type: "performance_bonus", amount: 700, description: "أسرع وقت توصيل", issued_by: "مشاري" },
-  { id: "r9", date: "2026-03-05", courier_name: "فهد القحطاني", courier_id: "C002", type: "referral_bonus", amount: 300, description: "إحالة مندوب جديد - سالم", issued_by: "عبدالله" },
-  { id: "r10", date: "2026-03-01", courier_name: "سعد الدوسري", courier_id: "C003", type: "performance_bonus", amount: 900, description: "أعلى عدد طلبات يومي", issued_by: "مشاري" },
-];
-
-const MOCK_PENALTIES: Penalty[] = [
-  { id: "p1", date: "2026-04-03", courier_name: "ناصر السبيعي", courier_id: "C008", type: "financial_deduction", amount: 200, reason: "تأخر في التسليم 3 مرات", issued_by: "مشاري", is_active: true },
-  { id: "p2", date: "2026-04-01", courier_name: "بدر الزهراني", courier_id: "C009", type: "verbal_warning", amount: 0, reason: "عدم ارتداء الزي الرسمي", issued_by: "عبدالله", is_active: true },
-  { id: "p3", date: "2026-03-28", courier_name: "عبدالرحمن النعيمي", courier_id: "C010", type: "written_warning", amount: 0, reason: "شكوى عميل - سوء تعامل", issued_by: "مشاري", is_active: true },
-  { id: "p4", date: "2026-03-25", courier_name: "سلطان العنزي", courier_id: "C011", type: "suspension", amount: 0, reason: "غياب بدون إذن 3 أيام", issued_by: "عبدالله", is_active: true },
-  { id: "p5", date: "2026-03-20", courier_name: "ناصر السبيعي", courier_id: "C008", type: "financial_deduction", amount: 150, reason: "فقدان طرد", issued_by: "مشاري", is_active: true },
-  { id: "p6", date: "2026-03-15", courier_name: "بدر الزهراني", courier_id: "C009", type: "financial_deduction", amount: 100, reason: "تلف بضاعة", issued_by: "عبدالله", is_active: false },
-  { id: "p7", date: "2026-03-10", courier_name: "تركي القرني", courier_id: "C012", type: "termination", amount: 0, reason: "مخالفات متكررة - 5 إنذارات", issued_by: "مشاري", is_active: true },
-  { id: "p8", date: "2026-03-05", courier_name: "عبدالرحمن النعيمي", courier_id: "C010", type: "verbal_warning", amount: 0, reason: "تأخر في بدء الدوام", issued_by: "عبدالله", is_active: false },
-];
-
 export default function CourierRewards() {
   const [activeTab, setActiveTab] = useState("rewards");
-  const [rewards, setRewards] = useState<Reward[]>(MOCK_REWARDS);
-  const [penalties, setPenalties] = useState<Penalty[]>(MOCK_PENALTIES);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [penalties, setPenalties] = useState<Penalty[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(false);

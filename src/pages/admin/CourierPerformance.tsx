@@ -47,56 +47,6 @@ interface CourierRecord {
   status: "active" | "inactive";
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-const MOCK_COURIERS: CourierRecord[] = [
-  { id: "C001", name: "أحمد العتيبي", city: "الرياض", rating: 4.9, deliveries: 1245, successRate: 98.2, avgDeliveryTime: 22, status: "active" },
-  { id: "C002", name: "محمد القحطاني", city: "جدة", rating: 4.8, deliveries: 1120, successRate: 97.5, avgDeliveryTime: 25, status: "active" },
-  { id: "C003", name: "فهد الدوسري", city: "الرياض", rating: 4.7, deliveries: 980, successRate: 96.8, avgDeliveryTime: 24, status: "active" },
-  { id: "C004", name: "خالد الشمري", city: "الدمام", rating: 4.7, deliveries: 875, successRate: 97.1, avgDeliveryTime: 23, status: "active" },
-  { id: "C005", name: "عبدالله الحربي", city: "الرياض", rating: 4.6, deliveries: 1050, successRate: 95.9, avgDeliveryTime: 26, status: "active" },
-  { id: "C006", name: "سعد المالكي", city: "مكة", rating: 4.6, deliveries: 920, successRate: 96.3, avgDeliveryTime: 27, status: "active" },
-  { id: "C007", name: "نايف الغامدي", city: "جدة", rating: 4.5, deliveries: 810, successRate: 95.4, avgDeliveryTime: 28, status: "active" },
-  { id: "C008", name: "عمر الزهراني", city: "المدينة", rating: 4.5, deliveries: 760, successRate: 94.8, avgDeliveryTime: 29, status: "active" },
-  { id: "C009", name: "ياسر السبيعي", city: "الرياض", rating: 4.4, deliveries: 690, successRate: 95.2, avgDeliveryTime: 25, status: "active" },
-  { id: "C010", name: "بندر العنزي", city: "الدمام", rating: 4.4, deliveries: 720, successRate: 94.5, avgDeliveryTime: 30, status: "active" },
-  { id: "C011", name: "تركي المطيري", city: "الرياض", rating: 4.3, deliveries: 650, successRate: 93.8, avgDeliveryTime: 31, status: "active" },
-  { id: "C012", name: "مشاري الرشيدي", city: "جدة", rating: 4.2, deliveries: 580, successRate: 93.2, avgDeliveryTime: 32, status: "active" },
-  { id: "C013", name: "صالح العمري", city: "مكة", rating: 4.1, deliveries: 540, successRate: 92.5, avgDeliveryTime: 33, status: "active" },
-  { id: "C014", name: "حسن الشهري", city: "المدينة", rating: 4.0, deliveries: 490, successRate: 91.8, avgDeliveryTime: 34, status: "active" },
-  { id: "C015", name: "رائد الحارثي", city: "الدمام", rating: 3.9, deliveries: 420, successRate: 90.5, avgDeliveryTime: 35, status: "active" },
-  { id: "C016", name: "وليد البقمي", city: "الرياض", rating: 3.8, deliveries: 380, successRate: 89.8, avgDeliveryTime: 36, status: "inactive" },
-  { id: "C017", name: "سلطان اليامي", city: "جدة", rating: 3.7, deliveries: 350, successRate: 88.2, avgDeliveryTime: 38, status: "inactive" },
-  { id: "C018", name: "ماجد النمر", city: "الرياض", rating: 3.5, deliveries: 310, successRate: 87.5, avgDeliveryTime: 40, status: "inactive" },
-  { id: "C019", name: "زياد الفيفي", city: "مكة", rating: 3.3, deliveries: 280, successRate: 85.1, avgDeliveryTime: 42, status: "inactive" },
-  { id: "C020", name: "هاني الأسمري", city: "المدينة", rating: 3.1, deliveries: 240, successRate: 83.4, avgDeliveryTime: 45, status: "inactive" },
-];
-
-const MOCK_DAILY_TREND = [
-  { day: "22 مارس", deliveries: 142, successRate: 94 },
-  { day: "23 مارس", deliveries: 158, successRate: 95 },
-  { day: "24 مارس", deliveries: 135, successRate: 93 },
-  { day: "25 مارس", deliveries: 170, successRate: 96 },
-  { day: "26 مارس", deliveries: 162, successRate: 95 },
-  { day: "27 مارس", deliveries: 148, successRate: 94 },
-  { day: "28 مارس", deliveries: 110, successRate: 91 },
-  { day: "29 مارس", deliveries: 155, successRate: 95 },
-  { day: "30 مارس", deliveries: 168, successRate: 96 },
-  { day: "31 مارس", deliveries: 145, successRate: 93 },
-  { day: "1 أبريل", deliveries: 175, successRate: 97 },
-  { day: "2 أبريل", deliveries: 160, successRate: 95 },
-  { day: "3 أبريل", deliveries: 152, successRate: 94 },
-  { day: "4 أبريل", deliveries: 180, successRate: 97 },
-];
-
-const MOCK_MONTHLY_TREND = [
-  { month: "نوفمبر", orders: 3200, deliveries: 2980 },
-  { month: "ديسمبر", orders: 3800, deliveries: 3560 },
-  { month: "يناير", orders: 3500, deliveries: 3280 },
-  { month: "فبراير", orders: 4100, deliveries: 3890 },
-  { month: "مارس", orders: 4400, deliveries: 4180 },
-  { month: "أبريل", orders: 4650, deliveries: 4420 },
-];
-
 const CITY_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -120,9 +70,9 @@ function getToday(): string {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function CourierPerformance() {
-  const [couriers, setCouriers] = useState<CourierRecord[]>(MOCK_COURIERS);
-  const [dailyTrend] = useState(MOCK_DAILY_TREND);
-  const [monthlyTrend] = useState(MOCK_MONTHLY_TREND);
+  const [couriers, setCouriers] = useState<CourierRecord[]>([]);
+  const [dailyTrend] = useState<{ day: string; deliveries: number; successRate: number }[]>([]);
+  const [monthlyTrend] = useState<{ month: string; orders: number; deliveries: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
@@ -157,9 +107,8 @@ export default function CourierPerformance() {
         }
       }
     } catch {
-      // fall through to mock
+      // keep empty
     }
-    setCouriers(MOCK_COURIERS);
     setLoading(false);
   }, []);
 

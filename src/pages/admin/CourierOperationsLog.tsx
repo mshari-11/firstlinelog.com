@@ -85,73 +85,11 @@ function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   a.click();
 }
 
-// ── Mock data (30+ entries) ──────────────────────────────────────────────────
-const COURIERS = [
-  { id: "C001", name: "أحمد محمد العتيبي" },
-  { id: "C002", name: "خالد عبدالله الشمري" },
-  { id: "C003", name: "محمد سعد القحطاني" },
-  { id: "C004", name: "عبدالرحمن فهد الدوسري" },
-  { id: "C005", name: "سلطان ناصر الحربي" },
-  { id: "C006", name: "فيصل يوسف المالكي" },
-  { id: "C007", name: "تركي حمد الزهراني" },
-  { id: "C008", name: "ماجد عادل السبيعي" },
-];
-
-function mockEntry(
-  id: number,
-  date: string,
-  courierIdx: number,
-  op: OpType,
-  details: string,
-  status: string,
-): LogEntry {
-  const c = COURIERS[courierIdx % COURIERS.length];
-  return { id: `LOG${String(id).padStart(4, "0")}`, date, courier_name: c.name, courier_id: c.id, op_type: op, details, status };
-}
-
-const MOCK_DATA: LogEntry[] = [
-  mockEntry(1, "2026-04-05 08:15", 0, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(2, "2026-04-05 08:30", 0, "delivery", "طلب #ORD-4521 — حي النزهة، الرياض", "success"),
-  mockEntry(3, "2026-04-05 09:00", 1, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(4, "2026-04-05 09:10", 1, "delivery", "طلب #ORD-4522 — حي الملقا، الرياض", "success"),
-  mockEntry(5, "2026-04-05 09:25", 2, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(6, "2026-04-05 09:45", 0, "delivery", "طلب #ORD-4523 — حي العليا، الرياض", "success"),
-  mockEntry(7, "2026-04-05 10:00", 2, "late", "تأخر 15 دقيقة عن طلب #ORD-4524", "pending"),
-  mockEntry(8, "2026-04-05 10:15", 3, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(9, "2026-04-05 10:30", 1, "cancel", "إلغاء طلب #ORD-4525 — العميل غير متاح", "success"),
-  mockEntry(10, "2026-04-05 10:45", 3, "delivery", "طلب #ORD-4526 — حي الربوة، الرياض", "success"),
-  mockEntry(11, "2026-04-05 11:00", 4, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(12, "2026-04-05 11:15", 4, "delivery", "طلب #ORD-4527 — حي الورود، الرياض", "success"),
-  mockEntry(13, "2026-04-05 11:30", 2, "delivery", "طلب #ORD-4524 — حي السليمانية (متأخر)", "partial"),
-  mockEntry(14, "2026-04-05 11:45", 5, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(15, "2026-04-05 12:00", 5, "delivery", "طلب #ORD-4528 — حي الياسمين، الرياض", "success"),
-  mockEntry(16, "2026-04-05 12:15", 0, "complaint", "شكوى من العميل — تلف بالمنتج طلب #ORD-4521", "pending"),
-  mockEntry(17, "2026-04-05 12:30", 6, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(18, "2026-04-05 12:45", 6, "delivery", "طلب #ORD-4529 — حي الصحافة، الرياض", "success"),
-  mockEntry(19, "2026-04-05 13:00", 3, "status_change", "تغيير حالة المندوب إلى «استراحة»", "success"),
-  mockEntry(20, "2026-04-05 13:15", 7, "login", "تسجيل دخول من الجوال", "success"),
-  mockEntry(21, "2026-04-05 13:30", 7, "delivery", "طلب #ORD-4530 — حي الروابي، الرياض", "success"),
-  mockEntry(22, "2026-04-05 13:45", 4, "cancel", "إلغاء طلب #ORD-4531 — عنوان خاطئ", "success"),
-  mockEntry(23, "2026-04-05 14:00", 1, "delivery", "طلب #ORD-4532 — حي الغدير، الرياض", "success"),
-  mockEntry(24, "2026-04-05 14:15", 6, "late", "تأخر 20 دقيقة عن طلب #ORD-4533", "pending"),
-  mockEntry(25, "2026-04-05 14:30", 5, "delivery", "طلب #ORD-4534 — حي النرجس، الرياض", "success"),
-  mockEntry(26, "2026-04-05 14:45", 3, "status_change", "تغيير حالة المندوب إلى «متاح»", "success"),
-  mockEntry(27, "2026-04-05 15:00", 0, "delivery", "طلب #ORD-4535 — حي المروج، الرياض", "success"),
-  mockEntry(28, "2026-04-05 15:15", 7, "cancel", "إلغاء طلب #ORD-4536 — رفض العميل الاستلام", "success"),
-  mockEntry(29, "2026-04-05 15:30", 2, "delivery", "طلب #ORD-4537 — حي الملك فهد، الرياض", "success"),
-  mockEntry(30, "2026-04-05 15:45", 4, "complaint", "شكوى — تأخر كبير في التوصيل طلب #ORD-4531", "pending"),
-  mockEntry(31, "2026-04-05 16:00", 1, "delivery", "طلب #ORD-4538 — حي الروضة، الرياض", "success"),
-  mockEntry(32, "2026-04-05 16:15", 6, "delivery", "طلب #ORD-4533 — حي الصحافة (متأخر)", "partial"),
-  mockEntry(33, "2026-04-05 16:30", 5, "delivery", "طلب #ORD-4539 — حي حطين، الرياض", "success"),
-  mockEntry(34, "2026-04-05 16:45", 0, "status_change", "تغيير حالة المندوب إلى «منتهي»", "success"),
-  mockEntry(35, "2026-04-05 17:00", 7, "delivery", "طلب #ORD-4540 — حي العقيق، الرياض", "success"),
-];
-
 const PAGE_SIZE = 20;
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function CourierOperationsLog() {
-  const [data, setData] = useState<LogEntry[]>(MOCK_DATA);
+  const [data, setData] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [opFilter, setOpFilter] = useState<OpType | "all">("all");

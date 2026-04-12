@@ -114,7 +114,7 @@ const MOCK: AuditEntry[] = [
 
 export default function AuditLog() {
   const navigate = useNavigate();
-  const [data, setData] = useState<AuditEntry[]>(MOCK);
+  const [data, setData] = useState<AuditEntry[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ActionType | "all">("all");
   const [dateRange, setDateRange] = useState<

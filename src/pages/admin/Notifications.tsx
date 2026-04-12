@@ -157,7 +157,7 @@ const MOCK: Notification[] = [
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Notification[]>(MOCK);
+  const [data, setData] = useState<Notification[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<NotifType | "all">("all");
   const [page, setPage] = useState(1);

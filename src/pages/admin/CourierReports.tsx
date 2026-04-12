@@ -52,22 +52,6 @@ const STATUS_COLORS: Record<string, string> = {
   suspended: "var(--con-danger)",
 };
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_REPORTS: CourierReport[] = [
-  { id: "1", courier_name: "أحمد العتيبي", courier_id: "C001", rating: 4.8, total_orders: 520, success_rate: 97.5, violations: 0, status: "active", notes: "أداء ممتاز - مرشح لمندوب الشهر" },
-  { id: "2", courier_name: "فهد القحطاني", courier_id: "C002", rating: 4.6, total_orders: 480, success_rate: 96.2, violations: 1, status: "active", notes: "أداء جيد جداً" },
-  { id: "3", courier_name: "سعد الدوسري", courier_id: "C003", rating: 4.2, total_orders: 410, success_rate: 94.0, violations: 2, status: "active", notes: "تحسن ملحوظ عن الشهر السابق" },
-  { id: "4", courier_name: "خالد الحربي", courier_id: "C004", rating: 3.9, total_orders: 350, success_rate: 91.5, violations: 3, status: "active", notes: "يحتاج متابعة - تأخيرات متكررة" },
-  { id: "5", courier_name: "محمد الشهري", courier_id: "C005", rating: 4.5, total_orders: 460, success_rate: 95.8, violations: 0, status: "active", notes: "ملتزم ومنضبط" },
-  { id: "6", courier_name: "عمر المالكي", courier_id: "C006", rating: 3.3, total_orders: 280, success_rate: 87.0, violations: 5, status: "active", notes: "أداء ضعيف - إنذار ثاني" },
-  { id: "7", courier_name: "يوسف الغامدي", courier_id: "C007", rating: 4.7, total_orders: 500, success_rate: 98.0, violations: 0, status: "active", notes: "من أفضل المناديب" },
-  { id: "8", courier_name: "ناصر السبيعي", courier_id: "C008", rating: 3.1, total_orders: 200, success_rate: 82.5, violations: 7, status: "active", notes: "تحت المراقبة - مخالفات متعددة" },
-  { id: "9", courier_name: "بدر الزهراني", courier_id: "C009", rating: 3.6, total_orders: 310, success_rate: 89.0, violations: 4, status: "active", notes: "يحتاج تدريب إضافي" },
-  { id: "10", courier_name: "سلطان العنزي", courier_id: "C011", rating: 0, total_orders: 0, success_rate: 0, violations: 0, status: "suspended", notes: "موقوف - غياب بدون إذن" },
-  { id: "11", courier_name: "تركي القرني", courier_id: "C012", rating: 0, total_orders: 0, success_rate: 0, violations: 0, status: "inactive", notes: "مفصول - مخالفات متكررة" },
-  { id: "12", courier_name: "عبدالرحمن النعيمي", courier_id: "C010", rating: 3.8, total_orders: 340, success_rate: 90.5, violations: 3, status: "active", notes: "أداء مقبول - يحتاج تحسين" },
-];
-
 const MONTHS = [
   "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
   "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
@@ -77,7 +61,7 @@ export default function CourierReports() {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [reports, setReports] = useState<CourierReport[]>(MOCK_REPORTS);
+  const [reports, setReports] = useState<CourierReport[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchData = useCallback(async () => {

@@ -96,7 +96,7 @@ const MOCK: Shipment[] = [
 
 export default function Shipments() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Shipment[]>(MOCK);
+  const [data, setData] = useState<Shipment[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ShipmentStatus | "all">("all");
   const [loading, setLoading] = useState(false);

@@ -111,7 +111,7 @@ const MOCK: Task[] = [
 
 export default function Tasks() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Task[]>(MOCK);
+  const [data, setData] = useState<Task[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
   const [loading, setLoading] = useState(false);

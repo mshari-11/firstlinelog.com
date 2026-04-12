@@ -130,7 +130,7 @@ const MOCK: AttendanceEntry[] = [
 
 export default function Attendance() {
   const navigate = useNavigate();
-  const [data, setData] = useState<AttendanceEntry[]>(MOCK);
+  const [data, setData] = useState<AttendanceEntry[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<AttendanceStatus | "all">("all");
   const [dateFrom, setDateFrom] = useState("");

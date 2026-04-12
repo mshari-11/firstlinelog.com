@@ -89,9 +89,11 @@ export default function Tasks() {
       if (res.ok) {
         const d = await res.json();
         if (Array.isArray(d) && d.length) setData(d);
+      } else {
+        toast.warning("تعذّر جلب المهام من السيرفر — عرض البيانات المحلية");
       }
     } catch {
-      /* keep mock */
+      toast.warning("تعذّر الاتصال — عرض البيانات المحلية");
     }
     setLoading(false);
   }

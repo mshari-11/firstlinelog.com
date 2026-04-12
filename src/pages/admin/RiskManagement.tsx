@@ -231,28 +231,28 @@ export default function RiskManagement() {
             value: activeRules,
             icon: CheckCircle2,
             accent: "var(--con-success)",
-            onClick: () => navigate("/admin-panel/audit-log"),
+            onClick: () => { setFilter("active"); setSearch(""); },
           },
           {
             label: "تنبيهات اليوم",
             value: todayAlerts,
             icon: AlertTriangle,
             accent: "var(--con-warning)",
-            onClick: () => navigate("/admin-panel/finance"),
+            onClick: () => navigate("/admin-panel/audit-log"),
           },
           {
             label: "حالات مشبوهة",
             value: suspiciousCases,
             icon: ShieldAlert,
             accent: "var(--con-danger)",
-            onClick: () => {},
+            onClick: () => { setFilter("all"); setSearch("مشبوه"); },
           },
           {
             label: "قواعد معطلة",
             value: disabledRules,
             icon: XCircle,
             accent: "var(--con-text-muted)",
-            onClick: () => navigate("/admin-panel/settings"),
+            onClick: () => { setFilter("disabled"); setSearch(""); },
           },
         ].map((k) => (
           <div
@@ -567,7 +567,7 @@ export default function RiskManagement() {
               <button
                 className="con-btn-primary"
                 disabled={!ruleForm.name || !ruleForm.threshold}
-                onClick={() => {
+                onClick={async () => {
                   const newRule: RiskRule = {
                     id: `RSK-${String(data.length + 1).padStart(3, "0")}`,
                     name: ruleForm.name,
@@ -576,7 +576,24 @@ export default function RiskManagement() {
                     status: ruleForm.status,
                     lastRun: new Date().toISOString(),
                   };
-                  setData((prev) => [newRule, ...prev]);
+                  try {
+                    const res = await fetch(`${API_BASE}/api/risk-rules`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(newRule),
+                    });
+                    if (res.ok) {
+                      const saved = await res.json().catch(() => newRule);
+                      setData((prev) => [saved?.id ? saved : newRule, ...prev]);
+                      toast.success("تم إضافة القاعدة");
+                    } else {
+                      setData((prev) => [newRule, ...prev]);
+                      toast.warning("تم الحفظ محلياً — تعذّر الاتصال بالسيرفر");
+                    }
+                  } catch {
+                    setData((prev) => [newRule, ...prev]);
+                    toast.warning("تم الحفظ محلياً — تعذّر الاتصال بالسيرفر");
+                  }
                   setRuleForm({
                     name: "",
                     type: "fraud",
@@ -584,7 +601,6 @@ export default function RiskManagement() {
                     status: "active",
                   });
                   setShowModal(false);
-                  toast.success("تم إضافة القاعدة");
                 }}
                 style={{ marginTop: 8 }}
               >

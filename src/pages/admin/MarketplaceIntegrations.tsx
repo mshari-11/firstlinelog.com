@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface Integration {
   id: string;
@@ -259,13 +260,14 @@ export default function MarketplaceIntegrations() {
   async function toggleStatus(id: string, current: string) {
     const newStatus = current === "active" ? "inactive" : "active";
     try {
-      await fetch(`${API_BASE}/api/marketplace/integrations/${id}`, {
+      const res = await fetch(`${API_BASE}/api/marketplace/integrations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+      if (!res.ok) toast.warning("تعذّر تحديث الحالة على السيرفر");
     } catch {
-      /* ignore */
+      toast.warning("تعذّر الاتصال بالسيرفر");
     }
     setIntegrations((prev) =>
       prev.map((i) => (i.id === id ? { ...i, status: newStatus as any } : i)),
@@ -286,19 +288,25 @@ export default function MarketplaceIntegrations() {
         : undefined,
       total_orders: 0,
     };
+    let savedRemotely = false;
     try {
-      await fetch(`${API_BASE}/api/marketplace/integrations`, {
+      const res = await fetch(`${API_BASE}/api/marketplace/integrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...newIntg, id: item.id }),
       });
+      savedRemotely = res.ok;
+      if (!res.ok) {
+        toast.warning("تعذّر حفظ التكامل على السيرفر — تم الحفظ محلياً");
+      }
     } catch {
-      /* save locally */
+      toast.warning("تعذّر الاتصال بالسيرفر — تم الحفظ محلياً");
     }
     setIntegrations((prev) => [...prev, item]);
     setNewIntg({ name: "", platform: "custom", webhook_url: "", api_key: "" });
     setShowAdd(false);
     setSaving(false);
+    if (savedRemotely) toast.success("تمت إضافة التكامل");
   }
 
   const activeCount = integrations.filter((i) => i.status === "active").length;

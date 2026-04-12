@@ -184,8 +184,16 @@ export default function SLAConfig() {
           working_hours_only: form.workingHoursOnly,
         };
         const { error } = await supabase.schema("admin").from("sla_rules").upsert(payload, { onConflict: "id" });
-        if (error) console.error("SLA save error:", error);
-      } catch { /* continue with local state */ }
+        if (error) {
+          console.error("SLA save error:", error);
+          toast.error("تعذّر حفظ القاعدة في السحابة — تم الحفظ محلياً");
+        } else {
+          toast.success(isNew ? "تمت إضافة القاعدة" : "تم تحديث القاعدة");
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error("خطأ في الاتصال — تم الحفظ محلياً");
+      }
     }
 
     if (isNew) {

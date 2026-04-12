@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+import { CHAT_API_URL } from "@/lib/api";
 import {
   Send,
   Zap,
@@ -403,17 +404,36 @@ export default function AIFinanceAnalysis() {
     setInput("");
     setLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: `شكراً على السؤال: "${messageText}". بناءً على تحليل البيانات، فإن الإجابة هي أن الأداء المالي حالياً يسير بشكل إيجابي. الإيرادات تنمو بمعدل 8% شهرياً، والهامش التشغيلي مستقر عند 39.9%. أوصي بمراقبة مصروفات الوقود والصيانة التي أظهرت زيادة طفيفة هذا الشهر.`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setLoading(false);
-    }, 1000);
+    let replyText = "";
+    try {
+      const res = await fetch(CHAT_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: messageText,
+          role: "admin",
+          context: "finance_analysis",
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        replyText = data.reply || data.message || "";
+      }
+    } catch {
+      /* network error handled below */
+    }
+
+    const aiMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      type: "ai",
+      content:
+        replyText ||
+        "تعذّر الاتصال بخدمة الذكاء الاصطناعي حالياً. حاول مرة أخرى بعد قليل.",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+    setLoading(false);
   };
 
   const handleCopyMessage = (text: string) => {

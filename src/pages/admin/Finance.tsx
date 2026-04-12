@@ -724,7 +724,8 @@ export default function Finance() {
       const { data: finance } = await supabase
         .from("finance")
         .select(`*, couriers ( full_name )`)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
 
       if (finance) {
         const mapped: FinanceRecord[] = finance.map((r: any) => ({

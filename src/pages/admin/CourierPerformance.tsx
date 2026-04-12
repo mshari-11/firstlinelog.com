@@ -89,7 +89,8 @@ export default function CourierPerformance() {
         const { data, error } = await supabase
           .from("couriers")
           .select("*")
-          .order("rating", { ascending: false });
+          .order("rating", { ascending: false })
+          .limit(500);
         if (!error && data && data.length > 0) {
           const mapped: CourierRecord[] = data.map((c: Record<string, unknown>) => ({
             id: String(c.id ?? c.courier_id ?? ""),

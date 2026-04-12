@@ -386,7 +386,8 @@ export default function Dispatch() {
         if (rawOrders.length > 0)
           setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
         if (!cancelled) setApiError(null);
-      } catch {
+      } catch (err) {
+        console.error("[Dispatch] fetchData error:", err);
         if (!cancelled)
           setApiError("تعذّر الاتصال بالـ API — يُعرض البيانات التجريبية");
       } finally {

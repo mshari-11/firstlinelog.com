@@ -612,12 +612,20 @@ export default function AdminOrders() {
                                   <AlertDialogCancel>تراجع</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-red-600 hover:bg-red-700"
-                                    onClick={() => {
+                                    onClick={async () => {
                                       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o));
-                                      toast.success(`تم إلغاء الطلب ${order.id}`);
                                       if (supabase) {
-                                        supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id).then(() => {});
+                                        const { error } = await supabase
+                                          .from("orders")
+                                          .update({ status: "cancelled" })
+                                          .eq("id", order.id);
+                                        if (error) {
+                                          console.error("[AdminOrders] cancel error:", error);
+                                          toast.error("تم الإلغاء محلياً — تعذّر تحديث السيرفر");
+                                          return;
+                                        }
                                       }
+                                      toast.success(`تم إلغاء الطلب ${order.id}`);
                                     }}
                                   >
                                     إلغاء الطلب

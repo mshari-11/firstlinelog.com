@@ -521,7 +521,8 @@ export default function AdminCouriers() {
         supabase
           .from("couriers")
           .select("*")
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .limit(2000),
         supabase
           .from("jahez_drivers")
           .select(
@@ -583,7 +584,8 @@ export default function AdminCouriers() {
       const { data, error } = await supabase
         .from("driver_applications")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(500);
       if (!error && data && data.length > 0) {
         setApplications(data as DriverApplication[]);
       }

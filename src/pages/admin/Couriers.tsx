@@ -527,7 +527,8 @@ export default function AdminCouriers() {
           .select(
             "external_id, name, phone, iqama_number, status, availability, vehicle_type, synced_at",
           )
-          .order("synced_at", { ascending: false }),
+          .order("synced_at", { ascending: false })
+          .range(0, 9999),
       ]);
 
       const own: Courier[] =

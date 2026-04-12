@@ -166,7 +166,8 @@ export default function CourierMap() {
           .select("id, full_name, name, phone, status, vehicle_type, rating, last_active, city"),
         supabase
           .from("jahez_drivers")
-          .select("external_id, name, phone, status, availability, vehicle_type, synced_at"),
+          .select("external_id, name, phone, status, availability, vehicle_type, synced_at")
+          .range(0, 9999),
       ]);
       if (ownRes.error) throw ownRes.error;
 

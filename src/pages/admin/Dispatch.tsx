@@ -333,7 +333,8 @@ export default function Dispatch() {
               .eq("is_online", true),
             supabase
               .from("jahez_drivers")
-              .select("external_id, name, phone, status, availability, vehicle_type"),
+              .select("external_id, name, phone, status, availability, vehicle_type")
+              .range(0, 9999),
           ]);
           liveLocations = liveRes.data || [];
           jahezDrivers = jahezRes.data || [];

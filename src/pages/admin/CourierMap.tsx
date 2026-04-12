@@ -160,11 +160,37 @@ export default function CourierMap() {
     setLoading(true);
     setFetchError(null);
     try {
-      const { data, error } = await supabase
-        .from("couriers")
-        .select("id, full_name, name, phone, status, vehicle_type, rating, last_active, city");
-      if (error) throw error;
-      setCityData(groupByCities((data ?? []) as CourierRow[]));
+      const [ownRes, jahezRes] = await Promise.all([
+        supabase
+          .from("couriers")
+          .select("id, full_name, name, phone, status, vehicle_type, rating, last_active, city"),
+        supabase
+          .from("jahez_drivers")
+          .select("external_id, name, phone, status, availability, vehicle_type, synced_at"),
+      ]);
+      if (ownRes.error) throw ownRes.error;
+
+      const jahezRows: CourierRow[] = (jahezRes.data ?? []).map((d: any) => {
+        const isActive = d.status === "Active";
+        const isOnline = d.availability === "Online";
+        const mappedStatus = !isActive
+          ? "inactive"
+          : isOnline
+            ? "on_delivery"
+            : "active";
+        return {
+          id: `jahez:${d.external_id}`,
+          full_name: d.name || "—",
+          phone: d.phone || "",
+          status: mappedStatus,
+          vehicle_type: String(d.vehicle_type || "—"),
+          last_active: d.synced_at,
+          city: "جاهز",
+        } as CourierRow;
+      });
+
+      const allRows = [...((ownRes.data ?? []) as CourierRow[]), ...jahezRows];
+      setCityData(groupByCities(allRows));
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : "فشل جلب البيانات");
     } finally {

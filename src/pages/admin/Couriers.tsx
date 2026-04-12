@@ -517,13 +517,54 @@ export default function AdminCouriers() {
       return;
     }
     try {
-      const { data, error } = await supabase
-        .from("couriers")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (!error && data && data.length > 0) {
-        setCouriers(data as Courier[]);
+      const [ownRes, jahezRes] = await Promise.all([
+        supabase
+          .from("couriers")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("jahez_drivers")
+          .select(
+            "external_id, name, phone, iqama_number, status, availability, vehicle_type, synced_at",
+          )
+          .order("synced_at", { ascending: false }),
+      ]);
+
+      const own: Courier[] =
+        !ownRes.error && ownRes.data ? (ownRes.data as Courier[]) : [];
+
+      const jahezMapped: Courier[] = (jahezRes.data ?? []).map((d: any) => {
+        const isActive = d.status === "Active";
+        const isOnline = d.availability === "Online";
+        const mappedStatus: Courier["status"] = !isActive
+          ? "inactive"
+          : isOnline
+            ? "on_delivery"
+            : "active";
+        return {
+          id: `jahez:${d.external_id}`,
+          full_name: d.name || "بدون اسم",
+          phone: d.phone || "",
+          status: mappedStatus,
+          iqama_number: d.iqama_number || undefined,
+          vehicle_type: String(d.vehicle_type || ""),
+          app_name: "جاهز",
+          app_id: d.external_id,
+          joined_platforms: ["jahez"],
+          created_at: d.synced_at || new Date().toISOString(),
+          last_active: d.synced_at,
+        } as Courier;
+      });
+
+      const seen = new Set<string>();
+      const merged: Courier[] = [];
+      for (const c of [...own, ...jahezMapped]) {
+        const key = (c.iqama_number || "") + "|" + (c.phone || "") + "|" + c.id;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(c);
       }
+      if (merged.length > 0) setCouriers(merged);
     } catch (e) {
       console.error(e);
     } finally {

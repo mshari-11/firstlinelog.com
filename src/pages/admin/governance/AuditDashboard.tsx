@@ -160,13 +160,49 @@ function extractTableName(action: string, details: unknown): string {
   return "system";
 }
 
+function exportAuditCSV(rows: AuditEntry[]) {
+  if (!rows.length) return;
+  const headers = [
+    "ID",
+    "المستخدم",
+    "البريد",
+    "الإجراء",
+    "الجدول",
+    "المعرّف",
+    "التاريخ",
+  ];
+  const csv = [
+    headers.join(","),
+    ...rows.map((r) =>
+      [
+        r.id,
+        r.changedByName ?? "",
+        r.changedBy ?? "",
+        actionLabels[r.action] ?? r.action,
+        r.tableName,
+        r.recordId,
+        r.changedAt,
+      ]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(","),
+    ),
+  ].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
+
 export default function AuditDashboard() {
   const [entries, setEntries] = useState<AuditEntry[]>(mockAuditEntries);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchAuditLog() {
+      setLoading(true);
       try {
         if (!supabase) throw new Error("no client");
         const { data, error } = await supabase
@@ -209,6 +245,8 @@ export default function AuditDashboard() {
         setEntries(mapped);
       } catch {
         // Silently fall back to mock data already in state
+      } finally {
+        setLoading(false);
       }
     }
     fetchAuditLog();
@@ -247,7 +285,15 @@ export default function AuditDashboard() {
         icon={Eye}
         title="لوحة التدقيق"
         subtitle="سجل شامل لجميع العمليات والتغييرات في النظام"
-        actions={<Button icon={Download}>تصدير السجل</Button>}
+        actions={
+          <Button
+            icon={Download}
+            onClick={() => exportAuditCSV(filtered)}
+            disabled={!filtered.length || loading}
+          >
+            تصدير السجل
+          </Button>
+        }
       />
 
       <KPIGrid cols="repeat(4, 1fr)">

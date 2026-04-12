@@ -291,9 +291,6 @@ const KNOWN_IMPORT_COLUMNS = [
   "iqama_number",
 ];
 
-const mockCouriers: Courier[] = [];
-
-const mockApplications: DriverApplication[] = [];
 
 function getOnlineStatus(lastActive?: string): { color: string; label: string } {
   if (!lastActive) return { color: "#64748b", label: "غير متصل" };

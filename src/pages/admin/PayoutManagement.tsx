@@ -50,36 +50,6 @@ const STATUS: Record<
   },
 };
 
-const MOCK: PayoutRun[] = [
-  {
-    id: "PAY-001",
-    period: "1-7 مارس 2026",
-    driverCount: 45,
-    amount: 67500,
-    status: "paid",
-  },
-  {
-    id: "PAY-002",
-    period: "8-14 مارس 2026",
-    driverCount: 48,
-    amount: 72000,
-    status: "paid",
-  },
-  {
-    id: "PAY-003",
-    period: "15-21 مارس 2026",
-    driverCount: 50,
-    amount: 75000,
-    status: "approved",
-  },
-  {
-    id: "PAY-004",
-    period: "22-28 مارس 2026",
-    driverCount: 47,
-    amount: 70500,
-    status: "draft",
-  },
-];
 
 export default function PayoutManagement() {
   const navigate = useNavigate();

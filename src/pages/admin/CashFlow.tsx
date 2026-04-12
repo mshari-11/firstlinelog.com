@@ -44,73 +44,12 @@ import {
   formatSAR,
 } from "@/components/admin/FinanceUI";
 
-// ─── Fallback Data (used when Supabase fetch fails or returns no rows) ────────
-const FALLBACK_cashFlowTimeline = [
-  { week: "الأسبوع 1", in: 145000, out: 98000, net: 47000 },
-  { week: "الأسبوع 2", in: 162000, out: 105000, net: 57000 },
-  { week: "الأسبوع 3", in: 138000, out: 92000, net: 46000 },
-  { week: "الأسبوع 4", in: 178000, out: 112000, net: 66000 },
-];
-
-const FALLBACK_netCashFlowMonthly = [
-  { month: "سبتمبر", cash: 142000, cumulative: 142000 },
-  { month: "أكتوبر", cash: 178000, cumulative: 320000 },
-  { month: "نوفمبر", cash: 145000, cumulative: 465000 },
-  { month: "ديسمبر", cash: 198000, cumulative: 663000 },
-  { month: "يناير", cash: 165000, cumulative: 828000 },
-  { month: "فبراير", cash: 172000, cumulative: 1000000 },
-];
-
-const FALLBACK_burnRateData = [
-  { period: "يناير", operatingExpenses: 120000, revenue: 198000, margin: 39 },
-  { period: "فبراير", operatingExpenses: 125000, revenue: 218000, margin: 43 },
-  { period: "مارس", operatingExpenses: 128000, revenue: 225000, margin: 43 },
-];
-
-const FALLBACK_operatingMetrics = [
-  {
-    date: "1 مارس",
-    dailyIn: 18500,
-    dailyOut: 12200,
-    dailyNet: 6300,
-    margin: 34,
-  },
-  {
-    date: "2 مارس",
-    dailyIn: 21200,
-    dailyOut: 14100,
-    dailyNet: 7100,
-    margin: 34,
-  },
-  {
-    date: "3 مارس",
-    dailyIn: 19800,
-    dailyOut: 13200,
-    dailyNet: 6600,
-    margin: 33,
-  },
-  {
-    date: "4 مارس",
-    dailyIn: 23100,
-    dailyOut: 15500,
-    dailyNet: 7600,
-    margin: 33,
-  },
-  {
-    date: "5 مارس",
-    dailyIn: 20700,
-    dailyOut: 13900,
-    dailyNet: 6800,
-    margin: 33,
-  },
-];
-
-const FALLBACK_forecastData = [
-  { month: "مارس", actual: null, projected: 225000 },
-  { month: "أبريل", actual: null, projected: 235000 },
-  { month: "مايو", actual: null, projected: 245000 },
-  { month: "يونيو", actual: null, projected: 258000 },
-];
+// ─── Empty defaults ──────────────────────────────────────────────────────────
+const FALLBACK_cashFlowTimeline: { week: string; in: number; out: number; net: number }[] = [];
+const FALLBACK_netCashFlowMonthly: { month: string; cash: number; cumulative: number }[] = [];
+const FALLBACK_burnRateData: { period: string; operatingExpenses: number; revenue: number; margin: number }[] = [];
+const FALLBACK_operatingMetrics: { date: string; dailyIn: number; dailyOut: number; dailyNet: number; margin: number }[] = [];
+const FALLBACK_forecastData: { month: string; actual: number | null; projected: number }[] = [];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface WeeklyFlow {

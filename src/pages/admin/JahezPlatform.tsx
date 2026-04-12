@@ -726,45 +726,46 @@ export default function JahezPlatform() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  /* ─── Sync drivers → Supabase (batched upsert) ─── */
+  /* ─── Sync drivers → Supabase (client-side pagination + streaming upsert) ─── */
   const syncDriversToSupabase = useCallback(async () => {
     if (!token) return;
+    if (!supabase) { toast.error("Supabase غير متصل"); return; }
     setSyncing("drivers");
     setSyncProgress(0);
     try {
-      toast.info("جاري جلب جميع المناديب من Saned...");
-      const raw = await proxyFetch("drivers-all", token);
-      if (!raw) {
-        toast.error("فشل جلب بيانات المناديب");
-        return;
-      }
+      toast.info("جاري جلب المناديب من Saned صفحة تلو الأخرى...");
 
-      /* Normalize response shape — proxy returns { drivers: [...], total } */
-      let allRaw: RawDriver[] = [];
-      const rawAny = raw as any;
-      if (rawAny?.drivers && Array.isArray(rawAny.drivers)) {
-        allRaw = rawAny.drivers;
-      } else if (rawAny?.data?.drivers && Array.isArray(rawAny.data.drivers)) {
-        allRaw = rawAny.data.drivers;
-      } else if (rawAny?.data?.result && Array.isArray(rawAny.data.result)) {
-        allRaw = rawAny.data.result;
-      } else if (Array.isArray(rawAny?.data)) {
-        allRaw = rawAny.data;
-      } else if (Array.isArray(rawAny)) {
-        allRaw = rawAny as RawDriver[];
-      }
+      const PAGE_SIZE = 100;
+      const MAX_PAGES = 100; // 10,000 drivers cap
+      let totalSynced = 0;
+      let totalExpected = 0;
+      let page = 1;
 
-      if (allRaw.length === 0) {
-        toast.warning("لا يوجد مناديب لمزامنتهم");
-        return;
-      }
+      while (page <= MAX_PAGES) {
+        const raw = await proxyFetch("drivers", token, {
+          page,
+          size: PAGE_SIZE,
+        });
 
-      const BATCH = 200;
-      const total = allRaw.length;
-      let synced = 0;
+        if (!raw) {
+          toast.error(`فشل جلب الصفحة ${page}`);
+          break;
+        }
 
-      for (let i = 0; i < total; i += BATCH) {
-        const batch = allRaw.slice(i, i + BATCH).map((d) => ({
+        const rawAny = raw as any;
+        const inner = rawAny.data || rawAny;
+        const drivers: RawDriver[] =
+          inner.result || inner.content || inner.drivers ||
+          (Array.isArray(inner) ? inner : []);
+
+        if (page === 1) {
+          totalExpected =
+            inner.rowsCount || inner.totalElements || inner.total || 0;
+        }
+
+        if (!Array.isArray(drivers) || drivers.length === 0) break;
+
+        const batch = drivers.map((d) => ({
           platform: "jahez",
           external_id: String(d.driverID || d.driverId || ""),
           iqama_number: d.idNumber || "",
@@ -776,23 +777,33 @@ export default function JahezPlatform() {
           synced_at: new Date().toISOString(),
         }));
 
-        if (!supabase) { toast.error("Supabase غير متصل"); return; }
         const { error } = await supabase
           .from("jahez_drivers")
           .upsert(batch, { onConflict: "external_id" });
 
         if (error) {
           console.error("Supabase upsert batch error:", error);
-          toast.error(
-            `خطأ في مزامنة الدفعة ${Math.floor(i / BATCH) + 1}`,
-          );
+          toast.error(`خطأ في حفظ الصفحة ${page}`);
+          break;
         }
 
-        synced += batch.length;
-        setSyncProgress(Math.round((synced / total) * 100));
+        totalSynced += batch.length;
+        if (totalExpected > 0) {
+          setSyncProgress(Math.min(100, Math.round((totalSynced / totalExpected) * 100)));
+        } else {
+          setSyncProgress(Math.min(95, page * 3));
+        }
+
+        if (drivers.length < PAGE_SIZE) break;
+        page++;
       }
 
-      toast.success(`تم مزامنة ${synced.toLocaleString("ar-SA")} سائق بنجاح`);
+      setSyncProgress(100);
+      toast.success(
+        `تمت المزامنة: ${totalSynced.toLocaleString("ar-SA")} سائق${
+          totalExpected ? ` من أصل ${totalExpected.toLocaleString("ar-SA")}` : ""
+        }`,
+      );
     } catch (err) {
       console.error("Sync exception:", err);
       toast.error("حدث خطأ أثناء المزامنة");

@@ -12,6 +12,7 @@ Flow:
 
 import json
 import os
+import time
 import traceback
 from datetime import datetime, timezone
 from urllib.error import HTTPError
@@ -128,20 +129,53 @@ def sync_stats(token):
 
 
 def sync_drivers(token):
-    """Pull first page of drivers (for quick sync)."""
-    stats = {"fetched": 0, "upserted": 0, "errors": 0}
+    """Pull ALL drivers via pagination (100 per page, up to 10k).
+    Cloudflare rate-limits aggressive clients, so we insert a small delay
+    between pages and retry on 403 challenge.
+    """
+    stats = {"fetched": 0, "upserted": 0, "errors": 0, "pages": 0}
+    PAGE_SIZE = 100
+    MAX_PAGES = 100
+    PAGE_DELAY_S = 1.5
+    MAX_RETRIES = 3
     try:
-        result = proxy_fetch("drivers", token, {"page": 1, "size": 100})
-        data = result.get("data", result)
-        drivers = data.get("result", data.get("drivers", []))
-        if not isinstance(drivers, list):
-            drivers = []
-        stats["fetched"] = len(drivers)
-        stats["total"] = data.get("rowsCount", len(drivers))
+        page = 1
+        while page <= MAX_PAGES:
+            result = None
+            for attempt in range(MAX_RETRIES):
+                try:
+                    result = proxy_fetch("drivers", token, {"page": page, "size": PAGE_SIZE})
+                    break
+                except Exception as e:
+                    msg = str(e)
+                    if "403" in msg or "Just a moment" in msg or "challenge" in msg.lower():
+                        wait = (attempt + 1) * 5
+                        print(f"[drivers] Cloudflare challenge on page {page}, retry {attempt + 1}/{MAX_RETRIES} after {wait}s")
+                        time.sleep(wait)
+                        continue
+                    raise
+            if result is None:
+                stats["errors"] += 1
+                stats["message"] = f"Failed to fetch page {page} after {MAX_RETRIES} retries"
+                break
+            data = result.get("data", result)
+            drivers = data.get("result", data.get("drivers", []))
+            if not isinstance(drivers, list):
+                drivers = []
 
-        for d in drivers:
-            try:
-                record = {
+            if page == 1:
+                stats["total"] = data.get("rowsCount", 0)
+
+            if not drivers:
+                break
+
+            stats["fetched"] += len(drivers)
+            stats["pages"] = page
+
+            # Bulk upsert — one request per page instead of per-driver
+            batch = []
+            for d in drivers:
+                batch.append({
                     "platform": "jahez",
                     "external_id": str(d.get("driverID", d.get("driverId", ""))),
                     "iqama_number": str(d.get("idNumber", "")),
@@ -152,15 +186,20 @@ def sync_drivers(token):
                     "vehicle_type": str(d.get("vehicleType", "")),
                     "data": d,
                     "synced_at": now_utc().isoformat(),
-                }
-                supabase_request("POST", "jahez_drivers?on_conflict=external_id", body=record)
-                stats["upserted"] += 1
+                })
+            try:
+                supabase_request("POST", "jahez_drivers?on_conflict=external_id", body=batch)
+                stats["upserted"] += len(batch)
             except Exception as e:
                 stats["errors"] += 1
-                if stats["errors"] <= 3:
-                    print(f"[drivers] Upsert error for {record.get('external_id')}: {e}")
+                print(f"[drivers] Bulk upsert error page {page}: {e}")
 
-        print(f"[drivers] Fetched {stats['fetched']}, Upserted {stats['upserted']}")
+            if len(drivers) < PAGE_SIZE:
+                break
+            page += 1
+            time.sleep(PAGE_DELAY_S)
+
+        print(f"[drivers] Pages {stats['pages']}, Fetched {stats['fetched']}, Upserted {stats['upserted']}")
     except Exception as e:
         stats["errors"] += 1
         stats["message"] = str(e)

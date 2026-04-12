@@ -642,21 +642,30 @@ export default function MarketplaceIntegrations() {
                   }
                   style={{ width: "100%" }}
                 >
-                  {Object.entries(PLATFORM_ICONS).map(([k, icon]) => (
+                  {Object.entries(PLATFORM_LOGOS).map(([k]) => (
                     <option key={k} value={k}>
-                      {icon}{" "}
                       {k === "jahez"
                         ? "جاهز"
                         : k === "hungerstation"
                           ? "هنقرستيشن"
-                          : k === "noon"
-                            ? "نون"
-                            : k === "salla"
-                              ? "سلة"
-                              : k === "zid"
-                                ? "زد"
-                                : k === "amazon"
-                                  ? "أمازون"
+                          : k === "marsool"
+                            ? "مرسول"
+                            : k === "keeta"
+                              ? "كيتا"
+                              : k === "ninja"
+                                ? "نينجا"
+                                : k === "keeta_mart"
+                                  ? "كيتا مارت"
+                                  : k === "wasfaty"
+                                    ? "وصفتي"
+                                    : k === "toyou"
+                                      ? "تويو"
+                                      : k === "the_chefs"
+                                        ? "ذا شيفز"
+                                        : k === "noon"
+                                          ? "نون"
+                                          : k === "amazon"
+                                            ? "أمازون"
                                   : k === "namshi"
                                     ? "نمشي"
                                     : "مخصص"}

@@ -324,12 +324,19 @@ export default function Dispatch() {
 
         // Merge with Supabase live driver locations if available
         let liveLocations: any[] = [];
+        let jahezDrivers: any[] = [];
         if (supabase) {
-          const { data: live } = await supabase
-            .from("driver_locations")
-            .select("driver_id, latitude, longitude, is_online, updated_at")
-            .eq("is_online", true);
-          liveLocations = live || [];
+          const [liveRes, jahezRes] = await Promise.all([
+            supabase
+              .from("driver_locations")
+              .select("driver_id, latitude, longitude, is_online, updated_at")
+              .eq("is_online", true),
+            supabase
+              .from("jahez_drivers")
+              .select("external_id, name, phone, status, availability, vehicle_type"),
+          ]);
+          liveLocations = liveRes.data || [];
+          jahezDrivers = jahezRes.data || [];
         }
 
         const liveMap = new globalThis.Map(
@@ -349,7 +356,32 @@ export default function Dispatch() {
             : driver;
         });
 
-        if (mergedDrivers.length > 0) setDrivers(mergedDrivers);
+        // Append Jahez drivers — place around Riyadh with small jitter
+        // (Saned does not expose coordinates; only online drivers are shown on map)
+        const jahezMapped: Driver[] = jahezDrivers
+          .filter((d: any) => d.availability === "Online")
+          .map((d: any) => {
+            const hash = String(d.external_id || "").split("").reduce(
+              (a, c) => a + c.charCodeAt(0),
+              0,
+            );
+            const jitterLat = ((hash % 100) / 100 - 0.5) * 0.08;
+            const jitterLng = (((hash * 31) % 100) / 100 - 0.5) * 0.08;
+            const isActive = d.status === "Active";
+            return {
+              id: `jahez:${d.external_id}`,
+              name: d.name || "سائق جاهز",
+              phone: d.phone || "",
+              rating: 4.5,
+              status: isActive ? "available" : "offline",
+              lat: 24.7136 + jitterLat,
+              lng: 46.6753 + jitterLng,
+              vehicle: String(d.vehicle_type || "دراجة نارية"),
+            } as Driver;
+          });
+
+        const allDrivers = [...mergedDrivers, ...jahezMapped];
+        if (allDrivers.length > 0) setDrivers(allDrivers);
         if (rawOrders.length > 0)
           setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
         if (!cancelled) setApiError(null);

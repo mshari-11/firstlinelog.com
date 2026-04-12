@@ -1425,11 +1425,7 @@ function BulkImportModal({
 
   function downloadTemplate() {
     const headers = "full_name,email,phone,job_title,department,role,password";
-    const row1 =
-      "أحمد محمد,ahmed@example.com,0501234567,محاسب,المالية,staff,Pass@1234";
-    const row2 =
-      "فاطمة علي,fatima@example.com,0559876543,مديرة موارد بشرية,الموارد البشرية,admin,Pass@5678";
-    const csv = [headers, row1, row2].join("\n");
+    const csv = headers;
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);

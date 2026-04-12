@@ -40,16 +40,29 @@ interface SyncLog {
   created_at: string;
 }
 
-const PLATFORM_ICONS: Record<string, string> = {
-  jahez: "🍕",
-  hungerstation: "🍔",
-  noon: "🛒",
-  namshi: "👗",
-  amazon: "📦",
-  salla: "🏪",
-  zid: "🛍",
-  custom: "🔗",
+const PLATFORM_LOGOS: Record<string, string> = {
+  hungerstation: "/images/partners/hungerstation.png",
+  jahez: "/images/partners/jahez.png",
+  marsool: "",
+  keeta: "/images/partners/keeta.jpg",
+  ninja: "/images/partners/ninja.png",
+  keeta_mart: "/images/partners/keeta-small.jpg",
+  wasfaty: "",
+  toyou: "/images/partners/toyou.png",
+  the_chefs: "/images/partners/thechefz.webp",
+  noon: "",
+  amazon: "/images/partners/amazon.jpg",
+  custom: "",
 };
+
+function PlatformLogo({ platform, size = 28 }: { platform: string; size?: number }) {
+  const src = PLATFORM_LOGOS[platform];
+  if (src) {
+    return <img src={src} alt={platform} style={{ width: size, height: size, borderRadius: 6, objectFit: "cover" }} />;
+  }
+  const fallback: Record<string, string> = { marsool: "🛵", wasfaty: "💊", noon: "🛒", custom: "🔗" };
+  return <span style={{ fontSize: size * 0.7 }}>{fallback[platform] || "🔗"}</span>;
+}
 
 const STATUS_MAP = {
   active: { label: "نشط", cls: "con-badge-success" },
@@ -58,83 +71,144 @@ const STATUS_MAP = {
   pending: { label: "قيد الربط", cls: "con-badge-info" },
 };
 
-const MOCK_INTEGRATIONS: Integration[] = [
-  {
-    id: "1",
-    name: "جاهز للتوصيل",
-    platform: "jahez",
-    status: "active",
-    last_sync: new Date(Date.now() - 5 * 60000).toISOString(),
-    total_orders: 1243,
-  },
-  {
-    id: "2",
-    name: "هنقرستيشن",
-    platform: "hungerstation",
-    status: "active",
-    last_sync: new Date(Date.now() - 15 * 60000).toISOString(),
-    total_orders: 876,
-  },
-  {
-    id: "3",
-    name: "نون",
-    platform: "noon",
-    status: "inactive",
-    total_orders: 0,
-  },
-  {
-    id: "4",
-    name: "سلة",
-    platform: "salla",
-    status: "error",
-    error_message: "API Key منتهي الصلاحية",
-    total_orders: 234,
-  },
-  { id: "5", name: "زد", platform: "zid", status: "pending", total_orders: 0 },
-];
+// ─── Platform Integration Guide ──────────────────────────────────────────────
 
-const MOCK_LOGS: SyncLog[] = [
+interface PlatformGuide {
+  key: string;
+  name: string;
+  icon: string;
+  color: string;
+  steps: string[];
+  apiType: string;
+  docsUrl?: string;
+}
+
+const PLATFORM_GUIDES: PlatformGuide[] = [
   {
-    id: "l1",
-    platform: "jahez",
-    event_type: "new_order",
-    status: "success",
-    records: 12,
-    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    key: "hungerstation", name: "هنقرستيشن", icon: "🍔", color: "#ff6b00",
+    apiType: "Webhook + REST API",
+    steps: [
+      "سجّل دخول في لوحة تحكم هنقرستيشن للشركاء (Vendor Portal)",
+      "اذهب إلى Settings → API & Integrations",
+      "أنشئ API Key جديد وانسخه",
+      "في صفحة الربط هنا، اضغط \"إضافة تكامل\" واختر هنقرستيشن",
+      "الصق API Key واضغط حفظ",
+      "فعّل Webhook URL في لوحة هنقرستيشن لاستقبال تحديثات الطلبات تلقائياً",
+    ],
   },
   {
-    id: "l2",
-    platform: "hungerstation",
-    event_type: "status_update",
-    status: "success",
-    records: 8,
-    created_at: new Date(Date.now() - 15 * 60000).toISOString(),
+    key: "jahez", name: "جاهز", icon: "🍕", color: "#e53e3e",
+    apiType: "Saned API + Token Relay",
+    steps: [
+      "ادخل على بوابة ساند (gateway.saned.io) بحساب المزوّد",
+      "بعد تسجيل الدخول، التوكن يُحفظ تلقائياً",
+      "اذهب لصفحة \"جاهز\" في لوحة التحكم واضغط \"ربط بساند\"",
+      "الصق التوكن أو سيتم التقاطه تلقائياً من الرابط",
+      "البيانات تتزامن عبر Supabase Edge Function كـ proxy",
+      "Lambda يسحب البيانات كل 15 دقيقة تلقائياً طالما التوكن صالح",
+    ],
   },
   {
-    id: "l3",
-    platform: "salla",
-    event_type: "new_order",
-    status: "error",
-    records: 0,
-    created_at: new Date(Date.now() - 30 * 60000).toISOString(),
+    key: "marsool", name: "مرسول", icon: "🛵", color: "#805ad5",
+    apiType: "REST API",
+    steps: [
+      "تواصل مع فريق مرسول للحصول على بيانات API (Partner API)",
+      "ستحصل على Client ID + Client Secret",
+      "أضف التكامل هنا واملأ البيانات",
+      "فعّل المزامنة لسحب الطلبات",
+    ],
   },
   {
-    id: "l4",
-    platform: "jahez",
-    event_type: "cancel_order",
-    status: "success",
-    records: 2,
-    created_at: new Date(Date.now() - 45 * 60000).toISOString(),
+    key: "keeta", name: "كيتا", icon: "🏍", color: "#00c853",
+    apiType: "REST API / Dashboard Export",
+    steps: [
+      "سجّل دخول في لوحة تحكم كيتا للمزوّدين",
+      "اذهب إلى إعدادات API",
+      "أنشئ مفتاح API وانسخه",
+      "أضف التكامل هنا والصق المفتاح",
+      "بديل: صدّر الطلبات كـ CSV من لوحة كيتا واستوردها هنا",
+    ],
+  },
+  {
+    key: "ninja", name: "نينجا", icon: "⚡", color: "#e91e63",
+    apiType: "REST API",
+    steps: [
+      "تواصل مع Ninja Van للحصول على API credentials",
+      "ستحصل على API Key + Webhook Secret",
+      "أضف التكامل والصق البيانات",
+      "فعّل Webhook لاستقبال تحديثات التتبع مباشرة",
+    ],
+  },
+  {
+    key: "keeta_mart", name: "كيتا مارت", icon: "🛒", color: "#00e676",
+    apiType: "REST API / Dashboard Export",
+    steps: [
+      "نفس خطوات كيتا — استخدم نفس بيانات API",
+      "حدد نوع الطلبات: كيتا مارت (بقالة/سوبرماركت)",
+      "الطلبات تُصنّف تلقائياً حسب النوع",
+    ],
+  },
+  {
+    key: "wasfaty", name: "وصفتي", icon: "💊", color: "#ff9800",
+    apiType: "REST API / Manual Import",
+    steps: [
+      "سجّل دخول في نظام وصفتي للمزوّدين",
+      "اطلب تفعيل API من الدعم الفني",
+      "أضف بيانات الربط هنا",
+      "بديل: استورد الطلبات يدوياً من ملف Excel/CSV",
+    ],
+  },
+  {
+    key: "toyou", name: "تويو", icon: "📦", color: "#0abab5",
+    apiType: "Odoo XML-RPC",
+    steps: [
+      "ادخل على نظام Odoo الخاص بتويو",
+      "اذهب لصفحة \"تويو\" في لوحة التحكم",
+      "اضغط إعدادات وأدخل: Server URL + Database + Username + API Key",
+      "اضغط \"اختبار الاتصال\" للتأكد",
+      "فعّل المزامنة — البيانات تُسحب عبر Odoo XML-RPC",
+    ],
+  },
+  {
+    key: "the_chefs", name: "ذا شيفز", icon: "👨‍🍳", color: "#8d6e63",
+    apiType: "REST API / Manual Import",
+    steps: [
+      "تواصل مع فريق ذا شيفز للحصول على API access",
+      "أضف بيانات الربط (API Key + Endpoint)",
+      "بديل: صدّر الطلبات من لوحة ذا شيفز واستوردها كـ CSV",
+    ],
+  },
+  {
+    key: "noon", name: "نون", icon: "🛒", color: "#f6e05e",
+    apiType: "Seller API",
+    steps: [
+      "سجّل دخول في Noon Seller Center",
+      "اذهب إلى Settings → API Integration",
+      "أنشئ API Key جديد",
+      "أضف التكامل هنا والصق بيانات API",
+      "فعّل Webhook لتحديثات الطلبات المباشرة",
+    ],
+  },
+  {
+    key: "amazon", name: "أمازون", icon: "📦", color: "#3182ce",
+    apiType: "SP-API (Selling Partner)",
+    steps: [
+      "سجّل كـ Developer في Amazon Seller Central",
+      "أنشئ تطبيق SP-API واحصل على credentials",
+      "أضف: Client ID + Client Secret + Refresh Token",
+      "فعّل المزامنة — الطلبات تُسحب عبر Amazon SP-API",
+    ],
   },
 ];
 
 export default function MarketplaceIntegrations() {
   const [integrations, setIntegrations] =
-    useState<Integration[]>(MOCK_INTEGRATIONS);
-  const [logs, setLogs] = useState<SyncLog[]>(MOCK_LOGS);
+    useState<Integration[]>([]);
+  const [logs, setLogs] = useState<SyncLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"integrations" | "logs">("integrations");
+  const [tab, setTab] = useState<"integrations" | "logs" | "guide">("integrations");
+  const [expandedGuide, setExpandedGuide] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newIntg, setNewIntg] = useState({
@@ -341,6 +415,7 @@ export default function MarketplaceIntegrations() {
         {[
           { id: "integrations", label: "المنصات" },
           { id: "logs", label: "سجل المزامنة" },
+          { id: "guide", label: "📖 تعليمات الربط" },
         ].map((t) => (
           <button
             key={t.id}
@@ -402,9 +477,7 @@ export default function MarketplaceIntegrations() {
                   <div
                     style={{ display: "flex", alignItems: "center", gap: 10 }}
                   >
-                    <span style={{ fontSize: 24 }}>
-                      {PLATFORM_ICONS[intg.platform] || "🔗"}
-                    </span>
+                    <PlatformLogo platform={intg.platform} size={28} />
                     <div>
                       <div
                         style={{
@@ -749,7 +822,7 @@ export default function MarketplaceIntegrations() {
                 >
                   <td style={{ padding: "0.75rem 1rem" }}>
                     <span style={{ fontSize: 16, marginLeft: 6 }}>
-                      {PLATFORM_ICONS[log.platform] || "🔗"}
+                      {PLATFORM_LOGOS[log.platform] ? <img src={PLATFORM_LOGOS[log.platform]} alt={log.platform} style={{ width: 20, height: 20, borderRadius: 4, objectFit: "cover" }} /> : "🔗"}
                     </span>
                     <span
                       style={{ fontSize: 12, color: "var(--con-text-primary)" }}
@@ -800,6 +873,72 @@ export default function MarketplaceIntegrations() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Guide Tab ──────────────────────────────────────────────────── */}
+      {tab === "guide" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ padding: "1rem", background: "var(--con-bg-elevated)", borderRadius: 12, border: "1px solid var(--con-border-default)" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>كيف تربط منصة توصيل؟</h3>
+            <p style={{ fontSize: "0.9rem", color: "var(--con-text-muted)", lineHeight: 1.8 }}>
+              كل منصة لها طريقة ربط مختلفة. اختر المنصة من القائمة أدناه لرؤية الخطوات التفصيلية.
+              بعد الربط، ستتمكن من سحب الطلبات مباشرة من صفحة "تحليل الطلبات".
+            </p>
+          </div>
+
+          {PLATFORM_GUIDES.map((guide) => (
+            <div
+              key={guide.key}
+              style={{
+                background: "var(--con-bg-elevated)",
+                borderRadius: 12,
+                border: expandedGuide === guide.key ? `2px solid ${guide.color}` : "1px solid var(--con-border-default)",
+                overflow: "hidden",
+                transition: "all 0.2s",
+              }}
+            >
+              <button
+                onClick={() => setExpandedGuide(expandedGuide === guide.key ? null : guide.key)}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: "0.75rem",
+                  padding: "1rem 1.25rem", background: "none", border: "none", cursor: "pointer",
+                  textAlign: "start",
+                }}
+              >
+                <PlatformLogo platform={guide.key} size={36} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--con-text-primary)" }}>{guide.name}</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--con-text-muted)" }}>{guide.apiType}</div>
+                </div>
+                <ChevronDown
+                  size={18}
+                  style={{
+                    transform: expandedGuide === guide.key ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.2s",
+                    color: "var(--con-text-muted)",
+                  }}
+                />
+              </button>
+
+              {expandedGuide === guide.key && (
+                <div style={{ padding: "0 1.25rem 1.25rem", borderTop: "1px solid var(--con-border-default)" }}>
+                  <ol style={{ margin: "1rem 0 0", paddingInlineStart: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                    {guide.steps.map((step, i) => (
+                      <li key={i} style={{ fontSize: "0.9rem", lineHeight: 1.7, color: "var(--con-text-primary)" }}>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                  {guide.docsUrl && (
+                    <a href={guide.docsUrl} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: "0.75rem", fontSize: "0.85rem", color: guide.color, textDecoration: "underline" }}>
+                      فتح التوثيق الرسمي ↗
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

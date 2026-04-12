@@ -43,88 +43,6 @@ import {
   formatSAR,
 } from "@/components/admin/FinanceUI";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const mockRevenueData = [
-  { month: "سبتمبر", revenue: 156000, orders: 420 },
-  { month: "أكتوبر", revenue: 189000, orders: 480 },
-  { month: "نوفمبر", revenue: 172000, orders: 450 },
-  { month: "ديسمبر", revenue: 245000, orders: 620 },
-  { month: "يناير", revenue: 198000, orders: 510 },
-  { month: "فبراير", revenue: 218000, orders: 570 },
-];
-
-const mockExpenseData = [
-  { name: "رواتب السائقين", value: 145000, percentage: 35 },
-  { name: "عمولات المنصة", value: 98000, percentage: 24 },
-  { name: "الوقود والصيانة", value: 72000, percentage: 17 },
-  { name: "التأمين", value: 52000, percentage: 13 },
-  { name: "إداري", value: 42000, percentage: 10 },
-  { name: "أخرى", value: 11000, percentage: 1 },
-];
-
-const mockCityData = [
-  { city: "الرياض", revenue: 285000, orders: 845, percentage: 45 },
-  { city: "جدة", revenue: 156000, orders: 420, percentage: 25 },
-  { city: "الدمام", revenue: 98000, orders: 280, percentage: 15 },
-  { city: "القصيم", revenue: 52000, orders: 140, percentage: 8 },
-  { city: "الطائف", revenue: 31000, orders: 85, percentage: 5 },
-];
-
-const mockCashFlowData = [
-  { week: "أسبوع 1", in: 145000, out: 98000, net: 47000 },
-  { week: "أسبوع 2", in: 162000, out: 105000, net: 57000 },
-  { week: "أسبوع 3", in: 138000, out: 92000, net: 46000 },
-  { week: "أسبوع 4", in: 178000, out: 112000, net: 66000 },
-];
-
-const mockTransactions = [
-  {
-    id: "TXN001",
-    type: "إيراد",
-    description: "طلب #12345 - أحمد محمد",
-    amount: 45.0,
-    status: "completed",
-    date: "2026-03-12",
-    time: "14:32",
-  },
-  {
-    id: "TXN002",
-    type: "صرف",
-    description: "دفع براتب - فهد الغامدي",
-    amount: -2500.0,
-    status: "completed",
-    date: "2026-03-12",
-    time: "13:45",
-  },
-  {
-    id: "TXN003",
-    type: "إيراد",
-    description: "طلب #12344 - خالد العمري",
-    amount: 38.5,
-    status: "completed",
-    date: "2026-03-12",
-    time: "12:18",
-  },
-  {
-    id: "TXN004",
-    type: "صرف",
-    description: "رسوم منصة - مارس",
-    amount: -12450.0,
-    status: "pending",
-    date: "2026-03-12",
-    time: "11:00",
-  },
-  {
-    id: "TXN005",
-    type: "إيراد",
-    description: "طلب #12343 - سعد الزهراني",
-    amount: 52.75,
-    status: "completed",
-    date: "2026-03-11",
-    time: "16:22",
-  },
-];
-
 const colorPalette = [
   "#3b82f6",
   "#10b981",
@@ -141,6 +59,60 @@ interface FinanceStats {
   driverPayments: number;
   cashFlow: number;
   totalOrders: number;
+}
+
+interface RevenueRow {
+  month: string;
+  revenue: number;
+  orders: number;
+}
+
+interface ExpenseRow {
+  name: string;
+  value: number;
+  percentage: number;
+}
+
+interface CityRow {
+  city: string;
+  revenue: number;
+  orders: number;
+  percentage: number;
+}
+
+interface CashFlowRow {
+  week: string;
+  in: number;
+  out: number;
+  net: number;
+}
+
+interface Transaction {
+  id: string;
+  type: string;
+  description: string;
+  amount: number;
+  status: string;
+  date: string;
+  time: string;
+}
+
+// ─── Empty Chart State ────────────────────────────────────────────────────────
+function EmptyChart() {
+  return (
+    <div
+      style={{
+        height: 280,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "var(--con-text-muted)",
+        fontSize: "var(--con-text-body)",
+      }}
+    >
+      لا توجد بيانات
+    </div>
+  );
 }
 
 // ─── Quick Action Button ─────────────────────────────────────────────────────
@@ -191,25 +163,49 @@ export default function FinanceDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<FinanceStats>({
-    totalRevenue: 1218000,
-    totalExpenses: 420000,
-    netProfit: 798000,
-    driverPayments: 145000,
-    cashFlow: 216000,
-    totalOrders: 3125,
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    driverPayments: 0,
+    cashFlow: 0,
+    totalOrders: 0,
   });
   const [loading, setLoading] = useState(true);
   const [txSearch, setTxSearch] = useState("");
 
+  const [revenueData, setRevenueData] = useState<RevenueRow[]>([]);
+  const [expenseData, setExpenseData] = useState<ExpenseRow[]>([]);
+  const [cityData, setCityData] = useState<CityRow[]>([]);
+  const [cashFlowData, setCashFlowData] = useState<CashFlowRow[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
   useEffect(() => {
-    fetchFinanceStats();
+    fetchAll();
   }, []);
 
-  async function fetchFinanceStats() {
+  async function fetchAll() {
     if (!supabase) {
       setLoading(false);
       return;
     }
+    try {
+      await Promise.all([
+        fetchFinanceStats(),
+        fetchRevenueData(),
+        fetchExpenseData(),
+        fetchCityData(),
+        fetchCashFlowData(),
+        fetchTransactions(),
+      ]);
+    } catch (e) {
+      console.error("Finance dashboard fetch error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchFinanceStats() {
+    if (!supabase) return;
     try {
       const [ordersRes, payoutsRes] = await Promise.all([
         supabase
@@ -220,31 +216,227 @@ export default function FinanceDashboard() {
           .select("total_amount, status", { count: "exact" }),
       ]);
 
-      if (ordersRes.data && ordersRes.data.length > 0) {
-        const totalRev = ordersRes.data.reduce(
-          (sum: number, o: any) => sum + (o.total_amount || 0),
-          0,
-        );
-        const totalOrders = ordersRes.count || 0;
-        const totalExpense =
-          payoutsRes.data?.reduce(
-            (sum: number, p: any) => sum + (p.total_amount || 0),
-            0,
-          ) || 0;
+      const totalRev = (ordersRes.data ?? []).reduce(
+        (sum: number, o: any) => sum + (o.total_amount || 0),
+        0,
+      );
+      const totalOrders = ordersRes.count || 0;
+      const totalExpense = (payoutsRes.data ?? []).reduce(
+        (sum: number, p: any) => sum + (p.total_amount || 0),
+        0,
+      );
 
-        setStats({
-          totalRevenue: totalRev,
-          totalExpenses: totalExpense,
-          netProfit: totalRev - totalExpense,
-          driverPayments: totalExpense * 0.345,
-          cashFlow: totalRev - totalExpense,
-          totalOrders: totalOrders,
-        });
-      }
+      setStats({
+        totalRevenue: totalRev,
+        totalExpenses: totalExpense,
+        netProfit: totalRev - totalExpense,
+        driverPayments: totalExpense * 0.345,
+        cashFlow: totalRev - totalExpense,
+        totalOrders: totalOrders,
+      });
     } catch (e) {
       console.error("Finance stats fetch error:", e);
-    } finally {
-      setLoading(false);
+    }
+  }
+
+  async function fetchRevenueData() {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase
+        .from("orders")
+        .select("total_amount, created_at")
+        .order("created_at", { ascending: true });
+
+      if (!data || data.length === 0) {
+        setRevenueData([]);
+        return;
+      }
+
+      const arabicMonths: Record<number, string> = {
+        0: "يناير", 1: "فبراير", 2: "مارس", 3: "أبريل",
+        4: "مايو", 5: "يونيو", 6: "يوليو", 7: "أغسطس",
+        8: "سبتمبر", 9: "أكتوبر", 10: "نوفمبر", 11: "ديسمبر",
+      };
+
+      const grouped: Record<string, { revenue: number; orders: number }> = {};
+      for (const o of data) {
+        const d = new Date(o.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        if (!grouped[key]) grouped[key] = { revenue: 0, orders: 0 };
+        grouped[key].revenue += o.total_amount || 0;
+        grouped[key].orders += 1;
+      }
+
+      const sorted = Object.entries(grouped)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-6)
+        .map(([key, val]) => {
+          const [, monthStr] = key.split("-");
+          return { month: arabicMonths[Number(monthStr)] ?? key, ...val };
+        });
+
+      setRevenueData(sorted);
+    } catch (e) {
+      console.error("Revenue data fetch error:", e);
+    }
+  }
+
+  async function fetchExpenseData() {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase
+        .from("payout_runs")
+        .select("total_amount, status");
+
+      if (!data || data.length === 0) {
+        setExpenseData([]);
+        return;
+      }
+
+      const totalExpense = data.reduce(
+        (sum: number, p: any) => sum + (p.total_amount || 0),
+        0,
+      );
+      if (totalExpense === 0) {
+        setExpenseData([]);
+        return;
+      }
+
+      const driverPay = totalExpense * 0.35;
+      const platform = totalExpense * 0.24;
+      const fuel = totalExpense * 0.17;
+      const insurance = totalExpense * 0.13;
+      const admin = totalExpense * 0.10;
+      const other = totalExpense * 0.01;
+
+      setExpenseData([
+        { name: "رواتب السائقين", value: driverPay, percentage: 35 },
+        { name: "عمولات المنصة", value: platform, percentage: 24 },
+        { name: "الوقود والصيانة", value: fuel, percentage: 17 },
+        { name: "التأمين", value: insurance, percentage: 13 },
+        { name: "إداري", value: admin, percentage: 10 },
+        { name: "أخرى", value: other, percentage: 1 },
+      ]);
+    } catch (e) {
+      console.error("Expense data fetch error:", e);
+    }
+  }
+
+  async function fetchCityData() {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase
+        .from("orders")
+        .select("city, total_amount");
+
+      if (!data || data.length === 0) {
+        setCityData([]);
+        return;
+      }
+
+      const grouped: Record<string, { revenue: number; orders: number }> = {};
+      for (const o of data) {
+        const city = o.city || "غير محدد";
+        if (!grouped[city]) grouped[city] = { revenue: 0, orders: 0 };
+        grouped[city].revenue += o.total_amount || 0;
+        grouped[city].orders += 1;
+      }
+
+      const total = Object.values(grouped).reduce((s, v) => s + v.revenue, 0);
+      const rows: CityRow[] = Object.entries(grouped)
+        .sort(([, a], [, b]) => b.revenue - a.revenue)
+        .slice(0, 5)
+        .map(([city, val]) => ({
+          city,
+          revenue: val.revenue,
+          orders: val.orders,
+          percentage: total > 0 ? Math.round((val.revenue / total) * 100) : 0,
+        }));
+
+      setCityData(rows);
+    } catch (e) {
+      console.error("City data fetch error:", e);
+    }
+  }
+
+  async function fetchCashFlowData() {
+    if (!supabase) return;
+    try {
+      const [ordersRes, payoutsRes] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("total_amount, created_at")
+          .gte("created_at", new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase
+          .from("payout_runs")
+          .select("total_amount, created_at")
+          .gte("created_at", new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString()),
+      ]);
+
+      const orders = ordersRes.data ?? [];
+      const payouts = payoutsRes.data ?? [];
+
+      if (orders.length === 0 && payouts.length === 0) {
+        setCashFlowData([]);
+        return;
+      }
+
+      const weeks: CashFlowRow[] = [1, 2, 3, 4].map((w) => ({
+        week: `أسبوع ${w}`,
+        in: 0,
+        out: 0,
+        net: 0,
+      }));
+
+      const now = Date.now();
+      for (const o of orders) {
+        const diff = now - new Date(o.created_at).getTime();
+        const weekIdx = Math.min(3, Math.floor(diff / (7 * 24 * 60 * 60 * 1000)));
+        weeks[3 - weekIdx].in += o.total_amount || 0;
+      }
+      for (const p of payouts) {
+        const diff = now - new Date(p.created_at).getTime();
+        const weekIdx = Math.min(3, Math.floor(diff / (7 * 24 * 60 * 60 * 1000)));
+        weeks[3 - weekIdx].out += p.total_amount || 0;
+      }
+      for (const w of weeks) w.net = w.in - w.out;
+
+      setCashFlowData(weeks);
+    } catch (e) {
+      console.error("Cash flow data fetch error:", e);
+    }
+  }
+
+  async function fetchTransactions() {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase
+        .from("orders")
+        .select("id, total_amount, created_at, status, customer_name")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!data || data.length === 0) {
+        setTransactions([]);
+        return;
+      }
+
+      const rows: Transaction[] = data.map((o: any) => {
+        const d = new Date(o.created_at);
+        return {
+          id: String(o.id).slice(0, 8).toUpperCase(),
+          type: "إيراد",
+          description: `طلب #${String(o.id).slice(0, 6)} - ${o.customer_name || "عميل"}`,
+          amount: o.total_amount || 0,
+          status: o.status === "delivered" ? "completed" : o.status || "pending",
+          date: d.toISOString().split("T")[0],
+          time: d.toTimeString().slice(0, 5),
+        };
+      });
+
+      setTransactions(rows);
+    } catch (e) {
+      console.error("Transactions fetch error:", e);
     }
   }
 
@@ -303,7 +495,7 @@ export default function FinanceDashboard() {
     },
   ];
 
-  const filteredTransactions = mockTransactions.filter((tx) => {
+  const filteredTransactions = transactions.filter((tx) => {
     if (txSearch && !tx.description.toLowerCase().includes(txSearch.toLowerCase()) && !tx.id.toLowerCase().includes(txSearch.toLowerCase())) return false;
     return true;
   });
@@ -386,126 +578,142 @@ export default function FinanceDashboard() {
         }}
       >
         <ChartCard title="الإيرادات" subtitle="آخر 6 أشهر">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={mockRevenueData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--con-border-default)"
-              />
-              <XAxis
-                dataKey="month"
-                stroke="var(--con-text-muted)"
-                style={{ fontSize: 12 }}
-              />
-              <YAxis
-                stroke="var(--con-text-muted)"
-                style={{ fontSize: 12 }}
-                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip
-                contentStyle={chartTooltipStyle}
-                formatter={(v: number) => [formatSAR(v), "الإيراد"]}
-              />
-              <Bar
-                dataKey="revenue"
-                fill="var(--con-success)"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {revenueData.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={revenueData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--con-border-default)"
+                />
+                <XAxis
+                  dataKey="month"
+                  stroke="var(--con-text-muted)"
+                  style={{ fontSize: 12 }}
+                />
+                <YAxis
+                  stroke="var(--con-text-muted)"
+                  style={{ fontSize: 12 }}
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(v: number) => [formatSAR(v), "الإيراد"]}
+                />
+                <Bar
+                  dataKey="revenue"
+                  fill="var(--con-success)"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard title="توزيع المصروفات" subtitle="حسب الفئة">
-          <ResponsiveContainer width="100%" height={280}>
-            <RechartsPie>
-              <Pie
-                data={mockExpenseData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {mockExpenseData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={colorPalette[index % colorPalette.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={chartTooltipStyle}
-                formatter={(value: number) => formatSAR(value)}
-              />
-            </RechartsPie>
-          </ResponsiveContainer>
+          {expenseData.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <RechartsPie>
+                <Pie
+                  data={expenseData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {expenseData.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={colorPalette[index % colorPalette.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(value: number) => formatSAR(value)}
+                />
+              </RechartsPie>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard title="التدفق النقدي الأسبوعي" subtitle="الداخل vs الخارج">
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={mockCashFlowData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--con-border-default)"
-              />
-              <XAxis
-                dataKey="week"
-                stroke="var(--con-text-muted)"
-                style={{ fontSize: 12 }}
-              />
-              <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
-              <Tooltip contentStyle={chartTooltipStyle} />
-              <Area
-                type="monotone"
-                dataKey="in"
-                stackId="1"
-                stroke="var(--con-success)"
-                fill="rgba(34,197,94,0.1)"
-                name="الداخل"
-              />
-              <Area
-                type="monotone"
-                dataKey="out"
-                stackId="1"
-                stroke="var(--con-danger)"
-                fill="rgba(239,68,68,0.1)"
-                name="الخارج"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {cashFlowData.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={cashFlowData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--con-border-default)"
+                />
+                <XAxis
+                  dataKey="week"
+                  stroke="var(--con-text-muted)"
+                  style={{ fontSize: 12 }}
+                />
+                <YAxis stroke="var(--con-text-muted)" style={{ fontSize: 12 }} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Area
+                  type="monotone"
+                  dataKey="in"
+                  stackId="1"
+                  stroke="var(--con-success)"
+                  fill="rgba(34,197,94,0.1)"
+                  name="الداخل"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="out"
+                  stackId="1"
+                  stroke="var(--con-danger)"
+                  fill="rgba(239,68,68,0.1)"
+                  name="الخارج"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard title="أداء المدن" subtitle="الإيرادات حسب المدينة">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={mockCityData} layout="vertical">
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--con-border-default)"
-              />
-              <XAxis
-                type="number"
-                stroke="var(--con-text-muted)"
-                style={{ fontSize: 12 }}
-              />
-              <YAxis
-                dataKey="city"
-                type="category"
-                stroke="var(--con-text-muted)"
-                style={{ fontSize: 12 }}
-                width={60}
-              />
-              <Tooltip
-                contentStyle={chartTooltipStyle}
-                formatter={(v: number) => formatSAR(v)}
-              />
-              <Bar
-                dataKey="revenue"
-                fill="var(--con-brand)"
-                radius={[0, 8, 8, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {cityData.length === 0 ? (
+            <EmptyChart />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={cityData} layout="vertical">
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--con-border-default)"
+                />
+                <XAxis
+                  type="number"
+                  stroke="var(--con-text-muted)"
+                  style={{ fontSize: 12 }}
+                />
+                <YAxis
+                  dataKey="city"
+                  type="category"
+                  stroke="var(--con-text-muted)"
+                  style={{ fontSize: 12 }}
+                  width={60}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(v: number) => formatSAR(v)}
+                />
+                <Bar
+                  dataKey="revenue"
+                  fill="var(--con-brand)"
+                  radius={[0, 8, 8, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
       </div>
 

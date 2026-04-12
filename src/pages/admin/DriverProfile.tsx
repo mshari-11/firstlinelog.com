@@ -2,7 +2,7 @@
  * صفحة ملف المندوب — Comprehensive Driver Profile Page
  * Shows everything about a contracted delivery driver in one place.
  * Accessible when admin clicks a driver name anywhere in the system.
- * Backend: Supabase `couriers` table with fallback to mock data.
+ * Backend: Supabase `couriers` table.
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -116,86 +116,6 @@ interface DriverData {
     penalty: number;
   }[];
 }
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────────
-
-const MOCK_DRIVER: DriverData = {
-  id: "DRV-001",
-  name: "عبدالرحمن محمد الشهري",
-  phone: "0551234567",
-  email: "abdulrahman@fll.sa",
-  nationalId: "1098765432",
-  city: "الرياض",
-  status: "active",
-  platform: "جاهز",
-  joinDate: "2025-06-15",
-  rating: "A",
-  contractStartDate: "2025-06-15",
-  contractType: "دوام كامل",
-  supervisor: "محمد العلي",
-  iban: "SA0380000000608010167519",
-  stcBankPhone: "966551234567",
-  emergencyContact: "محمد الشهري",
-  emergencyPhone: "0559876543",
-  monthlyOrders: 342,
-  monthlyTarget: 400,
-  monthlyEarnings: 8750,
-  ratingScore: 4.7,
-  violationCount: 1,
-  weeklyBreakdown: [
-    { week: "الأسبوع 1", orders: 78, target: 100 },
-    { week: "الأسبوع 2", orders: 92, target: 100 },
-    { week: "الأسبوع 3", orders: 88, target: 100 },
-    { week: "الأسبوع 4", orders: 84, target: 100 },
-  ],
-  performanceTrend: [
-    { month: "يناير", score: 82 },
-    { month: "فبراير", score: 88 },
-    { month: "مارس", score: 85 },
-    { month: "أبريل", score: 91 },
-  ],
-  attendance: { present: 24, absent: 1, late: 3 },
-  baseSalary: 6500,
-  fuelAllowance: 800,
-  phoneAllowance: 200,
-  absenceDeduction: 250,
-  violationDeduction: 150,
-  maintenanceDeduction: 0,
-  advanceRepayment: 500,
-  salaryHistory: [
-    { month: "يناير 2026", base: 6200, allowances: 1000, deductions: 400, net: 6800 },
-    { month: "فبراير 2026", base: 6400, allowances: 1000, deductions: 200, net: 7200 },
-    { month: "مارس 2026", base: 6500, allowances: 1000, deductions: 900, net: 6600 },
-  ],
-  advances: [
-    { id: "ADV-001", amount: 3000, date: "2026-01-15", remaining: 1500, status: "قيد السداد" },
-    { id: "ADV-002", amount: 1000, date: "2025-11-01", remaining: 0, status: "مسدد بالكامل" },
-  ],
-  vehicle: {
-    plate: "أ ب د 1234",
-    type: "دباب",
-    brand: "هوندا PCX",
-    year: 2024,
-    status: "active",
-    lastService: "2026-03-10",
-    nextService: "2026-04-10",
-    totalKm: 18450,
-    history: [
-      { vehicle: "هوندا PCX 2024 — أ ب د 1234", from: "2025-06-15", to: "حالياً" },
-      { vehicle: "ياماها NMAX 2023 — ح ع ر 5678", from: "2025-01-01", to: "2025-06-14" },
-    ],
-  },
-  tickets: [
-    { id: "TKT-045", title: "طلب صيانة دباب", category: "صيانة", status: "resolved", date: "2026-03-20", department: "الأسطول" },
-    { id: "TKT-067", title: "مشكلة في تطبيق التوصيل", category: "تقنية", status: "in_progress", date: "2026-03-28", department: "تقنية المعلومات" },
-    { id: "TKT-012", title: "استفسار عن الراتب", category: "مالية", status: "closed", date: "2026-02-15", department: "المالية" },
-  ],
-  violations: [
-    { id: "VIO-001", date: "2026-03-05", type: "تأخر", description: "تأخر عن الدوام بساعة", penalty: 150 },
-    { id: "VIO-002", date: "2026-01-20", type: "مخالفة مرورية", description: "تجاوز إشارة حمراء", penalty: 500 },
-    { id: "VIO-003", date: "2025-12-10", type: "غياب", description: "غياب يوم كامل بدون إذن", penalty: 250 },
-  ],
-};
 
 // ─── Status Config ──────────────────────────────────────────────────────────────
 
@@ -747,6 +667,7 @@ export default function DriverProfilePage() {
   const navigate = useNavigate();
   const [driver, setDriver] = useState<DriverData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("details");
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<DriverData | null>(null);
@@ -777,6 +698,7 @@ export default function DriverProfilePage() {
   useEffect(() => {
     async function fetchDriver() {
       setLoading(true);
+      setFetchError(false);
       try {
         if (supabase) {
           const { data, error } = await supabase
@@ -791,10 +713,9 @@ export default function DriverProfilePage() {
           }
         }
       } catch {
-        // Supabase fetch failed — fall back to mock
+        // Supabase fetch failed
       }
-      // Fallback to mock data
-      setDriver({ ...MOCK_DRIVER, id: driverId || "DRV-001" });
+      setFetchError(true);
       setLoading(false);
     }
     fetchDriver();
@@ -812,7 +733,20 @@ export default function DriverProfilePage() {
     );
   }
 
-  if (!driver) return null;
+  if (fetchError || !driver) {
+    return (
+      <div dir="rtl" style={{ padding: "3rem", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "60vh", gap: "1rem" }}>
+        <AlertTriangle size={40} style={{ color: "var(--con-danger)" }} />
+        <p style={{ fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", margin: 0 }}>فشل تحميل بيانات السائق</p>
+        <button
+          onClick={() => navigate(-1)}
+          style={{ background: "none", border: "1px solid var(--con-border-default)", borderRadius: "var(--con-radius)", padding: "0.5rem 1.25rem", cursor: "pointer", fontSize: "var(--con-text-body)", color: "var(--con-text-secondary)", fontFamily: "var(--con-font-primary)" }}
+        >
+          العودة
+        </button>
+      </div>
+    );
+  }
 
   const targetPct = Math.round((driver.monthlyOrders / driver.monthlyTarget) * 100);
 

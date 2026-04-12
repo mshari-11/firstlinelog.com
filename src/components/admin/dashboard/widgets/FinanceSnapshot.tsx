@@ -27,29 +27,27 @@ interface FinanceMetric {
 const MOCK_METRICS: FinanceMetric[] = [
   {
     label: "إيرادات الشهر",
-    value: "142,000 ر.س",
+    value: "-- ر.س",
     icon: TrendingUp,
     accent: "var(--con-success)",
-    change: 11,
   },
   {
     label: "دفعات مكتملة",
-    value: "98,500 ر.س",
+    value: "-- ر.س",
     icon: CreditCard,
     accent: "var(--con-info)",
   },
   {
     label: "دفعات معلقة",
-    value: "43,500 ر.س",
+    value: "-- ر.س",
     icon: AlertCircle,
     accent: "var(--con-warning)",
   },
   {
     label: "صافي التدفق",
-    value: "+23,800 ر.س",
+    value: "-- ر.س",
     icon: ArrowRightLeft,
     accent: "var(--con-brand)",
-    change: 5,
   },
 ];
 
@@ -132,35 +130,33 @@ export function FinanceSnapshot() {
           .reduce((s: number, p: any) => s + (Number(p.net_payout) || 0), 0);
         const netFlow = currentRevenue - completedPayouts - pendingPayouts;
 
-        if (currentRevenue > 0 || payouts.length > 0) {
-          setMetrics([
-            {
-              label: "إيرادات الشهر",
-              value: formatSAR(currentRevenue),
-              icon: TrendingUp,
-              accent: "var(--con-success)",
-              change: revenueChange,
-            },
-            {
-              label: "دفعات مكتملة",
-              value: formatSAR(completedPayouts),
-              icon: CreditCard,
-              accent: "var(--con-info)",
-            },
-            {
-              label: "دفعات معلقة",
-              value: formatSAR(pendingPayouts),
-              icon: AlertCircle,
-              accent: "var(--con-warning)",
-            },
-            {
-              label: "صافي التدفق",
-              value: `${netFlow >= 0 ? "+" : ""}${formatSAR(netFlow)}`,
-              icon: ArrowRightLeft,
-              accent: "var(--con-brand)",
-            },
-          ]);
-        }
+        setMetrics([
+          {
+            label: "إيرادات الشهر",
+            value: currentRevenue > 0 ? formatSAR(currentRevenue) : "-- ر.س",
+            icon: TrendingUp,
+            accent: "var(--con-success)",
+            change: revenueChange > 0 ? revenueChange : undefined,
+          },
+          {
+            label: "دفعات مكتملة",
+            value: completedPayouts > 0 ? formatSAR(completedPayouts) : "-- ر.س",
+            icon: CreditCard,
+            accent: "var(--con-info)",
+          },
+          {
+            label: "دفعات معلقة",
+            value: pendingPayouts > 0 ? formatSAR(pendingPayouts) : "-- ر.س",
+            icon: AlertCircle,
+            accent: "var(--con-warning)",
+          },
+          {
+            label: "صافي التدفق",
+            value: currentRevenue > 0 ? `${netFlow >= 0 ? "+" : ""}${formatSAR(netFlow)}` : "-- ر.س",
+            icon: ArrowRightLeft,
+            accent: "var(--con-brand)",
+          },
+        ]);
       } catch {
         /* keep mock */
       }

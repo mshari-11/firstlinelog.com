@@ -3,7 +3,8 @@
  * Manages ToYou (toyou.io) orders synced via Odoo backend
  * Branding: #0ABAB5 teal primary, #0C2D48 navy, #00D4AA accent
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
   RefreshCw,
@@ -96,30 +97,7 @@ interface SyncLog {
   type: "success" | "error" | "info";
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_ORDERS: ToYouOrder[] = [
-  { id: "TY-10421", orderNumber: "TY-10421", customer: "أحمد العتيبي", driver: "خالد المطيري", amount: 45.00, status: "delivered", deliveryTime: "28 دقيقة", area: "الرياض - العليا", date: "2026-04-05 14:30" },
-  { id: "TY-10422", orderNumber: "TY-10422", customer: "فاطمة الدوسري", driver: "سعد القحطاني", amount: 32.50, status: "delivering", deliveryTime: "—", area: "الرياض - النخيل", date: "2026-04-05 14:45" },
-  { id: "TY-10423", orderNumber: "TY-10423", customer: "محمد الشمري", driver: "عبدالله الحربي", amount: 78.00, status: "new", deliveryTime: "—", area: "الرياض - الملقا", date: "2026-04-05 15:00" },
-  { id: "TY-10424", orderNumber: "TY-10424", customer: "نورة العنزي", driver: "فهد الزهراني", amount: 56.75, status: "delivered", deliveryTime: "22 دقيقة", area: "جدة - الحمراء", date: "2026-04-05 13:20" },
-  { id: "TY-10425", orderNumber: "TY-10425", customer: "عبدالرحمن السبيعي", driver: "خالد المطيري", amount: 91.00, status: "delivered", deliveryTime: "35 دقيقة", area: "الرياض - الياسمين", date: "2026-04-05 12:10" },
-  { id: "TY-10426", orderNumber: "TY-10426", customer: "هند الغامدي", driver: "سعد القحطاني", amount: 23.00, status: "cancelled", deliveryTime: "—", area: "الرياض - الروضة", date: "2026-04-05 11:50" },
-  { id: "TY-10427", orderNumber: "TY-10427", customer: "سلطان الحارثي", driver: "ماجد العمري", amount: 67.25, status: "delivered", deliveryTime: "18 دقيقة", area: "جدة - الصفا", date: "2026-04-05 11:30" },
-  { id: "TY-10428", orderNumber: "TY-10428", customer: "ريم القرني", driver: "عبدالله الحربي", amount: 44.50, status: "delivering", deliveryTime: "—", area: "الرياض - حطين", date: "2026-04-05 15:10" },
-  { id: "TY-10429", orderNumber: "TY-10429", customer: "تركي البقمي", driver: "فهد الزهراني", amount: 120.00, status: "new", deliveryTime: "—", area: "الرياض - النرجس", date: "2026-04-05 15:15" },
-  { id: "TY-10430", orderNumber: "TY-10430", customer: "مها الشهري", driver: "ماجد العمري", amount: 38.00, status: "delivered", deliveryTime: "25 دقيقة", area: "جدة - المحمدية", date: "2026-04-05 10:45" },
-  { id: "TY-10431", orderNumber: "TY-10431", customer: "يوسف الرشيدي", driver: "خالد المطيري", amount: 55.50, status: "delivering", deliveryTime: "—", area: "الرياض - الورود", date: "2026-04-05 15:20" },
-  { id: "TY-10432", orderNumber: "TY-10432", customer: "لمى العسيري", driver: "سعد القحطاني", amount: 82.00, status: "delivered", deliveryTime: "31 دقيقة", area: "الرياض - الربيع", date: "2026-04-05 09:30" },
-];
-
-const MOCK_DRIVERS: DriverPerformance[] = [
-  { name: "خالد المطيري", ordersCount: 187, successRate: 97.3, avgDeliveryTime: "24 دقيقة", rating: 4.9 },
-  { name: "سعد القحطاني", ordersCount: 162, successRate: 95.8, avgDeliveryTime: "27 دقيقة", rating: 4.8 },
-  { name: "عبدالله الحربي", ordersCount: 148, successRate: 96.5, avgDeliveryTime: "22 دقيقة", rating: 4.7 },
-  { name: "فهد الزهراني", ordersCount: 134, successRate: 94.2, avgDeliveryTime: "29 دقيقة", rating: 4.6 },
-  { name: "ماجد العمري", ordersCount: 121, successRate: 98.1, avgDeliveryTime: "20 دقيقة", rating: 4.9 },
-];
+// ─── Data (fetched on demand) ─────────────────────────────────────────────────
 
 const DEFAULT_CONFIG: OdooConfig = {
   serverUrl: "",
@@ -154,8 +132,8 @@ function ToYouLogo({ size = 36 }: { size?: number }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ToYouPlatform() {
-  const [orders] = useState<ToYouOrder[]>(MOCK_ORDERS);
-  const [drivers] = useState<DriverPerformance[]>(MOCK_DRIVERS);
+  const [orders, setOrders] = useState<ToYouOrder[]>([]);
+  const [drivers, setDrivers] = useState<DriverPerformance[]>([]);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [config, setConfig] = useState<OdooConfig>(() => {
     try {
@@ -166,11 +144,7 @@ export default function ToYouPlatform() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncLogs, setSyncLogs] = useState<SyncLog[]>([
-    { time: "15:20:00", message: "آخر مزامنة تمت بنجاح — 12 طلب محدّث", type: "success" },
-    { time: "15:05:00", message: "تم سحب بيانات 5 مناديب من Odoo", type: "info" },
-    { time: "14:50:00", message: "مزامنة تلقائية — لا توجد تحديثات جديدة", type: "info" },
-  ]);
+  const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [filterOpen, setFilterOpen] = useState(false);

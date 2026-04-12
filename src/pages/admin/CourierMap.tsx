@@ -2,8 +2,9 @@
  * صفحة توزيع المناديب — Courier City Distribution Dashboard
  * عرض توزيع المناديب حسب المدينة مع إحصائيات ورسوم بيانية
  */
-import { useState, useMemo } from "react";
-import { MapPin, Users, UserCheck, Truck, Clock, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { MapPin, Users, UserCheck, Truck, Clock, Search, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   PageWrapper,
   PageHeader,
@@ -47,7 +48,7 @@ interface CityData {
   couriers: CityCourier[];
 }
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
+// ── City Colors ───────────────────────────────────────────────────────────────
 const CITY_COLORS: Record<string, string> = {
   "الرياض": "#3b82f6",
   "جدة": "#22c55e",
@@ -55,6 +56,12 @@ const CITY_COLORS: Record<string, string> = {
   "مكة": "#a855f7",
   "المدينة": "#ef4444",
 };
+
+const FALLBACK_COLOR = "#94a3b8";
+
+function getCityColor(city: string): string {
+  return CITY_COLORS[city] ?? FALLBACK_COLOR;
+}
 
 function getOnlineStatus(lastActive?: string): { color: string; label: string } {
   if (!lastActive) return { color: "#64748b", label: "غير متصل" };
@@ -67,80 +74,18 @@ function getOnlineStatus(lastActive?: string): { color: string; label: string } 
   return { color: "#64748b", label: `منذ ${Math.round(days)} يوم` };
 }
 
-const mockCityData: CityData[] = [
-  {
-    city: "الرياض",
-    total: 45,
-    active: 28,
-    on_delivery: 10,
-    on_leave: 4,
-    inactive: 3,
-    color: CITY_COLORS["الرياض"],
-    couriers: [
-      { id: "r1", name: "أحمد محمد السالم", phone: "0501234567", status: "active", vehicle_type: "دراجة", rating: 4.8, last_active: new Date(Date.now() - 10 * 60000).toISOString() },
-      { id: "r2", name: "فهد الغامدي", phone: "0509876543", status: "on_leave", vehicle_type: "دراجة", rating: 4.9, last_active: "2026-03-28T14:30:00Z" },
-      { id: "r3", name: "عمر الشمري", phone: "0503334455", status: "training", vehicle_type: "سيارة", last_active: new Date(Date.now() - 2 * 3600000).toISOString() },
-      { id: "r4", name: "سلطان الدوسري", phone: "0504445566", status: "active", vehicle_type: "سيارة", rating: 4.6, last_active: new Date(Date.now() - 30 * 60000).toISOString() },
-      { id: "r5", name: "عبدالرحمن العتيبي", phone: "0505556677", status: "on_delivery", vehicle_type: "دراجة", rating: 4.3, last_active: new Date(Date.now() - 5 * 60000).toISOString() },
-      { id: "r6", name: "ماجد الحربي", phone: "0506667788", status: "active", vehicle_type: "شاحنة صغيرة", rating: 4.1, last_active: new Date(Date.now() - 45 * 60000).toISOString() },
-    ],
-  },
-  {
-    city: "جدة",
-    total: 25,
-    active: 15,
-    on_delivery: 6,
-    on_leave: 2,
-    inactive: 2,
-    color: CITY_COLORS["جدة"],
-    couriers: [
-      { id: "j1", name: "خالد العمري", phone: "0557654321", status: "on_delivery", vehicle_type: "سيارة", rating: 4.5, last_active: new Date(Date.now() - 5 * 60000).toISOString() },
-      { id: "j2", name: "ياسر الزهراني", phone: "0558765432", status: "active", vehicle_type: "دراجة", rating: 4.7, last_active: new Date(Date.now() - 20 * 60000).toISOString() },
-      { id: "j3", name: "حسن الشريف", phone: "0559876543", status: "active", vehicle_type: "سيارة", rating: 4.2, last_active: new Date(Date.now() - 8 * 3600000).toISOString() },
-      { id: "j4", name: "نواف القرشي", phone: "0550987654", status: "on_leave", vehicle_type: "دراجة", rating: 3.9 },
-    ],
-  },
-  {
-    city: "الدمام",
-    total: 15,
-    active: 8,
-    on_delivery: 4,
-    on_leave: 1,
-    inactive: 2,
-    color: CITY_COLORS["الدمام"],
-    couriers: [
-      { id: "d1", name: "سعد الزهراني", phone: "0551112233", status: "suspended", vehicle_type: "دراجة", rating: 3.9, last_active: "2026-03-15T09:00:00Z" },
-      { id: "d2", name: "فيصل العنزي", phone: "0552223344", status: "active", vehicle_type: "سيارة", rating: 4.4, last_active: new Date(Date.now() - 40 * 60000).toISOString() },
-      { id: "d3", name: "بدر الشمري", phone: "0553334455", status: "on_delivery", vehicle_type: "دراجة", rating: 4.6, last_active: new Date(Date.now() - 3 * 60000).toISOString() },
-    ],
-  },
-  {
-    city: "مكة",
-    total: 10,
-    active: 6,
-    on_delivery: 2,
-    on_leave: 1,
-    inactive: 1,
-    color: CITY_COLORS["مكة"],
-    couriers: [
-      { id: "m1", name: "محمد القحطاني", phone: "0556667788", status: "active", vehicle_type: "دراجة", rating: 4.7, last_active: new Date(Date.now() - 15 * 60000).toISOString() },
-      { id: "m2", name: "علي الغامدي", phone: "0557778899", status: "on_delivery", vehicle_type: "سيارة", rating: 4.0, last_active: new Date(Date.now() - 7 * 60000).toISOString() },
-    ],
-  },
-  {
-    city: "المدينة",
-    total: 5,
-    active: 3,
-    on_delivery: 1,
-    on_leave: 0,
-    inactive: 1,
-    color: CITY_COLORS["المدينة"],
-    couriers: [
-      { id: "md1", name: "عبدالله المالكي", phone: "0558889900", status: "active", vehicle_type: "دراجة", rating: 4.5, last_active: new Date(Date.now() - 25 * 60000).toISOString() },
-      { id: "md2", name: "تركي الحارثي", phone: "0559990011", status: "inactive", vehicle_type: "سيارة", rating: 3.8, last_active: "2026-03-01T10:00:00Z" },
-    ],
-  },
-];
+// ── Raw courier row from Supabase ─────────────────────────────────────────────
+interface CourierRow {
+  id: string;
+  full_name?: string;
+  name?: string;
+  phone?: string;
+  status?: string;
+  vehicle_type?: string;
+  rating?: number;
+  last_active?: string;
+  city?: string;
+}
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   active: { label: "يعمل", color: "#22c55e" },
@@ -173,35 +118,86 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   );
 }
 
+// ── Helper: group raw rows into CityData ──────────────────────────────────────
+function groupByCities(rows: CourierRow[]): CityData[] {
+  const map = new Map<string, CityData>();
+  for (const row of rows) {
+    const city = row.city ?? "غير محدد";
+    const color = getCityColor(city);
+    if (!map.has(city)) {
+      map.set(city, { city, total: 0, active: 0, on_delivery: 0, on_leave: 0, inactive: 0, color, couriers: [] });
+    }
+    const cd = map.get(city)!;
+    cd.total += 1;
+    const status = (row.status ?? "inactive") as CityCourier["status"];
+    if (status === "active") cd.active += 1;
+    else if (status === "on_delivery") cd.on_delivery += 1;
+    else if (status === "on_leave") cd.on_leave += 1;
+    else cd.inactive += 1;
+    cd.couriers.push({
+      id: row.id,
+      name: row.full_name ?? row.name ?? "—",
+      phone: row.phone ?? "",
+      status,
+      vehicle_type: row.vehicle_type ?? "—",
+      rating: row.rating,
+      last_active: row.last_active,
+    });
+  }
+  return Array.from(map.values());
+}
+
 // ── Main Component ──────────────────────────────────────────────────────────
 export default function CourierMap() {
   const [searchCity, setSearchCity] = useState("");
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
+  const [cityData, setCityData] = useState<CityData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchLocations = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("couriers")
+        .select("id, full_name, name, phone, status, vehicle_type, rating, last_active, city");
+      if (error) throw error;
+      setCityData(groupByCities((data ?? []) as CourierRow[]));
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "فشل جلب البيانات");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchLocations(); }, [fetchLocations]);
 
   const filteredCities = useMemo(() => {
-    if (!searchCity.trim()) return mockCityData;
-    return mockCityData.filter((c) => c.city.includes(searchCity.trim()));
-  }, [searchCity]);
+    if (!searchCity.trim()) return cityData;
+    return cityData.filter((c) => c.city.includes(searchCity.trim()));
+  }, [searchCity, cityData]);
 
   const totals = useMemo(() => ({
-    total: mockCityData.reduce((s, c) => s + c.total, 0),
-    active: mockCityData.reduce((s, c) => s + c.active, 0),
-    onDelivery: mockCityData.reduce((s, c) => s + c.on_delivery, 0),
-    onLeave: mockCityData.reduce((s, c) => s + c.on_leave, 0),
-  }), []);
+    total: cityData.reduce((s, c) => s + c.total, 0),
+    active: cityData.reduce((s, c) => s + c.active, 0),
+    onDelivery: cityData.reduce((s, c) => s + c.on_delivery, 0),
+    onLeave: cityData.reduce((s, c) => s + c.on_leave, 0),
+  }), [cityData]);
 
   const pieData = useMemo(() =>
-    mockCityData.map((c) => ({ name: c.city, value: c.total, color: c.color })),
-  []);
+    cityData.map((c) => ({ name: c.city, value: c.total, color: c.color })),
+  [cityData]);
 
   const barData = useMemo(() =>
-    mockCityData.map((c) => ({
+    cityData.map((c) => ({
       city: c.city,
       نشط: c.active,
       "في التوصيل": c.on_delivery,
       "غير نشط": c.inactive + c.on_leave,
     })),
-  []);
+  [cityData]);
 
   const _s: Record<string, React.CSSProperties> = {
     section: {
@@ -227,6 +223,31 @@ export default function CourierMap() {
         title="توزيع المناديب"
         subtitle="عرض توزيع المناديب حسب المدن مع الإحصائيات التفصيلية"
         icon={MapPin}
+        actions={
+          <button
+            type="button"
+            onClick={fetchLocations}
+            disabled={loading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "1px solid var(--con-brand, #3b82f6)",
+              background: "var(--con-brand, #3b82f6)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
+            <RefreshCw size={14} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+            سحب المواقع
+          </button>
+        }
       />
 
       {/* KPIs */}
@@ -488,7 +509,27 @@ export default function CourierMap() {
         })}
       </div>
 
-      {filteredCities.length === 0 && (
+      {fetchError && (
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem 0", color: "var(--con-danger, #ef4444)" }}>
+            <div style={{ fontSize: 14 }}>{fetchError}</div>
+          </div>
+        </Card>
+      )}
+
+      {!loading && !fetchError && cityData.length === 0 && (
+        <Card>
+          <div style={{ textAlign: "center", padding: "2rem 0", color: "var(--con-text-muted)" }}>
+            <MapPin size={32} style={{ margin: "0 auto 8px", opacity: 0.4 }} />
+            <div style={{ fontSize: 14 }}>لا توجد بيانات مواقع</div>
+            <div style={{ fontSize: 12, marginTop: 6, color: "var(--con-text-muted)" }}>
+              اضغط "سحب المواقع" لجلب البيانات من قاعدة البيانات
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {!loading && !fetchError && cityData.length > 0 && filteredCities.length === 0 && (
         <Card>
           <div style={{ textAlign: "center", padding: "2rem 0", color: "var(--con-text-muted)" }}>
             <MapPin size={32} style={{ margin: "0 auto 8px", opacity: 0.4 }} />

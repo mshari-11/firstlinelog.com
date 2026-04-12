@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import {
@@ -27,6 +27,9 @@ import {
   FileSpreadsheet,
   Users,
   Target,
+  Zap,
+  Loader2,
+  Upload,
 } from "lucide-react";
 import {
   PageWrapper,
@@ -104,115 +107,82 @@ const statusConfig: Record<
 
 const platforms = [
   "الكل",
-  "jahez",
   "hungerstation",
-  "toyor",
+  "jahez",
   "marsool",
-  "mrsool",
+  "keeta",
+  "ninja",
+  "keeta_mart",
+  "wasfaty",
+  "toyou",
+  "the_chefs",
   "noon",
   "amazon",
 ];
 const platformLabels: Record<string, string> = {
   الكل: "الكل",
-  jahez: "جاهز",
   hungerstation: "هنقرستيشن",
-  toyor: "طيور",
+  jahez: "جاهز",
   marsool: "مرسول",
-  mrsool: "مرسول برو",
+  keeta: "كيتا",
+  ninja: "نينجا",
+  keeta_mart: "كيتا مارت",
+  wasfaty: "وصفتي",
+  toyou: "تويو",
+  the_chefs: "ذا شيفز",
   noon: "نون",
   amazon: "أمازون",
 };
 
 const platformColors: Record<string, string> = {
-  jahez: "#e53e3e",
   hungerstation: "#ff6b00",
-  toyor: "#38a169",
+  jahez: "#e53e3e",
   marsool: "#805ad5",
-  mrsool: "#6b46c1",
-  noon: "#ecc94b",
+  keeta: "#00c853",
+  ninja: "#e91e63",
+  keeta_mart: "#00e676",
+  wasfaty: "#ff9800",
+  toyou: "#0abab5",
+  the_chefs: "#8d6e63",
+  noon: "#f6e05e",
   amazon: "#3182ce",
 };
 
-const CHART_COLORS = ["#e53e3e", "#ff6b00", "#38a169", "#805ad5", "#6b46c1", "#ecc94b", "#3182ce"];
+const CHART_COLORS = ["#ff6b00", "#e53e3e", "#805ad5", "#00c853", "#e91e63", "#00e676", "#ff9800", "#0abab5", "#8d6e63", "#f6e05e", "#3182ce"];
 
 const cities = ["الكل", "الرياض", "جدة", "الدمام", "مكة", "المدينة"];
 
-// ─── Mock Data Generator ─────────────────────────────────────────────────────
+const PLATFORMS_STORAGE_KEY = "fll_sync_platforms";
 
-const _TODAY = new Date().toISOString().slice(0, 10);
-
-function generateMockOrders(): Order[] {
-  const couriers = ["أحمد محمد", "خالد العمري", "فهد الغامدي", "سعد الزهراني", "عمر الشمري", "محمد القحطاني", "يوسف الدوسري", "عبدالرحمن السبيعي", "تركي المطيري", "ناصر الحازمي", "بندر العتيبي"];
-  const customers = ["محمد علي", "فاطمة السالم", "علي أحمد", "هند محمد", "عبدالله خالد", "نورة العتيبي", "سلمى الشريف", "ريم الحربي", "سارة الفهد", "لمياء العنزي", "خالد الشهري", "منى الغامدي", "عائشة البلوي", "فيصل المالكي", "هدى الزهراني"];
-  const platformKeys = ["jahez", "hungerstation", "toyor", "marsool", "mrsool", "noon", "amazon"];
-  const cityList = ["الرياض", "جدة", "الدمام", "مكة", "المدينة"];
-  const statuses: Order["status"][] = ["pending", "picked_up", "on_way", "delivered", "delivered", "delivered", "delivered", "failed", "returned"];
-  const addresses: Record<string, string[]> = {
-    "الرياض": ["حي النزهة", "حي الملقا", "حي العليا", "حي السلام", "حي الياسمين", "حي النخيل", "حي الربيع"],
-    "جدة": ["حي الروضة", "حي الحمراء", "حي السلامة", "حي الصفا", "حي المحمدية"],
-    "الدمام": ["حي الفيصلية", "حي الشاطئ", "حي الجلوية", "حي المزروعية"],
-    "مكة": ["حي العزيزية", "حي الشوقية", "حي النسيم", "حي العوالي"],
-    "المدينة": ["حي العزيزية", "حي قباء", "حي العنابس", "حي الحرة الشرقية"],
-  };
-
-  // Platform weight distribution (jahez/hungerstation are bigger)
-  const platformWeights = [25, 22, 10, 18, 8, 9, 8]; // jahez heavy
-
-  const orders: Order[] = [];
-  const now = new Date();
-  let idCounter = 10000;
-
-  // Generate 6 months of data
-  for (let monthOffset = 5; monthOffset >= 0; monthOffset--) {
-    const monthDate = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
-    const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
-    // More orders in recent months (growth trend)
-    const baseOrdersPerMonth = 40 + (5 - monthOffset) * 8;
-
-    for (let i = 0; i < baseOrdersPerMonth; i++) {
-      const day = Math.floor(Math.random() * daysInMonth) + 1;
-      const d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
-      if (d > now) continue;
-
-      // Weighted platform selection
-      const rand = Math.random() * 100;
-      let cumulative = 0;
-      let pIdx = 0;
-      for (let p = 0; p < platformWeights.length; p++) {
-        cumulative += platformWeights[p];
-        if (rand <= cumulative) { pIdx = p; break; }
-      }
-      const platform = platformKeys[pIdx];
-      const city = cityList[Math.floor(Math.random() * cityList.length)];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const isDelivered = status === "delivered";
-      const amount = Math.round(20 + Math.random() * 330);
-      const hour = 7 + Math.floor(Math.random() * 14);
-      const minute = Math.floor(Math.random() * 60);
-
-      orders.push({
-        id: `#${idCounter++}`,
-        courier_name: couriers[Math.floor(Math.random() * couriers.length)],
-        platform,
-        customer_name: customers[Math.floor(Math.random() * customers.length)],
-        customer_phone: `05${String(Math.floor(Math.random() * 100000000)).padStart(8, "0")}`,
-        address: `${city}، ${addresses[city][Math.floor(Math.random() * addresses[city].length)]}`,
-        status,
-        amount,
-        created_at: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-        created_date: d.toISOString().slice(0, 10),
-        city,
-        delivery_time: isDelivered ? 12 + Math.floor(Math.random() * 35) : undefined,
-        courier_rating: isDelivered ? +(3 + Math.random() * 2).toFixed(1) : +(2 + Math.random() * 3).toFixed(1),
-        profit: isDelivered ? Math.round(amount * (0.08 + Math.random() * 0.15)) : 0,
-      });
-    }
-  }
-
-  return orders.sort((a, b) => (b.created_date + b.created_at).localeCompare(a.created_date + a.created_at));
+interface SyncPlatform {
+  key: string;
+  label: string;
+  color: string;
+  enabled: boolean;
 }
 
-const mockOrders = generateMockOrders();
+const DEFAULT_SYNC_PLATFORMS: SyncPlatform[] = [
+  { key: "hungerstation", label: "هنقرستيشن", color: "#ff6b00", enabled: true },
+  { key: "jahez", label: "جاهز", color: "#e53e3e", enabled: true },
+  { key: "marsool", label: "مرسول", color: "#805ad5", enabled: true },
+  { key: "keeta", label: "كيتا", color: "#00c853", enabled: true },
+  { key: "ninja", label: "نينجا", color: "#e91e63", enabled: true },
+  { key: "keeta_mart", label: "كيتا مارت", color: "#00e676", enabled: true },
+  { key: "wasfaty", label: "وصفتي", color: "#ff9800", enabled: true },
+  { key: "toyou", label: "تويو", color: "#0abab5", enabled: true },
+  { key: "the_chefs", label: "ذا شيفز", color: "#8d6e63", enabled: true },
+  { key: "noon", label: "نون", color: "#f6e05e", enabled: true },
+  { key: "amazon", label: "أمازون", color: "#3182ce", enabled: true },
+];
+
+function loadSyncPlatforms(): SyncPlatform[] {
+  try {
+    const saved = localStorage.getItem(PLATFORMS_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : DEFAULT_SYNC_PLATFORMS;
+  } catch { return DEFAULT_SYNC_PLATFORMS; }
+}
+
+const _TODAY = new Date().toISOString().slice(0, 10);
 
 // ─── Period Presets ──────────────────────────────────────────────────────────
 
@@ -264,8 +234,17 @@ export default function AdminOrders() {
   const [dateTo, setDateTo] = useState(() => getDateRange("last_3m").to);
   const [amountFrom, setAmountFrom] = useState("");
   const [amountTo, setAmountTo] = useState("");
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [lastPulled, setLastPulled] = useState<string | null>(null);
+  const [syncPlatforms, setSyncPlatforms] = useState<SyncPlatform[]>(loadSyncPlatforms);
+  const [syncingPlatform, setSyncingPlatform] = useState<string | null>(null);
+  const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [newPlatformName, setNewPlatformName] = useState("");
+  const [newPlatformColor, setNewPlatformColor] = useState("#6366f1");
+  const [uploadingPlatform, setUploadingPlatform] = useState<string | null>(null);
+  const [showUploadFor, setShowUploadFor] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
@@ -277,46 +256,213 @@ export default function AdminOrders() {
   const [showFailureAnalysis, setShowFailureAnalysis] = useState(true);
   const [showCourierPerformance, setShowCourierPerformance] = useState(true);
 
+  // ─── Per-Platform Sync ──────────────────────────────────────────────────
+  async function syncPlatform(platformKey: string) {
+    if (!supabase) { toast.error("Supabase غير متصل"); return; }
+    setSyncingPlatform(platformKey);
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, couriers(full_name)")
+        .eq("platform", platformKey)
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) { toast.error(`خطأ في سحب ${platformLabels[platformKey] || platformKey}: ${error.message}`); return; }
+      if (!data || data.length === 0) {
+        toast.info(`لا توجد طلبات لـ ${platformLabels[platformKey] || platformKey}`);
+        return;
+      }
+      const mapped = data.map((o: any) => ({
+        id: `#${o.id}`,
+        courier_name: o.couriers?.full_name || "غير محدد",
+        platform: o.platform,
+        customer_name: o.customer_name || "غير محدد",
+        customer_phone: o.customer_phone || "",
+        address: o.delivery_address || "",
+        status: o.status,
+        amount: o.amount || 0,
+        created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+        created_date: o.created_at ? new Date(o.created_at).toISOString().slice(0, 10) : _TODAY,
+        city: o.city,
+        delivery_time: o.delivery_time,
+        courier_rating: o.courier_rating,
+        profit: o.profit,
+      }));
+      // Merge: remove old orders for this platform, add new ones
+      setOrders(prev => [...prev.filter(o => o.platform !== platformKey), ...mapped]);
+      toast.success(`تم سحب ${mapped.length} طلب من ${platformLabels[platformKey] || platformKey}`);
+    } catch { toast.error("فشل الاتصال"); } finally { setSyncingPlatform(null); }
+  }
+
+  function addPlatform() {
+    if (!newPlatformName.trim()) return;
+    const key = newPlatformName.trim().toLowerCase().replace(/\s+/g, "_");
+    if (syncPlatforms.find(p => p.key === key)) { toast.error("المنصة موجودة مسبقاً"); return; }
+    const updated = [...syncPlatforms, { key, label: newPlatformName.trim(), color: newPlatformColor, enabled: true }];
+    setSyncPlatforms(updated);
+    localStorage.setItem(PLATFORMS_STORAGE_KEY, JSON.stringify(updated));
+    // Add to platform filters
+    if (!platforms.includes(key)) platforms.push(key);
+    if (!platformLabels[key]) platformLabels[key] = newPlatformName.trim();
+    if (!platformColors[key]) platformColors[key] = newPlatformColor;
+    setNewPlatformName("");
+    setShowAddPlatform(false);
+    toast.success(`تمت إضافة منصة "${newPlatformName.trim()}"`);
+  }
+
+  function removePlatform(key: string) {
+    const updated = syncPlatforms.filter(p => p.key !== key);
+    setSyncPlatforms(updated);
+    localStorage.setItem(PLATFORMS_STORAGE_KEY, JSON.stringify(updated));
+    toast.success("تم حذف المنصة");
+  }
+
+  // ─── Excel Import ──────────────────────────────────────────────────────
+  async function handleExcelUpload(file: File, platformKey: string) {
+    setUploadingPlatform(platformKey);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+      if (rows.length === 0) {
+        toast.error("الملف فارغ — لا توجد بيانات");
+        return;
+      }
+
+      // Map Excel columns to order fields (flexible column matching)
+      const mapped: Order[] = rows.map((row, i) => {
+        const id = row["رقم الطلب"] || row["order_id"] || row["orderId"] || row["id"] || `#IMP-${Date.now()}-${i}`;
+        const courier = row["المندوب"] || row["courier"] || row["driver"] || row["courier_name"] || "غير محدد";
+        const customer = row["العميل"] || row["customer"] || row["customer_name"] || "غير محدد";
+        const phone = row["الهاتف"] || row["phone"] || row["customer_phone"] || "";
+        const address = row["العنوان"] || row["address"] || row["delivery_address"] || "";
+        const status = row["الحالة"] || row["status"] || "pending";
+        const amount = Number(row["المبلغ"] || row["amount"] || row["total"] || 0);
+        const date = row["التاريخ"] || row["date"] || row["created_at"] || new Date().toISOString();
+        const city = row["المدينة"] || row["city"] || "";
+
+        // Normalize status
+        const statusMap: Record<string, Order["status"]> = {
+          "تم التسليم": "delivered", "delivered": "delivered", "مكتمل": "delivered",
+          "قيد التوصيل": "on_way", "on_way": "on_way", "في الطريق": "on_way",
+          "تم الاستلام": "picked_up", "picked_up": "picked_up",
+          "بانتظار": "pending", "pending": "pending", "جديد": "pending", "new": "pending",
+          "فشل": "failed", "failed": "failed", "ملغي": "failed", "cancelled": "failed",
+          "مرتجع": "returned", "returned": "returned",
+        };
+
+        const parsedDate = new Date(date);
+        const validDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+
+        return {
+          id: String(id).startsWith("#") ? String(id) : `#${id}`,
+          courier_name: String(courier),
+          platform: platformKey,
+          customer_name: String(customer),
+          customer_phone: String(phone),
+          address: String(address),
+          status: statusMap[String(status).trim()] || "pending",
+          amount,
+          created_at: validDate.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }),
+          created_date: validDate.toISOString().slice(0, 10),
+          city: String(city),
+          delivery_time: undefined,
+          courier_rating: undefined,
+          profit: undefined,
+        };
+      });
+
+      // Save to Supabase if connected
+      if (supabase) {
+        const toInsert = mapped.map(o => ({
+          platform: platformKey,
+          customer_name: o.customer_name,
+          customer_phone: o.customer_phone,
+          delivery_address: o.address,
+          status: o.status,
+          amount: o.amount,
+          city: o.city,
+          created_at: new Date(o.created_date + "T00:00:00").toISOString(),
+        }));
+
+        const { error } = await supabase.from("orders").insert(toInsert);
+        if (error) {
+          console.error("Supabase insert error:", error);
+          toast.error("تم تحميل الملف لكن فشل الحفظ في قاعدة البيانات: " + error.message);
+        } else {
+          toast.success(`تم حفظ ${mapped.length} طلب في قاعدة البيانات`);
+        }
+      }
+
+      // Add to local state
+      setOrders(prev => [...prev.filter(o => o.platform !== platformKey), ...mapped]);
+      setLastPulled(new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }));
+      setShowUploadFor(null);
+      toast.success(`تم استيراد ${mapped.length} طلب من ${platformLabels[platformKey] || platformKey} عبر Excel`);
+    } catch (err) {
+      console.error("Excel parse error:", err);
+      toast.error("خطأ في قراءة ملف Excel — تأكد من صيغة الملف");
+    } finally {
+      setUploadingPlatform(null);
+    }
+  }
+
+  function triggerFileUpload(platformKey: string) {
+    setShowUploadFor(platformKey);
+    setTimeout(() => fileInputRef.current?.click(), 100);
+  }
+
   async function fetchOrders() {
+    if (!supabase) {
+      toast.error("Supabase غير متصل");
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("orders")
         .select("*, couriers(full_name)")
         .order("created_at", { ascending: false })
-        .limit(100);
-      if (!error && data && data.length > 0) {
-        const mapped = data.map((o: any) => ({
-          id: `#${o.id}`,
-          courier_name: o.couriers?.full_name || "غير محدد",
-          platform: o.platform,
-          customer_name: o.customer_name || "غير محدد",
-          customer_phone: o.customer_phone || "",
-          address: o.delivery_address || "",
-          status: o.status,
-          amount: o.amount || 0,
-          created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          created_date: o.created_at ? new Date(o.created_at).toISOString().slice(0, 10) : _TODAY,
-          city: o.city,
-          delivery_time: o.delivery_time,
-          courier_rating: o.courier_rating,
-          profit: o.profit,
-        }));
-        setOrders(mapped);
+        .limit(5000);
+      if (error) {
+        toast.error("خطأ في سحب الطلبات: " + error.message);
+        return;
       }
+      if (!data || data.length === 0) {
+        setOrders([]);
+        toast.info("لا توجد طلبات في قاعدة البيانات");
+        return;
+      }
+      const mapped = data.map((o: any) => ({
+        id: `#${o.id}`,
+        courier_name: o.couriers?.full_name || "غير محدد",
+        platform: o.platform,
+        customer_name: o.customer_name || "غير محدد",
+        customer_phone: o.customer_phone || "",
+        address: o.delivery_address || "",
+        status: o.status,
+        amount: o.amount || 0,
+        created_at: new Date(o.created_at).toLocaleTimeString("ar-SA", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        created_date: o.created_at ? new Date(o.created_at).toISOString().slice(0, 10) : _TODAY,
+        city: o.city,
+        delivery_time: o.delivery_time,
+        courier_rating: o.courier_rating,
+        profit: o.profit,
+      }));
+      setOrders(mapped);
+      setLastPulled(new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" }));
+      toast.success(`تم سحب ${mapped.length} طلب بنجاح`);
     } catch {
-      // keep existing data on error
+      toast.error("فشل الاتصال بقاعدة البيانات");
     } finally {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   // ─── Filtering ────────────────────────────────────────────────────────────
 
@@ -618,15 +764,121 @@ export default function AdminOrders() {
             <IconButton icon={FileSpreadsheet} onClick={downloadExcel} title="تصدير Excel" />
             <IconButton icon={Printer} onClick={() => window.print()} title="طباعة" />
             <Button
-              variant="ghost"
+              variant="brand"
               icon={RefreshCw}
               onClick={() => fetchOrders()}
+              disabled={loading}
             >
-              تحديث
+              {loading ? "جاري السحب..." : "سحب البيانات"}
             </Button>
           </>
         }
       />
+
+      {/* ── Pull Status Banner ────────────────────────────────────────────── */}
+      {orders.length === 0 && !loading && (
+        <Card style={{ padding: "2rem", textAlign: "center" }}>
+          <Package size={48} style={{ margin: "0 auto 1rem", opacity: 0.3 }} />
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>لا توجد بيانات طلبات</h3>
+          <p style={{ color: "#718096", marginBottom: "1rem" }}>اضغط "سحب البيانات" لتحميل الطلبات من قاعدة البيانات</p>
+          <Button variant="brand" icon={RefreshCw} onClick={() => fetchOrders()}>سحب البيانات</Button>
+        </Card>
+      )}
+
+      {lastPulled && (
+        <div style={{ fontSize: "0.85rem", color: "#718096", textAlign: "center", padding: "0.5rem" }}>
+          آخر سحب: {lastPulled} — {orders.length} طلب
+        </div>
+      )}
+
+      {/* ── Platform Sync Buttons ─────────────────────────────────────────── */}
+      <Card style={{ padding: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Zap size={16} /> مزامنة المنصات
+          </h3>
+          <button
+            onClick={() => setShowAddPlatform(!showAddPlatform)}
+            style={{ fontSize: "0.8rem", color: "var(--con-brand)", background: "none", border: "1px solid var(--con-brand)", borderRadius: "6px", padding: "4px 12px", cursor: "pointer" }}
+          >
+            + إضافة منصة
+          </button>
+        </div>
+        {/* Hidden file input for Excel upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          style={{ display: "none" }}
+          onChange={e => {
+            const file = e.target.files?.[0];
+            if (file && showUploadFor) handleExcelUpload(file, showUploadFor);
+            e.target.value = "";
+          }}
+        />
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+          {syncPlatforms.filter(p => p.enabled).map(p => (
+            <div key={p.key} style={{ display: "flex", borderRadius: "8px", border: "1px solid " + p.color + "40", overflow: "hidden" }}>
+              {/* API Sync Button */}
+              <button
+                onClick={() => syncPlatform(p.key)}
+                disabled={syncingPlatform === p.key}
+                title="مزامنة من API"
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "8px 12px", border: "none", borderInlineEnd: "1px solid " + p.color + "30",
+                  background: syncingPlatform === p.key ? p.color + "20" : "transparent",
+                  color: p.color, fontWeight: 600, fontSize: "0.85rem", cursor: "pointer",
+                  opacity: syncingPlatform === p.key ? 0.7 : 1,
+                  transition: "all 0.2s",
+                }}
+              >
+                {syncingPlatform === p.key ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                {p.label}
+              </button>
+              {/* Excel Upload Button */}
+              <button
+                onClick={() => triggerFileUpload(p.key)}
+                disabled={uploadingPlatform === p.key}
+                title="استيراد من Excel"
+                style={{
+                  display: "flex", alignItems: "center", padding: "8px 10px",
+                  background: uploadingPlatform === p.key ? p.color + "20" : "transparent",
+                  border: "none", color: p.color, cursor: "pointer",
+                  opacity: uploadingPlatform === p.key ? 0.7 : 1,
+                  transition: "all 0.2s",
+                }}
+              >
+                {uploadingPlatform === p.key ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {showAddPlatform && (
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              value={newPlatformName}
+              onChange={e => setNewPlatformName(e.target.value)}
+              placeholder="اسم المنصة"
+              style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", width: "160px" }}
+            />
+            <input
+              type="color"
+              value={newPlatformColor}
+              onChange={e => setNewPlatformColor(e.target.value)}
+              style={{ width: "36px", height: "32px", border: "none", cursor: "pointer" }}
+            />
+            <button onClick={addPlatform} style={{ padding: "6px 16px", borderRadius: "6px", background: "var(--con-brand)", color: "#fff", border: "none", fontSize: "0.85rem", cursor: "pointer" }}>
+              إضافة
+            </button>
+            <button onClick={() => setShowAddPlatform(false)} style={{ padding: "6px 12px", borderRadius: "6px", background: "#f1f5f9", border: "none", fontSize: "0.85rem", cursor: "pointer" }}>
+              إلغاء
+            </button>
+          </div>
+        )}
+      </Card>
 
       {/* ── Analytics KPIs ─────────────────────────────────────────────────── */}
 

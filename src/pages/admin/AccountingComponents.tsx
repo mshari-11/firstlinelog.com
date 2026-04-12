@@ -36,7 +36,6 @@ import {
   ConfirmDialog,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
-import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import type {
   AccountingComponent,
@@ -56,8 +55,6 @@ const SCOPE_LABELS: Record<
   driver: { label: "سائق محدد", icon: Users },
 };
 
-const MOCK_COMPONENTS: AccountingComponent[] = [];
-
 const EMPTY_FORM: Partial<AccountingComponent> = {
   name_ar: "",
   name_en: "",
@@ -74,7 +71,7 @@ const EMPTY_FORM: Partial<AccountingComponent> = {
 
 export default function AccountingComponents() {
   const [components, setComponents] =
-    useState<AccountingComponent[]>(MOCK_COMPONENTS);
+    useState<AccountingComponent[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -85,30 +82,17 @@ export default function AccountingComponents() {
 
   useEffect(() => {
     async function loadRules() {
+      if (!supabase) return;
       try {
-        const res = await fetch(`${API_BASE}/accounting-rules`);
-        const data = await res.json();
-        if (data.items && data.items.length > 0) {
-          setComponents(
-            data.items.map((r: any) => ({
-              id: r.ruleId || r.id,
-              name_ar: r.name_ar || "",
-              name_en: r.name_en || "",
-              component_type: r.component_type || "addition",
-              calc_method: r.calc_method || "fixed",
-              amount: r.amount || 0,
-              percentage: r.percentage || 0,
-              scope_type: r.scope_type || "all",
-              scope_value: r.scope_value || "",
-              is_active: r.is_active !== false,
-              priority: r.priority || 0,
-              effective_from: r.effective_from || "",
-              effective_to: r.effective_to || "",
-            })),
-          );
-        }
+        const { data, error } = await supabase
+          .schema("finance")
+          .from("accounting_components")
+          .select("*")
+          .order("priority", { ascending: true });
+        if (error) throw error;
+        if (data) setComponents(data as AccountingComponent[]);
       } catch {
-        /* keep mock */
+        /* supabase unavailable — show empty state */
       }
     }
     loadRules();
@@ -299,7 +283,7 @@ export default function AccountingComponents() {
             "إجراءات",
           ]}
           isEmpty={filtered.length === 0}
-          emptyText="لا توجد مكونات محاسبية"
+          emptyText="لا توجد قواعد محاسبية"
         >
           {filtered.map((c) => {
             const scopeInfo = SCOPE_LABELS[c.scope_type];

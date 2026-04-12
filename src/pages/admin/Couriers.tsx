@@ -291,262 +291,9 @@ const KNOWN_IMPORT_COLUMNS = [
   "iqama_number",
 ];
 
-const mockCouriers: Courier[] = [
-  {
-    id: "1",
-    full_name: "أحمد محمد السالم",
-    phone: "0501234567",
-    status: "active",
-    city: "الرياض",
-    rating: 4.8,
-    total_orders: 312,
-    vehicle_type: "دراجة",
-    created_at: "2024-01-15",
-    app_id: "JHZ-1001",
-    app_name: "jahez",
-    nationality: "سعودي",
-    iqama_number: "2388901234",
-    monthly_orders: 45,
-    supervisor: "محمد العلي",
-    contract_type: "دوام كامل",
-    registration_date: "2024-01-15",
-    email: "ahmed.salem@email.com",
-    delivery_success_rate: 96.5, avg_delivery_time: 22, cancellation_rate: 1.2,
-    total_earnings: 8500, monthly_earnings: 3200, pending_payout: 450,
-    completed_orders: 280, failed_orders: 12,
-    joined_platforms: ["jahez", "hungerstation"],
-    vehicle_model: "هيونداي أكسنت", vehicle_year: 2022, plate_number: "أ ب ج 1234",
-    license_expiry: "2026-08-15", insurance_expiry: "2026-12-01",
-    iban: "SA02 8000 0000 6080 1016 7519", bank_name: "بنك الراجحي",
-    emergency_contact: "0551234567", emergency_name: "عبدالله (أخ)",
-    last_active: new Date(Date.now() - 15 * 60000).toISOString(),
-    app_violations: [
-      { date: "2026-04-01", type: "تأخر في التوصيل", amount: 50, notes: "تأخر ٤٥ دقيقة عن الموعد المحدد" },
-      { date: "2026-04-03", type: "إلغاء طلب بدون سبب", amount: 100, notes: "إلغاء بعد استلام الطلب" },
-    ],
-    traffic_violations: [], has_company_vehicle: false,
-    notes_history: [
-      { date: "2026-03-15", note: "تم ترقيته إلى مندوب أول بعد تحقيق أداء متميز", by: "محمد العلي" },
-      { date: "2026-02-01", note: "أكمل التدريب على توصيل الطلبات الكبيرة", by: "أحمد الشمري" },
-      { date: "2025-12-10", note: "تنبيه بخصوص التأخر المتكرر — تم التنبيه شفهياً", by: "محمد العلي" },
-    ],
-  },
-  {
-    id: "2",
-    full_name: "خالد العمري",
-    phone: "0557654321",
-    email: "khalid.amri@email.com",
-    status: "on_delivery",
-    city: "جدة",
-    rating: 4.5,
-    total_orders: 198,
-    vehicle_type: "سيارة",
-    created_at: "2024-02-20",
-    app_id: "HS-2050",
-    app_name: "hungerstation",
-    nationality: "يمني",
-    iqama_number: "2455678901",
-    monthly_orders: 32,
-    supervisor: "أحمد الشمري",
-    contract_type: "دوام جزئي",
-    registration_date: "2024-02-20",
-    delivery_success_rate: 92.1, avg_delivery_time: 28, cancellation_rate: 2.8,
-    total_earnings: 5200, monthly_earnings: 1800, pending_payout: 220,
-    completed_orders: 175, failed_orders: 23,
-    joined_platforms: ["hungerstation", "marsool", "noon"],
-    vehicle_model: "تويوتا كورولا", vehicle_year: 2021, plate_number: "ه و ز 5678",
-    license_expiry: "2026-05-01", insurance_expiry: "2026-04-20",
-    iban: "SA44 1000 0000 0036 0651 1001", bank_name: "بنك الأهلي",
-    emergency_contact: "0559876543", emergency_name: "سعود (صديق)",
-    last_active: new Date(Date.now() - 5 * 60000).toISOString(),
-    app_violations: [], traffic_violations: [], has_company_vehicle: false,
-    notes_history: [
-      { date: "2026-04-01", note: "تجديد العقد لمدة 6 أشهر إضافية", by: "أحمد الشمري" },
-      { date: "2026-01-15", note: "تم تحويله من فرع الرياض إلى فرع جدة", by: "محمد العلي" },
-    ],
-  },
-  {
-    id: "3",
-    full_name: "فهد الغامدي",
-    phone: "0509876543",
-    email: "fahd.ghamdi@email.com",
-    status: "on_leave",
-    city: "الرياض",
-    rating: 4.9,
-    total_orders: 445,
-    vehicle_type: "دراجة",
-    created_at: "2023-11-10",
-    app_id: "MRS-3022",
-    app_name: "marsool",
-    nationality: "سعودي",
-    iqama_number: "2311234567",
-    monthly_orders: 61,
-    supervisor: "محمد العلي",
-    contract_type: "دوام كامل",
-    registration_date: "2023-11-10",
-    admin_notes: "إجازة سنوية حتى 2026-04-20",
-    last_active: "2026-03-28T14:30:00Z",
-    delivery_success_rate: 98.2, avg_delivery_time: 18, cancellation_rate: 0.5,
-    total_earnings: 14200, monthly_earnings: 4800, pending_payout: 0,
-    completed_orders: 430, failed_orders: 5,
-    joined_platforms: ["marsool", "jahez", "amazon"],
-    vehicle_model: "سوزوكي سويفت", vehicle_year: 2023, plate_number: "ك ل م 9012",
-    license_expiry: "2027-03-01", insurance_expiry: "2027-01-15",
-    iban: "SA03 8000 0000 0640 1067 7219", bank_name: "بنك الراجحي",
-    emergency_contact: "0503456789", emergency_name: "محمد الغامدي (أب)",
-    app_violations: [
-      { date: "2026-03-20", type: "سوء تعامل", amount: 75, notes: "شكوى من العميل بخصوص أسلوب التعامل" },
-    ],
-    traffic_violations: [
-      { date: "2026-03-15", type: "قطع إشارة", fine_amount: 500, plate: "أ ب ج ٥٦٧٨", notes: "مخالفة مرورية مسجلة" },
-    ],
-    has_company_vehicle: true,
-    notes_history: [
-      { date: "2026-03-28", note: "بدأ إجازة سنوية — يعود 2026-04-20", by: "محمد العلي" },
-      { date: "2026-02-14", note: "حصل على جائزة أفضل مندوب للربع الرابع 2025", by: "الإدارة" },
-      { date: "2025-11-01", note: "تم تكليفه بتدريب المناديب الجدد", by: "أحمد الشمري" },
-    ],
-  },
-  {
-    id: "4",
-    full_name: "سعد الزهراني",
-    phone: "0551112233",
-    status: "suspended",
-    city: "الدمام",
-    rating: 3.9,
-    total_orders: 87,
-    vehicle_type: "دراجة",
-    created_at: "2024-03-05",
-    app_id: "NOON-410",
-    app_name: "noon",
-    nationality: "باكستاني",
-    iqama_number: "2499887766",
-    monthly_orders: 0,
-    supervisor: "أحمد الشمري",
-    contract_type: "عقد مؤقت",
-    registration_date: "2024-03-05",
-    admin_notes: "موقوف بسبب مخالفات متكررة — بانتظار التحقيق",
-    last_active: "2026-03-15T09:00:00Z",
-  },
-  {
-    id: "5",
-    full_name: "عمر الشمري",
-    phone: "0503334455",
-    status: "training",
-    city: "الرياض",
-    rating: undefined,
-    total_orders: 0,
-    vehicle_type: "سيارة",
-    created_at: "2025-02-01",
-    app_id: "AMZ-5001",
-    app_name: "amazon",
-    nationality: "سعودي",
-    iqama_number: "2300112233",
-    monthly_orders: 0,
-    supervisor: "محمد العلي",
-    contract_type: "حر (فريلانس)",
-    registration_date: "2025-02-01",
-    admin_notes: "في فترة التدريب الأولية — أسبوعين",
-    last_active: "2026-04-04T11:00:00Z",
-  },
-  {
-    id: "6",
-    full_name: "محمد القحطاني",
-    phone: "0556667788",
-    status: "active",
-    city: "مكة",
-    rating: 4.7,
-    total_orders: 234,
-    vehicle_type: "دراجة",
-    created_at: "2024-04-18",
-    app_id: "TYR-6100",
-    app_name: "toyor",
-    nationality: "مصري",
-    iqama_number: "2477665544",
-    monthly_orders: 28,
-    supervisor: "أحمد الشمري",
-    contract_type: "دوام كامل",
-    registration_date: "2024-04-18",
-    last_active: "2026-04-05T08:15:00Z",
-  },
-];
+const mockCouriers: Courier[] = [];
 
-const mockApplications: DriverApplication[] = [
-  {
-    id: "app-1",
-    app_ref: "FLL-20250301-A1B2",
-    full_name: "ناصر الحربي",
-    national_id: "1088******",
-    email: "n***@gmail.com",
-    phone: "055***4567",
-    city: "الرياض",
-    date_of_birth: "1995-06-15",
-    has_vehicle: true,
-    vehicle_type: "سيارة",
-    vehicle_model: "هيونداي أكسنت",
-    vehicle_year: 2022,
-    plate_number: "أ ب ج ١٢٣٤",
-    status: "pending",
-    supervisor: "محمد العلي",
-    contract_type: "دوام كامل",
-    created_at: "2025-03-01T10:00:00Z",
-  },
-  {
-    id: "app-2",
-    app_ref: "FLL-20250228-C3D4",
-    full_name: "عبدالله الدوسري",
-    national_id: "1092******",
-    email: "a***@outlook.com",
-    phone: "050***8901",
-    city: "جدة",
-    date_of_birth: "1998-11-20",
-    has_vehicle: false,
-    status: "under_review",
-    supervisor: "أحمد الشمري",
-    contract_type: "دوام جزئي",
-    created_at: "2025-02-28T14:30:00Z",
-  },
-  {
-    id: "app-3",
-    app_ref: "FLL-20250225-E5F6",
-    full_name: "يوسف الشهري",
-    national_id: "1075******",
-    email: "y***@gmail.com",
-    phone: "053***2345",
-    city: "الدمام",
-    date_of_birth: "1992-03-08",
-    has_vehicle: true,
-    vehicle_type: "دراجة",
-    status: "approved",
-    supervisor: "محمد العلي",
-    contract_type: "عقد مؤقت",
-    reviewed_by: "admin@fll.sa",
-    reviewed_at: "2025-02-26T09:00:00Z",
-    created_at: "2025-02-25T08:00:00Z",
-  },
-  {
-    id: "app-4",
-    app_ref: "FLL-20250220-G7H8",
-    full_name: "تركي المطيري",
-    national_id: "1100******",
-    email: "t***@yahoo.com",
-    phone: "054***6789",
-    city: "مكة",
-    date_of_birth: "2000-01-12",
-    has_vehicle: true,
-    vehicle_type: "سيارة",
-    vehicle_model: "تويوتا كورولا",
-    vehicle_year: 2021,
-    status: "rejected",
-    admin_notes: "الهوية غير واضحة",
-    supervisor: "أحمد الشمري",
-    contract_type: "حر (فريلانس)",
-    rejection_category: "مستندات ناقصة",
-    reviewed_by: "admin@fll.sa",
-    reviewed_at: "2025-02-21T16:00:00Z",
-    created_at: "2025-02-20T11:00:00Z",
-  },
-];
+const mockApplications: DriverApplication[] = [];
 
 function getOnlineStatus(lastActive?: string): { color: string; label: string } {
   if (!lastActive) return { color: "#64748b", label: "غير متصل" };
@@ -673,12 +420,12 @@ export default function AdminCouriers() {
   const [activeTab, setActiveTab] = useState<"couriers" | "applications">(
     "couriers",
   );
-  const [couriers, setCouriers] = useState<Courier[]>(mockCouriers);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
   const [courierLoading, setCourierLoading] = useState(true);
   const [courierSearch, setCourierSearch] = useState("");
   const [courierStatusFilter, setCourierStatusFilter] = useState<string>("all");
   const [applications, setApplications] =
-    useState<DriverApplication[]>(mockApplications);
+    useState<DriverApplication[]>([]);
   const [appLoading, setAppLoading] = useState(true);
   const [appSearch, setAppSearch] = useState("");
   const [appStatusFilter, setAppStatusFilter] = useState<string>("all");
@@ -1694,7 +1441,9 @@ export default function AdminCouriers() {
             {!courierLoading && filteredCouriers.length === 0 ? (
               <div className="con-empty">
                 <Users size={40} />
-                <p style={{ fontSize: "var(--con-text-body)" }}>لا توجد نتائج تطابق المعايير المحددة</p>
+                <p style={{ fontSize: "var(--con-text-body)" }}>
+                  {couriers.length === 0 ? "لا توجد مناديب" : "لا توجد نتائج تطابق المعايير المحددة"}
+                </p>
               </div>
             ) : (
             <div style={{ overflowX: "auto" }}>
@@ -1899,7 +1648,7 @@ export default function AdminCouriers() {
               ]}
               isEmpty={!appLoading && filteredApps.length === 0}
               emptyIcon={FileText}
-              emptyText="لا توجد طلبات تسجيل تطابق المعايير المحددة"
+              emptyText={applications.length === 0 ? "لا توجد طلبات تسجيل" : "لا توجد طلبات تسجيل تطابق المعايير المحددة"}
             >
               {appLoading ? (
                 <SkeletonRows rows={4} cols={10} />

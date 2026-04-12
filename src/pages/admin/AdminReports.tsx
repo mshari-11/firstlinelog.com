@@ -2,6 +2,7 @@
  * صفحة التقارير - Admin Reports
  * FirstLine Logistics
  */
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FileSpreadsheet,
@@ -32,70 +33,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/lib/supabase";
 
-const monthlyRevenue = [
-  { month: "سبتمبر", value: 820000, orders: 9200 },
-  { month: "أكتوبر", value: 890000, orders: 9800 },
-  { month: "نوفمبر", value: 950000, orders: 10500 },
-  { month: "ديسمبر", value: 1100000, orders: 12100 },
-  { month: "يناير", value: 1050000, orders: 11800 },
-  { month: "فبراير", value: 1200000, orders: 12847 },
-];
+interface MonthlyRevenue {
+  month: string;
+  value: number;
+  orders: number;
+}
 
-const platformPerformance = [
-  {
-    name: "هنقرستيشن",
-    orders: 4200,
-    revenue: 420000,
-    percentage: 35,
-    growth: 12,
-  },
-  { name: "جاهز", orders: 3600, revenue: 360000, percentage: 30, growth: 8 },
-  { name: "مرسول", orders: 2400, revenue: 240000, percentage: 20, growth: 15 },
-  {
-    name: "نون فود",
-    orders: 1200,
-    revenue: 120000,
-    percentage: 10,
-    growth: 22,
-  },
-  { name: "أخرى", orders: 600, revenue: 60000, percentage: 5, growth: 5 },
-];
+interface PlatformPerformance {
+  name: string;
+  orders: number;
+  revenue: number;
+  percentage: number;
+  growth: number;
+}
 
-const kpiCards = [
-  {
-    title: "إجمالي الإيرادات",
-    value: "1.2M ر.س",
-    change: "+18.3%",
-    trend: "up",
-    icon: DollarSign,
-    period: "هذا الشهر",
-  },
-  {
-    title: "إجمالي الطلبات",
-    value: "12,847",
-    change: "+12.5%",
-    trend: "up",
-    icon: Package,
-    period: "هذا الشهر",
-  },
-  {
-    title: "السائقين النشطين",
-    value: "2,120",
-    change: "+5.2%",
-    trend: "up",
-    icon: Users,
-    period: "حالياً",
-  },
-  {
-    title: "معدل التسليم",
-    value: "94.8%",
-    change: "+2.1%",
-    trend: "up",
-    icon: Clock,
-    period: "هذا الشهر",
-  },
-];
+interface KpiCard {
+  title: string;
+  value: string;
+  change: string;
+  trend: "up" | "down";
+  icon: React.ElementType;
+  period: string;
+}
+
+const kpiIconMap: Record<string, React.ElementType> = {
+  "إجمالي الإيرادات": DollarSign,
+  "إجمالي الطلبات": Package,
+  "السائقين النشطين": Users,
+  "معدل التسليم": Clock,
+};
 
 const container = {
   hidden: { opacity: 0 },
@@ -108,7 +76,59 @@ const item = {
 };
 
 export default function AdminReports() {
-  const maxRevenue = Math.max(...monthlyRevenue.map((m) => m.value));
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
+  const [platformPerformance, setPlatformPerformance] = useState<PlatformPerformance[]>([]);
+  const [kpiCards, setKpiCards] = useState<KpiCard[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchReportsData() {
+      if (!supabase) return;
+      try {
+        const [revenueRes, platformRes, kpiRes] = await Promise.all([
+          supabase
+            .from("monthly_revenue_report")
+            .select("month, value, orders")
+            .order("created_at", { ascending: false })
+            .limit(6),
+          supabase
+            .from("platform_performance_report")
+            .select("name, orders, revenue, percentage, growth"),
+          supabase
+            .from("reports_kpi_summary")
+            .select("title, value, change, trend, period"),
+        ]);
+
+        if (revenueRes.data && revenueRes.data.length > 0) {
+          setMonthlyRevenue(revenueRes.data as MonthlyRevenue[]);
+        }
+
+        if (platformRes.data && platformRes.data.length > 0) {
+          setPlatformPerformance(platformRes.data as PlatformPerformance[]);
+        }
+
+        if (kpiRes.data && kpiRes.data.length > 0) {
+          setKpiCards(
+            kpiRes.data.map((k) => ({
+              ...k,
+              trend: (k.trend === "up" || k.trend === "down" ? k.trend : "up") as "up" | "down",
+              icon: kpiIconMap[k.title] ?? DollarSign,
+            }))
+          );
+        }
+      } catch (_err) {
+        // بيانات فارغة عند الخطأ
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchReportsData();
+  }, []);
+
+  const maxRevenue = monthlyRevenue.length > 0
+    ? Math.max(...monthlyRevenue.map((m) => m.value))
+    : 1;
 
   return (
     <motion.div
@@ -161,34 +181,48 @@ export default function AdminReports() {
 
       {/* مؤشرات الأداء */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiCards.map((kpi) => (
-          <motion.div key={kpi.title} variants={item}>
+        {loading ? (
+          <motion.div variants={item} className="col-span-4">
+            <p className="text-sm text-muted-foreground text-center py-6">جاري التحميل...</p>
+          </motion.div>
+        ) : kpiCards.length === 0 ? (
+          <motion.div variants={item} className="col-span-4">
             <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <kpi.icon className="w-5 h-5 text-primary" />
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {kpi.period}
-                  </span>
-                </div>
-                <p className="text-2xl font-bold font-mono">{kpi.value}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-sm text-muted-foreground">{kpi.title}</p>
-                  <span
-                    className={`text-xs font-bold flex items-center gap-0.5 ${kpi.trend === "up" ? "text-emerald-600" : "text-red-500"}`}
-                  >
-                    {kpi.trend === "up" ? (
-                      <ArrowUpRight className="w-3 h-3" />
-                    ) : (
-                      <ArrowDownRight className="w-3 h-3" />
-                    )}
-                    {kpi.change}
-                  </span>
-                </div>
+              <CardContent className="p-6 text-center text-muted-foreground text-sm">
+                لا توجد بيانات
               </CardContent>
             </Card>
           </motion.div>
-        ))}
+        ) : (
+          kpiCards.map((kpi) => (
+            <motion.div key={kpi.title} variants={item}>
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <kpi.icon className="w-5 h-5 text-primary" />
+                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {kpi.period}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold font-mono">{kpi.value}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-sm text-muted-foreground">{kpi.title}</p>
+                    <span
+                      className={`text-xs font-bold flex items-center gap-0.5 ${kpi.trend === "up" ? "text-emerald-600" : "text-red-500"}`}
+                    >
+                      {kpi.trend === "up" ? (
+                        <ArrowUpRight className="w-3 h-3" />
+                      ) : (
+                        <ArrowDownRight className="w-3 h-3" />
+                      )}
+                      {kpi.change}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -200,30 +234,34 @@ export default function AdminReports() {
               <CardDescription>آخر 6 أشهر</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {monthlyRevenue.map((month) => (
-                <div key={month.month} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium w-20">{month.month}</span>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {(month.value / 1000).toFixed(0)}K ر.س
-                    </span>
-                  </div>
-                  <div className="relative h-8 bg-muted/50 rounded-lg overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${(month.value / maxRevenue) * 100}%`,
-                      }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
-                      className="absolute inset-y-0 right-0 bg-gradient-to-l from-primary to-primary/60 rounded-lg flex items-center px-3"
-                    >
-                      <span className="text-[10px] font-bold text-primary-foreground font-mono">
-                        {month.orders.toLocaleString("ar-SA")} طلب
+              {monthlyRevenue.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">لا توجد بيانات</p>
+              ) : (
+                monthlyRevenue.map((month) => (
+                  <div key={month.month} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium w-20">{month.month}</span>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {(month.value / 1000).toFixed(0)}K ر.س
                       </span>
-                    </motion.div>
+                    </div>
+                    <div className="relative h-8 bg-muted/50 rounded-lg overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${(month.value / maxRevenue) * 100}%`,
+                        }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="absolute inset-y-0 right-0 bg-gradient-to-l from-primary to-primary/60 rounded-lg flex items-center px-3"
+                      >
+                        <span className="text-[10px] font-bold text-primary-foreground font-mono">
+                          {month.orders.toLocaleString("ar-SA")} طلب
+                        </span>
+                      </motion.div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -238,34 +276,38 @@ export default function AdminReports() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              {platformPerformance.map((platform) => (
-                <div key={platform.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold">{platform.name}</span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-mono"
-                      >
-                        {platform.percentage}%
-                      </Badge>
+              {platformPerformance.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">لا توجد بيانات</p>
+              ) : (
+                platformPerformance.map((platform) => (
+                  <div key={platform.name} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold">{platform.name}</span>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-mono"
+                        >
+                          {platform.percentage}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {(platform.revenue / 1000).toFixed(0)}K ر.س
+                        </span>
+                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                          <ArrowUpRight className="w-3 h-3" />
+                          {platform.growth}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {(platform.revenue / 1000).toFixed(0)}K ر.س
-                      </span>
-                      <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
-                        <ArrowUpRight className="w-3 h-3" />
-                        {platform.growth}%
-                      </span>
-                    </div>
+                    <Progress value={platform.percentage} className="h-2" />
+                    <p className="text-[11px] text-muted-foreground">
+                      {platform.orders.toLocaleString("ar-SA")} طلب
+                    </p>
                   </div>
-                  <Progress value={platform.percentage} className="h-2" />
-                  <p className="text-[11px] text-muted-foreground">
-                    {platform.orders.toLocaleString("ar-SA")} طلب
-                  </p>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </motion.div>

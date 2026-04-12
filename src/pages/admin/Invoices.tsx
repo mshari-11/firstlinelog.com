@@ -51,52 +51,9 @@ const STATUS: Record<
   },
 };
 
-const MOCK: Invoice[] = [
-  {
-    id: "INV-001",
-    customer: "شركة النقل السريع",
-    amount: 25000,
-    issueDate: "2026-03-01",
-    dueDate: "2026-03-15",
-    status: "paid",
-  },
-  {
-    id: "INV-002",
-    customer: "مؤسسة التوصيل المتميز",
-    amount: 18500,
-    issueDate: "2026-03-05",
-    dueDate: "2026-03-20",
-    status: "sent",
-  },
-  {
-    id: "INV-003",
-    customer: "شركة الخليج للخدمات",
-    amount: 32000,
-    issueDate: "2026-03-10",
-    dueDate: "2026-03-25",
-    status: "draft",
-  },
-  {
-    id: "INV-004",
-    customer: "مجموعة الرياض اللوجستية",
-    amount: 15000,
-    issueDate: "2026-02-15",
-    dueDate: "2026-03-01",
-    status: "overdue",
-  },
-  {
-    id: "INV-005",
-    customer: "شركة الأمانة للشحن",
-    amount: 42000,
-    issueDate: "2026-03-12",
-    dueDate: "2026-03-27",
-    status: "sent",
-  },
-];
-
 export default function Invoices() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Invoice[]>(MOCK);
+  const [data, setData] = useState<Invoice[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InvoiceStatus | "all">("all");
   const [loading, setLoading] = useState(false);
@@ -147,7 +104,7 @@ export default function Invoices() {
         if (Array.isArray(d) && d.length) setData(d);
       }
     } catch {
-      /* keep mock */
+      /* keep empty */
     }
     setLoading(false);
   }

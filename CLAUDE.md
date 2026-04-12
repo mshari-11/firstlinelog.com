@@ -27,12 +27,12 @@
 - `vercel.json` — Vercel config (rewrites, headers)
 
 ### Safety Rules
-- NEVER delete mock data from any admin page
+- Remove mock data from admin pages — show empty state + Supabase fetch instead
 - NEVER drop/truncate Supabase tables — only ADD columns or tables
 - NEVER modify Cognito, SES, or IAM configurations
 - NEVER force push to main
 - Always `npm run build` before committing to verify no build errors
-- Always keep fallback mock data when wiring real API data
+- Orders: manual pull only (button trigger), NOT auto-sync
 
 ## Stack
 
@@ -180,7 +180,7 @@
 ## CRITICAL OPERATIONAL RULES
 
 ### Never Do
-- Never delete mock data from admin pages
+- Remove mock data — use empty state + real Supabase data
 - Never modify OTP/auth files without explicit permission (LOCKED section above)
 - Never use me-south-1 for ANY service
 - Never assume DynamoDB key is `id` — each table has unique keys:

@@ -67,13 +67,13 @@ export const useDashboardStore = create<DashboardState>()(
               set({
                 stats: {
                   totalCouriers: s.drivers?.count || 0,
-                  activeCouriers: Math.round((s.drivers?.count || 0) * 0.8),
+                  activeCouriers: 0,
                   todayOrders: s.orders?.count || 0,
                   pendingComplaints: s.complaints?.count || 0,
-                  monthRevenue: (s.orders?.count || 0) * 45,
+                  monthRevenue: 0,
                   pendingApprovals: s["payout-runs"]?.count || 0,
-                  activeDriversNow: Math.round((s.drivers?.count || 0) * 0.6),
-                  slaBreaches: Math.round((s.complaints?.count || 0) * 0.1),
+                  activeDriversNow: 0,
+                  slaBreaches: 0,
                 },
                 statsLoading: false,
                 lastRefresh: new Date().toISOString(),
@@ -116,12 +116,12 @@ export const useDashboardStore = create<DashboardState>()(
               ).length,
               todayOrders: ordersRes.count || 0,
               pendingComplaints: complaintsRes.count || 0,
-              monthRevenue: 128000, // TODO: aggregate from finance tables
+              monthRevenue: 0, // aggregate from finance.payout_run_stages when available
               pendingApprovals: approvalsRes.count || 0,
               activeDriversNow: couriers.filter(
                 (c: { status: string }) => c.status === "active",
               ).length,
-              slaBreaches: 0, // TODO: query from SLA scanner
+              slaBreaches: 0,
             },
             statsLoading: false,
             lastRefresh: new Date().toISOString(),

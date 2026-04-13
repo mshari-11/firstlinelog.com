@@ -27,7 +27,19 @@ import {
   Landmark,
   Receipt,
   AlertCircle,
+  Printer,
+  MessageCircle,
+  Ban,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  SlidersHorizontal,
+  Check,
+  Copy,
 } from "lucide-react";
+
+type SortKey = "name" | "period" | "gross" | "net" | "status";
+type SortDir = "asc" | "desc";
 
 type PaymentStatus = "pending" | "approved" | "paid" | "rejected";
 
@@ -632,6 +644,82 @@ export default function Finance() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [sendingAlert, setSendingAlert] = useState<string | null>(null);
   const [alertSent, setAlertSent] = useState<Set<string>>(new Set());
+  // Selection for bulk actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  // Advanced filters
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+  // Sorting
+  const [sortKey, setSortKey] = useState<SortKey>("period");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(ids: string[]) {
+    setSelectedIds((prev) => {
+      if (ids.every((id) => prev.has(id)) && ids.length > 0) return new Set();
+      return new Set(ids);
+    });
+  }
+
+  async function bulkUpdateStatus(newStatus: PaymentStatus) {
+    if (selectedIds.size === 0 || !supabase) return;
+    setBulkUpdating(true);
+    try {
+      const updates: Record<string, unknown> = { payment_status: newStatus };
+      if (newStatus === "approved") updates.approved_at = new Date().toISOString();
+      if (newStatus === "paid") updates.paid_at = new Date().toISOString();
+      const { error } = await supabase
+        .from("finance")
+        .update(updates)
+        .in("id", Array.from(selectedIds));
+      if (error) {
+        toast.error("تعذّر تحديث السجلات المحددة");
+        return;
+      }
+      toast.success(`تم تحديث ${selectedIds.size} سجل`);
+      setSelectedIds(new Set());
+      await fetchFinanceData();
+    } finally {
+      setBulkUpdating(false);
+    }
+  }
+
+  function handlePrint() {
+    window.print();
+  }
+
+  function copyToClipboard(text: string, label = "تم النسخ") {
+    navigator.clipboard?.writeText(text).then(
+      () => toast.success(label),
+      () => toast.error("تعذّر النسخ"),
+    );
+  }
+
+  function openWhatsApp(record: FinanceRecord) {
+    const msg = encodeURIComponent(
+      `مرحباً ${record.courier_name || ""}، مستحقاتك للفترة ${formatDate(record.period_start)} — ${formatDate(record.period_end)}: ${formatCurrency(record.net_payout)}`,
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+  }
 
   function exportFinanceCsv() {
     const headers = [
@@ -818,16 +906,41 @@ export default function Finance() {
     }
   }
 
-  const filtered = records.filter((r) => {
-    const matchName = r.courier_name?.includes(search) || search === "";
-    const matchStatus =
-      statusFilter === "all" || r.payment_status === statusFilter;
-    const dateField = (r.period_start || r.created_at || "").slice(0, 10);
-    const matchDate =
-      (!dateRange.from || dateField >= dateRange.from) &&
-      (!dateRange.to || dateField <= dateRange.to);
-    return matchName && matchStatus && matchDate;
-  });
+  const filtered = records
+    .filter((r) => {
+      const matchName = r.courier_name?.includes(search) || search === "";
+      const matchStatus =
+        statusFilter === "all" || r.payment_status === statusFilter;
+      const dateField = (r.period_start || r.created_at || "").slice(0, 10);
+      const matchDate =
+        (!dateRange.from || dateField >= dateRange.from) &&
+        (!dateRange.to || dateField <= dateRange.to);
+      const minA = minAmount ? Number(minAmount) : -Infinity;
+      const maxA = maxAmount ? Number(maxAmount) : Infinity;
+      const matchAmount = r.net_payout >= minA && r.net_payout <= maxA;
+      return matchName && matchStatus && matchDate && matchAmount;
+    })
+    .sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      switch (sortKey) {
+        case "name":
+          return dir * (a.courier_name || "").localeCompare(b.courier_name || "", "ar");
+        case "period":
+          return dir * a.period_start.localeCompare(b.period_start);
+        case "gross":
+          return dir * (a.gross_revenue - b.gross_revenue);
+        case "net":
+          return dir * (a.net_payout - b.net_payout);
+        case "status":
+          return dir * a.payment_status.localeCompare(b.payment_status);
+        default:
+          return 0;
+      }
+    });
+
+  const filteredIds = filtered.map((r) => r.id);
+  const allSelected =
+    filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
 
   const totalAll = stats.totalPending + stats.totalApproved + stats.totalPaid;
 
@@ -894,6 +1007,14 @@ export default function Finance() {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             className="con-btn-ghost"
+            onClick={handlePrint}
+            title="طباعة"
+          >
+            <Printer size={14} />
+            طباعة
+          </button>
+          <button
+            className="con-btn-ghost"
             onClick={fetchFinanceData}
             disabled={loading}
           >
@@ -915,7 +1036,7 @@ export default function Finance() {
         </div>
       </div>
 
-      {/* KPI Row */}
+      {/* KPI Row — clickable filters */}
       <div
         style={{
           display: "grid",
@@ -923,43 +1044,117 @@ export default function Finance() {
           gap: 12,
         }}
       >
-        <KpiCard
-          label="في الانتظار"
-          value={formatCurrency(stats.totalPending)}
-          count={stats.pendingCount}
-          countLabel="سجل"
-          icon={Clock}
-          accent="warning"
-          loading={loading}
-        />
-        <KpiCard
-          label="موافق عليه"
-          value={formatCurrency(stats.totalApproved)}
-          count={stats.approvedCount}
-          countLabel="سجل"
-          icon={CheckCircle2}
-          accent="info"
-          loading={loading}
-        />
-        <KpiCard
-          label="مدفوع"
-          value={formatCurrency(stats.totalPaid)}
-          count={stats.paidCount}
-          countLabel="سجل"
-          icon={Wallet}
-          accent="success"
-          loading={loading}
-        />
-        <KpiCard
-          label="إجمالي الفترة"
-          value={formatCurrency(totalAll)}
-          count={records.length}
-          countLabel="سجل إجمالي"
-          icon={DollarSign}
-          accent="brand"
-          loading={loading}
-        />
+        <div
+          onClick={() => setStatusFilter(statusFilter === "pending" ? "all" : "pending")}
+          style={{ cursor: "pointer", outline: statusFilter === "pending" ? "2px solid var(--con-warning)" : "none", borderRadius: 10 }}
+        >
+          <KpiCard
+            label="في الانتظار"
+            value={formatCurrency(stats.totalPending)}
+            count={stats.pendingCount}
+            countLabel="سجل"
+            icon={Clock}
+            accent="warning"
+            loading={loading}
+          />
+        </div>
+        <div
+          onClick={() => setStatusFilter(statusFilter === "approved" ? "all" : "approved")}
+          style={{ cursor: "pointer", outline: statusFilter === "approved" ? "2px solid var(--con-info)" : "none", borderRadius: 10 }}
+        >
+          <KpiCard
+            label="موافق عليه"
+            value={formatCurrency(stats.totalApproved)}
+            count={stats.approvedCount}
+            countLabel="سجل"
+            icon={CheckCircle2}
+            accent="info"
+            loading={loading}
+          />
+        </div>
+        <div
+          onClick={() => setStatusFilter(statusFilter === "paid" ? "all" : "paid")}
+          style={{ cursor: "pointer", outline: statusFilter === "paid" ? "2px solid var(--con-success)" : "none", borderRadius: 10 }}
+        >
+          <KpiCard
+            label="مدفوع"
+            value={formatCurrency(stats.totalPaid)}
+            count={stats.paidCount}
+            countLabel="سجل"
+            icon={Wallet}
+            accent="success"
+            loading={loading}
+          />
+        </div>
+        <div
+          onClick={() => setStatusFilter("all")}
+          style={{ cursor: "pointer", outline: statusFilter === "all" ? "2px solid var(--con-brand)" : "none", borderRadius: 10 }}
+        >
+          <KpiCard
+            label="إجمالي الفترة"
+            value={formatCurrency(totalAll)}
+            count={records.length}
+            countLabel="سجل إجمالي"
+            icon={DollarSign}
+            accent="brand"
+            loading={loading}
+          />
+        </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 16px",
+            background: "var(--con-brand-subtle)",
+            border: "1px solid var(--con-brand)",
+            borderRadius: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontWeight: 600, color: "var(--con-brand)" }}>
+            {selectedIds.size} سجل محدد
+          </span>
+          <div style={{ marginInlineStart: "auto", display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button
+              className="con-btn-ghost"
+              onClick={() => bulkUpdateStatus("approved")}
+              disabled={bulkUpdating}
+              title="موافقة جماعية"
+            >
+              <CheckCircle2 size={14} /> موافقة
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => bulkUpdateStatus("paid")}
+              disabled={bulkUpdating}
+              title="تأكيد الدفع جماعياً"
+            >
+              <Wallet size={14} /> تأكيد الدفع
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => bulkUpdateStatus("rejected")}
+              disabled={bulkUpdating}
+              title="رفض جماعي"
+              style={{ color: "var(--con-danger)" }}
+            >
+              <Ban size={14} /> رفض
+            </button>
+            <button
+              className="con-btn-ghost"
+              onClick={() => setSelectedIds(new Set())}
+              title="إلغاء التحديد"
+            >
+              <X size={14} /> إلغاء
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="con-toolbar" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -1026,6 +1221,20 @@ export default function Finance() {
           )}
         </div>
 
+        {/* Advanced filter toggle */}
+        <button
+          className="con-btn-ghost"
+          onClick={() => setShowAdvancedFilter((v) => !v)}
+          title="فلتر متقدم"
+          style={{
+            background: showAdvancedFilter ? "var(--con-brand-subtle)" : "transparent",
+            color: showAdvancedFilter ? "var(--con-brand)" : undefined,
+          }}
+        >
+          <SlidersHorizontal size={14} />
+          فلتر متقدم
+        </button>
+
         {/* Export */}
         <div style={{ marginInlineStart: "auto", display: "flex", gap: 6 }}>
           <button
@@ -1063,6 +1272,53 @@ export default function Finance() {
         </div>
       </div>
 
+      {/* Advanced Filter Panel */}
+      {showAdvancedFilter && (
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            padding: "12px 16px",
+            background: "var(--con-bg-surface-2)",
+            border: "1px solid var(--con-border-default)",
+            borderRadius: 8,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: 12, color: "var(--con-text-muted)" }}>
+            نطاق صافي الراتب:
+          </span>
+          <input
+            type="number"
+            placeholder="من"
+            value={minAmount}
+            onChange={(e) => setMinAmount(e.target.value)}
+            className="con-input"
+            style={{ width: 120 }}
+          />
+          <span style={{ color: "var(--con-text-muted)" }}>—</span>
+          <input
+            type="number"
+            placeholder="إلى"
+            value={maxAmount}
+            onChange={(e) => setMaxAmount(e.target.value)}
+            className="con-input"
+            style={{ width: 120 }}
+          />
+          <button
+            className="con-btn-ghost"
+            onClick={() => {
+              setMinAmount("");
+              setMaxAmount("");
+            }}
+            style={{ marginInlineStart: "auto" }}
+          >
+            <X size={13} /> مسح
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div
         style={{
@@ -1099,12 +1355,31 @@ export default function Finance() {
             <table className="con-table">
               <thead>
                 <tr>
-                  <th>المندوب</th>
-                  <th>الفترة</th>
-                  <th>الإيراد الإجمالي</th>
+                  <th style={{ width: 32 }}>
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={() => toggleSelectAll(filteredIds)}
+                      style={{ cursor: "pointer" }}
+                      aria-label="تحديد الكل"
+                    />
+                  </th>
+                  <th onClick={() => toggleSort("name")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    المندوب {sortKey === "name" ? (sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />) : <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />}
+                  </th>
+                  <th onClick={() => toggleSort("period")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    الفترة {sortKey === "period" ? (sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />) : <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />}
+                  </th>
+                  <th onClick={() => toggleSort("gross")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    الإيراد الإجمالي {sortKey === "gross" ? (sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />) : <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />}
+                  </th>
                   <th>الخصومات</th>
-                  <th>صافي الراتب</th>
-                  <th>الحالة</th>
+                  <th onClick={() => toggleSort("net")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    صافي الراتب {sortKey === "net" ? (sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />) : <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />}
+                  </th>
+                  <th onClick={() => toggleSort("status")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    الحالة {sortKey === "status" ? (sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />) : <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />}
+                  </th>
                   <th>إجراءات</th>
                 </tr>
               </thead>
@@ -1123,7 +1398,17 @@ export default function Finance() {
                   const StatusIcon = meta.icon;
 
                   return (
-                    <tr key={record.id}>
+                    <tr key={record.id} style={{ background: selectedIds.has(record.id) ? "var(--con-brand-subtle)" : undefined }}>
+                      {/* Checkbox */}
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(record.id)}
+                          onChange={() => toggleSelect(record.id)}
+                          style={{ cursor: "pointer" }}
+                          aria-label="تحديد"
+                        />
+                      </td>
                       {/* Courier */}
                       <td>
                         <div
@@ -1158,6 +1443,14 @@ export default function Finance() {
                           >
                             {record.courier_name}
                           </span>
+                          <button
+                            onClick={() => copyToClipboard(record.courier_name || "", "تم نسخ اسم المندوب")}
+                            className="con-btn-ghost"
+                            style={{ padding: "2px 4px" }}
+                            title="نسخ الاسم"
+                          >
+                            <Copy size={11} />
+                          </button>
                         </div>
                       </td>
 
@@ -1245,47 +1538,69 @@ export default function Finance() {
                             <Eye size={13} />
                           </button>
                           {record.payment_status === "pending" && (
-                            <button
-                              onClick={() =>
-                                updateStatus(record.id, "approved")
-                              }
-                              disabled={updating === record.id}
-                              style={{
-                                padding: "3px 10px",
-                                borderRadius: 5,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                border: "1px solid rgba(14,165,233,0.35)",
-                                background: "rgba(14,165,233,0.08)",
-                                color: "var(--con-info)",
-                                cursor: "pointer",
-                                transition: "all 0.15s",
-                                opacity: updating === record.id ? 0.5 : 1,
-                              }}
-                            >
-                              {updating === record.id ? "..." : "موافقة"}
-                            </button>
+                            <>
+                              <button
+                                onClick={() =>
+                                  updateStatus(record.id, "approved")
+                                }
+                                disabled={updating === record.id}
+                                title="موافقة"
+                                style={{
+                                  padding: "4px 8px",
+                                  borderRadius: 5,
+                                  border: "1px solid rgba(14,165,233,0.35)",
+                                  background: "rgba(14,165,233,0.08)",
+                                  color: "var(--con-info)",
+                                  cursor: "pointer",
+                                  opacity: updating === record.id ? 0.5 : 1,
+                                }}
+                              >
+                                <Check size={13} />
+                              </button>
+                              <button
+                                onClick={() => updateStatus(record.id, "rejected")}
+                                disabled={updating === record.id}
+                                title="رفض"
+                                style={{
+                                  padding: "4px 8px",
+                                  borderRadius: 5,
+                                  border: "1px solid rgba(220,38,38,0.35)",
+                                  background: "rgba(220,38,38,0.08)",
+                                  color: "var(--con-danger)",
+                                  cursor: "pointer",
+                                  opacity: updating === record.id ? 0.5 : 1,
+                                }}
+                              >
+                                <Ban size={13} />
+                              </button>
+                            </>
                           )}
                           {record.payment_status === "approved" && (
                             <button
                               onClick={() => updateStatus(record.id, "paid")}
                               disabled={updating === record.id}
+                              title="تأكيد الدفع"
                               style={{
-                                padding: "3px 10px",
+                                padding: "4px 8px",
                                 borderRadius: 5,
-                                fontSize: 11,
-                                fontWeight: 600,
                                 border: "1px solid rgba(22,163,74,0.35)",
                                 background: "rgba(22,163,74,0.08)",
                                 color: "var(--con-success)",
                                 cursor: "pointer",
-                                transition: "all 0.15s",
                                 opacity: updating === record.id ? 0.5 : 1,
                               }}
                             >
-                              {updating === record.id ? "..." : "تأكيد الدفع"}
+                              <Wallet size={13} />
                             </button>
                           )}
+                          <button
+                            onClick={() => openWhatsApp(record)}
+                            title="إرسال واتساب للمندوب"
+                            className="con-btn-ghost"
+                            style={{ padding: "4px 8px", color: "#25d366" }}
+                          >
+                            <MessageCircle size={13} />
+                          </button>
                           <button
                             onClick={() => sendBankAlert(record)}
                             disabled={sendingAlert === record.id}

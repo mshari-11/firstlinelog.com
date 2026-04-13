@@ -162,9 +162,10 @@ export function SystemHealth() {
   useEffect(() => {
     checkHealth();
     const interval = setInterval(checkHealth, 120000);
+    // Countdown every 10s instead of every second — reduces re-renders 10x
     const countdownInterval = setInterval(() => {
-      setNextCheckIn((prev) => (prev > 0 ? prev - 1 : 120));
-    }, 1000);
+      setNextCheckIn((prev) => (prev > 10 ? prev - 10 : 120));
+    }, 10000);
     return () => {
       clearInterval(interval);
       clearInterval(countdownInterval);

@@ -1,7 +1,6 @@
 /**
  * KPI Overview Widget — Executive KPI row with 8 key metrics
  */
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -35,13 +34,10 @@ interface KPIItem {
 }
 
 export function KPIOverview() {
-  const { stats, statsLoading, fetchStats } = useDashboardStore();
+  const stats = useDashboardStore((s) => s.stats);
+  const statsLoading = useDashboardStore((s) => s.statsLoading);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Dashboard.tsx already triggers fetchStats on mount — no duplicate call here
 
   const kpis: KPIItem[] = [
     {

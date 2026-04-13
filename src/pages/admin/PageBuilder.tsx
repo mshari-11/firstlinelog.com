@@ -564,6 +564,15 @@ const DEFAULT_PAGES: PageConfig[] = [
     order: 41,
   },
   {
+    id: "jahez",
+    label: "جاهز",
+    path: "/admin-panel/jahez-platform",
+    group: "التشغيل",
+    icon: "Truck",
+    enabled: true,
+    order: 5,
+  },
+  {
     id: "n8n-workflows",
     label: "سير العمل (n8n)",
     path: "/admin-panel/n8n-workflows",
@@ -707,20 +716,14 @@ const DEFAULT_PAGES: PageConfig[] = [
   },
 ];
 
-const STORAGE_KEY = "fll_page_config_v4";
+const STORAGE_KEY = "fll_page_config_v5";
 
 function loadConfig(): PageConfig[] {
   try {
     // Clear old version caches
-    if (localStorage.getItem("fll_page_config_v1")) {
-      localStorage.removeItem("fll_page_config_v1");
-    }
-    if (localStorage.getItem("fll_page_config_v2")) {
-      localStorage.removeItem("fll_page_config_v2");
-    }
-    if (localStorage.getItem("fll_page_config_v3")) {
-      localStorage.removeItem("fll_page_config_v3");
-    }
+    ["fll_page_config_v1", "fll_page_config_v2", "fll_page_config_v3", "fll_page_config_v4"].forEach(
+      (k) => localStorage.removeItem(k),
+    );
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PAGES;
     const saved: PageConfig[] = JSON.parse(raw);

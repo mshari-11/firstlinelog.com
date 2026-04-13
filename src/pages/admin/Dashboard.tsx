@@ -36,6 +36,7 @@ import { FinanceSnapshot } from "@/components/admin/dashboard/widgets/FinanceSna
 import { OperationsMap } from "@/components/admin/dashboard/widgets/OperationsMap";
 import { ModuleStatusGrid } from "@/components/admin/dashboard/widgets/ModuleStatusGrid";
 import { InfrastructurePanel } from "@/components/admin/dashboard/widgets/InfrastructurePanel";
+import { ActiveDrivers } from "@/components/admin/dashboard/widgets/ActiveDrivers";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function getGreeting(): string {
@@ -334,6 +335,7 @@ export default function ControlTower() {
 
         {/* Right Column — Alerts, approvals, module status */}
         <WidgetZone zone="sidebar" gap={compactMode ? 8 : 14}>
+          <ActiveDrivers />
           <AlertsPanel />
           <PendingApprovals />
           {isAdmin && <ModuleStatusGrid />}

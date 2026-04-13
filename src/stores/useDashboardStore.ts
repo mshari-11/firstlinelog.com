@@ -15,6 +15,9 @@ export interface DashboardStats {
   pendingApprovals: number;
   activeDriversNow: number;
   slaBreaches: number;
+  jahezTotal: number;
+  jahezActive: number;
+  jahezOnline: number;
 }
 
 interface DashboardState {
@@ -43,6 +46,9 @@ const DEFAULT_STATS: DashboardStats = {
   pendingApprovals: 0,
   activeDriversNow: 0,
   slaBreaches: 0,
+  jahezTotal: 0,
+  jahezActive: 0,
+  jahezOnline: 0,
 };
 
 export const useDashboardStore = create<DashboardState>()(
@@ -88,40 +94,65 @@ export const useDashboardStore = create<DashboardState>()(
           }
 
           const today = new Date().toISOString().split("T")[0];
-          const [couriersRes, ordersRes, complaintsRes, approvalsRes] =
-            await Promise.all([
-              supabase
-                .from("couriers")
-                .select("id, status", { count: "exact" }),
-              supabase
-                .from("orders")
-                .select("id", { count: "exact" })
-                .gte("created_at", today),
-              supabase
-                .from("complaints_requests")
-                .select("id", { count: "exact" })
-                .eq("status", "open"),
-              supabase
-                .from("couriers")
-                .select("id", { count: "exact" })
-                .eq("status", "pending"),
-            ]);
+          const [
+            couriersRes,
+            ordersRes,
+            complaintsRes,
+            approvalsRes,
+            jahezTotalRes,
+            jahezActiveRes,
+            jahezOnlineRes,
+          ] = await Promise.all([
+            supabase
+              .from("couriers")
+              .select("id, status", { count: "exact" }),
+            supabase
+              .from("orders")
+              .select("id", { count: "exact" })
+              .gte("created_at", today),
+            supabase
+              .from("complaints_requests")
+              .select("id", { count: "exact" })
+              .eq("status", "open"),
+            supabase
+              .from("couriers")
+              .select("id", { count: "exact" })
+              .eq("status", "pending"),
+            supabase
+              .from("jahez_drivers")
+              .select("id", { count: "exact", head: true }),
+            supabase
+              .from("jahez_drivers")
+              .select("id", { count: "exact", head: true })
+              .eq("status", "Active"),
+            supabase
+              .from("jahez_drivers")
+              .select("id", { count: "exact", head: true })
+              .eq("status", "Active")
+              .eq("availability", "Online"),
+          ]);
 
           const couriers = couriersRes.data || [];
+          const ownActive = couriers.filter(
+            (c: { status: string }) => c.status === "active" || c.status === "on_delivery",
+          ).length;
+          const jahezTotal = jahezTotalRes.count || 0;
+          const jahezActive = jahezActiveRes.count || 0;
+          const jahezOnline = jahezOnlineRes.count || 0;
+
           set({
             stats: {
-              totalCouriers: couriersRes.count || 0,
-              activeCouriers: couriers.filter(
-                (c: { status: string }) => c.status === "active",
-              ).length,
+              totalCouriers: (couriersRes.count || 0) + jahezTotal,
+              activeCouriers: ownActive + jahezActive,
               todayOrders: ordersRes.count || 0,
               pendingComplaints: complaintsRes.count || 0,
               monthRevenue: 0, // aggregate from finance.payout_run_stages when available
               pendingApprovals: approvalsRes.count || 0,
-              activeDriversNow: couriers.filter(
-                (c: { status: string }) => c.status === "active",
-              ).length,
+              activeDriversNow: ownActive + jahezOnline,
               slaBreaches: 0,
+              jahezTotal,
+              jahezActive,
+              jahezOnline,
             },
             statsLoading: false,
             lastRefresh: new Date().toISOString(),

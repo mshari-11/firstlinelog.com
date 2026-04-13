@@ -160,6 +160,35 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ── SDP Payment Report (per-driver financial details) ──
+      case "sdp-payment-report": {
+        const p: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
+        if (body.startDate) p.startDate = body.startDate;
+        if (body.endDate) p.endDate = body.endDate;
+        if (body.driverId) p.driverId = body.driverId;
+        if (page) p.page = String(page);
+        if (size) p.pageSize = String(size);
+        result = await sanedRequest("payment/sdp-payment-report", token, p);
+        break;
+      }
+
+      case "driver-orders-report": {
+        const p: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
+        if (body.driverId) p.driverId = body.driverId;
+        if (body.startDate) p.startDate = body.startDate;
+        if (body.endDate) p.endDate = body.endDate;
+        if (page) p.page = String(page);
+        if (size) p.pageSize = String(size);
+        result = await sanedRequest("reports/driver-orders-report", token, p);
+        break;
+      }
+
+      case "driver-detail": {
+        if (!body.driverId) throw new Error("driverId required");
+        result = await sanedRequest(`delivery-providers/driver/${body.driverId}`, token, { DeliveryProviderId: PROVIDER_ID });
+        break;
+      }
+
       // ── Generic passthrough (discover new endpoints) ──
       case "raw": {
         const rawEndpoint = body.endpoint as string;

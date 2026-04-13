@@ -619,6 +619,15 @@ export default function JahezPlatform() {
     null,
   );
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  // Extra info sections
+  const [insights, setInsights] = useState<Record<string, unknown> | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [paymentSummary, setPaymentSummary] = useState<Record<string, unknown> | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [vehicleTypes, setVehicleTypes] = useState<Array<{ id: number; name: string }>>([]);
+  // Per-driver payment report (loaded on driver detail open)
+  const [driverPayments, setDriverPayments] = useState<Record<string, unknown> | null>(null);
+  const [driverPaymentsLoading, setDriverPaymentsLoading] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const hasToken = !!token;
@@ -717,11 +726,87 @@ export default function JahezPlatform() {
     [token, mapDrivers],
   );
 
+  /* ─── Load Delivery Insights ─── */
+  const loadInsights = useCallback(async () => {
+    if (!token) return;
+    setInsightsLoading(true);
+    try {
+      const raw = await proxyFetch("delivery-insights", token);
+      if (raw) {
+        const data = ((raw as any).data || raw) as Record<string, unknown>;
+        setInsights(data);
+      }
+    } catch (e) {
+      console.error("[insights]", e);
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [token]);
+
+  /* ─── Load Payment Summary ─── */
+  const loadPaymentSummary = useCallback(async () => {
+    if (!token) return;
+    setPaymentLoading(true);
+    try {
+      const raw = await proxyFetch("payment-summary", token);
+      if (raw) {
+        const data = ((raw as any).data || raw) as Record<string, unknown>;
+        setPaymentSummary(data);
+      }
+    } catch (e) {
+      console.error("[payment-summary]", e);
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, [token]);
+
+  /* ─── Load per-driver payment report ─── */
+  const loadDriverPayments = useCallback(
+    async (driverId: string) => {
+      if (!token || !driverId) return;
+      setDriverPaymentsLoading(true);
+      setDriverPayments(null);
+      try {
+        const raw = await proxyFetch("sdp-payment-report", token, {
+          driverId,
+          size: 50,
+        });
+        if (raw) {
+          const data = ((raw as any).data || raw) as Record<string, unknown>;
+          setDriverPayments(data);
+        }
+      } catch (e) {
+        console.error("[driver-payments]", e);
+      } finally {
+        setDriverPaymentsLoading(false);
+      }
+    },
+    [token],
+  );
+
+  /* ─── Load Vehicle Types lookup ─── */
+  const loadVehicleTypes = useCallback(async () => {
+    if (!token) return;
+    try {
+      const raw = await proxyFetch("vehicle-types", token);
+      if (raw) {
+        const data = ((raw as any).data || raw) as any;
+        const list = data?.result || data?.items || (Array.isArray(data) ? data : []);
+        if (Array.isArray(list)) setVehicleTypes(list);
+      }
+    } catch (e) {
+      console.error("[vehicle-types]", e);
+    }
+  }, [token]);
+
   /* ─── Initial load on token change ─── */
   useEffect(() => {
     if (!token) return;
     loadProfile();
     loadStats();
+    loadInsights();
+    loadPaymentSummary();
+    loadVehicleTypes();
     loadDrivers(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -1386,6 +1471,206 @@ export default function JahezPlatform() {
         </div>
       )}
 
+      {/* ══════════════════ Extra Info: Insights + Payments + Profile ══════════════════ */}
+      {hasToken && (insights || paymentSummary || profile) && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: 16,
+            marginBottom: 20,
+          }}
+        >
+          {/* Delivery Insights */}
+          <div
+            style={{
+              background: "var(--con-bg-surface-1)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 10,
+              padding: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "var(--con-text-card-title)",
+                  fontWeight: 600,
+                  color: "var(--con-text-primary)",
+                  margin: 0,
+                }}
+              >
+                تحليلات التسليم
+              </h3>
+              <button
+                style={S.btn("#2d3748", false)}
+                onClick={loadInsights}
+                disabled={insightsLoading}
+              >
+                <RefreshCw size={12} />
+              </button>
+            </div>
+            {insights ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+                {Object.entries(insights)
+                  .filter(([, v]) => typeof v === "number" || typeof v === "string")
+                  .slice(0, 10)
+                  .map(([k, v]) => (
+                    <div
+                      key={k}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderBottom: "1px solid var(--con-border-default)",
+                      }}
+                    >
+                      <span style={{ color: "var(--con-text-muted)" }}>{k}</span>
+                      <span style={{ color: "var(--con-text-primary)", fontWeight: 600 }}>
+                        {typeof v === "number" ? v.toLocaleString("ar-SA") : String(v)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div style={{ color: "var(--con-text-muted)", fontSize: 12, padding: 20, textAlign: "center" }}>
+                {insightsLoading ? "جاري التحميل..." : "لا توجد بيانات"}
+              </div>
+            )}
+          </div>
+
+          {/* Payment Summary */}
+          <div
+            style={{
+              background: "var(--con-bg-surface-1)",
+              border: "1px solid var(--con-border-default)",
+              borderRadius: 10,
+              padding: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "var(--con-text-card-title)",
+                  fontWeight: 600,
+                  color: "var(--con-text-primary)",
+                  margin: 0,
+                }}
+              >
+                ملخص المدفوعات
+              </h3>
+              <button
+                style={S.btn("#2d3748", false)}
+                onClick={loadPaymentSummary}
+                disabled={paymentLoading}
+              >
+                <RefreshCw size={12} />
+              </button>
+            </div>
+            {paymentSummary ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+                {Object.entries(paymentSummary)
+                  .filter(([, v]) => typeof v === "number" || typeof v === "string")
+                  .slice(0, 10)
+                  .map(([k, v]) => (
+                    <div
+                      key={k}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderBottom: "1px solid var(--con-border-default)",
+                      }}
+                    >
+                      <span style={{ color: "var(--con-text-muted)" }}>{k}</span>
+                      <span
+                        style={{
+                          color: typeof v === "number" && v > 0 ? ACCENT_GREEN : "var(--con-text-primary)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {typeof v === "number"
+                          ? v.toLocaleString("ar-SA") + (k.toLowerCase().includes("amount") || k.toLowerCase().includes("total") ? " ر.س" : "")
+                          : String(v)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div style={{ color: "var(--con-text-muted)", fontSize: 12, padding: 20, textAlign: "center" }}>
+                {paymentLoading ? "جاري التحميل..." : "لا توجد بيانات"}
+              </div>
+            )}
+          </div>
+
+          {/* Provider Profile Details */}
+          {profile && (
+            <div
+              style={{
+                background: "var(--con-bg-surface-1)",
+                border: "1px solid var(--con-border-default)",
+                borderRadius: 10,
+                padding: 16,
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "var(--con-text-card-title)",
+                  fontWeight: 600,
+                  color: "var(--con-text-primary)",
+                  margin: "0 0 12px",
+                }}
+              >
+                بيانات المزوّد
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
+                {Object.entries(profile as Record<string, unknown>)
+                  .filter(([, v]) => typeof v === "number" || typeof v === "string" || typeof v === "boolean")
+                  .slice(0, 12)
+                  .map(([k, v]) => (
+                    <div
+                      key={k}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderBottom: "1px solid var(--con-border-default)",
+                      }}
+                    >
+                      <span style={{ color: "var(--con-text-muted)" }}>{k}</span>
+                      <span
+                        style={{
+                          color: "var(--con-text-primary)",
+                          fontWeight: 600,
+                          maxWidth: 180,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {String(v)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ══════════════════ Driver Table ══════════════════ */}
       {hasToken && (
         <div style={S.tableWrap}>
@@ -1993,10 +2278,89 @@ export default function JahezPlatform() {
                 />
               </div>
 
+              {/* Payment Report Section */}
+              <div
+                style={{
+                  marginTop: "24px",
+                  paddingTop: "16px",
+                  borderTop: `1px solid ${colors.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 10,
+                  }}
+                >
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: colors.textPrimary }}>
+                    تقرير المدفوعات
+                  </h4>
+                  <button
+                    style={S.btn("#2d3748", false)}
+                    onClick={() => loadDriverPayments(selectedDriver.driverId)}
+                    disabled={driverPaymentsLoading}
+                  >
+                    <RefreshCw size={11} />
+                    {driverPaymentsLoading ? "جاري..." : "جلب"}
+                  </button>
+                </div>
+                {driverPayments ? (
+                  <div
+                    style={{
+                      background: "var(--con-bg-surface-2)",
+                      border: "1px solid var(--con-border-default)",
+                      borderRadius: 6,
+                      padding: 10,
+                      fontSize: 11,
+                      maxHeight: 220,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {Object.entries(driverPayments)
+                      .filter(([, v]) => typeof v === "number" || typeof v === "string")
+                      .slice(0, 15)
+                      .map(([k, v]) => (
+                        <div
+                          key={k}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "4px 0",
+                            borderBottom: "1px solid var(--con-border-default)",
+                          }}
+                        >
+                          <span style={{ color: colors.textMuted }}>{k}</span>
+                          <span style={{ color: colors.textPrimary, fontWeight: 600 }}>
+                            {typeof v === "number" ? v.toLocaleString("ar-SA") : String(v)}
+                          </span>
+                        </div>
+                      ))}
+                    {(driverPayments as any).result && Array.isArray((driverPayments as any).result) && (
+                      <div style={{ marginTop: 8, color: colors.textMuted }}>
+                        {(driverPayments as any).result.length} سجل دفعات
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: colors.textMuted,
+                      padding: 10,
+                      textAlign: "center",
+                    }}
+                  >
+                    اضغط "جلب" لعرض تقرير دفعات هذا السائق
+                  </div>
+                )}
+              </div>
+
               {/* Actions */}
               <div
                 style={{
-                  marginTop: "30px",
+                  marginTop: "24px",
                   display: "flex",
                   gap: "10px",
                 }}

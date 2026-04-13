@@ -199,6 +199,7 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [logoFailed, setLogoFailed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
   );
@@ -309,20 +310,29 @@ export function AdminSidebar() {
             transition: "all 0.3s ease",
           }}
         >
-          <img
-            src="/images/logo.webp"
-            alt="First Line"
-            style={{ width: collapsed ? 28 : 32, height: collapsed ? 28 : 32, objectFit: "contain" }}
-            onError={(e) => {
-              const el = e.target as HTMLImageElement;
-              el.src = "/images/first_line_professional_english_1.png";
-              el.onerror = () => {
-                el.style.display = "none";
-                (el.parentElement as HTMLElement).innerHTML =
-                  '<span style="font-size:13px;font-weight:800;color:var(--con-brand);letter-spacing:-0.5px">FL</span>';
-              };
-            }}
-          />
+          {logoFailed ? (
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "var(--con-brand)",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              FL
+            </span>
+          ) : (
+            <img
+              src="/images/logo.webp"
+              alt="First Line"
+              style={{
+                width: collapsed ? 28 : 32,
+                height: collapsed ? 28 : 32,
+                objectFit: "contain",
+              }}
+              onError={() => setLogoFailed(true)}
+            />
+          )}
         </motion.div>
         {!collapsed && (
           <motion.div

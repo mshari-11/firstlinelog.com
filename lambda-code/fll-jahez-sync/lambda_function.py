@@ -207,6 +207,87 @@ def sync_drivers(token):
     return stats
 
 
+def snapshot_daily(token):
+    """Take a daily snapshot of Jahez data and retain last 30 days.
+
+    Writes one row per day to public.jahez_daily_snapshots with:
+    - Driver counts (total, active, inactive, online, offline)
+    - Full list of Active+Online drivers (id, name, phone, vehicle)
+    Then deletes rows older than 30 days.
+    """
+    stats = {"errors": 0, "deleted_old": 0}
+    today = now_utc().date().isoformat()
+    cutoff = (now_utc().date() - __import__("datetime").timedelta(days=30)).isoformat()
+
+    try:
+        # Pull active+online drivers from our own jahez_drivers table (just synced)
+        try:
+            active_rows = supabase_request(
+                "GET",
+                "jahez_drivers",
+                params={
+                    "select": "external_id,name,phone,vehicle_type,iqama_number",
+                    "status": "eq.Active",
+                    "availability": "eq.Online",
+                    "limit": "5000",
+                },
+            ) or []
+        except Exception as e:
+            print(f"[snapshot] fetch active failed: {e}")
+            active_rows = []
+
+        # Pull counts
+        counts = {"total": 0, "active": 0, "inactive": 0, "online": 0, "offline": 0}
+        try:
+            stats_raw = proxy_fetch("stats", token)
+            s = stats_raw.get("data", stats_raw)
+            counts["active"] = int(s.get("activeDrivers", 0) or 0)
+            counts["inactive"] = int(s.get("inactiveDrivers", 0) or 0)
+            counts["online"] = int(s.get("onlineDrivers", 0) or 0)
+            counts["offline"] = int(s.get("offlineDrivers", 0) or 0)
+            counts["total"] = counts["active"] + counts["inactive"]
+        except Exception as e:
+            print(f"[snapshot] stats fetch failed: {e}")
+
+        # Upsert today's snapshot
+        supabase_request(
+            "POST",
+            "jahez_daily_snapshots?on_conflict=snapshot_date",
+            body={
+                "snapshot_date": today,
+                "total_drivers": counts["total"],
+                "active_drivers": counts["active"],
+                "inactive_drivers": counts["inactive"],
+                "online_drivers": counts["online"],
+                "offline_drivers": counts["offline"],
+                "active_online_count": len(active_rows) if isinstance(active_rows, list) else 0,
+                "active_online_drivers": active_rows if isinstance(active_rows, list) else [],
+            },
+        )
+        stats["snapshot_date"] = today
+        stats["active_online_saved"] = len(active_rows) if isinstance(active_rows, list) else 0
+        print(
+            f"[snapshot] {today} saved — total={counts['total']}, "
+            f"active_online={stats['active_online_saved']}"
+        )
+
+        # Cleanup: delete rows older than 30 days
+        try:
+            supabase_request(
+                "DELETE",
+                f"jahez_daily_snapshots?snapshot_date=lt.{cutoff}",
+            )
+            stats["cutoff"] = cutoff
+            print(f"[snapshot] cleaned snapshots older than {cutoff}")
+        except Exception as e:
+            print(f"[snapshot] cleanup error: {e}")
+    except Exception as e:
+        stats["errors"] += 1
+        stats["message"] = str(e)
+        print(f"[snapshot] Error: {e}")
+    return stats
+
+
 def sync_payments(token):
     """Pull driver payments."""
     stats = {"fetched": 0, "errors": 0}
@@ -292,6 +373,7 @@ def lambda_handler(event, context):
         ("sync_stats", sync_stats),
         ("sync_drivers", sync_drivers),
         ("sync_payments", sync_payments),
+        ("snapshot_daily", snapshot_daily),
     ]
 
     for name, func in tasks:

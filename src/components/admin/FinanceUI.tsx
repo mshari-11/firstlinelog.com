@@ -361,6 +361,7 @@ export interface TableColumn {
   label: string;
   align?: "right" | "center" | "left";
   mono?: boolean;
+  sortable?: boolean;
   render?: (value: any, row: any) => React.ReactNode;
 }
 
@@ -369,11 +370,17 @@ export function DataTable({
   columns,
   data,
   headerAction,
+  sortKey,
+  sortDir,
+  onSort,
 }: {
   title: string;
   columns: TableColumn[];
   data: any[];
   headerAction?: React.ReactNode;
+  sortKey?: string;
+  sortDir?: "asc" | "desc";
+  onSort?: (key: string) => void;
 }) {
   return (
     <div
@@ -414,20 +421,32 @@ export function DataTable({
                 borderBottom: "1px solid var(--con-border-default)",
               }}
             >
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  style={{
-                    padding: "12px 16px",
-                    textAlign: col.align || "right",
-                    color: "var(--con-text-muted)",
-                    fontSize: "var(--con-text-caption)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {col.label}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const isSorted = sortKey === col.key;
+                const canSort = col.sortable && onSort;
+                return (
+                  <th
+                    key={col.key}
+                    onClick={canSort ? () => onSort(col.key) : undefined}
+                    style={{
+                      padding: "12px 16px",
+                      textAlign: col.align || "right",
+                      color: "var(--con-text-muted)",
+                      fontSize: "var(--con-text-caption)",
+                      fontWeight: 600,
+                      cursor: canSort ? "pointer" : undefined,
+                      userSelect: canSort ? "none" : undefined,
+                    }}
+                  >
+                    {col.label}
+                    {canSort && (
+                      <span style={{ marginInlineStart: 4, fontSize: 9, opacity: isSorted ? 1 : 0.3 }}>
+                        {isSorted ? (sortDir === "asc" ? "▲" : "▼") : "↕"}
+                      </span>
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

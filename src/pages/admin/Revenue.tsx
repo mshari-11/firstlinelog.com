@@ -96,6 +96,10 @@ export default function RevenueAnalysis() {
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [courierSearch, setCourierSearch] = useState("");
+  const [courierSortKey, setCourierSortKey] = useState<string>("revenue");
+  const [courierSortDir, setCourierSortDir] = useState<"asc" | "desc">("desc");
+  const [platformSortKey, setPlatformSortKey] = useState<string>("revenue");
+  const [platformSortDir, setPlatformSortDir] = useState<"asc" | "desc">("desc");
   const [addForm, setAddForm] = useState({
     platform: "",
     amount: "",
@@ -218,10 +222,36 @@ export default function RevenueAnalysis() {
     fetchRevenue();
   }, []);
 
-  const filteredCouriers = courierPerformanceData.filter((c) => {
-    if (courierSearch && !c.courier.toLowerCase().includes(courierSearch.toLowerCase())) return false;
-    return true;
-  });
+  function sortRows<T extends Record<string, any>>(rows: T[], key: string, dir: "asc" | "desc"): T[] {
+    const mul = dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = a[key];
+      const bv = b[key];
+      if (typeof av === "number" && typeof bv === "number") return mul * (av - bv);
+      return mul * String(av ?? "").localeCompare(String(bv ?? ""), "ar");
+    });
+  }
+
+  function toggleCourierSort(key: string) {
+    if (courierSortKey === key) setCourierSortDir(courierSortDir === "asc" ? "desc" : "asc");
+    else { setCourierSortKey(key); setCourierSortDir("desc"); }
+  }
+
+  function togglePlatformSort(key: string) {
+    if (platformSortKey === key) setPlatformSortDir(platformSortDir === "asc" ? "desc" : "asc");
+    else { setPlatformSortKey(key); setPlatformSortDir("desc"); }
+  }
+
+  const filteredCouriers = sortRows(
+    courierPerformanceData.filter((c) => {
+      if (courierSearch && !c.courier.toLowerCase().includes(courierSearch.toLowerCase())) return false;
+      return true;
+    }),
+    courierSortKey,
+    courierSortDir,
+  );
+
+  const sortedPlatforms = sortRows(platformRevenueData, platformSortKey, platformSortDir);
 
   return (
     <div
@@ -443,17 +473,19 @@ export default function RevenueAnalysis() {
             </div>
           }
           columns={[
-            { key: "courier", label: "اسم المندوب" },
+            { key: "courier", label: "اسم المندوب", sortable: true },
             {
               key: "revenue",
               label: "الإيرادات",
+              sortable: true,
               render: (v: number) => formatSAR(v, true),
             },
-            { key: "orders", label: "الطلبات", align: "center" },
+            { key: "orders", label: "الطلبات", align: "center", sortable: true },
             {
               key: "rating",
               label: "التقييم",
               align: "center",
+              sortable: true,
               render: (v: number) => (
                 <span style={{ color: "var(--con-warning)", fontWeight: 600 }}>
                   <TrendingUp
@@ -465,26 +497,34 @@ export default function RevenueAnalysis() {
               ),
             },
           ]}
+          sortKey={courierSortKey}
+          sortDir={courierSortDir}
+          onSort={toggleCourierSort}
         />
 
         <DataTable
           title="المنصات"
-          data={platformRevenueData}
+          data={sortedPlatforms}
           columns={[
-            { key: "platform", label: "المنصة" },
+            { key: "platform", label: "المنصة", sortable: true },
             {
               key: "revenue",
               label: "الإيرادات",
+              sortable: true,
               render: (v: number) => formatSAR(v, true),
             },
-            { key: "orders", label: "الطلبات", align: "center" },
+            { key: "orders", label: "الطلبات", align: "center", sortable: true },
             {
               key: "percentage",
               label: "النسبة",
               align: "center",
+              sortable: true,
               render: (v: number) => `${v}%`,
             },
           ]}
+          sortKey={platformSortKey}
+          sortDir={platformSortDir}
+          onSort={togglePlatformSort}
         />
       </div>
 

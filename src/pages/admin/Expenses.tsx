@@ -25,6 +25,10 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Download,
+  Printer,
+  RefreshCw,
+  Filter,
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
@@ -388,6 +392,41 @@ export default function Expenses() {
     budgetRemaining: 0,
     budgetUtilization: 0,
   });
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [expenseSortKey, setExpenseSortKey] = useState<string>("date");
+  const [expenseSortDir, setExpenseSortDir] = useState<"asc" | "desc">("desc");
+
+  function toggleExpenseSort(key: string) {
+    if (expenseSortKey === key) setExpenseSortDir(expenseSortDir === "asc" ? "desc" : "asc");
+    else { setExpenseSortKey(key); setExpenseSortDir("desc"); }
+  }
+
+  const uniqueCategories = Array.from(
+    new Set(recentExpenses.map((e) => e.category).filter(Boolean)),
+  );
+
+  const filteredExpenses = recentExpenses
+    .filter((e) => categoryFilter === "all" || e.category === categoryFilter)
+    .sort((a: any, b: any) => {
+      const mul = expenseSortDir === "asc" ? 1 : -1;
+      const av = a[expenseSortKey];
+      const bv = b[expenseSortKey];
+      if (typeof av === "number" && typeof bv === "number") return mul * (av - bv);
+      return mul * String(av ?? "").localeCompare(String(bv ?? ""), "ar");
+    });
+
+  function exportExpensesCsv() {
+    const headers = ["id", "category", "description", "amount", "date", "status"];
+    const rows = filteredExpenses.map((e: any) =>
+      headers.map((h) => `"${String(e[h] ?? "").replace(/"/g, '""')}"`).join(","),
+    );
+    const csv = ["\uFEFF" + headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  }
 
   useEffect(() => {
     async function fetchExpenses() {
@@ -561,32 +600,51 @@ export default function Expenses() {
         title="تتبع المصروفات"
         subtitle="إدارة شاملة للمصروفات والميزانية"
         actions={
-          <button
-            onClick={() => setShowModal(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 16px",
-              background: "var(--con-brand)",
-              border: "none",
-              borderRadius: 8,
-              color: "white",
-              fontSize: "var(--con-text-body)",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "opacity 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = "0.9";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = "1";
-            }}
-          >
-            <Plus size={18} />
-            إضافة مصروف جديد
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={exportExpensesCsv}
+              className="con-btn-ghost"
+              title="تصدير CSV"
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <Download size={14} /> CSV
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="con-btn-ghost"
+              title="طباعة"
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <Printer size={14} /> طباعة
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="con-btn-ghost"
+              title="تحديث"
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <RefreshCw size={14} /> تحديث
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 16px",
+                background: "var(--con-brand)",
+                border: "none",
+                borderRadius: 8,
+                color: "white",
+                fontSize: "var(--con-text-body)",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              <Plus size={18} />
+              إضافة مصروف
+            </button>
+          </div>
         }
       />
 
@@ -810,11 +868,55 @@ export default function Expenses() {
         </div>
       </div>
 
+      {/* Category filter pills */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <Filter size={14} style={{ color: "var(--con-text-muted)" }} />
+        <span style={{ fontSize: 12, color: "var(--con-text-muted)" }}>تصفية بالفئة:</span>
+        <button
+          onClick={() => setCategoryFilter("all")}
+          style={{
+            padding: "4px 12px",
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 500,
+            border: "1px solid",
+            cursor: "pointer",
+            background: categoryFilter === "all" ? "var(--con-brand)" : "transparent",
+            borderColor: categoryFilter === "all" ? "var(--con-brand)" : "var(--con-border-strong)",
+            color: categoryFilter === "all" ? "#fff" : "var(--con-text-muted)",
+          }}
+        >
+          الكل
+        </button>
+        {uniqueCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat)}
+            style={{
+              padding: "4px 12px",
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 500,
+              border: "1px solid",
+              cursor: "pointer",
+              background: categoryFilter === cat ? "var(--con-brand)" : "transparent",
+              borderColor: categoryFilter === cat ? "var(--con-brand)" : "var(--con-border-strong)",
+              color: categoryFilter === cat ? "#fff" : "var(--con-text-muted)",
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* Recent Expenses */}
       <DataTable
-        title="آخر المصروفات"
-        columns={expenseColumns}
-        data={recentExpenses}
+        title={`آخر المصروفات (${filteredExpenses.length})`}
+        columns={expenseColumns.map((c) => ({ ...c, sortable: true }))}
+        data={filteredExpenses}
+        sortKey={expenseSortKey}
+        sortDir={expenseSortDir}
+        onSort={toggleExpenseSort}
       />
 
       {showModal && (

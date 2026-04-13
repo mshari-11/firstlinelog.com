@@ -15,7 +15,15 @@ import {
   Plus,
   Download,
   Printer,
+  Trash2,
+  MessageCircle,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
@@ -63,6 +71,54 @@ export default function Invoices() {
     amount: "",
     dueDate: "",
   });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<keyof Invoice>("issueDate");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(ids: string[]) {
+    setSelectedIds((prev) => {
+      if (ids.every((id) => prev.has(id)) && ids.length > 0) return new Set();
+      return new Set(ids);
+    });
+  }
+
+  function toggleSort(key: keyof Invoice) {
+    if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  }
+
+  function bulkMarkPaid() {
+    if (selectedIds.size === 0) return;
+    setData((prev) =>
+      prev.map((i) => (selectedIds.has(i.id) ? { ...i, status: "paid" as InvoiceStatus } : i)),
+    );
+    toast.success(`تم تحديد ${selectedIds.size} فاتورة كمدفوعة`);
+    setSelectedIds(new Set());
+  }
+
+  function bulkDelete() {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`حذف ${selectedIds.size} فاتورة؟`)) return;
+    setData((prev) => prev.filter((i) => !selectedIds.has(i.id)));
+    toast.success(`تم حذف ${selectedIds.size} فاتورة`);
+    setSelectedIds(new Set());
+  }
+
+  function sendReminder(inv: Invoice) {
+    const msg = encodeURIComponent(
+      `مرحباً ${inv.customer}، تذكير بالفاتورة ${inv.id} بمبلغ ${inv.amount.toLocaleString("ar-SA")} ر.س مستحقة ${inv.dueDate}`,
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+  }
 
   useEffect(() => {
     fetchData();
@@ -109,11 +165,26 @@ export default function Invoices() {
     setLoading(false);
   }
 
-  const filtered = data.filter((a) => {
-    const matchSearch = a.customer.includes(search) || a.id.includes(search);
-    const matchFilter = filter === "all" || a.status === filter;
-    return matchSearch && matchFilter;
-  });
+  const filtered = data
+    .filter((a) => {
+      const matchSearch = a.customer.includes(search) || a.id.includes(search);
+      const matchFilter = filter === "all" || a.status === filter;
+      return matchSearch && matchFilter;
+    })
+    .sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (typeof av === "number" && typeof bv === "number") return dir * (av - bv);
+      return dir * String(av ?? "").localeCompare(String(bv ?? ""), "ar");
+    });
+
+  const filteredIds = filtered.map((i) => i.id);
+  const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+  function SortIcon({ col }: { col: keyof Invoice }) {
+    if (sortKey !== col) return <ArrowUpDown size={11} style={{ display: "inline", opacity: 0.3 }} />;
+    return sortDir === "asc" ? <ArrowUp size={11} style={{ display: "inline" }} /> : <ArrowDown size={11} style={{ display: "inline" }} />;
+  }
 
   const totalAmount = data.reduce((s, i) => s + i.amount, 0);
   const paidAmount = data
@@ -323,6 +394,36 @@ export default function Invoices() {
         ))}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 16px",
+            background: "var(--con-brand-subtle)",
+            border: "1px solid var(--con-brand)",
+            borderRadius: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontWeight: 600, color: "var(--con-brand)" }}>
+            {selectedIds.size} فاتورة محددة
+          </span>
+          <div style={{ marginInlineStart: "auto", display: "flex", gap: 6 }}>
+            <button className="con-btn-ghost" onClick={bulkMarkPaid}>
+              <CheckCircle2 size={14} /> تحديد كمدفوعة
+            </button>
+            <button className="con-btn-ghost" onClick={bulkDelete} style={{ color: "var(--con-danger)" }}>
+              <Trash2 size={14} /> حذف
+            </button>
+            <button className="con-btn-ghost" onClick={() => setSelectedIds(new Set())}>
+              <X size={14} /> إلغاء
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="con-toolbar" style={{ flexWrap: "wrap", gap: 10 }}>
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
           <Search
@@ -388,60 +489,109 @@ export default function Invoices() {
             <table className="con-table">
               <thead>
                 <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>العميل</th>
-                  <th>المبلغ</th>
-                  <th>تاريخ الإصدار</th>
-                  <th>الاستحقاق</th>
-                  <th>الحالة</th>
-                  <th>إجراء</th>
+                  <th style={{ width: 32 }}>
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={() => toggleSelectAll(filteredIds)}
+                      style={{ cursor: "pointer" }}
+                      aria-label="تحديد الكل"
+                    />
+                  </th>
+                  <th onClick={() => toggleSort("id")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    رقم الفاتورة <SortIcon col="id" />
+                  </th>
+                  <th onClick={() => toggleSort("customer")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    العميل <SortIcon col="customer" />
+                  </th>
+                  <th onClick={() => toggleSort("amount")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    المبلغ <SortIcon col="amount" />
+                  </th>
+                  <th onClick={() => toggleSort("issueDate")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    تاريخ الإصدار <SortIcon col="issueDate" />
+                  </th>
+                  <th onClick={() => toggleSort("dueDate")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    الاستحقاق <SortIcon col="dueDate" />
+                  </th>
+                  <th onClick={() => toggleSort("status")} style={{ cursor: "pointer", userSelect: "none" }}>
+                    الحالة <SortIcon col="status" />
+                  </th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((a) => (
-                  <tr key={a.id}>
+                  <tr key={a.id} style={{ background: selectedIds.has(a.id) ? "var(--con-brand-subtle)" : undefined }}>
                     <td>
-                      <span
-                        style={{
-                          fontFamily: "var(--con-font-mono)",
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(a.id)}
+                        onChange={() => toggleSelect(a.id)}
+                        style={{ cursor: "pointer" }}
+                        aria-label="تحديد"
+                      />
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: "var(--con-font-mono)", fontSize: 12, fontWeight: 600 }}>
                         {a.id}
                       </span>
                     </td>
                     <td>{a.customer}</td>
                     <td>
-                      <span
-                        style={{
-                          fontFamily: "var(--con-font-mono)",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => navigate("/admin-panel/finance")}
-                      >
+                      <span style={{ fontFamily: "var(--con-font-mono)" }}>
                         {a.amount.toLocaleString("ar-SA")} ر.س
                       </span>
                     </td>
                     <td>{a.issueDate}</td>
                     <td>{a.dueDate}</td>
                     <td>
-                      <span
-                        className={`con-badge con-badge-sm ${STATUS[a.status].cls}`}
-                      >
+                      <span className={`con-badge con-badge-sm ${STATUS[a.status].cls}`}>
                         {STATUS[a.status].icon} {STATUS[a.status].label}
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="con-btn-ghost"
-                        style={{ padding: "4px 8px", fontSize: 11 }}
-                        onClick={() =>
-                          navigate("/admin-panel/financial-reports")
-                        }
-                      >
-                        <Eye size={12} /> عرض
-                      </button>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button
+                          className="con-btn-ghost"
+                          style={{ padding: "4px 6px" }}
+                          onClick={() => navigate("/admin-panel/financial-reports")}
+                          title="عرض"
+                        >
+                          <Eye size={13} />
+                        </button>
+                        {a.status !== "paid" && (
+                          <button
+                            className="con-btn-ghost"
+                            style={{ padding: "4px 6px", color: "var(--con-success)" }}
+                            onClick={() => {
+                              setData((prev) => prev.map((i) => (i.id === a.id ? { ...i, status: "paid" as InvoiceStatus } : i)));
+                              toast.success("تم تحديد الفاتورة كمدفوعة");
+                            }}
+                            title="تحديد كمدفوعة"
+                          >
+                            <CheckCircle2 size={13} />
+                          </button>
+                        )}
+                        <button
+                          className="con-btn-ghost"
+                          style={{ padding: "4px 6px", color: "#25d366" }}
+                          onClick={() => sendReminder(a)}
+                          title="إرسال تذكير واتساب"
+                        >
+                          <MessageCircle size={13} />
+                        </button>
+                        <button
+                          className="con-btn-ghost"
+                          style={{ padding: "4px 6px" }}
+                          onClick={() => {
+                            navigator.clipboard?.writeText(a.id);
+                            toast.success("تم نسخ رقم الفاتورة");
+                          }}
+                          title="نسخ الرقم"
+                        >
+                          <Copy size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

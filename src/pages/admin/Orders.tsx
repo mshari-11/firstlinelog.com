@@ -487,6 +487,13 @@ export default function AdminOrders() {
 
   useEffect(() => setPage(1), [search, statusFilter, platformFilter, cityFilter, dateFrom, dateTo, amountFrom, amountTo]);
 
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 60_000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ─── Analytics KPIs ───────────────────────────────────────────────────────
 
   const totalAmount = filtered.reduce((s, o) => s + o.amount, 0);

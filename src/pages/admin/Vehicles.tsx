@@ -59,30 +59,7 @@ const VEHICLE_TYPE_MAP: Record<string, string> = {
   van: "فان",
 };
 
-const FALLBACK_VEHICLES: Vehicle[] = [
-  {
-    id: 1,
-    plate: "ABC-1234",
-    type: "دراجة نارية",
-    brand: "هوندا",
-    year: 2022,
-    courier: "أحمد محمد",
-    city: "الرياض",
-    status: "active",
-    lastService: "2025-12-01",
-  },
-  {
-    id: 2,
-    plate: "XYZ-5678",
-    type: "سيارة",
-    brand: "تويوتا",
-    year: 2021,
-    courier: "محمد علي",
-    city: "جدة",
-    status: "maintenance",
-    lastService: "2025-11-15",
-  },
-];
+const FALLBACK_VEHICLES: Vehicle[] = [];
 
 const STATUS_META: Record<
   VehicleStatus,

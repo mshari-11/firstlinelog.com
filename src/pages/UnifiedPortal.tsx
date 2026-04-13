@@ -244,7 +244,9 @@ export default function UnifiedPortal() {
               alt="First Line Logistics"
               style={{ height: "40px", objectFit: "contain" }}
               onError={(e) => {
-                (e.target as HTMLImageElement).src = "/images/logo.webp";
+                const el = e.currentTarget;
+                el.onerror = null;
+                el.src = "/images/logo.webp";
               }}
             />
           </Link>
@@ -324,7 +326,9 @@ export default function UnifiedPortal() {
               marginBottom: "1rem",
             }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/images/logo.webp";
+              const el = e.currentTarget;
+              el.onerror = null;
+              el.src = "/images/logo.webp";
             }}
           />
           <h1

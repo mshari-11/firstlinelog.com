@@ -402,7 +402,9 @@ export default function DriverLogin() {
             alt="First Line Logistics"
             style={S.logo}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/images/logo.webp";
+              const el = e.currentTarget;
+              el.onerror = null; // prevent infinite loop
+              el.src = "/images/logo.webp";
             }}
           />
           <h1 style={S.title}>First Line Logistics</h1>

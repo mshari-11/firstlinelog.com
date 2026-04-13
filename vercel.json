@@ -53,6 +53,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/images/:path*", "destination": "/public/images/:path*" },
     { "source": "/admin-panel/:path*", "destination": "/dist/index" },
     { "source": "/admin/:path*", "destination": "/dist/index" },
     { "source": "/admin/login", "destination": "/dist/index" },

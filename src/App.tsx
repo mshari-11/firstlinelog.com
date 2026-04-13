@@ -162,6 +162,7 @@ const TargetTracking = lazy(() => import("@/pages/admin/TargetTracking"));
 const AdminDriverProfile = lazy(() => import("@/pages/admin/DriverProfile"));
 const ToYouPlatform = lazy(() => import("@/pages/admin/ToYouPlatform"));
 const JahezPlatform = lazy(() => import("@/pages/admin/JahezPlatform"));
+const SendTrackingLink = lazy(() => import("@/pages/admin/SendTrackingLink"));
 const MarketplaceIntegrations = lazy(
   () => import("@/pages/admin/MarketplaceIntegrations"),
 );
@@ -755,6 +756,14 @@ export default function App() {
                 element={
                   <AccessGuard roles={["admin", "owner"]}>
                     <JahezPlatform />
+                  </AccessGuard>
+                }
+              />
+              <Route
+                path="send-tracking"
+                element={
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <SendTrackingLink />
                   </AccessGuard>
                 }
               />

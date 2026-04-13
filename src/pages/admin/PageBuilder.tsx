@@ -574,6 +574,16 @@ const DEFAULT_PAGES: PageConfig[] = [
     order: 5,
   },
   {
+    id: "send-tracking",
+    label: "إرسال رابط تتبع",
+    path: "/admin-panel/send-tracking",
+    group: "التشغيل",
+    icon: "Send",
+    enabled: true,
+    isCore: true,
+    order: 6,
+  },
+  {
     id: "n8n-workflows",
     label: "سير العمل (n8n)",
     path: "/admin-panel/n8n-workflows",

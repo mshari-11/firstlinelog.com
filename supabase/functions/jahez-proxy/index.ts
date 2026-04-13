@@ -7,7 +7,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const GATEWAY_BASE = "https://gateway.saned.io/api/v1/drivers-management-portal";
+const GATEWAY_HOST = "https://gateway.saned.io";
+const DRIVERS_PORTAL = "api/v1/drivers-management-portal";
 const PROVIDER_ID = "20524";
 
 const corsHeaders = {
@@ -16,9 +17,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** endpoint: may be relative to drivers-management-portal (default) OR start with "api/" / "/" for absolute gateway paths */
 async function sanedRequest(endpoint: string, token: string, params?: Record<string, string>): Promise<any> {
-  let url = `${GATEWAY_BASE}/${endpoint}`;
-  if (params) url += "?" + new URLSearchParams(params).toString();
+  let path: string;
+  if (endpoint.startsWith("api/") || endpoint.startsWith("/")) {
+    path = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
+  } else {
+    path = `${DRIVERS_PORTAL}/${endpoint}`;
+  }
+  let url = `${GATEWAY_HOST}/${path}`;
+  if (params && Object.keys(params).length > 0) {
+    url += "?" + new URLSearchParams(params).toString();
+  }
 
   const res = await fetch(url, {
     headers: {
@@ -161,14 +171,60 @@ serve(async (req: Request) => {
       }
 
       // ── SDP Payment Report (per-driver financial details) ──
+      // Correct Saned path: payment/transactions/sdpReport/{providerId}/page/{p}/pageSize/{s}
       case "sdp-payment-report": {
-        const p: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
-        if (body.startDate) p.startDate = body.startDate;
-        if (body.endDate) p.endDate = body.endDate;
-        if (body.driverId) p.driverId = body.driverId;
-        if (page) p.page = String(page);
-        if (size) p.pageSize = String(size);
-        result = await sanedRequest("payment/sdp-payment-report", token, p);
+        const p = page ?? 1;
+        const s = size ?? 10;
+        const params: Record<string, string> = {};
+        if (body.startDate) params.startDate = body.startDate;
+        if (body.endDate) params.endDate = body.endDate;
+        if (body.driverId) params.driverId = String(body.driverId);
+        const version = body.v2 ? "v2" : "v1";
+        result = await sanedRequest(
+          `api/${version}/payment/transactions/sdpReport/${PROVIDER_ID}/page/${p}/pageSize/${s}`,
+          token,
+          params,
+        );
+        break;
+      }
+
+      // Correct path: payment/settlements/accountantReport/page/{p}/pageSize/{s}
+      case "accountant-report-v2": {
+        const p = page ?? 1;
+        const s = size ?? 10;
+        const params: Record<string, string> = {};
+        if (body.startDate) params.startDate = body.startDate;
+        if (body.endDate) params.endDate = body.endDate;
+        result = await sanedRequest(
+          `api/v1/payment/settlements/accountantReport/page/${p}/pageSize/${s}`,
+          token,
+          params,
+        );
+        break;
+      }
+
+      case "accountants-list": {
+        result = await sanedRequest(`api/v1/payment/settlements/accountants`, token);
+        break;
+      }
+
+      // Full driver/all endpoint (richer data than driver-list)
+      case "driver-all-full": {
+        result = await sanedRequest(`driver/all`, token, { DeliveryProviderId: PROVIDER_ID });
+        break;
+      }
+
+      // Live dispatches / tracking data
+      case "dispatches": {
+        result = await sanedRequest(`drivers/dispatches`, token);
+        break;
+      }
+
+      case "registration-requests": {
+        result = await sanedRequest(
+          `api/v1/drivers-management/account/portal/get-registration-requests`,
+          token,
+        );
         break;
       }
 

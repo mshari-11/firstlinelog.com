@@ -776,13 +776,14 @@ export default function JahezPlatform() {
     if (!token) return;
     setAccountantLoading(true);
     try {
-      const raw = await proxyFetch("accountant-report", token, {
+      const raw = await proxyFetch("accountant-report-v2", token, {
         startDate: reportStartDate,
         endDate: reportEndDate,
+        page: 1,
+        size: 100,
       });
       if (raw) {
-        const data = ((raw as any).data || raw) as Record<string, unknown>;
-        setAccountantReport(data);
+        setAccountantReport(raw as Record<string, unknown>);
       } else {
         toast.error("فشل جلب التقرير المحاسبي");
       }
@@ -803,11 +804,11 @@ export default function JahezPlatform() {
       try {
         const raw = await proxyFetch("sdp-payment-report", token, {
           driverId,
+          page: 1,
           size: 50,
         });
         if (raw) {
-          const data = ((raw as any).data || raw) as Record<string, unknown>;
-          setDriverPayments(data);
+          setDriverPayments(raw as Record<string, unknown>);
         }
       } catch (e) {
         console.error("[driver-payments]", e);
@@ -1554,7 +1555,6 @@ export default function JahezPlatform() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
                 {Object.entries(insights)
                   .filter(([, v]) => typeof v === "number" || typeof v === "string")
-                  .slice(0, 10)
                   .map(([k, v]) => (
                     <div
                       key={k}
@@ -1618,7 +1618,6 @@ export default function JahezPlatform() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
                 {Object.entries(paymentSummary)
                   .filter(([, v]) => typeof v === "number" || typeof v === "string")
-                  .slice(0, 10)
                   .map(([k, v]) => (
                     <div
                       key={k}
@@ -1673,7 +1672,6 @@ export default function JahezPlatform() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12 }}>
                 {Object.entries(profile as Record<string, unknown>)
                   .filter(([, v]) => typeof v === "number" || typeof v === "string" || typeof v === "boolean")
-                  .slice(0, 12)
                   .map(([k, v]) => (
                     <div
                       key={k}
@@ -1803,7 +1801,6 @@ export default function JahezPlatform() {
               >
                 {Object.entries(accountantReport)
                   .filter(([, v]) => typeof v === "number" || typeof v === "string" || typeof v === "boolean")
-                  .slice(0, 12)
                   .map(([k, v]) => {
                     const isMoney =
                       typeof v === "number" &&
@@ -2604,7 +2601,6 @@ export default function JahezPlatform() {
                   >
                     {Object.entries(driverPayments)
                       .filter(([, v]) => typeof v === "number" || typeof v === "string")
-                      .slice(0, 15)
                       .map(([k, v]) => (
                         <div
                           key={k}

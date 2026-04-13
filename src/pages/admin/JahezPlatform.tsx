@@ -628,6 +628,17 @@ export default function JahezPlatform() {
   // Per-driver payment report (loaded on driver detail open)
   const [driverPayments, setDriverPayments] = useState<Record<string, unknown> | null>(null);
   const [driverPaymentsLoading, setDriverPaymentsLoading] = useState(false);
+  // Accountant report with date filter
+  const [accountantReport, setAccountantReport] = useState<Record<string, unknown> | null>(null);
+  const [accountantLoading, setAccountantLoading] = useState(false);
+  const [reportStartDate, setReportStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(1); // first day of current month
+    return d.toISOString().slice(0, 10);
+  });
+  const [reportEndDate, setReportEndDate] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
   const searchRef = useRef<HTMLInputElement>(null);
 
   const hasToken = !!token;
@@ -759,6 +770,29 @@ export default function JahezPlatform() {
       setPaymentLoading(false);
     }
   }, [token]);
+
+  /* ─── Load Accountant Report (date range) ─── */
+  const loadAccountantReport = useCallback(async () => {
+    if (!token) return;
+    setAccountantLoading(true);
+    try {
+      const raw = await proxyFetch("accountant-report", token, {
+        startDate: reportStartDate,
+        endDate: reportEndDate,
+      });
+      if (raw) {
+        const data = ((raw as any).data || raw) as Record<string, unknown>;
+        setAccountantReport(data);
+      } else {
+        toast.error("فشل جلب التقرير المحاسبي");
+      }
+    } catch (e) {
+      console.error("[accountant-report]", e);
+      toast.error("خطأ في جلب التقرير المحاسبي");
+    } finally {
+      setAccountantLoading(false);
+    }
+  }, [token, reportStartDate, reportEndDate]);
 
   /* ─── Load per-driver payment report ─── */
   const loadDriverPayments = useCallback(
@@ -1666,6 +1700,256 @@ export default function JahezPlatform() {
                     </div>
                   ))}
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════ Accountant Report (date-filtered) ══════════════════ */}
+      {hasToken && (
+        <div
+          style={{
+            background: "var(--con-bg-surface-1)",
+            border: "1px solid var(--con-border-default)",
+            borderRadius: 10,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "var(--con-text-card-title)",
+                fontWeight: 600,
+                color: "var(--con-text-primary)",
+                margin: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Receipt size={16} color={JAHEZ_RED} />
+              التقرير المحاسبي
+            </h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "var(--con-text-muted)" }}>من:</span>
+              <input
+                type="date"
+                value={reportStartDate}
+                onChange={(e) => setReportStartDate(e.target.value)}
+                className="con-input"
+                style={{ fontSize: 12, padding: "6px 10px" }}
+              />
+              <span style={{ fontSize: 11, color: "var(--con-text-muted)" }}>إلى:</span>
+              <input
+                type="date"
+                value={reportEndDate}
+                onChange={(e) => setReportEndDate(e.target.value)}
+                className="con-input"
+                style={{ fontSize: 12, padding: "6px 10px" }}
+              />
+              <button
+                style={S.btn(JAHEZ_RED, true)}
+                onClick={loadAccountantReport}
+                disabled={accountantLoading}
+              >
+                <RefreshCw
+                  size={12}
+                  style={{
+                    animation: accountantLoading ? "spin 1s linear infinite" : "none",
+                  }}
+                />
+                {accountantLoading ? "جاري..." : "جلب التقرير"}
+              </button>
+              {accountantReport && (
+                <button
+                  style={S.btn("#2d3748", false)}
+                  onClick={() => {
+                    const json = JSON.stringify(accountantReport, null, 2);
+                    const blob = new Blob([json], { type: "application/json" });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `accountant-report-${reportStartDate}-to-${reportEndDate}.json`;
+                    a.click();
+                  }}
+                  title="تصدير JSON"
+                >
+                  <Download size={12} />
+                  تصدير
+                </button>
+              )}
+            </div>
+          </div>
+
+          {accountantReport ? (
+            <div>
+              {/* Summary scalar fields */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 8,
+                  marginBottom: 14,
+                }}
+              >
+                {Object.entries(accountantReport)
+                  .filter(([, v]) => typeof v === "number" || typeof v === "string" || typeof v === "boolean")
+                  .slice(0, 12)
+                  .map(([k, v]) => {
+                    const isMoney =
+                      typeof v === "number" &&
+                      (k.toLowerCase().includes("amount") ||
+                        k.toLowerCase().includes("total") ||
+                        k.toLowerCase().includes("paid") ||
+                        k.toLowerCase().includes("due") ||
+                        k.toLowerCase().includes("revenue"));
+                    return (
+                      <div
+                        key={k}
+                        style={{
+                          background: "var(--con-bg-surface-2)",
+                          border: "1px solid var(--con-border-default)",
+                          borderRadius: 6,
+                          padding: "10px 12px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "var(--con-text-muted)",
+                            marginBottom: 4,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          {k}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 700,
+                            color: isMoney ? ACCENT_GREEN : "var(--con-text-primary)",
+                            fontFamily: "var(--con-font-mono)",
+                          }}
+                        >
+                          {typeof v === "number"
+                            ? v.toLocaleString("ar-SA") + (isMoney ? " ر.س" : "")
+                            : String(v)}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Array result table if present */}
+              {(() => {
+                const rowsField = (accountantReport as any).result ||
+                  (accountantReport as any).rows ||
+                  (accountantReport as any).items ||
+                  (accountantReport as any).data;
+                if (!Array.isArray(rowsField) || rowsField.length === 0) return null;
+                const headers = Object.keys(rowsField[0]).slice(0, 8);
+                return (
+                  <div
+                    style={{
+                      background: "var(--con-bg-surface-2)",
+                      border: "1px solid var(--con-border-default)",
+                      borderRadius: 6,
+                      maxHeight: 340,
+                      overflow: "auto",
+                    }}
+                  >
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        fontSize: 11,
+                      }}
+                    >
+                      <thead
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          background: "var(--con-bg-surface-1)",
+                        }}
+                      >
+                        <tr>
+                          {headers.map((h) => (
+                            <th
+                              key={h}
+                              style={{
+                                padding: "8px 10px",
+                                textAlign: "start",
+                                fontWeight: 600,
+                                color: "var(--con-text-muted)",
+                                borderBottom: "1px solid var(--con-border-default)",
+                              }}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rowsField.slice(0, 100).map((row: any, idx: number) => (
+                          <tr
+                            key={idx}
+                            style={{
+                              borderBottom: "1px solid var(--con-border-default)",
+                            }}
+                          >
+                            {headers.map((h) => (
+                              <td
+                                key={h}
+                                style={{
+                                  padding: "7px 10px",
+                                  color: "var(--con-text-primary)",
+                                }}
+                              >
+                                {typeof row[h] === "number"
+                                  ? row[h].toLocaleString("ar-SA")
+                                  : String(row[h] ?? "—")}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {rowsField.length > 100 && (
+                      <div
+                        style={{
+                          padding: 8,
+                          textAlign: "center",
+                          fontSize: 10,
+                          color: "var(--con-text-muted)",
+                        }}
+                      >
+                        + {rowsField.length - 100} صف آخر (قم بالتصدير للاطلاع)
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: 24,
+                color: "var(--con-text-muted)",
+                fontSize: 13,
+              }}
+            >
+              حدّد التواريخ واضغط "جلب التقرير" لعرض البيانات المحاسبية
             </div>
           )}
         </div>

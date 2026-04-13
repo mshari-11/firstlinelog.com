@@ -93,6 +93,7 @@ import { DriverLayout } from "@/components/driver/DriverLayout";
 import CourierRegister from "@/pages/courier/Register";
 import CourierPortal from "@/pages/courier/Portal";
 import ApplicationStatus from "@/pages/courier/ApplicationStatus";
+const TrackLocation = lazy(() => import("@/pages/TrackLocation"));
 import PasswordLogin from "@/pages/PasswordLogin";
 import UnifiedPortal from "@/pages/UnifiedPortal";
 
@@ -944,6 +945,7 @@ export default function App() {
             <Route path="/courier/register" element={<CourierRegister />} />
             <Route path="/courier/portal" element={<CourierPortal />} />
             <Route path="/application-status" element={<ApplicationStatus />} />
+            <Route path="/track/:shipmentId" element={<TrackLocation />} />
 
             {/* ══════════════════════════════════════════════════════════════
                 STAGING (dev preview — no auth, safe sandbox)

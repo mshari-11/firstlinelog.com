@@ -63,6 +63,7 @@
     { "source": "/courier/:path*", "destination": "/dist/index" },
     { "source": "/application-status", "destination": "/dist/index" },
     { "source": "/driver/:path*", "destination": "/dist/index" },
+    { "source": "/track/:path*", "destination": "/dist/index" },
     { "source": "/about", "destination": "/" },
     { "source": "/contact", "destination": "/" },
     { "source": "/services", "destination": "/" },

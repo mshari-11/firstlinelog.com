@@ -17,6 +17,7 @@ function spaFallback(): Plugin {
           "/courier",
           "/login",
           "/application-status",
+          "/track",
         ];
         if (req.url && spaRoutes.some((r) => req.url!.startsWith(r))) {
           req.url = "/spa.html";

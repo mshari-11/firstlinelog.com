@@ -566,10 +566,11 @@ const DEFAULT_PAGES: PageConfig[] = [
   {
     id: "jahez",
     label: "جاهز",
-    path: "/admin-panel/jahez-platform",
+    path: "/admin-panel/jahez",
     group: "التشغيل",
     icon: "Truck",
     enabled: true,
+    isCore: true,
     order: 5,
   },
   {
@@ -716,12 +717,12 @@ const DEFAULT_PAGES: PageConfig[] = [
   },
 ];
 
-const STORAGE_KEY = "fll_page_config_v5";
+const STORAGE_KEY = "fll_page_config_v6";
 
 function loadConfig(): PageConfig[] {
   try {
     // Clear old version caches
-    ["fll_page_config_v1", "fll_page_config_v2", "fll_page_config_v3", "fll_page_config_v4"].forEach(
+    ["fll_page_config_v1", "fll_page_config_v2", "fll_page_config_v3", "fll_page_config_v4", "fll_page_config_v5"].forEach(
       (k) => localStorage.removeItem(k),
     );
     const raw = localStorage.getItem(STORAGE_KEY);

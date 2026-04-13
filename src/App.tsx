@@ -750,6 +750,14 @@ export default function App() {
                 }
               />
               <Route
+                path="jahez"
+                element={
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <JahezPlatform />
+                  </AccessGuard>
+                }
+              />
+              <Route
                 path="toyou-platform"
                 element={
                   <AccessGuard roles={["admin", "owner"]}>

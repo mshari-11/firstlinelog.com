@@ -8,7 +8,7 @@
  *   Zone C: Finance Strip (collapsible, permission-gated)
  *   Zone D: Infrastructure + Module Status (admin only)
  */
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useAuth } from "@/lib/admin/auth";
 import { useDashboardStore } from "@/stores/useDashboardStore";
 import { useModuleRegistry } from "@/stores/useModuleRegistry";
@@ -24,19 +24,62 @@ import {
   Minimize,
 } from "lucide-react";
 
-// Widgets
+// Eager widgets (above-the-fold)
 import { KPIOverview } from "@/components/admin/dashboard/widgets/KPIOverview";
-import { SystemHealth } from "@/components/admin/dashboard/widgets/SystemHealth";
 import { QuickActions } from "@/components/admin/dashboard/widgets/QuickActions";
-import { ChartsPanel } from "@/components/admin/dashboard/widgets/ChartsPanel";
-import { AlertsPanel } from "@/components/admin/dashboard/widgets/AlertsPanel";
-import { RecentActivity } from "@/components/admin/dashboard/widgets/RecentActivity";
-import { PendingApprovals } from "@/components/admin/dashboard/widgets/PendingApprovals";
-import { FinanceSnapshot } from "@/components/admin/dashboard/widgets/FinanceSnapshot";
-import { OperationsMap } from "@/components/admin/dashboard/widgets/OperationsMap";
-import { ModuleStatusGrid } from "@/components/admin/dashboard/widgets/ModuleStatusGrid";
-import { InfrastructurePanel } from "@/components/admin/dashboard/widgets/InfrastructurePanel";
-import { ActiveDrivers } from "@/components/admin/dashboard/widgets/ActiveDrivers";
+
+// Lazy widgets (below-the-fold) — each becomes its own async chunk
+const SystemHealth = lazy(() =>
+  import("@/components/admin/dashboard/widgets/SystemHealth").then((m) => ({ default: m.SystemHealth })),
+);
+const ChartsPanel = lazy(() =>
+  import("@/components/admin/dashboard/widgets/ChartsPanel").then((m) => ({ default: m.ChartsPanel })),
+);
+const AlertsPanel = lazy(() =>
+  import("@/components/admin/dashboard/widgets/AlertsPanel").then((m) => ({ default: m.AlertsPanel })),
+);
+const RecentActivity = lazy(() =>
+  import("@/components/admin/dashboard/widgets/RecentActivity").then((m) => ({ default: m.RecentActivity })),
+);
+const PendingApprovals = lazy(() =>
+  import("@/components/admin/dashboard/widgets/PendingApprovals").then((m) => ({ default: m.PendingApprovals })),
+);
+const FinanceSnapshot = lazy(() =>
+  import("@/components/admin/dashboard/widgets/FinanceSnapshot").then((m) => ({ default: m.FinanceSnapshot })),
+);
+const OperationsMap = lazy(() =>
+  import("@/components/admin/dashboard/widgets/OperationsMap").then((m) => ({ default: m.OperationsMap })),
+);
+const ModuleStatusGrid = lazy(() =>
+  import("@/components/admin/dashboard/widgets/ModuleStatusGrid").then((m) => ({ default: m.ModuleStatusGrid })),
+);
+const InfrastructurePanel = lazy(() =>
+  import("@/components/admin/dashboard/widgets/InfrastructurePanel").then((m) => ({ default: m.InfrastructurePanel })),
+);
+const ActiveDrivers = lazy(() =>
+  import("@/components/admin/dashboard/widgets/ActiveDrivers").then((m) => ({ default: m.ActiveDrivers })),
+);
+
+// Skeleton fallback while a lazy widget loads
+function WidgetSkeleton({ height = 180 }: { height?: number }) {
+  return (
+    <div
+      style={{
+        background: "var(--con-bg-surface-1)",
+        border: "1px solid var(--con-border-default)",
+        borderRadius: 10,
+        height,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "var(--con-text-muted)",
+        fontSize: 12,
+      }}
+    >
+      جاري التحميل...
+    </div>
+  );
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function getGreeting(): string {
@@ -289,14 +332,16 @@ export default function ControlTower() {
       />
 
       {/* ═══════════════════════════════════════════════════════════════════════
-         ZONE A: Executive Overview — KPIs + Quick Actions
+         ZONE A: Executive Overview — KPIs + Quick Actions (eager)
          ═══════════════════════════════════════════════════════════════════════ */}
       <WidgetZone zone="executive" gap={compactMode ? 8 : 14}>
         <KPIOverview />
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}
         >
-          <SystemHealth />
+          <Suspense fallback={<WidgetSkeleton height={220} />}>
+            <SystemHealth />
+          </Suspense>
           <div
             style={{
               background: "var(--con-bg-surface-1)",
@@ -328,17 +373,35 @@ export default function ControlTower() {
       >
         {/* Left Column — Main operational data */}
         <WidgetZone zone="main" gap={compactMode ? 8 : 14}>
-          <ChartsPanel />
-          <RecentActivity />
-          {canViewOrders && <OperationsMap />}
+          <Suspense fallback={<WidgetSkeleton height={320} />}>
+            <ChartsPanel />
+          </Suspense>
+          <Suspense fallback={<WidgetSkeleton height={280} />}>
+            <RecentActivity />
+          </Suspense>
+          {canViewOrders && (
+            <Suspense fallback={<WidgetSkeleton height={300} />}>
+              <OperationsMap />
+            </Suspense>
+          )}
         </WidgetZone>
 
         {/* Right Column — Alerts, approvals, module status */}
         <WidgetZone zone="sidebar" gap={compactMode ? 8 : 14}>
-          <ActiveDrivers />
-          <AlertsPanel />
-          <PendingApprovals />
-          {isAdmin && <ModuleStatusGrid />}
+          <Suspense fallback={<WidgetSkeleton height={400} />}>
+            <ActiveDrivers />
+          </Suspense>
+          <Suspense fallback={<WidgetSkeleton height={220} />}>
+            <AlertsPanel />
+          </Suspense>
+          <Suspense fallback={<WidgetSkeleton height={260} />}>
+            <PendingApprovals />
+          </Suspense>
+          {isAdmin && (
+            <Suspense fallback={<WidgetSkeleton height={200} />}>
+              <ModuleStatusGrid />
+            </Suspense>
+          )}
         </WidgetZone>
       </div>
 
@@ -347,7 +410,9 @@ export default function ControlTower() {
          ═══════════════════════════════════════════════════════════════════════ */}
       {canViewFinance && (
         <WidgetZone zone="finance" title="نظرة مالية" collapsible>
-          <FinanceSnapshot />
+          <Suspense fallback={<WidgetSkeleton height={200} />}>
+            <FinanceSnapshot />
+          </Suspense>
         </WidgetZone>
       )}
 
@@ -356,7 +421,9 @@ export default function ControlTower() {
          ═══════════════════════════════════════════════════════════════════════ */}
       {isAdmin && (
         <WidgetZone zone="infrastructure" title="البنية التحتية" collapsible>
-          <InfrastructurePanel />
+          <Suspense fallback={<WidgetSkeleton height={200} />}>
+            <InfrastructurePanel />
+          </Suspense>
         </WidgetZone>
       )}
     </PageWrapper>

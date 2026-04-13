@@ -1,4 +1,4 @@
-const CACHE_NAME = "fll-v2";
+const CACHE_NAME = "fll-v3";
 const STATIC_ASSETS = [
   "/public/images/logo.webp",
   "/public/images/first_line_correct_logos_1.jpg",

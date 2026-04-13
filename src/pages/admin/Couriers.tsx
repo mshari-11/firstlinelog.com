@@ -421,6 +421,9 @@ export default function AdminCouriers() {
   const [courierLoading, setCourierLoading] = useState(true);
   const [courierSearch, setCourierSearch] = useState("");
   const [courierStatusFilter, setCourierStatusFilter] = useState<string>("all");
+  // Client-side pagination to avoid rendering 3000+ rows
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
   const [applications, setApplications] =
     useState<DriverApplication[]>([]);
   const [appLoading, setAppLoading] = useState(true);
@@ -1513,7 +1516,9 @@ export default function AdminCouriers() {
                   {courierLoading ? (
                     <SkeletonRows rows={4} cols={ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)).length} />
                   ) : (
-                    filteredCouriers.map((courier) => {
+                    filteredCouriers
+                      .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                      .map((courier) => {
                       const sc = courierStatusConfig[courier.status];
                       const onlineStatus = getOnlineStatus(courier.last_active);
                       const cls = getClassification(courier);
@@ -1593,19 +1598,56 @@ export default function AdminCouriers() {
                   borderTop: "1px solid var(--con-border-default)",
                   display: "flex",
                   justifyContent: "space-between",
+                  alignItems: "center",
                   fontSize: "var(--con-text-caption)",
                   color: "var(--con-text-muted)",
+                  flexWrap: "wrap",
+                  gap: 10,
                 }}
               >
-                <span>{filteredCouriers.length} مندوب</span>
                 <span>
-                  نشط:{" "}
-                  {filteredCouriers.filter((c) => c.status === "active").length}{" "}
-                  · في التوصيل:{" "}
-                  {
-                    filteredCouriers.filter((c) => c.status === "on_delivery")
-                      .length
-                  }
+                  عرض {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredCouriers.length)} من {filteredCouriers.length} مندوب
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button
+                    className="con-btn-ghost"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(1)}
+                    style={{ padding: "4px 8px" }}
+                  >
+                    الأول
+                  </button>
+                  <button
+                    className="con-btn-ghost"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    style={{ padding: "4px 8px" }}
+                  >
+                    ‹ السابق
+                  </button>
+                  <span style={{ padding: "0 10px", fontWeight: 600, color: "var(--con-text-primary)" }}>
+                    {currentPage} / {Math.max(1, Math.ceil(filteredCouriers.length / PAGE_SIZE))}
+                  </span>
+                  <button
+                    className="con-btn-ghost"
+                    disabled={currentPage >= Math.ceil(filteredCouriers.length / PAGE_SIZE)}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    style={{ padding: "4px 8px" }}
+                  >
+                    التالي ›
+                  </button>
+                  <button
+                    className="con-btn-ghost"
+                    disabled={currentPage >= Math.ceil(filteredCouriers.length / PAGE_SIZE)}
+                    onClick={() => setCurrentPage(Math.ceil(filteredCouriers.length / PAGE_SIZE))}
+                    style={{ padding: "4px 8px" }}
+                  >
+                    الأخير
+                  </button>
+                </div>
+                <span>
+                  نشط: {filteredCouriers.filter((c) => c.status === "active").length} · في التوصيل:{" "}
+                  {filteredCouriers.filter((c) => c.status === "on_delivery").length}
                 </span>
               </div>
             )}

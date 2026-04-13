@@ -548,9 +548,9 @@ export default function CourierMap() {
         <Card>
           <div style={{ textAlign: "center", padding: "2rem 0", color: "var(--con-text-muted)" }}>
             <MapPin size={32} style={{ margin: "0 auto 8px", opacity: 0.4 }} />
-            <div style={{ fontSize: 14 }}>لا توجد بيانات مواقع</div>
+            <div style={{ fontSize: 14 }}>لا توجد مناديب لعرضهم</div>
             <div style={{ fontSize: 12, marginTop: 6, color: "var(--con-text-muted)" }}>
-              اضغط "سحب المواقع" لجلب البيانات من قاعدة البيانات
+              سجّل أول مندوب من صفحة "المناديب" أو زامن منصة جاهز من صفحة "منصة جاهز"
             </div>
           </div>
         </Card>

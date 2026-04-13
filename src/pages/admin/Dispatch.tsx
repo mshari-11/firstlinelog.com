@@ -81,39 +81,65 @@ interface Order {
   estimatedTime?: number;
 }
 
-function normalizeDriver(raw: any): Driver {
+type RawRecord = Record<string, unknown>;
+
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : v != null ? String(v) : fallback;
+}
+function num(v: unknown, fallback = 0): number {
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeDriver(raw: RawRecord): Driver | null {
+  const id = str(raw.id || raw.driverId || raw.driver_id);
+  if (!id) return null;
+  const rawStatus = str(raw.status);
   return {
-    id: raw.id || raw.driverId || raw.driver_id,
-    name: raw.name || raw.fullName || raw.full_name || "سائق",
-    phone: raw.phone || raw.mobile || "",
-    rating: Number(raw.rating || 4.5),
+    id,
+    name: str(raw.name || raw.fullName || raw.full_name, "سائق"),
+    phone: str(raw.phone || raw.mobile),
+    rating: num(raw.rating, 4.5),
     status:
-      raw.status === "offline"
+      rawStatus === "offline"
         ? "offline"
-        : raw.status === "busy" || raw.status === "on_delivery"
+        : rawStatus === "busy" || rawStatus === "on_delivery"
           ? "busy"
           : "available",
-    lat: Number(raw.lat ?? raw.latitude ?? 24.7136),
-    lng: Number(raw.lng ?? raw.longitude ?? 46.6753),
-    vehicle:
-      raw.vehicle || raw.vehicleType || raw.vehicle_type || "دراجة نارية",
-    activeOrderId: raw.activeOrderId || raw.active_order_id,
+    lat: num(raw.lat ?? raw.latitude, 24.7136),
+    lng: num(raw.lng ?? raw.longitude, 46.6753),
+    vehicle: str(
+      raw.vehicle || raw.vehicleType || raw.vehicle_type,
+      "دراجة نارية",
+    ),
+    activeOrderId: str(raw.activeOrderId || raw.active_order_id) || undefined,
   };
 }
 
-function normalizeOrder(raw: any): Order {
+function normalizeOrder(raw: RawRecord): Order | null {
+  const id = str(raw.id || raw.orderId || raw.order_id);
+  if (!id) return null;
+  const s = str(raw.status, "pending");
+  const allowedStatus: OrderStatus[] = [
+    "pending",
+    "assigned",
+    "pickup",
+    "delivering",
+    "delivered",
+    "cancelled",
+  ];
   return {
-    id: raw.id || raw.orderId || raw.order_id,
-    customer: raw.customer || raw.customer_name || "عميل",
-    address: raw.address || raw.delivery_address || "",
-    platform: raw.platform || raw.platform_name || "FLL",
-    amount: Number(raw.amount || 0),
-    status: raw.status || "pending",
-    lat: Number(raw.lat ?? raw.latitude ?? 24.7136),
-    lng: Number(raw.lng ?? raw.longitude ?? 46.6753),
-    assignedDriverId: raw.assignedDriverId || raw.assigned_driver_id,
-    createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
-    estimatedTime: raw.estimatedTime || raw.estimated_time,
+    id,
+    customer: str(raw.customer || raw.customer_name, "عميل"),
+    address: str(raw.address || raw.delivery_address),
+    platform: str(raw.platform || raw.platform_name, "FLL"),
+    amount: num(raw.amount),
+    status: (allowedStatus.includes(s as OrderStatus) ? s : "pending") as OrderStatus,
+    lat: num(raw.lat ?? raw.latitude, 24.7136),
+    lng: num(raw.lng ?? raw.longitude, 46.6753),
+    assignedDriverId: str(raw.assignedDriverId || raw.assigned_driver_id) || undefined,
+    createdAt: str(raw.createdAt || raw.created_at, new Date().toISOString()),
+    estimatedTime: raw.estimatedTime != null ? num(raw.estimatedTime) : undefined,
   };
 }
 
@@ -343,48 +369,57 @@ export default function Dispatch() {
         const liveMap = new globalThis.Map(
           liveLocations.map((loc) => [String(loc.driver_id), loc]),
         );
-        const mergedDrivers = rawDrivers.map((raw: any) => {
-          const driver = normalizeDriver(raw);
-          const live = liveMap.get(String(driver.id));
-          return live
-            ? {
-                ...driver,
-                lat: Number(live.latitude),
-                lng: Number(live.longitude),
-                status:
-                  driver.status === "offline" ? "available" : driver.status,
-              }
-            : driver;
-        });
+        const mergedDrivers: Driver[] = rawDrivers
+          .map((raw: RawRecord) => {
+            const driver = normalizeDriver(raw);
+            if (!driver) return null;
+            const live = liveMap.get(String(driver.id));
+            return live
+              ? {
+                  ...driver,
+                  lat: Number(live.latitude),
+                  lng: Number(live.longitude),
+                  status:
+                    driver.status === "offline" ? "available" : driver.status,
+                }
+              : driver;
+          })
+          .filter((d: Driver | null): d is Driver => d !== null);
 
         // Append Jahez drivers — place around Riyadh with small jitter
         // (Saned does not expose coordinates; only online drivers are shown on map)
-        const jahezMapped: Driver[] = jahezDrivers
-          .filter((d: any) => d.availability === "Online")
-          .map((d: any) => {
-            const hash = String(d.external_id || "").split("").reduce(
-              (a, c) => a + c.charCodeAt(0),
-              0,
-            );
+        const jahezMapped: Driver[] = (jahezDrivers as RawRecord[])
+          .filter((d) => d.availability === "Online")
+          .map((d) => {
+            const externalId = str(d.external_id);
+            if (!externalId) return null;
+            const hash = externalId
+              .split("")
+              .reduce((a, c) => a + c.charCodeAt(0), 0);
             const jitterLat = ((hash % 100) / 100 - 0.5) * 0.08;
             const jitterLng = (((hash * 31) % 100) / 100 - 0.5) * 0.08;
             const isActive = d.status === "Active";
             return {
-              id: `jahez:${d.external_id}`,
-              name: d.name || "سائق جاهز",
-              phone: d.phone || "",
+              id: `jahez:${externalId}`,
+              name: str(d.name, "سائق جاهز"),
+              phone: str(d.phone),
               rating: 4.5,
               status: isActive ? "available" : "offline",
               lat: 24.7136 + jitterLat,
               lng: 46.6753 + jitterLng,
-              vehicle: String(d.vehicle_type || "دراجة نارية"),
+              vehicle: str(d.vehicle_type, "دراجة نارية"),
             } as Driver;
-          });
+          })
+          .filter((d): d is Driver => d !== null);
 
         const allDrivers = [...mergedDrivers, ...jahezMapped];
         if (allDrivers.length > 0) setDrivers(allDrivers);
-        if (rawOrders.length > 0)
-          setOrders(rawOrders.map((raw: any) => normalizeOrder(raw)));
+        if (rawOrders.length > 0) {
+          const mappedOrders = (rawOrders as RawRecord[])
+            .map((raw) => normalizeOrder(raw))
+            .filter((o): o is Order => o !== null);
+          setOrders(mappedOrders);
+        }
         if (!cancelled) setApiError(null);
       } catch (err) {
         console.error("[Dispatch] fetchData error:", err);

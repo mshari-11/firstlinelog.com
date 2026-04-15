@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { PageWrapper, PageHeader, Modal } from "@/components/admin/ui";
 
 function downloadCSV(rows: Record<string, unknown>[], filename: string) {
@@ -136,7 +137,9 @@ export default function Tasks() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTask),
       });
-    } catch {}
+    } catch (err) {
+      console.error("handleAdd tasks sync error:", err);
+    }
     setData((prev) => [newTask, ...prev]);
     resetForm();
     setShowModal(false);
@@ -154,26 +157,22 @@ export default function Tasks() {
       status: form.status,
     };
     try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if (url && key) {
-        const supabase = createClient(url, key);
-        if (supabase) {
-          await supabase
-            .schema("admin" as any)
-            .from("tasks")
-            .update({
-              title: updated.title,
-              description: updated.description,
-              assignee: updated.assignee,
-              priority: updated.priority,
-              status: updated.status,
-            })
-            .eq("id", updated.id);
-        }
+      if (supabase) {
+        await (supabase as any)
+          .schema("admin")
+          .from("tasks")
+          .update({
+            title: updated.title,
+            description: updated.description,
+            assignee: updated.assignee,
+            priority: updated.priority,
+            status: updated.status,
+          })
+          .eq("id", updated.id);
       }
-    } catch { /* keep local */ }
+    } catch (err) {
+      console.error("handleEdit tasks sync error:", err);
+    }
     setData((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     resetForm();
     setEditingTask(null);
@@ -184,20 +183,16 @@ export default function Tasks() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if (url && key) {
-        const supabase = createClient(url, key);
-        if (supabase) {
-          await supabase
-            .schema("admin" as any)
-            .from("tasks")
-            .delete()
-            .eq("id", deleteTarget.id);
-        }
+      if (supabase) {
+        await (supabase as any)
+          .schema("admin")
+          .from("tasks")
+          .delete()
+          .eq("id", deleteTarget.id);
       }
-    } catch { /* keep local */ }
+    } catch (err) {
+      console.error("handleDelete tasks sync error:", err);
+    }
     setData((prev) => prev.filter((t) => t.id !== deleteTarget.id));
     setDeleteTarget(null);
     toast.success("تم حذف المهمة");

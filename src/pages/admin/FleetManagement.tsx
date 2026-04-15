@@ -144,7 +144,9 @@ export default function FleetManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: new Date().toISOString() }),
       });
-    } catch {}
+    } catch (err) {
+      console.error("handleMaintenance sync error:", err);
+    }
     setData((prev) =>
       prev.map((v) =>
         v.id === id

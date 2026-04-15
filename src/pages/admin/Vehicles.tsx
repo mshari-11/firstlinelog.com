@@ -3,13 +3,13 @@
  * Enterprise Fleet Panel — vehicle registry, status tracking, service history
  */
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Truck,
   Plus,
   Search,
   Car,
   Bike,
-  Package,
   Wrench,
   MapPin,
   AlertCircle,
@@ -57,6 +57,13 @@ const VEHICLE_TYPE_MAP: Record<string, string> = {
   car: "سيارة",
   bicycle: "دراجة هوائية",
   van: "فان",
+};
+
+const VEHICLE_TYPE_REVERSE: Record<string, string> = {
+  "دراجة نارية": "motorcycle",
+  "سيارة": "car",
+  "دراجة هوائية": "bicycle",
+  "فان": "van",
 };
 
 const FALLBACK_VEHICLES: Vehicle[] = [];
@@ -153,9 +160,9 @@ export default function Vehicles() {
     setSelectedIds(new Set());
   }
 
-  function addVehicle() {
+  async function addVehicle() {
     if (!newVehicle.plate) return;
-    const next: Vehicle = {
+    const localVehicle: Vehicle = {
       id: `local-${Date.now()}`,
       plate: newVehicle.plate,
       type: newVehicle.type,
@@ -166,16 +173,47 @@ export default function Vehicles() {
       status: "active",
       lastService: new Date().toISOString(),
     };
-    setVehicles((prev) => [next, ...prev]);
+    const resetForm = () =>
+      setNewVehicle({ plate: "", type: "سيارة", brand: "", courier: "", city: "الرياض", year: "2024" });
+
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("fll_vehicles").insert({
+          plate_number: newVehicle.plate,
+          vehicle_type: VEHICLE_TYPE_REVERSE[newVehicle.type] || "motorcycle",
+          brand: newVehicle.brand || "غير محدد",
+          year: Number(newVehicle.year) || 2024,
+          rider_name: newVehicle.courier || "غير محدد",
+          city: newVehicle.city || "الرياض",
+          status: "active",
+        }).select().single();
+
+        if (error) throw error;
+        const saved: Vehicle = {
+          id: data.id,
+          plate: data.plate_number || newVehicle.plate,
+          type: VEHICLE_TYPE_MAP[data.vehicle_type] || newVehicle.type,
+          brand: data.brand || localVehicle.brand,
+          year: data.year || localVehicle.year,
+          courier: data.rider_name || localVehicle.courier,
+          city: data.city || localVehicle.city,
+          status: "active",
+          lastService: data.insurance_exp || localVehicle.lastService,
+        };
+        setVehicles((prev) => [saved, ...prev]);
+        toast.success("تمت إضافة المركبة بنجاح");
+      } catch (err) {
+        console.error("addVehicle supabase error:", err);
+        setVehicles((prev) => [localVehicle, ...prev]);
+        toast.warning("تمت إضافة المركبة محلياً — تعذّر الحفظ في قاعدة البيانات");
+      }
+    } else {
+      setVehicles((prev) => [localVehicle, ...prev]);
+      toast.success("تمت إضافة المركبة");
+    }
+
     setShowAddModal(false);
-    setNewVehicle({
-      plate: "",
-      type: "سيارة",
-      brand: "",
-      courier: "",
-      city: "الرياض",
-      year: "2024",
-    });
+    resetForm();
   }
 
   useEffect(() => {

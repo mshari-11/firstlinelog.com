@@ -1,27 +1,96 @@
 {
+  // ===== Editor =====
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  // ===== TypeScript — use workspace version =====
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  // ===== Path alias awareness =====
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+
+  // ===== Tailwind CSS =====
   "files.associations": {
     "*.css": "tailwindcss"
   },
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
   ],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+
+  // ===== ESLint =====
   "eslint.workingDirectories": ["."],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
+  // ===== Search & file scoping =====
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
-    "**/.vercel": true
+    "**/.vercel": true,
+    "**/.next": true,
+    "**/coverage": true,
+    "**/_archive": true,
+    "**/_backups": true,
+    "**/*.lock": true,
+    "**/package-lock.json": true
   },
   "files.exclude": {
     "**/node_modules": true,
     "**/.git": true,
-    "**/dist": false
+    "**/dist": false,
+    "**/_archive": true,
+    "**/_backups": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.vercel/**": true,
+    "**/coverage/**": true,
+    "**/_archive/**": true,
+    "**/_backups/**": true
+  },
+
+  // ===== Spell-check additions for FLL terms =====
+  "cSpell.words": [
+    "FLL", "firstlinelog", "Mshari", "Jahez", "Saned", "Cognito",
+    "Riyad", "couriers", "payout", "Lambdas", "supabase", "shadcn",
+    "ZUSTAND", "RBAC", "DKIM", "RTL", "Bahrain", "fll-sa"
+  ],
+
+  // ===== Auto-format on save for FLL files =====
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // ===== Git defaults for FLL repo =====
+  "git.branchProtection": ["main"],
+  "git.confirmNoVerifyCommit": true,
+
+  // ===== Emmet for TSX =====
+  "emmet.includeLanguages": {
+    "typescriptreact": "html",
+    "javascriptreact": "html"
+  },
+
+  // ===== Claude Code — point to project memory =====
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    ".claude": true
   }
 }

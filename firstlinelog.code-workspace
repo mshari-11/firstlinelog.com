@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "name": "FLL — firstlinelog.com",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "FLL Admin Panel — ${activeEditorShort}${separator}${rootName}",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.env.windows": {
+      "AWS_REGION": "us-east-1",
+      "AWS_DEFAULT_REGION": "us-east-1"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "anthropic.claude-code",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "usernamehw.errorlens",
+      "mhutchie.git-graph",
+      "aarondill.vercel-project-manager-vscode"
+    ]
+  }
+}

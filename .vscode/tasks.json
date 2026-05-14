@@ -108,14 +108,14 @@
     {
       "label": "☁️ AWS — List Lambda Functions",
       "type": "shell",
-      "command": "aws lambda list-functions --region me-south-1 --query \"Functions[].FunctionName\" --output table",
+      "command": "aws lambda list-functions --region us-east-1 --query \"Functions[].FunctionName\" --output table",
       "presentation": { "reveal": "always", "panel": "shared" },
       "problemMatcher": []
     },
     {
       "label": "☁️ AWS — Lambda Logs (last 5min)",
       "type": "shell",
-      "command": "aws logs filter-log-events --log-group-name /aws/lambda/${input:lambdaName} --region me-south-1 --start-time ${input:logMinutes} --output text",
+      "command": "aws logs filter-log-events --log-group-name /aws/lambda/${input:lambdaName} --region us-east-1 --start-time ${input:logMinutes} --output text",
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",

@@ -1,24 +1,51 @@
 /**
  * Jahez/Saned API Relay Proxy — Supabase Edge Function
- * Simply relays requests to Saned gateway using the provided auth token.
- * No Keycloak auth needed — frontend provides the token.
- * Bypasses CORS restrictions.
+ * Relays requests to Saned gateway using the provided auth token.
+ *
+ * SECURITY (2026-05-14):
+ *   - Requires a valid Supabase JWT (caller must be authenticated FLL staff/admin).
+ *   - CORS restricted to firstlinelog.com / fll.sa.
+ *   - The "raw" passthrough action is admin-only.
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GATEWAY_HOST = "https://gateway.saned.io";
 const DRIVERS_PORTAL = "api/v1/drivers-management-portal";
 const PROVIDER_ID = "20524";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = new Set([
+  "https://firstlinelog.com",
+  "https://www.firstlinelog.com",
+  "https://fll.sa",
+  "https://www.fll.sa",
+]);
 
-/** endpoint: may be relative to drivers-management-portal (default) OR start with "api/" / "/" for absolute gateway paths */
-async function sanedRequest(endpoint: string, token: string, params?: Record<string, string>): Promise<any> {
+const ALLOWED_RAW_PREFIXES = [
+  "api/v1/drivers-management-portal/",
+  "api/v1/payment/",
+  "api/v1/analytics/",
+];
+
+function buildCorsHeaders(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://firstlinelog.com";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+}
+
+function json(body: unknown, status: number, cors: Record<string, string>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
+
+async function sanedRequest(endpoint: string, token: string, params?: Record<string, string>): Promise<unknown> {
   let path: string;
   if (endpoint.startsWith("api/") || endpoint.startsWith("/")) {
     path = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
@@ -34,10 +61,11 @@ async function sanedRequest(endpoint: string, token: string, params?: Record<str
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       "Accept-Language": "ar,en;q=0.9",
-      "Referer": "https://sdp-portal.saned.io/",
-      "Origin": "https://sdp-portal.saned.io",
+      Referer: "https://sdp-portal.saned.io/",
+      Origin: "https://sdp-portal.saned.io",
     },
   });
 
@@ -49,22 +77,41 @@ async function sanedRequest(endpoint: string, token: string, params?: Record<str
 }
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const cors = buildCorsHeaders(req.headers.get("Origin"));
+
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
+
+  // 1. Authenticate the caller against Supabase
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const callerToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!callerToken) return json({ error: "Missing Authorization header" }, 401, cors);
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const authClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${callerToken}` } },
+  });
+
+  const { data: { user }, error: authErr } = await authClient.auth.getUser(callerToken);
+  if (authErr || !user) return json({ error: "Invalid or expired token" }, 401, cors);
+
+  const role =
+    (user.app_metadata?.role as string | undefined) ??
+    (user.user_metadata?.role as string | undefined) ?? "";
+  const isAdmin = ["admin", "owner", "super_admin"].includes(role);
+  const isStaff = isAdmin || role === "staff";
+  if (!isStaff) return json({ error: "Forbidden" }, 403, cors);
 
   try {
     const body = await req.json();
     const { action, token, page, size, status, availability } = body;
 
     if (!token) {
-      return new Response(
-        JSON.stringify({ error: "token مطلوب" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return json({ error: "Saned token required" }, 400, cors);
     }
 
-    let result: any;
+    let result: unknown;
 
     switch (action) {
       case "auth":
@@ -95,7 +142,7 @@ serve(async (req: Request) => {
       }
 
       case "drivers-all": {
-        const allDrivers: any[] = [];
+        const allDrivers: unknown[] = [];
         let currentPage = 1;
         const pageSize = 100;
         let hasMore = true;
@@ -108,17 +155,17 @@ serve(async (req: Request) => {
             driverId: "",
           });
 
-          let drivers: any[] = [];
+          let drivers: unknown[] = [];
           let totalElements = 0;
 
           if (Array.isArray(batch)) {
             drivers = batch;
           } else if (batch && typeof batch === "object") {
-            // Saned wraps: { statusCode, data: { result: [...], rowsCount } }
-            const inner = batch.data || batch;
-            drivers = inner.result || inner.content || inner.drivers || [];
+            const inner = (batch as Record<string, unknown>).data ?? batch;
+            const innerObj = inner as Record<string, unknown>;
+            drivers = (innerObj.result ?? innerObj.content ?? innerObj.drivers ?? []) as unknown[];
             if (!Array.isArray(drivers)) drivers = [];
-            totalElements = inner.rowsCount || inner.totalElements || inner.total || 0;
+            totalElements = (innerObj.rowsCount ?? innerObj.totalElements ?? innerObj.total ?? 0) as number;
           }
 
           allDrivers.push(...drivers);
@@ -142,7 +189,6 @@ serve(async (req: Request) => {
         result = await sanedRequest("lookups/cities-by-country-codes", token, { CountryCodes: "SA" });
         break;
 
-      // ── Payment / Financial endpoints ──
       case "driver-payments": {
         const pParams: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
         if (page) pParams.page = String(page);
@@ -151,10 +197,9 @@ serve(async (req: Request) => {
         break;
       }
 
-      case "payment-summary": {
+      case "payment-summary":
         result = await sanedRequest("payment/summary", token, { DeliveryProviderId: PROVIDER_ID });
         break;
-      }
 
       case "accountant-report": {
         const rParams: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
@@ -164,14 +209,10 @@ serve(async (req: Request) => {
         break;
       }
 
-      // ── Analytics endpoints ──
-      case "delivery-insights": {
+      case "delivery-insights":
         result = await sanedRequest("analytics/delivery-insights", token, { DeliveryProviderId: PROVIDER_ID });
         break;
-      }
 
-      // ── SDP Payment Report (per-driver financial details) ──
-      // Correct Saned path: payment/transactions/sdpReport/{providerId}/page/{p}/pageSize/{s}
       case "sdp-payment-report": {
         const p = page ?? 1;
         const s = size ?? 10;
@@ -188,7 +229,6 @@ serve(async (req: Request) => {
         break;
       }
 
-      // Correct path: payment/settlements/accountantReport/page/{p}/pageSize/{s}
       case "accountant-report-v2": {
         const p = page ?? 1;
         const s = size ?? 10;
@@ -203,30 +243,24 @@ serve(async (req: Request) => {
         break;
       }
 
-      case "accountants-list": {
+      case "accountants-list":
         result = await sanedRequest(`api/v1/payment/settlements/accountants`, token);
         break;
-      }
 
-      // Full driver/all endpoint (richer data than driver-list)
-      case "driver-all-full": {
+      case "driver-all-full":
         result = await sanedRequest(`driver/all`, token, { DeliveryProviderId: PROVIDER_ID });
         break;
-      }
 
-      // Live dispatches / tracking data
-      case "dispatches": {
+      case "dispatches":
         result = await sanedRequest(`drivers/dispatches`, token);
         break;
-      }
 
-      case "registration-requests": {
+      case "registration-requests":
         result = await sanedRequest(
           `api/v1/drivers-management/account/portal/get-registration-requests`,
           token,
         );
         break;
-      }
 
       case "driver-orders-report": {
         const p: Record<string, string> = { DeliveryProviderId: PROVIDER_ID };
@@ -241,34 +275,34 @@ serve(async (req: Request) => {
 
       case "driver-detail": {
         if (!body.driverId) throw new Error("driverId required");
-        result = await sanedRequest(`delivery-providers/driver/${body.driverId}`, token, { DeliveryProviderId: PROVIDER_ID });
+        result = await sanedRequest(
+          `delivery-providers/driver/${body.driverId}`,
+          token,
+          { DeliveryProviderId: PROVIDER_ID },
+        );
         break;
       }
 
-      // ── Generic passthrough (discover new endpoints) ──
       case "raw": {
+        if (!isAdmin) return json({ error: "raw action is admin-only" }, 403, cors);
         const rawEndpoint = body.endpoint as string;
-        const rawParams = body.params as Record<string, string> || {};
+        const rawParams = (body.params as Record<string, string>) ?? {};
         if (!rawEndpoint) throw new Error("endpoint required for raw action");
-        result = await sanedRequest(rawEndpoint, token, { DeliveryProviderId: PROVIDER_ID, ...rawParams });
+        const normalized = rawEndpoint.replace(/^\/+/, "");
+        if (!ALLOWED_RAW_PREFIXES.some((p) => normalized.startsWith(p))) {
+          return json({ error: "endpoint not in allowlist" }, 400, cors);
+        }
+        result = await sanedRequest(normalized, token, { DeliveryProviderId: PROVIDER_ID, ...rawParams });
         break;
       }
 
       default:
-        return new Response(
-          JSON.stringify({ error: `Unknown action: ${action}` }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        return json({ error: `Unknown action: ${action}` }, 400, cors);
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err: any) {
-    console.error("[jahez-proxy]", err.message);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return json(result, 200, cors);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return json({ error: msg }, 500, cors);
   }
 });

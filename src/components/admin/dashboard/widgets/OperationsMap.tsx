@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map, MapPin, ArrowUpDown, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
+import { Map, MapPin, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 

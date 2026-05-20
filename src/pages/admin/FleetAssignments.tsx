@@ -29,6 +29,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.click();
 }
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type AssignmentStatus = "assigned" | "unassigned" | "pending";
 interface Assignment {
@@ -77,7 +78,9 @@ export default function FleetAssignments() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-    } catch {}
+    } catch {
+      toast.error("فشل إلغاء التعيين - تحقق من الاتصال");
+    }
     setData((prev) =>
       prev.map((a) =>
         a.id === id

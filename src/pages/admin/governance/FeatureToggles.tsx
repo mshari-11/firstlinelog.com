@@ -3,7 +3,7 @@
  * Enable/disable features globally or per role
  */
 import { useState, useEffect } from "react";
-import { ToggleLeft, ToggleRight, Search } from "lucide-react";
+import { ToggleLeft, ToggleRight } from "lucide-react";
 import {
   PageWrapper,
   PageHeader,

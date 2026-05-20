@@ -109,7 +109,9 @@ export default function AccountReactivation() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: action }),
       });
-    } catch {}
+    } catch {
+      toast.error("فشل تحديث الحالة - تحقق من الاتصال");
+    }
     setData((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status: action } : a)),
     );

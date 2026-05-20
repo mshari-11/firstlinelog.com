@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Empty,
   EmptyMedia as EmptyIcon,

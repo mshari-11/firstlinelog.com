@@ -92,7 +92,7 @@ import {
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { loadConfig } from "@/pages/admin/PageBuilder";
-import { loadFavorites, toggleFavorite } from "./CommandPalette";
+import { loadFavorites } from "./CommandPalette";
 
 // ── Icon map (expanded) ─────────────────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {

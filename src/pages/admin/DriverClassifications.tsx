@@ -397,7 +397,9 @@ export default function DriverClassifications() {
             .from("couriers")
             .update({ ...form })
             .eq("id", editingId);
-        } catch {}
+        } catch {
+          toast.error("فشل تحديث البيانات في قاعدة البيانات");
+        }
       }
       toast.success("تم تحديث بيانات السائق");
     } else {
@@ -406,7 +408,9 @@ export default function DriverClassifications() {
       if (supabase) {
         try {
           await supabase.from("couriers").insert(form);
-        } catch {}
+        } catch {
+          toast.error("فشل حفظ البيانات في قاعدة البيانات");
+        }
       }
       toast.success("تم إضافة السائق");
     }

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Grid3X3, CheckCircle, XCircle } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { useModuleRegistry } from "@/stores/useModuleRegistry";
-import { GROUP_LABELS, type ModuleGroup } from "@/lib/admin/moduleRegistry";
+import { type ModuleGroup } from "@/lib/admin/moduleRegistry";
 
 export function ModuleStatusGrid() {
   const navigate = useNavigate();

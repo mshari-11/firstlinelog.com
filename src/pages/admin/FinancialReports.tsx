@@ -2,9 +2,8 @@
  * التقارير المالية - Financial Reports
  * Income statement, P&L, revenue analysis, city performance reports
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/admin/auth";
-import { supabase } from "@/lib/supabase";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import {
   FileText,

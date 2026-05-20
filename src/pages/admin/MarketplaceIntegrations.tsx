@@ -17,7 +17,6 @@ import {
   Save,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 interface Integration {

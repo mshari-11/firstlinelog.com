@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, CheckCircle2, XCircle, Loader2, CheckCheck, FileText, CreditCard, UserPlus, FileSpreadsheet } from "lucide-react";
+import { Clock, CheckCircle2, Loader2, CheckCheck, FileText, CreditCard, UserPlus, FileSpreadsheet } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";

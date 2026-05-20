@@ -3,7 +3,7 @@
  * Shows when items are selected, with action buttons
  */
 import { useState } from "react";
-import { CheckSquare, X, Trash2, RefreshCw } from "lucide-react";
+import { CheckSquare, X } from "lucide-react";
 
 interface BulkAction {
   label: string;

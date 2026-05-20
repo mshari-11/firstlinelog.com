@@ -4,7 +4,6 @@
  */
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/admin/auth";
-import { supabase } from "@/lib/supabase";
 import { CHAT_API_URL } from "@/lib/api";
 import {
   Send,

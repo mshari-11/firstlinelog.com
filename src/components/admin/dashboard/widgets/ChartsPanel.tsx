@@ -15,7 +15,7 @@ import {
   Bar,
 } from "recharts";
 import { WidgetShell } from "../WidgetShell";
-import { BarChart3, TrendingUp, BarChart2, LineChart as LineChartIcon } from "lucide-react";
+import { BarChart3, TrendingUp, BarChart2 } from "lucide-react";
 import { chartTooltipStyle } from "@/components/admin/FinanceUI";
 import { supabase } from "@/lib/supabase";
 

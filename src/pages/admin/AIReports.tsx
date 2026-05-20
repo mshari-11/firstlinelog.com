@@ -18,8 +18,6 @@ import {
   Printer,
   Plus,
 } from "lucide-react";
-import { API_BASE } from "@/lib/api";
-
 const AI_API = "https://k8d4arcxu4.execute-api.us-east-1.amazonaws.com";
 
 type ReportStatus = "ready" | "processing" | "failed";

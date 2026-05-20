@@ -4,7 +4,6 @@
  * Branding: #0ABAB5 teal primary, #0C2D48 navy, #00D4AA accent
  */
 import { useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
   RefreshCw,

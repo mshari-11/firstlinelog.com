@@ -31,7 +31,6 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 }
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
 type AttendanceStatus = "present" | "late" | "absent";
 interface AttendanceEntry {

@@ -103,7 +103,7 @@ export default function N8nWorkflows() {
   const [srcStatus, setSrcStatus] = useState<SourceStatus>("active");
   const [showGuide, setShowGuide] = useState(true);
 
-  function handleAddSource() {
+  async function handleAddSource() {
     if (!srcName.trim()) {
       toast.error("يرجى كتابة اسم المصدر");
       return;
@@ -123,6 +123,18 @@ export default function N8nWorkflows() {
     setSrcUrl("");
     setSrcStatus("active");
     toast.success("تم إضافة المصدر بنجاح");
+    if (supabase) {
+      try {
+        await supabase.from("n8n_external_sources").insert({
+          source_name: s.source_name,
+          source_type: s.source_type,
+          config: s.config,
+          status: s.status,
+        });
+      } catch {
+        toast.error("تعذر الحفظ في قاعدة البيانات");
+      }
+    }
   }
 
   const fetchData = useCallback(async () => {

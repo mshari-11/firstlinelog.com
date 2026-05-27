@@ -81,22 +81,32 @@ export default function BankAlerts() {
   async function markAsRead(id: string) {
     if (!supabase) return;
     const update = { is_read: true, read_at: new Date().toISOString() };
-    await supabase.from("bank_account_alerts").update(update).eq("id", id);
-    setData((prev) => prev.map((a) => (a.id === id ? { ...a, ...update } : a)));
+    try {
+      const { error } = await supabase.from("bank_account_alerts").update(update).eq("id", id);
+      if (error) throw error;
+      setData((prev) => prev.map((a) => (a.id === id ? { ...a, ...update } : a)));
+    } catch {
+      toast.error("تعذر تحديث حالة التنبيه");
+    }
   }
 
   async function markAllRead() {
     if (!supabase) return;
     const unread = data.filter((a) => !a.is_read);
     const update = { is_read: true, read_at: new Date().toISOString() };
-    await supabase
-      .from("bank_account_alerts")
-      .update(update)
-      .in(
-        "id",
-        unread.map((a) => a.id),
-      );
-    setData((prev) => prev.map((a) => ({ ...a, ...update })));
+    try {
+      const { error } = await supabase
+        .from("bank_account_alerts")
+        .update(update)
+        .in(
+          "id",
+          unread.map((a) => a.id),
+        );
+      if (error) throw error;
+      setData((prev) => prev.map((a) => ({ ...a, ...update })));
+    } catch {
+      toast.error("تعذر تحديث جميع التنبيهات");
+    }
   }
 
   const filtered = data.filter((a) => {

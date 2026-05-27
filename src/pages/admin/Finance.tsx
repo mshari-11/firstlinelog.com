@@ -762,43 +762,45 @@ export default function Finance() {
   async function createFinanceRecord() {
     if (!supabase) return;
     setCreateError("");
-    const { data: courier } = await supabase
-      .from("couriers")
-      .select("id, full_name")
-      .eq("full_name", newRecord.courier_name.trim())
-      .limit(1)
-      .maybeSingle();
-    if (!courier) {
-      setCreateError(
-        "لم يتم العثور على المندوب. استخدم الاسم كما هو مسجل بالنظام.",
-      );
-      return;
-    }
-    const now = new Date().toISOString();
-    const { error } = await supabase.from("finance").insert({
-      courier_id: courier.id,
-      period_start: now,
-      period_end: now,
-      gross_revenue: Number(newRecord.gross) || 0,
-      platform_fees: 0,
-      vehicle_deductions: 0,
-      absence_deductions: 0,
-      maintenance_deductions: 0,
-      insurance_deductions: 0,
-      other_deductions: 0,
-      net_payout: Number(newRecord.net) || 0,
-      payment_status: "pending",
-      notes: "تمت الإضافة من لوحة الإدارة",
-    });
-    if (error) {
+    try {
+      const { data: courier, error: courierError } = await supabase
+        .from("couriers")
+        .select("id, full_name")
+        .eq("full_name", newRecord.courier_name.trim())
+        .limit(1)
+        .maybeSingle();
+      if (courierError) throw courierError;
+      if (!courier) {
+        setCreateError(
+          "لم يتم العثور على المندوب. استخدم الاسم كما هو مسجل بالنظام.",
+        );
+        return;
+      }
+      const now = new Date().toISOString();
+      const { error } = await supabase.from("finance").insert({
+        courier_id: courier.id,
+        period_start: now,
+        period_end: now,
+        gross_revenue: Number(newRecord.gross) || 0,
+        platform_fees: 0,
+        vehicle_deductions: 0,
+        absence_deductions: 0,
+        maintenance_deductions: 0,
+        insurance_deductions: 0,
+        other_deductions: 0,
+        net_payout: Number(newRecord.net) || 0,
+        payment_status: "pending",
+        notes: "تمت الإضافة من لوحة الإدارة",
+      });
+      if (error) throw error;
+      toast.success("تم إنشاء السجل المالي بنجاح");
+      setShowCreateModal(false);
+      setNewRecord({ courier_name: "", net: "1000", gross: "1000" });
+      await fetchFinanceData();
+    } catch {
       setCreateError("تعذر إنشاء السجل المالي");
       toast.error("تعذر إنشاء السجل المالي");
-      return;
     }
-    toast.success("تم إنشاء السجل المالي بنجاح");
-    setShowCreateModal(false);
-    setNewRecord({ courier_name: "", net: "1000", gross: "1000" });
-    await fetchFinanceData();
   }
 
   useEffect(() => {

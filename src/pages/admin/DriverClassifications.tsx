@@ -418,11 +418,16 @@ export default function DriverClassifications() {
   }
 
   async function removeDriver(id: string) {
-    if (supabase) {
-      await supabase.from("couriers").delete().eq("id", id);
+    try {
+      if (supabase) {
+        const { error } = await supabase.from("couriers").delete().eq("id", id);
+        if (error) throw error;
+      }
+      setDrivers((prev) => prev.filter((d) => d.id !== id));
+      toast.success("تم حذف السائق");
+    } catch {
+      toast.error("تعذر حذف السائق من قاعدة البيانات");
     }
-    setDrivers((prev) => prev.filter((d) => d.id !== id));
-    toast.success("تم حذف السائق");
   }
 
   function getClassColor(c: string) {

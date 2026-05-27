@@ -6,7 +6,7 @@
  * Uses inline styles with CSS custom properties (--con-*).
  * Icons: lucide-react only.
  */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,

@@ -258,10 +258,15 @@ export default function AdminDrivers() {
   }
 
   async function updateDriverStatus(driverId: string, newStatus: string) {
-    if (supabase) {
-      await supabase.from("couriers").update({ status: newStatus }).eq("id", driverId);
+    try {
+      if (supabase) {
+        const { error } = await supabase.from("couriers").update({ status: newStatus }).eq("id", driverId);
+        if (error) throw error;
+      }
+      setDrivers(prev => prev.map(d => d.id === driverId ? { ...d, status: newStatus } : d));
+    } catch {
+      toast.error("تعذر تحديث حالة السائق");
     }
-    setDrivers(prev => prev.map(d => d.id === driverId ? { ...d, status: newStatus } : d));
   }
 
   const cityOptions = [...new Set(drivers.map((d) => d.city))].map((c) => ({

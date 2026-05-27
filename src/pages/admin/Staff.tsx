@@ -1142,15 +1142,21 @@ function AddDepartmentModal({
   async function handleSave() {
     if (!supabase || !form.name_ar) return;
     setSaving(true);
-    await supabase.from("departments").insert({
-      name: form.name || form.name_ar,
-      name_ar: form.name_ar,
-      description: form.description,
-      is_active: true,
-    });
-    setSaving(false);
-    onSaved();
-    onClose();
+    try {
+      const { error } = await supabase.from("departments").insert({
+        name: form.name || form.name_ar,
+        name_ar: form.name_ar,
+        description: form.description,
+        is_active: true,
+      });
+      if (error) throw error;
+      onSaved();
+      onClose();
+    } catch {
+      toast.error("تعذر حفظ القسم في قاعدة البيانات");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

@@ -271,7 +271,7 @@ export default function PayrollManagement() {
           );
         }
       }
-    } catch {}
+    } catch (e) { console.error("payroll fetch failed:", e); }
     setLoading(false);
   }, []);
 

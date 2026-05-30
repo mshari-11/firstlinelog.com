@@ -354,7 +354,7 @@ export default function EmailLogs() {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ id: a.id }),
                               });
-                            } catch {}
+                            } catch (e) { console.error("email resend failed:", e); }
                             setData((prev) =>
                               prev.map((e) =>
                                 e.id === a.id

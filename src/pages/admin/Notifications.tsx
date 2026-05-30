@@ -142,7 +142,7 @@ export default function Notifications() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, read: true }),
       });
-    } catch {}
+    } catch (e) { console.error("mark notification read failed:", e); }
     setData((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );

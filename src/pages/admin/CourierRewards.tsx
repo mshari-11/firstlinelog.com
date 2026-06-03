@@ -33,6 +33,7 @@ import {
   EmptyState,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type RewardType = "courier_of_month" | "performance_bonus" | "commitment_bonus" | "referral_bonus";
@@ -160,7 +161,7 @@ export default function CourierRewards() {
     a.click();
   }
 
-  function handleAddReward() {
+  async function handleAddReward() {
     const newReward: Reward = {
       id: `r${Date.now()}`,
       date: new Date().toISOString().split("T")[0],
@@ -174,9 +175,28 @@ export default function CourierRewards() {
     setRewards((prev) => [newReward, ...prev]);
     setShowRewardModal(false);
     setRewardForm({ courier_name: "", type: "performance_bonus", amount: "", note: "" });
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("courier_rewards").insert({
+          date: newReward.date,
+          courier_name: newReward.courier_name,
+          courier_id: newReward.courier_id,
+          type: newReward.type,
+          amount: newReward.amount,
+          description: newReward.description,
+          issued_by: newReward.issued_by,
+        });
+        if (error) throw error;
+        toast.success("تم إضافة المكافأة");
+      } catch {
+        toast.warning("تم الإضافة محلياً — تعذّر الحفظ في قاعدة البيانات");
+      }
+    } else {
+      toast.success("تم إضافة المكافأة محلياً");
+    }
   }
 
-  function handleAddPenalty() {
+  async function handleAddPenalty() {
     const newPenalty: Penalty = {
       id: `p${Date.now()}`,
       date: new Date().toISOString().split("T")[0],
@@ -191,6 +211,26 @@ export default function CourierRewards() {
     setPenalties((prev) => [newPenalty, ...prev]);
     setShowPenaltyModal(false);
     setPenaltyForm({ courier_name: "", type: "financial_deduction", amount: "", reason: "" });
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("courier_penalties").insert({
+          date: newPenalty.date,
+          courier_name: newPenalty.courier_name,
+          courier_id: newPenalty.courier_id,
+          type: newPenalty.type,
+          amount: newPenalty.amount,
+          reason: newPenalty.reason,
+          issued_by: newPenalty.issued_by,
+          is_active: newPenalty.is_active,
+        });
+        if (error) throw error;
+        toast.success("تم إضافة الجزاء");
+      } catch {
+        toast.warning("تم الإضافة محلياً — تعذّر الحفظ في قاعدة البيانات");
+      }
+    } else {
+      toast.success("تم إضافة الجزاء محلياً");
+    }
   }
 
   const rewardTypeOptions = [{ value: "all", label: "الكل" }, ...Object.entries(REWARD_LABELS).map(([v, l]) => ({ value: v, label: l }))];

@@ -80,7 +80,7 @@
     "react-icons": "^5.4.0",
     "react-map-gl": "^8.1.0",
     "react-resizable-panels": "^2.1.3",
-    "react-router-dom": "^6.26.2",
+    "react-router-dom": "^6.30.4",
     "recharts": "^2.12.7",
     "shiki": "^4.0.2",
     "sonner": "^1.5.0",

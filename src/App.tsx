@@ -924,7 +924,9 @@ export default function App() {
               path="/admin"
               element={
                 <AdminAuthProvider>
-                  <AdminDashboardLegacy />
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <AdminDashboardLegacy />
+                  </AccessGuard>
                 </AdminAuthProvider>
               }
             />
@@ -932,7 +934,9 @@ export default function App() {
               path="/admin/drivers"
               element={
                 <AdminAuthProvider>
-                  <AdminDriversLegacy />
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <AdminDriversLegacy />
+                  </AccessGuard>
                 </AdminAuthProvider>
               }
             />

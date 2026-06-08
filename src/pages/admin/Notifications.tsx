@@ -142,7 +142,9 @@ export default function Notifications() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, read: true }),
       });
-    } catch {}
+    } catch {
+      toast.error("تعذّر تحديث حالة الإشعار");
+    }
     setData((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );

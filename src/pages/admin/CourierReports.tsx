@@ -12,7 +12,6 @@ import {
   UserCheck,
   TrendingUp,
   AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
 import {
   PageWrapper,
@@ -21,7 +20,6 @@ import {
   KPICard,
   Card,
   Toolbar,
-  Badge,
   Button,
   EmptyState,
 } from "@/components/admin/ui";

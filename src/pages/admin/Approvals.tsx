@@ -6,8 +6,6 @@ import {
   Clock,
   Search,
   RefreshCw,
-  DollarSign,
-  Users,
   FileText,
   Eye,
   ThumbsUp,

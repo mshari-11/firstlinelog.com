@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Clock,
   Users,
-  ShieldAlert,
   ThumbsUp,
   ThumbsDown,
   Download,
@@ -109,7 +108,9 @@ export default function AccountReactivation() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: action }),
       });
-    } catch {}
+    } catch {
+      toast.error("تعذّر تنفيذ الإجراء، حاول مرة أخرى");
+    }
     setData((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status: action } : a)),
     );

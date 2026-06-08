@@ -9,7 +9,6 @@ import {
   Calculator,
   Users,
   Car,
-  Truck,
   DollarSign,
   Plus,
   X,
@@ -18,7 +17,6 @@ import {
   FileSpreadsheet,
   Trash2,
   RefreshCw,
-  ChevronDown,
   Building2,
   Wallet,
   Receipt,
@@ -27,8 +25,6 @@ import {
   Phone,
   User,
   Printer,
-  CheckCircle2,
-  AlertTriangle,
   Edit3,
 } from "lucide-react";
 

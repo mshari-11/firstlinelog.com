@@ -9,13 +9,6 @@ import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import {
   FileText,
   Download,
-  Filter,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  PieChart,
-  AlertCircle,
   Printer,
 } from "lucide-react";
 

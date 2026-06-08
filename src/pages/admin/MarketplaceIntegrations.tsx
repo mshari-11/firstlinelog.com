@@ -8,7 +8,6 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  Link2,
   Plug,
   Activity,
   Settings,

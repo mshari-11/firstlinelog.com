@@ -17,7 +17,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -55,9 +54,6 @@ import {
   Download,
   Edit2,
   Trash2,
-  Pause,
-  GraduationCap,
-  Ban,
   TrendingUp,
   Wallet,
   Briefcase,
@@ -85,7 +81,6 @@ import {
   DetailGrid,
   Section,
   TextArea,
-  EmptyState,
   SkeletonRows,
   Select,
 } from "@/components/admin/ui";

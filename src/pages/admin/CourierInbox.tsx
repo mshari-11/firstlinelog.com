@@ -19,8 +19,6 @@ import {
   KPIGrid,
   KPICard,
   Card,
-  Toolbar,
-  Tabs,
   Button,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";

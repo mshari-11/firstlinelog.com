@@ -6,7 +6,6 @@ import {
   AlertCircle,
   Link2,
   Truck,
-  Users,
   CheckCircle2,
   XCircle,
   Clock,
@@ -29,6 +28,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.click();
 }
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type AssignmentStatus = "assigned" | "unassigned" | "pending";
 interface Assignment {
@@ -77,7 +77,9 @@ export default function FleetAssignments() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-    } catch {}
+    } catch {
+      toast.error("تعذّر إلغاء التعيين");
+    }
     setData((prev) =>
       prev.map((a) =>
         a.id === id

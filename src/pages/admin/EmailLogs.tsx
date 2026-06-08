@@ -8,9 +8,6 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  Settings,
-  Users,
-  Filter,
   Download,
   Printer,
   RotateCcw,
@@ -354,7 +351,9 @@ export default function EmailLogs() {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ id: a.id }),
                               });
-                            } catch {}
+                            } catch {
+                              toast.error("تعذّر إعادة الإرسال");
+                            }
                             setData((prev) =>
                               prev.map((e) =>
                                 e.id === a.id

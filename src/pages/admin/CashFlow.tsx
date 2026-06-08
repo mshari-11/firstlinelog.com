@@ -10,7 +10,6 @@ import {
   Area,
   LineChart,
   Line,
-  BarChart,
   Bar,
   XAxis,
   YAxis,

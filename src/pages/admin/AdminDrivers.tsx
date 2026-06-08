@@ -11,7 +11,6 @@ import {
   Filter,
   MoreHorizontal,
   MapPin,
-  Phone,
   Star,
   CheckCircle2,
   XCircle,

@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   XCircle,
   Truck,
-  ShoppingCart,
-  Users,
   Radio,
   Plus,
   Download,

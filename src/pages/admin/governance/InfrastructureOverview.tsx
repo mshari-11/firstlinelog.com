@@ -12,8 +12,6 @@ import {
   Shield,
   Zap,
   HardDrive,
-  RefreshCw,
-  ExternalLink,
   Activity,
   Users,
 } from "lucide-react";

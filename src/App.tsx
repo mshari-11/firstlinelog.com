@@ -924,7 +924,9 @@ export default function App() {
               path="/admin"
               element={
                 <AdminAuthProvider>
-                  <AdminDashboardLegacy />
+                  <AccessGuard roles={["admin", "owner", "staff"]}>
+                    <AdminDashboardLegacy />
+                  </AccessGuard>
                 </AdminAuthProvider>
               }
             />
@@ -932,7 +934,9 @@ export default function App() {
               path="/admin/drivers"
               element={
                 <AdminAuthProvider>
-                  <AdminDriversLegacy />
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <AdminDriversLegacy />
+                  </AccessGuard>
                 </AdminAuthProvider>
               }
             />
@@ -970,9 +974,9 @@ export default function App() {
               <Route path="dashboard" element={<StagingDashboard />} />
             </Route>
 
-            {/* ══════════════════════════════════════════════════════════════
+            {/* ==============================================================
                 FALLBACK
-            ══════════════════════════════════════════════════════════════ */}
+            ============================================================== */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

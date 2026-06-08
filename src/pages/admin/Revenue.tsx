@@ -8,10 +8,8 @@ import { supabase } from "@/lib/supabase";
 import {
   BarChart,
   Bar,
-  LineChart,
   Line,
   PieChart as RechartsPie,
-  Pie,
   Cell,
   XAxis,
   YAxis,

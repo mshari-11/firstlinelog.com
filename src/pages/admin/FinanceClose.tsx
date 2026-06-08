@@ -6,11 +6,9 @@ import { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw,
   AlertCircle,
-  CheckCircle2,
   XCircle,
   Lock,
   Calendar,
-  DollarSign,
   Play,
   Download,
   Printer,

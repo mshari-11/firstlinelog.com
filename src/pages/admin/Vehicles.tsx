@@ -12,7 +12,6 @@ import {
   Bike,
   Wrench,
   MapPin,
-  AlertCircle,
   X,
   Download,
   Printer,

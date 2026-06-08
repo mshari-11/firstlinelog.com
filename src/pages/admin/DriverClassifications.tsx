@@ -17,24 +17,8 @@ import {
   Download,
   Printer,
   RefreshCw,
-  Car,
-  Truck,
-  Bike,
-  Building2,
   ChevronDown,
   ChevronUp,
-  Filter,
-  Tag,
-  DollarSign,
-  Shield,
-  Star,
-  MapPin,
-  Phone,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  Eye,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -397,7 +381,9 @@ export default function DriverClassifications() {
             .from("couriers")
             .update({ ...form })
             .eq("id", editingId);
-        } catch {}
+        } catch {
+          toast.error("تعذّر تحديث السائق في قاعدة البيانات");
+        }
       }
       toast.success("تم تحديث بيانات السائق");
     } else {
@@ -406,7 +392,9 @@ export default function DriverClassifications() {
       if (supabase) {
         try {
           await supabase.from("couriers").insert(form);
-        } catch {}
+        } catch {
+          toast.error("تعذّر حفظ السائق في قاعدة البيانات");
+        }
       }
       toast.success("تم إضافة السائق");
     }

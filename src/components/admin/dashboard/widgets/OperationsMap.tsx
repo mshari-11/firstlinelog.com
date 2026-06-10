@@ -89,7 +89,6 @@ export function OperationsMap() {
   const sortedCityData = [...cityData].sort((a, b) => b[sortBy] - a[sortBy]);
   const totalActive = cityData.reduce((sum, c) => sum + c.activeCouriers, 0);
   const totalOrders = cityData.reduce((sum, c) => sum + c.todayOrders, 0);
-  const bestCity = sortedCityData[0]?.city;
   const worstDelivery = [...cityData].sort((a, b) => b.avgDeliveryMin - a.avgDeliveryMin)[0]?.city;
 
   return (

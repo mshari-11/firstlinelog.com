@@ -11,7 +11,6 @@ import {
   Filter,
   MoreHorizontal,
   MapPin,
-  Phone,
   Star,
   CheckCircle2,
   XCircle,
@@ -190,7 +189,7 @@ export default function AdminDrivers() {
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [page, setPage] = useState(1);
   const [drivers, setDrivers] = useState(driversData);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const bulk = useBulkSelect();
 
   async function fetchDrivers() {

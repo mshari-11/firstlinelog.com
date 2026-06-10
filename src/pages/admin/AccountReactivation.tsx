@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Clock,
   Users,
-  ShieldAlert,
   ThumbsUp,
   ThumbsDown,
   Download,

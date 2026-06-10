@@ -197,7 +197,7 @@ export function AdminSidebar() {
   const { getUnreadCount } = useNotificationStore();
   const unreadCount = getUnreadCount();
   const [collapsed, setCollapsed] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [_notifOpen, _setNotifOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [logoFailed, setLogoFailed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(

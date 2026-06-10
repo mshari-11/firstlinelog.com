@@ -14,7 +14,6 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
-  Globe,
   Database,
   Shield,
   MessageSquare,
@@ -23,7 +22,6 @@ import {
   CreditCard,
   AlertTriangle,
   Server,
-  ExternalLink,
   Terminal,
   BookOpen,
 } from "lucide-react";
@@ -37,7 +35,6 @@ import {
   Button,
   Toolbar,
   Select,
-  Tabs,
 } from "@/components/admin/ui";
 import { toast } from "sonner";
 
@@ -514,7 +511,7 @@ export default function ApiManagement() {
   const [testing, setTesting] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
-  const [tab, setTab] = useState("endpoints");
+  const [_tab, _setTab] = useState("endpoints");
   const [testProgress, setTestProgress] = useState<{
     current: number;
     total: number;

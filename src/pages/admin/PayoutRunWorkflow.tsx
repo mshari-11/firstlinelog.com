@@ -24,8 +24,6 @@ import {
   Ban,
   Shield,
   Loader2,
-  Eye,
-  ArrowDown,
   ClipboardList,
   Printer,
   RotateCcw,
@@ -45,7 +43,6 @@ import {
 } from "@/components/admin/ui";
 import {
   usePayoutWorkflowStore,
-  STAGE_DEFS,
   type PayoutStage,
   type DriverPayoutLine,
 } from "@/stores/usePayoutWorkflowStore";
@@ -715,11 +712,10 @@ function SalaryBreakdownSection({
 
 // ─── Review Panel: Finance Review (Stage 1) ─────────────────────────────────
 function FinanceReviewPanel() {
-  const { drivers, getStageSummary, getStageErrors, getStageWarnings } =
+  const { drivers, getStageSummary, getStageErrors } =
     usePayoutWorkflowStore();
   const summary = getStageSummary(1) as any;
   const errors = getStageErrors(1);
-  const warnings = getStageWarnings(1);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1069,7 +1065,7 @@ function FleetReviewPanel() {
 
 // ─── Review Panel: HR (Stage 4) ─────────────────────────────────────────────
 function HRReviewPanel() {
-  const { drivers, getStageSummary, getStageWarnings } =
+  const { getStageSummary, getStageWarnings } =
     usePayoutWorkflowStore();
   const summary = getStageSummary(4) as any;
   const warnings = getStageWarnings(4);
@@ -1342,9 +1338,6 @@ function generatePayslip(driver: DriverPayoutLine, batch: { period_start: string
   const breakdown = MOCK_DEDUCTION_BREAKDOWN[driver.driver_id] || [];
   const additions = driver.components_applied.filter((c) => c.type === "addition");
   const deductions = driver.components_applied.filter((c) => c.type === "deduction");
-
-  const additionsTotal = additions.reduce((s, c) => s + c.amount, 0);
-  const deductionsTotal = deductions.reduce((s, c) => s + c.amount, 0);
 
   const html = `
     <div style="max-width:700px;margin:0 auto;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;">

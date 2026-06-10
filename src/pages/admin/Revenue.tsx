@@ -3,15 +3,12 @@
  * Detailed revenue breakdown and trends
  */
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   BarChart,
   Bar,
-  LineChart,
   Line,
   PieChart as RechartsPie,
-  Pie,
   Cell,
   XAxis,
   YAxis,
@@ -81,7 +78,6 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function RevenueAnalysis() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [platformRevenueData, setPlatformRevenueData] =
     useState(FALLBACK_PLATFORM);

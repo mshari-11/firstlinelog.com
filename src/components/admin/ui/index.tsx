@@ -10,11 +10,7 @@ import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
-  ChevronLeft,
   Search,
-  Filter,
-  Download,
-  ChevronDown,
   RefreshCw,
 } from "lucide-react";
 

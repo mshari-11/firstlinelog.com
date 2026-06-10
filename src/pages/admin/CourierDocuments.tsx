@@ -59,14 +59,6 @@ const STATUS_LABELS: Record<DocStatus, string> = {
   expired: "منتهي",
 };
 
-const DOC_NAMES: Record<string, string> = {
-  identity: "الهوية",
-  license: "الرخصة",
-  insurance: "التأمين",
-  iqama: "الإقامة",
-  bank_cert: "شهادة البنك",
-};
-
 // ── CSV helper ───────────────────────────────────────────────────────────────
 function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) return;

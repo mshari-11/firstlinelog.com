@@ -8,7 +8,6 @@ import {
   Cloud,
   Globe,
   Wifi,
-  RefreshCw,
   Timer,
 } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
@@ -46,7 +45,7 @@ async function pingEndpoint(
 ): Promise<{ ok: boolean; ms: number }> {
   const start = performance.now();
   try {
-    const res = await fetch(url, {
+    await fetch(url, {
       method: "HEAD",
       mode: "no-cors",
       signal: AbortSignal.timeout(timeout),

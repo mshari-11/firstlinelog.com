@@ -17,22 +17,8 @@ import {
   Download,
   Printer,
   RefreshCw,
-  Car,
-  Truck,
-  Bike,
-  Building2,
   ChevronDown,
   ChevronUp,
-  Filter,
-  Tag,
-  DollarSign,
-  Shield,
-  Star,
-  MapPin,
-  Phone,
-  CheckCircle2,
-  XCircle,
-  Clock,
   AlertTriangle,
   Eye,
 } from "lucide-react";
@@ -213,8 +199,8 @@ export default function DriverClassifications() {
   const [filterClassification, setFilterClassification] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [sortField, setSortField] = useState<SortField>("full_name");
-  const [sortAsc, setSortAsc] = useState(true);
+  const [sortField, _setSortField] = useState<SortField>("full_name");
+  const [sortAsc, _setSortAsc] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<DriverProfile>(emptyDriver());
   const [editingId, setEditingId] = useState<string | null>(null);

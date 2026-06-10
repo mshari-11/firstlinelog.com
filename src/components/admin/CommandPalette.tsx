@@ -14,7 +14,7 @@ import {
   Truck, Link2, FileCheck, CreditCard, Zap, Server, ToggleLeft, GitBranch,
   Calculator, HelpCircle, Workflow, Activity, Gauge, Globe, UserCog,
   BadgeDollarSign, HandCoins, ChartPie, Banknote, CircleDollarSign,
-  Tags, ClipboardCheck, FolderSearch, KeyRound, Search, X, Star,
+  Tags, ClipboardCheck, FolderSearch, KeyRound, Search, Star,
   ArrowRight, Blocks, BellRing, CalendarRange, Coins,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

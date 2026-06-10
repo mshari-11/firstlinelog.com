@@ -13,9 +13,6 @@ import {
   ToggleLeft,
   TrendingUp,
   TrendingDown,
-  Filter,
-  DollarSign,
-  Percent,
   Users,
   MapPin,
   Building2,
@@ -39,8 +36,6 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type {
   AccountingComponent,
-  ComponentType,
-  CalcMethod,
   ScopeType,
 } from "@/stores/usePayoutWorkflowStore";
 

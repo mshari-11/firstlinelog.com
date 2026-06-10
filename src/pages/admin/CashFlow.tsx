@@ -10,7 +10,6 @@ import {
   Area,
   LineChart,
   Line,
-  BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -87,7 +86,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function CashFlowAnalysis() {
-  const { user } = useAuth();
+  useAuth();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({

@@ -9,7 +9,6 @@ import {
   Calculator,
   Users,
   Car,
-  Truck,
   DollarSign,
   Plus,
   X,
@@ -18,7 +17,6 @@ import {
   FileSpreadsheet,
   Trash2,
   RefreshCw,
-  ChevronDown,
   Building2,
   Wallet,
   Receipt,
@@ -27,8 +25,6 @@ import {
   Phone,
   User,
   Printer,
-  CheckCircle2,
-  AlertTriangle,
   Edit3,
 } from "lucide-react";
 
@@ -267,7 +263,7 @@ export default function PayrollCalculator() {
     useState<CustomField[]>(loadCustomFields);
   const [drivers, setDrivers] = useState<DriverPayroll[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [showFieldEditor, setShowFieldEditor] = useState(false);
+  const [_showFieldEditor, _setShowFieldEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<DriverPayroll>(emptyDriver(customFields));
   const [generating, setGenerating] = useState(false);

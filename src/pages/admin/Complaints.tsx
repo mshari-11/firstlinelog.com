@@ -17,35 +17,23 @@ import {
   MessageSquare,
   User,
   Send,
-  Filter,
-  ChevronDown,
-  ChevronUp,
   Building2,
   Tag,
   AlertTriangle,
   Phone,
-  Mail,
-  PanelRightOpen,
   Download,
   Printer,
   Plus,
   Pencil,
   X,
   Save,
-  Trash2,
-  Copy,
-  MoreHorizontal,
   ListFilter,
   Timer,
   Zap,
   Shield,
   FileText,
   BarChart3,
-  TrendingUp,
-  Eye,
-  Ban,
   Forward,
-  Hash,
   Calendar,
   Flame,
   CircleDot,
@@ -227,7 +215,7 @@ export default function Complaints() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [bulkAction, setBulkAction] = useState<string>("");
   const [bulkAssignTo, setBulkAssignTo] = useState("");
-  const [showBulkPanel, setShowBulkPanel] = useState(false);
+  const [_showBulkPanel, setShowBulkPanel] = useState(false);
 
   // Add/Edit complaint modal
   const emptyComplaintForm = {

@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   RefreshCw,
   CheckCircle2,
-  XCircle,
   Clock,
   TrendingUp,
   Users,
@@ -16,14 +15,12 @@ import {
   DollarSign,
   Settings,
   Download,
-  Play,
   Wifi,
   WifiOff,
   Search,
   Filter,
   ChevronDown,
   ChevronUp,
-  Truck,
   Star,
   Timer,
   Activity,
@@ -33,14 +30,12 @@ import {
   Eye,
   EyeOff,
   Zap,
-  BarChart3,
   ArrowUpRight,
   ArrowDownRight,
   X,
   Loader2,
   FileText,
   UserCheck,
-  AlertCircle,
   CircleDot,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,13 +43,10 @@ import { motion, AnimatePresence } from "framer-motion";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TOYOU_PRIMARY = "#0ABAB5";
-const TOYOU_NAVY = "#0C2D48";
 const TOYOU_ACCENT = "#00D4AA";
 const TOYOU_PRIMARY_10 = "rgba(10,186,181,0.10)";
 const TOYOU_PRIMARY_15 = "rgba(10,186,181,0.15)";
-const TOYOU_PRIMARY_20 = "rgba(10,186,181,0.20)";
 const TOYOU_ACCENT_10 = "rgba(0,212,170,0.10)";
-const TOYOU_NAVY_80 = "rgba(12,45,72,0.80)";
 const LOCAL_KEY = "fll_toyou_odoo_config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -131,8 +123,8 @@ function ToYouLogo({ size = 36 }: { size?: number }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ToYouPlatform() {
-  const [orders, setOrders] = useState<ToYouOrder[]>([]);
-  const [drivers, setDrivers] = useState<DriverPerformance[]>([]);
+  const [orders, _setOrders] = useState<ToYouOrder[]>([]);
+  const [drivers, _setDrivers] = useState<DriverPerformance[]>([]);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [config, setConfig] = useState<OdooConfig>(() => {
     try {

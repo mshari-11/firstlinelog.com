@@ -10,9 +10,7 @@ import { toast } from "sonner";
 import {
   Wallet,
   Search,
-  Plus,
   X,
-  Save,
   Download,
   Printer,
   RefreshCw,
@@ -25,15 +23,12 @@ import {
   FileSpreadsheet,
   Eye,
   Edit3,
-  Filter,
-  ChevronDown,
   TrendingUp,
   // New icons for enhancements
   Lock,
   Unlock,
   Calculator,
   Bell,
-  History,
   ShieldCheck,
   ShieldAlert,
   UserCheck,
@@ -181,7 +176,7 @@ export default function PayrollManagement() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPeriod, setFilterPeriod] = useState("");
-  const [showForm, setShowForm] = useState(false);
+  const [_showForm, _setShowForm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detailId, setDetailId] = useState<string | null>(null);
 
@@ -189,10 +184,10 @@ export default function PayrollManagement() {
   const [lockedRecords, setLockedRecords] = useState<Set<string>>(new Set());
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const [showToolbar, setShowToolbar] = useState(true);
+  const [_showToolbar, _setShowToolbar] = useState(true);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<string>("created_at");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [_sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -271,7 +266,7 @@ export default function PayrollManagement() {
           );
         }
       }
-    } catch (e) { console.error("payroll fetch failed:", e); }
+    } catch (e) { console.error("payroll fetch failed:", e); toast.error("فشل تحميل بيانات الرواتب"); }
     setLoading(false);
   }, []);
 

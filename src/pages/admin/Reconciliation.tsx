@@ -215,7 +215,6 @@ function reconcile(
   uploaded: UploadedFile[],
   internal: InternalRecord[],
 ): ReconciliationRow[] {
-  const internalMap = new Map(internal.map((r) => [r.order_id, r]));
   const platformMap = new Map<string, RawRow>();
   for (const file of uploaded) {
     for (const row of file.rows) {

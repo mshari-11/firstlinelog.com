@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/admin/auth";
 import { CHAT_API_URL } from "@/lib/api";
 import {
   Send,
-  Zap,
   TrendingUp,
   AlertCircle,
   BarChart3,
@@ -363,7 +362,7 @@ function TabButton({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AIFinanceAnalysis() {
-  const { user } = useAuth();
+  useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",

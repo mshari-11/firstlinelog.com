@@ -21,7 +21,6 @@ import {
   Truck,
   ChevronDown,
   ChevronUp,
-  BarChart3,
   AlertTriangle,
   Star,
   FileSpreadsheet,
@@ -148,9 +147,7 @@ const platformColors: Record<string, string> = {
   amazon: "#3182ce",
 };
 
-const CHART_COLORS = ["#ff6b00", "#e53e3e", "#805ad5", "#00c853", "#e91e63", "#00e676", "#ff9800", "#0abab5", "#8d6e63", "#f6e05e", "#3182ce"];
-
-const cities = ["الكل", "الرياض", "جدة", "الدمام", "مكة", "المدينة"];
+const cities =["الكل", "الرياض", "جدة", "الدمام", "مكة", "المدينة"];
 
 const PLATFORMS_STORAGE_KEY = "fll_sync_platforms";
 
@@ -308,13 +305,6 @@ export default function AdminOrders() {
     setNewPlatformName("");
     setShowAddPlatform(false);
     toast.success(`تمت إضافة منصة "${newPlatformName.trim()}"`);
-  }
-
-  function removePlatform(key: string) {
-    const updated = syncPlatforms.filter(p => p.key !== key);
-    setSyncPlatforms(updated);
-    localStorage.setItem(PLATFORMS_STORAGE_KEY, JSON.stringify(updated));
-    toast.success("تم حذف المنصة");
   }
 
   // ─── Excel Import ──────────────────────────────────────────────────────

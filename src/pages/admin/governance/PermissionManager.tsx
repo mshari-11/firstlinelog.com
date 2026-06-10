@@ -6,8 +6,6 @@ import { useState, useEffect } from "react";
 import {
   Shield,
   Plus,
-  Edit2,
-  Trash2,
   Save,
   ChevronDown,
   ChevronUp,
@@ -18,11 +16,7 @@ import {
   Card,
   KPIGrid,
   KPICard,
-  Toolbar,
-  Badge,
   Button,
-  Modal,
-  Select,
 } from "@/components/admin/ui";
 import {
   SYSTEM_ROLES,

@@ -22,13 +22,7 @@ import {
   AlertTriangle,
   Search,
   RefreshCw,
-  Radio,
-  ChevronRight,
   Navigation,
-  Phone,
-  Star,
-  Layers,
-  Filter,
   Zap,
   Inbox,
   Plus,
@@ -269,7 +263,7 @@ export default function Dispatch() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [refreshTick, setRefreshTick] = useState(0);
+  const [_refreshTick, setRefreshTick] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

@@ -56,7 +56,7 @@
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-table": "^8.21.3",
     "ai": "^6.0.116",
-    "amazon-cognito-identity-js": "^6.3.16",
+    "amazon-cognito-identity-js": "^6.3.17",
     "ansi-to-react": "^6.2.6",
     "aws-amplify": "^6.16.3",
     "axios": "^1.13.2",

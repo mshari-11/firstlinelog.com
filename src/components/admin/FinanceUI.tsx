@@ -5,7 +5,6 @@
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  TrendingUp,
 } from "lucide-react";
 
 // ─── Chart Tooltip Style ─────────────────────────────────────────────────────

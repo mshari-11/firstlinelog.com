@@ -19,8 +19,6 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
-  AlertTriangle,
-  Eye,
 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */

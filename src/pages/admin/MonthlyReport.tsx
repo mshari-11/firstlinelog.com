@@ -9,10 +9,8 @@ import {
   FileText,
   Download,
   Play,
-  Calendar,
   TrendingUp,
   TrendingDown,
-  DollarSign,
   Printer,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";

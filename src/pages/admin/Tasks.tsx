@@ -170,6 +170,7 @@ export default function Tasks() {
       }
     } catch (err) {
       console.error("handleEdit tasks sync error:", err);
+      toast.error("تعذّر حفظ التعديلات في قاعدة البيانات");
     }
     setData((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     resetForm();
@@ -190,6 +191,7 @@ export default function Tasks() {
       }
     } catch (err) {
       console.error("handleDelete tasks sync error:", err);
+      toast.error("تعذّر حذف المهمة من قاعدة البيانات");
     }
     setData((prev) => prev.filter((t) => t.id !== deleteTarget.id));
     setDeleteTarget(null);

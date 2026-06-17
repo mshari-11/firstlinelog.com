@@ -8,9 +8,6 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  Settings,
-  Users,
-  Filter,
   Download,
   Printer,
   RotateCcw,
@@ -354,15 +351,18 @@ export default function EmailLogs() {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ id: a.id }),
                               });
-                            } catch (e) { console.error("email resend failed:", e); }
-                            setData((prev) =>
-                              prev.map((e) =>
-                                e.id === a.id
-                                  ? { ...e, status: "sent" as EmailStatus }
-                                  : e,
-                              ),
-                            );
-                            toast.success(`تم إعادة إرسال ${a.id}`);
+                              setData((prev) =>
+                                prev.map((e) =>
+                                  e.id === a.id
+                                    ? { ...e, status: "sent" as EmailStatus }
+                                    : e,
+                                ),
+                              );
+                              toast.success(`تم إعادة إرسال ${a.id}`);
+                            } catch (e) {
+                              console.error("email resend failed:", e);
+                              toast.error("تعذّر إعادة إرسال البريد الإلكتروني");
+                            }
                           }}
                         >
                           <RotateCcw size={12} /> إعادة إرسال

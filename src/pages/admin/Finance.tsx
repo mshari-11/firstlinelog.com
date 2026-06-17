@@ -839,6 +839,7 @@ export default function Finance() {
       }
     } catch (err) {
       console.error("خطأ في جلب بيانات المالية:", err);
+      toast.error("تعذّر تحميل بيانات المالية");
     } finally {
       setLoading(false);
     }

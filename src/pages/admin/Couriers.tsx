@@ -567,6 +567,7 @@ export default function AdminCouriers() {
       if (merged.length > 0) setCouriers(merged);
     } catch (e) {
       console.error(e);
+      toast.error("تعذّر تحميل بيانات المناديب");
     } finally {
       setCourierLoading(false);
     }
@@ -589,6 +590,7 @@ export default function AdminCouriers() {
       }
     } catch (e) {
       console.error(e);
+      toast.error("تعذّر تحميل طلبات التسجيل");
     } finally {
       setAppLoading(false);
     }
@@ -674,6 +676,7 @@ export default function AdminCouriers() {
       );
     } catch (e) {
       console.error(e);
+      toast.error("تعذّر تحديث حالة الطلب");
       setApplications((prev) =>
         prev.map((a) => (a.id === app.id ? { ...a, ...payload } : a)),
       );
@@ -941,10 +944,15 @@ export default function AdminCouriers() {
           .from("couriers")
           .update(editCourier)
           .eq("id", editCourier.id);
-        if (error) console.error("Supabase update error:", error);
+        if (error) {
+          console.error("Supabase update error:", error);
+          toast.error("تعذّر حفظ التعديلات في قاعدة البيانات");
+        }
       }
     } catch (e) {
       console.error(e);
+      toast.error("خطأ أثناء تحديث بيانات المندوب");
+      return;
     }
     setCouriers((prev) =>
       prev.map((c) => (c.id === editCourier.id ? { ...editCourier } : c)),
@@ -962,10 +970,16 @@ export default function AdminCouriers() {
           .from("couriers")
           .delete()
           .eq("id", deleteCourierId);
-        if (error) console.error("Supabase delete error:", error);
+        if (error) {
+          console.error("Supabase delete error:", error);
+          toast.error("تعذّر حذف المندوب من قاعدة البيانات");
+          return;
+        }
       }
     } catch (e) {
       console.error(e);
+      toast.error("خطأ أثناء حذف المندوب");
+      return;
     }
     setCouriers((prev) => prev.filter((c) => c.id !== deleteCourierId));
     toast.success(`تم حذف المندوب ${target?.full_name ?? ""}`);
@@ -980,10 +994,14 @@ export default function AdminCouriers() {
           .from("couriers")
           .update({ status: newStatus, status_changed_at: now })
           .eq("id", courierId);
-        if (error) console.error("Supabase status update error:", error);
+        if (error) {
+          console.error("Supabase status update error:", error);
+          toast.error("تعذّر تحديث حالة المندوب");
+        }
       }
     } catch (e) {
       console.error(e);
+      toast.error("خطأ أثناء تحديث حالة المندوب");
     }
     setCouriers((prev) =>
       prev.map((c) =>
@@ -1022,10 +1040,14 @@ export default function AdminCouriers() {
     try {
       if (supabase) {
         const { error } = await supabase.from("couriers").insert(newCourier);
-        if (error) console.error("Supabase insert error:", error);
+        if (error) {
+          console.error("Supabase insert error:", error);
+          toast.error("تعذّر حفظ المندوب في قاعدة البيانات");
+        }
       }
     } catch (e) {
       console.error(e);
+      toast.error("خطأ أثناء إضافة المندوب");
     }
     setCouriers((prev) => [newCourier, ...prev]);
     setAddForm({ full_name: "", phone: "", email: "", city: "", vehicle_type: "", app_id: "", app_name: "", nationality: "", iqama_number: "", photo_url: "", supervisor: "", contract_type: "" });
@@ -1095,10 +1117,14 @@ export default function AdminCouriers() {
     try {
       if (supabase) {
         const { error } = await supabase.from("couriers").insert(newCouriers);
-        if (error) console.error("Supabase bulk insert error:", error);
+        if (error) {
+          console.error("Supabase bulk insert error:", error);
+          toast.error("تعذّر حفظ بيانات الاستيراد في قاعدة البيانات");
+        }
       }
     } catch (e) {
       console.error(e);
+      toast.error("خطأ أثناء استيراد المناديب");
     }
     setCouriers((prev) => [...newCouriers, ...prev]);
     setImportPreview([]);

@@ -65,11 +65,6 @@ function postAllRoutesOnce(children: AnyEl) {
   try {
     const list = Array.from(flattenRoutes(children)).sort();
 
-    // Always log routes in development for debugging
-    if (process.env.NODE_ENV === "development") {
-      console.log("Routes:", list);
-    }
-
     // Check if route messaging is enabled
     if (!__ROUTE_MESSAGING_ENABLED__) {
       return;

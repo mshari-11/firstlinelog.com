@@ -31,6 +31,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 }
 import { API_BASE } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 type AttendanceStatus = "present" | "late" | "absent";
 interface AttendanceEntry {
@@ -609,7 +610,9 @@ export default function Attendance() {
                       check_out: checkinForm.type === "check-out" ? checkinForm.time : null,
                       date: new Date().toISOString().slice(0, 10),
                       status: "present",
-                    }).then(() => {});
+                    }).then(({ error }) => {
+                      if (error) toast.error("فشل حفظ تسجيل الحضور: " + error.message);
+                    });
                   }
                   setShowCheckinModal(false);
                   setCheckinForm({ name: "", time: "", type: "check-in" });

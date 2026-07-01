@@ -8,7 +8,7 @@ import {
   Activity, CheckCircle2, XCircle, AlertTriangle, Loader2,
   ChevronLeft, ChevronRight, Filter, Link2, Unlink2, Percent,
   Clock, DatabaseZap, Key, RefreshCw, Eye, X, Bike, Car, Phone,
-  IdCard, Hash,
+  IdCard, Hash, Receipt,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -2575,12 +2575,12 @@ export default function JahezPlatform() {
                     marginBottom: 10,
                   }}
                 >
-                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: colors.textPrimary }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: colors.text }}>
                     تقرير المدفوعات
                   </h4>
                   <button
                     style={S.btn("#2d3748", false)}
-                    onClick={() => loadDriverPayments(selectedDriver.driverId)}
+                    onClick={() => loadDriverPayments(String(selectedDriver.driverId))}
                     disabled={driverPaymentsLoading}
                   >
                     <RefreshCw size={11} />
@@ -2612,7 +2612,7 @@ export default function JahezPlatform() {
                           }}
                         >
                           <span style={{ color: colors.textMuted }}>{k}</span>
-                          <span style={{ color: colors.textPrimary, fontWeight: 600 }}>
+                          <span style={{ color: colors.text, fontWeight: 600 }}>
                             {typeof v === "number" ? v.toLocaleString("ar-SA") : String(v)}
                           </span>
                         </div>

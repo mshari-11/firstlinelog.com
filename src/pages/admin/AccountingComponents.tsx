@@ -34,6 +34,7 @@ import {
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { API_BASE } from "@/lib/api";
 import type {
   AccountingComponent,
   ScopeType,

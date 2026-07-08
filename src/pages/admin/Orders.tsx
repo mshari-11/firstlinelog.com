@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Clock,
   TrendingUp,
-  TrendingDown,
   Download,
   Printer,
   User,

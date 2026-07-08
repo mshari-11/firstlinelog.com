@@ -137,6 +137,7 @@ export default function Tasks() {
       });
     } catch (err) {
       console.error("handleAdd tasks sync error:", err);
+      toast.error("تعذّر حفظ المهمة في الخادم");
     }
     setData((prev) => [newTask, ...prev]);
     resetForm();

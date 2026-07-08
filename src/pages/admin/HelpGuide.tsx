@@ -21,8 +21,6 @@ import {
   TrendingUp,
   Receipt,
   ArrowRightLeft,
-  FileText,
-  Brain,
   Landmark,
   GitCompare,
   BarChart3,
@@ -40,16 +38,11 @@ import {
   Mail,
   ShieldAlert,
   UserCheck,
-  Sparkles,
   Settings2,
-  Zap,
   Shield,
   GraduationCap,
-  Lock,
   Calculator,
-  GitBranch,
   FileCheck,
-  Monitor,
 } from "lucide-react";
 
 interface GuideSection {

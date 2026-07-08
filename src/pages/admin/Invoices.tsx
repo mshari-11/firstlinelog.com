@@ -10,7 +10,6 @@ import {
   AlertCircle,
   DollarSign,
   Send,
-  BarChart3,
   Eye,
   Plus,
   Download,

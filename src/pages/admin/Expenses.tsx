@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   PieChart as RechartsPie,
-  Pie,
   Cell,
   XAxis,
   YAxis,

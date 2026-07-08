@@ -23,7 +23,6 @@ import {
   BellRing,
   TrendingDown,
   X,
-  ChevronDown,
   Landmark,
   Receipt,
   AlertCircle,

@@ -6,7 +6,6 @@ import {
   AlertCircle,
   Link2,
   Truck,
-  Users,
   CheckCircle2,
   XCircle,
   Clock,

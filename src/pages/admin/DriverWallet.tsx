@@ -8,10 +8,8 @@ import { supabase } from "@/lib/supabase";
 import {
   Wallet,
   TrendingUp,
-  Clock,
   CheckCircle2,
   Search,
-  Download,
   Plus,
   ArrowUpRight,
   AlertTriangle,

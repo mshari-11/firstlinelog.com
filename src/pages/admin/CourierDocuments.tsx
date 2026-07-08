@@ -136,12 +136,12 @@ export default function CourierDocuments() {
     { key: "expired", label: "منتهية الصلاحية" },
   ];
 
-  function handleUpload(docKey: string) {
+  async function handleUpload(docKey: string) {
     if (!uploadUrl.trim()) {
       toast.error("أدخل رابط المستند");
       return;
     }
-    // Update local state (placeholder for real API)
+    const uploadDate = new Date().toISOString().split("T")[0];
     setSelectedCourier((prev) => {
       if (!prev) return prev;
       return {
@@ -149,11 +149,23 @@ export default function CourierDocuments() {
         [docKey]: "uploaded" as DocStatus,
         documents: prev.documents.map((d) =>
           d.key === docKey
-            ? { ...d, status: "uploaded" as DocStatus, url: uploadUrl, upload_date: new Date().toISOString().split("T")[0] }
+            ? { ...d, status: "uploaded" as DocStatus, url: uploadUrl, upload_date: uploadDate }
             : d,
         ),
       };
     });
+    if (supabase && selectedCourier) {
+      try {
+        const { error } = await supabase
+          .from("courier_documents")
+          .update({ [docKey]: "uploaded" })
+          .eq("id", selectedCourier.id);
+        if (error) toast.error("تعذّر حفظ المستند في قاعدة البيانات");
+      } catch (err) {
+        console.error("handleUpload persist error:", err);
+        toast.error("خطأ في الاتصال — تم الحفظ محلياً فقط");
+      }
+    }
     toast.success("تم رفع المستند بنجاح");
     setUploadUrl("");
     setUploadingDoc(null);

@@ -220,16 +220,20 @@ export default function DriverWallet() {
       created_at: now.toISOString(),
     };
     if (supabase) {
-      const { error } = await supabase.from("payout_batches").insert({
-        batch_ref: batch.batch_ref,
-        status: batch.status,
-        total_amount: batch.total_amount,
-        driver_count: batch.driver_count,
-        period_start: batch.period_start,
-        period_end: batch.period_end,
-      });
-      if (error) {
-        // fallback to local draft when dedicated table is unavailable
+      try {
+        const { error } = await supabase.from("payout_batches").insert({
+          batch_ref: batch.batch_ref,
+          status: batch.status,
+          total_amount: batch.total_amount,
+          driver_count: batch.driver_count,
+          period_start: batch.period_start,
+          period_end: batch.period_end,
+        });
+        if (error) {
+          // fallback to local draft when dedicated table is unavailable
+        }
+      } catch (err) {
+        console.error("createDraftBatch error:", err);
       }
     }
     setBatches((prev) => [batch, ...prev]);
@@ -248,35 +252,41 @@ export default function DriverWallet() {
     if (!amount || amount <= 0 || amount > selected.balance) return;
     setShowPayoutModal(false);
     if (supabase) {
-      const { error } = await supabase.rpc("record_wallet_event", {
-        p_driver_id: selected.driver_id,
-        p_event_type: "payout",
-        p_amount: -amount,
-        p_description: "صرف يدوي من لوحة الإدارة",
-        p_reference_type: "manual_payout",
-        p_reference_id: `MAN-${Date.now()}`,
-        p_created_by: "admin",
-      });
-      if (error) {
-        const financeInsert = await supabase.from("finance").insert({
-          courier_id: selected.driver_id,
-          period_start: new Date().toISOString(),
-          period_end: new Date().toISOString(),
-          gross_revenue: amount,
-          platform_fees: 0,
-          vehicle_deductions: 0,
-          absence_deductions: 0,
-          maintenance_deductions: 0,
-          insurance_deductions: 0,
-          other_deductions: 0,
-          net_payout: amount,
-          payment_status: "paid",
-          notes: "صرف من شاشة المحافظ",
+      try {
+        const { error } = await supabase.rpc("record_wallet_event", {
+          p_driver_id: selected.driver_id,
+          p_event_type: "payout",
+          p_amount: -amount,
+          p_description: "صرف يدوي من لوحة الإدارة",
+          p_reference_type: "manual_payout",
+          p_reference_id: `MAN-${Date.now()}`,
+          p_created_by: "admin",
         });
-        if (financeInsert.error) {
-          toast.error("تعذر تسجيل عملية الصرف");
-          return;
+        if (error) {
+          const financeInsert = await supabase.from("finance").insert({
+            courier_id: selected.driver_id,
+            period_start: new Date().toISOString(),
+            period_end: new Date().toISOString(),
+            gross_revenue: amount,
+            platform_fees: 0,
+            vehicle_deductions: 0,
+            absence_deductions: 0,
+            maintenance_deductions: 0,
+            insurance_deductions: 0,
+            other_deductions: 0,
+            net_payout: amount,
+            payment_status: "paid",
+            notes: "صرف من شاشة المحافظ",
+          });
+          if (financeInsert.error) {
+            toast.error("تعذر تسجيل عملية الصرف");
+            return;
+          }
         }
+      } catch (err) {
+        console.error("payoutSelectedWallet error:", err);
+        toast.error("خطأ في الاتصال — تعذّر تسجيل عملية الصرف");
+        return;
       }
     }
     const txn: WalletTransaction = {

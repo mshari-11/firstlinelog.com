@@ -138,7 +138,7 @@ export default function AdminExcel() {
 
   async function handleUpload() {
     if (!file) return;
-    if (!supabase) throw new Error("no client");
+    if (!supabase) { toast.error("غير متصل بقاعدة البيانات"); return; }
     setUploading(true);
     try {
       const formData = new FormData();
@@ -151,6 +151,9 @@ export default function AdminExcel() {
       if (!res.ok) throw new Error(`upload failed: ${res.status}`);
       setFile(null);
       await fetchHistory();
+    } catch (err) {
+      console.error("handleUpload error:", err);
+      toast.error("فشل رفع الملف — تحقق من الاتصال وأعد المحاولة");
     } finally {
       setUploading(false);
     }

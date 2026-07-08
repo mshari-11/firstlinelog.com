@@ -65,10 +65,24 @@ export default function WorkflowBuilder() {
 
   const active = workflows.filter((w) => w.isActive).length;
 
-  const toggleActive = (id: string) => {
+  const toggleActive = async (id: string) => {
+    const wf = workflows.find((w) => w.id === id);
+    if (!wf) return;
+    const newValue = !wf.isActive;
     setWorkflows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, isActive: !w.isActive } : w)),
+      prev.map((w) => (w.id === id ? { ...w, isActive: newValue } : w)),
     );
+    if (supabase) {
+      try {
+        await supabase
+          .schema("admin")
+          .from("workflows")
+          .update({ is_active: newValue })
+          .eq("id", id);
+      } catch (err) {
+        console.error("toggleActive persist error:", err);
+      }
+    }
   };
 
   return (

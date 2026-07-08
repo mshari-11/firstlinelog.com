@@ -22,6 +22,7 @@ import {
   Button,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface Message {
@@ -94,7 +95,7 @@ export default function CourierInbox() {
     return diff < 48 * 60 * 60 * 1000; // 48 hours
   }).length;
 
-  function sendMessage() {
+  async function sendMessage() {
     if (!newMessage.trim() || !selected) return;
     const msg: Message = {
       id: `m${Date.now()}`,
@@ -102,20 +103,46 @@ export default function CourierInbox() {
       text: newMessage.trim(),
       timestamp: new Date().toISOString(),
     };
+    const updatedMessages = [...selected.messages, msg];
     setConversations((prev) =>
       prev.map((c) =>
         c.id === selected.id
-          ? { ...c, messages: [...c.messages, msg], last_activity: msg.timestamp }
+          ? { ...c, messages: updatedMessages, last_activity: msg.timestamp }
           : c
       )
     );
     setNewMessage("");
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from("courier_conversations")
+          .update({ messages: updatedMessages, last_activity: msg.timestamp })
+          .eq("id", selected.id);
+        if (error) toast.error("تعذّر حفظ الرسالة في قاعدة البيانات");
+      } catch (err) {
+        console.error("sendMessage persist error:", err);
+      }
+    }
   }
 
-  function toggleImportant(convId: string) {
+  async function toggleImportant(convId: string) {
+    const conv = conversations.find((c) => c.id === convId);
+    if (!conv) return;
+    const newValue = !conv.is_important;
     setConversations((prev) =>
-      prev.map((c) => (c.id === convId ? { ...c, is_important: !c.is_important } : c))
+      prev.map((c) => (c.id === convId ? { ...c, is_important: newValue } : c))
     );
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from("courier_conversations")
+          .update({ is_important: newValue })
+          .eq("id", convId);
+        if (error) toast.error("تعذّر تحديث حالة الرسالة");
+      } catch (err) {
+        console.error("toggleImportant persist error:", err);
+      }
+    }
   }
 
   function selectConversation(convId: string) {

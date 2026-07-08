@@ -612,6 +612,9 @@ export default function Attendance() {
                       status: "present",
                     }).then(({ error }) => {
                       if (error) toast.error("فشل حفظ تسجيل الحضور: " + error.message);
+                    }).catch((err) => {
+                      console.error("attendance insert error:", err);
+                      toast.error("تعذّر حفظ تسجيل الحضور");
                     });
                   }
                   setShowCheckinModal(false);

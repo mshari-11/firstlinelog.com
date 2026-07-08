@@ -221,7 +221,19 @@ export default function FeatureToggles() {
                   </div>
 
                   <button
-                    onClick={() => toggleModule(mod.id)}
+                    onClick={async () => {
+                      toggleModule(mod.id);
+                      if (supabase) {
+                        try {
+                          await supabase
+                            .schema("admin")
+                            .from("feature_toggles")
+                            .upsert({ id: mod.id, enabled: !mod.enabled }, { onConflict: "id" });
+                        } catch (err) {
+                          console.error("toggleModule persist error:", err);
+                        }
+                      }
+                    }}
                     disabled={mod.isCore}
                     title={
                       mod.isCore

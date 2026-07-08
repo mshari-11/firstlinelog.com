@@ -154,7 +154,7 @@ export default function AIReports() {
             className="con-btn-primary"
             onClick={() => {
               toast?.("جاري توليد التقرير...");
-              fetch(`${AI_API}/runs`, { method: "POST" }).catch(() => {});
+              fetch(`${AI_API}/runs`, { method: "POST" }).catch(() => { toast.error("تعذّر إنشاء التقرير — تحقق من الاتصال"); });
             }}
             style={{ gap: 4 }}
           >

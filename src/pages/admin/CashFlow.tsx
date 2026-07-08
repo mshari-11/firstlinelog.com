@@ -3,7 +3,6 @@
  * Money in vs money out timeline, burn rate, operating margin
  */
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   AreaChart,
@@ -86,8 +85,6 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function CashFlowAnalysis() {
-  useAuth();
-
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalCashIn: 1068000,

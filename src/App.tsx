@@ -971,7 +971,14 @@ export default function App() {
                 </AdminAuthProvider>
               }
             >
-              <Route path="dashboard" element={<StagingDashboard />} />
+              <Route
+                path="dashboard"
+                element={
+                  <AccessGuard roles={["admin", "owner"]}>
+                    <StagingDashboard />
+                  </AccessGuard>
+                }
+              />
             </Route>
 
             {/* ══════════════════════════════════════════════════════════════

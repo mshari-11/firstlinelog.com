@@ -88,14 +88,11 @@ export default function AdminExcel() {
   const [selectedType, setSelectedType] = useState("salaries");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<ImportHistory[]>(FALLBACK_HISTORY);
-  const [loading, setLoading] = useState(false);
 
   async function fetchHistory() {
     if (!supabase) return;
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("excel_imports")
@@ -108,8 +105,6 @@ export default function AdminExcel() {
       }
     } catch {
       // keep FALLBACK_HISTORY on error
-    } finally {
-      setLoading(false);
     }
   }
 

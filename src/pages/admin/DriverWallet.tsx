@@ -375,6 +375,7 @@ export default function DriverWallet() {
   }, []);
 
   async function fetchAll() {
+    if (!supabase) return;
     setLoading(true);
     try {
       // Try dedicated wallet tables first

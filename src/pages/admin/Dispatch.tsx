@@ -460,7 +460,7 @@ export default function Dispatch() {
       )
       .subscribe();
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, []);
 

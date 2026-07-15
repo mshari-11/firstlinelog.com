@@ -1326,7 +1326,6 @@ export default function ApiManagement() {
         {filtered.map((ep) => {
           const expanded = expandedId === ep.id;
           const mc = METHOD_COLORS[ep.method] || METHOD_COLORS.GET;
-          const cat = CATEGORY_LABELS[ep.category];
 
           return (
             <div

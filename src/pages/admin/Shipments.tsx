@@ -71,13 +71,22 @@ export default function Shipments() {
     window.print();
   }
 
-  function handleAddShipment() {
+  async function handleAddShipment() {
     if (!newShipment.trackingNumber || !newShipment.customer) return;
     const s: Shipment = {
       id: `SHP-${String(data.length + 1).padStart(3, "0")}`,
       ...newShipment,
       amount: 0,
     };
+    try {
+      await fetch(`${API_BASE}/api/shipments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(s),
+      });
+    } catch {
+      /* keep local fallback */
+    }
     setData((prev) => [s, ...prev]);
     setNewShipment({
       trackingNumber: "",

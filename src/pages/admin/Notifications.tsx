@@ -95,7 +95,7 @@ export default function Notifications() {
   const [newType, setNewType] = useState<NotifType>("system");
   const [newRecipients, setNewRecipients] = useState("");
 
-  function handleAddNotification() {
+  async function handleAddNotification() {
     if (!newTitle.trim() || !newMessage.trim()) {
       toast.error("يرجى تعبئة العنوان والرسالة");
       return;
@@ -109,6 +109,15 @@ export default function Notifications() {
       date: new Date().toISOString(),
       link: TYPE_MAP[newType].route,
     };
+    try {
+      await fetch(`${API_BASE}/api/notifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...n, action: "create", recipients: newRecipients }),
+      });
+    } catch {
+      /* keep local fallback */
+    }
     setData((prev) => [n, ...prev]);
     setShowAddModal(false);
     setNewTitle("");

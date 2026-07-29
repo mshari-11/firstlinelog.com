@@ -8,7 +8,7 @@ import {
   Activity, CheckCircle2, XCircle, AlertTriangle, Loader2,
   ChevronLeft, ChevronRight, Filter, Link2, Unlink2, Percent,
   Clock, DatabaseZap, Key, RefreshCw, Eye, X, Bike, Car, Phone,
-  IdCard, Hash,
+  IdCard, Hash, Receipt,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -186,6 +186,7 @@ const colors = {
   border: "var(--con-border, #2d3148)",
   text: "var(--con-text, #e2e8f0)",
   textMuted: "var(--con-text-muted, #94a3b8)",
+  textPrimary: "var(--con-text-primary, #e2e8f0)",
 };
 
 const S = {
@@ -2580,7 +2581,7 @@ export default function JahezPlatform() {
                   </h4>
                   <button
                     style={S.btn("#2d3748", false)}
-                    onClick={() => loadDriverPayments(selectedDriver.driverId)}
+                    onClick={() => loadDriverPayments(String(selectedDriver.driverId))}
                     disabled={driverPaymentsLoading}
                   >
                     <RefreshCw size={11} />

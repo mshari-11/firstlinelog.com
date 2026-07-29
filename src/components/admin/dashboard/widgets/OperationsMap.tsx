@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Map, MapPin, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
+import { Map as MapIcon, MapPin, Trophy, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { WidgetShell } from "../WidgetShell";
 import { supabase } from "@/lib/supabase";
 
@@ -96,7 +96,7 @@ export function OperationsMap() {
       id="operations-map"
       title="التوزيع التشغيلي"
       subtitle={`${totalActive} مندوب نشط · ${totalOrders} طلب اليوم`}
-      icon={Map}
+      icon={MapIcon}
       iconColor="var(--con-brand)"
       onDrilldown={() => navigate("/admin-panel/dispatch")}
       actions={

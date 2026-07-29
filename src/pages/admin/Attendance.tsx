@@ -604,18 +604,21 @@ export default function Attendance() {
                   }
                   // Persist to Supabase
                   if (supabase) {
-                    supabase.from("attendance").insert({
-                      employee_name: checkinForm.name,
-                      check_in: checkinForm.type === "check-in" ? checkinForm.time : null,
-                      check_out: checkinForm.type === "check-out" ? checkinForm.time : null,
-                      date: new Date().toISOString().slice(0, 10),
-                      status: "present",
-                    }).then(({ error }) => {
-                      if (error) toast.error("فشل حفظ تسجيل الحضور: " + error.message);
-                    }).catch((err) => {
-                      console.error("attendance insert error:", err);
-                      toast.error("تعذّر حفظ تسجيل الحضور");
-                    });
+                    (async () => {
+                      try {
+                        const { error } = await supabase.from("attendance").insert({
+                          employee_name: checkinForm.name,
+                          check_in: checkinForm.type === "check-in" ? checkinForm.time : null,
+                          check_out: checkinForm.type === "check-out" ? checkinForm.time : null,
+                          date: new Date().toISOString().slice(0, 10),
+                          status: "present",
+                        });
+                        if (error) toast.error("فشل حفظ تسجيل الحضور: " + error.message);
+                      } catch (err) {
+                        console.error("attendance insert error:", err);
+                        toast.error("تعذّر حفظ تسجيل الحضور");
+                      }
+                    })();
                   }
                   setShowCheckinModal(false);
                   setCheckinForm({ name: "", time: "", type: "check-in" });

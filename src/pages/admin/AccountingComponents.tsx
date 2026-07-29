@@ -33,6 +33,7 @@ import {
   ConfirmDialog,
 } from "@/components/admin/ui";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api";
 import { toast } from "sonner";
 import type {
   AccountingComponent,

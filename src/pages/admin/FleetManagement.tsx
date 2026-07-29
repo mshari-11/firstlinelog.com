@@ -33,6 +33,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.click();
 }
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type VehicleStatus = "active" | "maintenance" | "available" | "inactive";
 interface Vehicle {
@@ -115,7 +116,10 @@ export default function FleetManagement() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: new Date().toISOString() }),
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error(`[FleetManagement] maintenance update failed for ${id}:`, err);
+        toast.error(`فشل تحديث الصيانة للمركبة ${id}`);
+      });
     });
     setSelectedIds(new Set());
   }

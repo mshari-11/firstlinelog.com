@@ -18,6 +18,8 @@ import {
   Square,
   MinusSquare,
 } from "lucide-react";
+import { toast } from "sonner";
+import { API_BASE } from "@/lib/api";
 
 function downloadCSV(data: Record<string, any>[], filename: string) {
   if (!data.length) return;
@@ -32,7 +34,6 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.download = filename + ".csv";
   a.click();
 }
-import { API_BASE } from "@/lib/api";
 
 type VehicleStatus = "active" | "maintenance" | "available" | "inactive";
 interface Vehicle {
@@ -144,6 +145,7 @@ export default function FleetManagement() {
       });
     } catch (err) {
       console.error("handleMaintenance sync error:", err);
+      toast.error("تعذّر تسجيل طلب الصيانة في الخادم");
     }
     setData((prev) =>
       prev.map((v) =>

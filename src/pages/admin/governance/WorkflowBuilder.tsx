@@ -27,6 +27,7 @@ import {
   type ApprovalStep,
 } from "@/lib/admin/governance";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function WorkflowBuilder() {
   const [workflows, setWorkflows] =
@@ -81,6 +82,7 @@ export default function WorkflowBuilder() {
           .eq("id", id);
       } catch (err) {
         console.error("toggleActive persist error:", err);
+        toast.error("تعذّر حفظ تغيير حالة سير العمل");
       }
     }
   };

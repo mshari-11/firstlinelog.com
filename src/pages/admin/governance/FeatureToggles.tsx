@@ -15,6 +15,7 @@ import {
 import { useModuleRegistry } from "@/stores/useModuleRegistry";
 import { GROUP_LABELS, type ModuleGroup } from "@/lib/admin/moduleRegistry";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function FeatureToggles() {
   const { modules, toggleModule } = useModuleRegistry();
@@ -231,6 +232,7 @@ export default function FeatureToggles() {
                             .upsert({ id: mod.id, enabled: !mod.enabled }, { onConflict: "id" });
                         } catch (err) {
                           console.error("toggleModule persist error:", err);
+                          toast.error("تعذّر حفظ تغيير الميزة في قاعدة البيانات");
                         }
                       }
                     }}

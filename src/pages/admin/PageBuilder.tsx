@@ -825,7 +825,9 @@ export default function PageBuilder() {
           })),
           { onConflict: "id" },
         )
-        .then(() => {});
+        .then(({ error }) => {
+          if (error) console.error("page_builder_config upsert failed:", error);
+        });
     }
     setTimeout(() => setSaved(false), 2500);
   }

@@ -173,6 +173,7 @@ export default function AccountingComponents() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(record),
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const newComp: AccountingComponent = {
           ...record,

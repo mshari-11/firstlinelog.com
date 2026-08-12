@@ -2577,6 +2577,7 @@ function DriversTab() {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/drivers?limit=200`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setDrivers(data.items || []);
     } catch { /* keep empty */ }

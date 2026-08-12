@@ -691,8 +691,10 @@ export default function RevenueAnalysis() {
                 onClick={async () => {
                   if (!addForm.platform || !addForm.amount) return;
                   const amt = parseFloat(addForm.amount);
-                  try {
-                    if (supabase) {
+                  if (!supabase) {
+                    toast.warning("الاتصال بقاعدة البيانات غير متاح — تم الحفظ محلياً فقط");
+                  } else {
+                    try {
                       const { error } = await supabase
                         .from("finance.revenue_entries")
                         .insert({
@@ -704,9 +706,9 @@ export default function RevenueAnalysis() {
                         });
                       if (error) throw error;
                       toast.success("تم الحفظ بنجاح");
+                    } catch {
+                      toast.error("فشل الحفظ — تم الحفظ محلياً فقط");
                     }
-                  } catch {
-                    toast.error("فشل الحفظ — تم الحفظ محلياً فقط");
                   }
                   // Always update local state as fallback
                   setPlatformRevenueData((prev) => {

@@ -346,11 +346,12 @@ export default function EmailLogs() {
                           }}
                           onClick={async () => {
                             try {
-                              await fetch(`${API_BASE}/api/email-resend`, {
+                              const res = await fetch(`${API_BASE}/api/email-resend`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ id: a.id }),
                               });
+                              if (!res.ok) throw new Error(`HTTP ${res.status}`);
                               setData((prev) =>
                                 prev.map((e) =>
                                   e.id === a.id

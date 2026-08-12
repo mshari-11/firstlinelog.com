@@ -1567,6 +1567,21 @@ export default function PayoutRunWorkflow() {
           : a
       )
     );
+    if (supabase) {
+      supabase
+        .from("payout_approval_log" as any)
+        .insert({
+          batch_id: batchId || batch?.id,
+          stage_id: currentApprovalStageId,
+          action: "rejected",
+          reject_reason: approvalRejectReason,
+          decided_by: user?.full_name || "admin",
+          decided_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) console.error("payout_approval_log reject insert failed:", error);
+        });
+    }
     setApprovalRejectModal(false);
     setApprovalRejectReason("");
     toast.error("تم رفض المرحلة");
@@ -1589,6 +1604,21 @@ export default function PayoutRunWorkflow() {
         return a;
       })
     );
+    if (supabase) {
+      supabase
+        .from("payout_approval_log" as any)
+        .insert({
+          batch_id: batchId || batch?.id,
+          stage_id: currentApprovalStageId,
+          action: "revision",
+          reject_reason: revisionReason,
+          decided_by: user?.full_name || "admin",
+          decided_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) console.error("payout_approval_log revision insert failed:", error);
+        });
+    }
     setRevisionModal(false);
     setRevisionReason("");
     toast.info("تم طلب التعديل — أُعيد للمرحلة السابقة");

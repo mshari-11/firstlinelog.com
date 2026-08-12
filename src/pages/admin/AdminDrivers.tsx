@@ -74,96 +74,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-const driversData = [
-  {
-    id: "DRV-001",
-    name: "أحمد محمد الغامدي",
-    phone: "05XXXXXXX1",
-    city: "جدة",
-    platform: "هنقرستيشن",
-    status: "active",
-    rating: 4.8,
-    orders: 1247,
-    joinDate: "2024-03",
-  },
-  {
-    id: "DRV-002",
-    name: "خالد علي القحطاني",
-    phone: "05XXXXXXX2",
-    city: "الرياض",
-    platform: "جاهز",
-    status: "active",
-    rating: 4.9,
-    orders: 982,
-    joinDate: "2024-05",
-  },
-  {
-    id: "DRV-003",
-    name: "سعد ناصر العتيبي",
-    phone: "05XXXXXXX3",
-    city: "جدة",
-    platform: "مرسول",
-    status: "inactive",
-    rating: 4.5,
-    orders: 654,
-    joinDate: "2024-07",
-  },
-  {
-    id: "DRV-004",
-    name: "فهد أحمد الشهري",
-    phone: "05XXXXXXX4",
-    city: "الدمام",
-    platform: "نون فود",
-    status: "active",
-    rating: 4.7,
-    orders: 1580,
-    joinDate: "2023-11",
-  },
-  {
-    id: "DRV-005",
-    name: "عمر سعيد الحربي",
-    phone: "05XXXXXXX5",
-    city: "مكة",
-    platform: "هنقرستيشن",
-    status: "suspended",
-    rating: 3.9,
-    orders: 320,
-    joinDate: "2025-01",
-  },
-  {
-    id: "DRV-006",
-    name: "محمد يوسف الزهراني",
-    phone: "05XXXXXXX6",
-    city: "الرياض",
-    platform: "جاهز",
-    status: "active",
-    rating: 4.6,
-    orders: 890,
-    joinDate: "2024-08",
-  },
-  {
-    id: "DRV-007",
-    name: "عبدالله سالم المالكي",
-    phone: "05XXXXXXX7",
-    city: "المدينة",
-    platform: "مرسول",
-    status: "active",
-    rating: 4.8,
-    orders: 1120,
-    joinDate: "2024-01",
-  },
-  {
-    id: "DRV-008",
-    name: "ياسر حسن الدوسري",
-    phone: "05XXXXXXX8",
-    city: "جدة",
-    platform: "هنقرستيشن",
-    status: "pending",
-    rating: 0,
-    orders: 0,
-    joinDate: "2026-02",
-  },
-];
+const driversData: any[] = [];
 
 const statusConfig: Record<
   string,
@@ -200,7 +111,7 @@ export default function AdminDrivers() {
         .select("*")
         .order("created_at", { ascending: false })
         .limit(200);
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setDrivers(data.map((row: any) => ({
           id: row.id || row.driver_id || `DRV-${row.id}`,
           name: row.full_name || row.name || "سائق",

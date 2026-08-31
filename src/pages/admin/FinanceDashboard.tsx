@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   DollarSign,
   TrendingUp,
@@ -199,6 +200,7 @@ export default function FinanceDashboard() {
       ]);
     } catch (e) {
       console.error("Finance dashboard fetch error:", e);
+      toast.error("تعذّر تحميل بيانات لوحة المالية");
     } finally {
       setLoading(false);
     }

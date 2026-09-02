@@ -234,6 +234,7 @@ export default function DriverWallet() {
         }
       } catch (err) {
         console.error("createDraftBatch error:", err);
+        toast.error("تعذّر حفظ الدفعة في قاعدة البيانات — تم الحفظ محلياً فقط");
       }
     }
     setBatches((prev) => [batch, ...prev]);

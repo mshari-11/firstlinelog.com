@@ -95,7 +95,7 @@ export default function Notifications() {
   const [newType, setNewType] = useState<NotifType>("system");
   const [newRecipients, setNewRecipients] = useState("");
 
-  function handleAddNotification() {
+  async function handleAddNotification() {
     if (!newTitle.trim() || !newMessage.trim()) {
       toast.error("يرجى تعبئة العنوان والرسالة");
       return;
@@ -115,7 +115,17 @@ export default function Notifications() {
     setNewMessage("");
     setNewType("system");
     setNewRecipients("");
-    toast.success("تم إرسال الإشعار بنجاح");
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...n, recipients: newRecipients }),
+      });
+      if (!res.ok) throw new Error("server error");
+      toast.success("تم إرسال الإشعار بنجاح");
+    } catch {
+      toast.warning("تم إنشاء الإشعار محلياً — تعذّر الحفظ في الخادم");
+    }
   }
 
   useEffect(() => {

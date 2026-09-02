@@ -33,6 +33,7 @@ function downloadCSV(data: Record<string, any>[], filename: string) {
   a.click();
 }
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type VehicleStatus = "active" | "maintenance" | "available" | "inactive";
 interface Vehicle {
@@ -703,7 +704,7 @@ export default function FleetManagement() {
               <button
                 className="con-btn-primary"
                 disabled={!newVehicle.name}
-                onClick={() => {
+                onClick={async () => {
                   const next: Vehicle = {
                     id: `VEH-${Date.now()}`,
                     name: newVehicle.name,
@@ -715,12 +716,18 @@ export default function FleetManagement() {
                   };
                   setData((prev) => [next, ...prev]);
                   setShowAddModal(false);
-                  setNewVehicle({
-                    name: "",
-                    type: "فان",
-                    driver: "",
-                    location: "",
-                  });
+                  setNewVehicle({ name: "", type: "فان", driver: "", location: "" });
+                  try {
+                    const res = await fetch(`${API_BASE}/fleet/vehicles`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(next),
+                    });
+                    if (!res.ok) throw new Error("server error");
+                    toast.success("تمت إضافة المركبة بنجاح");
+                  } catch {
+                    toast.warning("تمت إضافة المركبة محلياً — تعذّر الحفظ في قاعدة البيانات");
+                  }
                 }}
                 style={{
                   width: "100%",

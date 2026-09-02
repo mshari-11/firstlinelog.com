@@ -63,7 +63,7 @@ export default function AccountReactivation() {
   const [newReason, setNewReason] = useState("");
   const [newNotes, setNewNotes] = useState("");
 
-  function handleAddRequest() {
+  async function handleAddRequest() {
     if (!newEmail.trim() || !newReason.trim()) {
       toast.error("يرجى تعبئة البريد والسبب");
       return;
@@ -81,7 +81,17 @@ export default function AccountReactivation() {
     setNewEmail("");
     setNewReason("");
     setNewNotes("");
-    toast.success("تم إنشاء طلب إعادة التفعيل");
+    try {
+      const res = await fetch(`${API_BASE}/api/account-reactivation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...r, notes: newNotes }),
+      });
+      if (!res.ok) throw new Error("server error");
+      toast.success("تم إنشاء طلب إعادة التفعيل");
+    } catch {
+      toast.warning("تم إنشاء الطلب محلياً — تعذّر الحفظ في الخادم");
+    }
   }
 
   useEffect(() => {

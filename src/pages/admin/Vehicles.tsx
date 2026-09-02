@@ -105,7 +105,6 @@ export default function Vehicles() {
     "all",
   );
   const [vehicles, setVehicles] = useState<Vehicle[]>(FALLBACK_VEHICLES);
-  const [_loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newVehicle, setNewVehicle] = useState({
@@ -217,7 +216,6 @@ export default function Vehicles() {
 
   useEffect(() => {
     async function fetchVehicles() {
-      setLoading(true);
       try {
         if (!supabase) throw new Error("no client");
         const { data, error } = await supabase
@@ -248,8 +246,6 @@ export default function Vehicles() {
         }
       } catch {
         /* keep fallback */
-      } finally {
-        setLoading(false);
       }
     }
     fetchVehicles();

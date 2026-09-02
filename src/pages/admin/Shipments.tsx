@@ -16,6 +16,7 @@ import {
   Save,
 } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { toast } from "sonner";
 
 type ShipmentStatus = "active" | "delivered" | "cancelled" | "in_transit";
 interface Shipment {
@@ -71,7 +72,7 @@ export default function Shipments() {
     window.print();
   }
 
-  function handleAddShipment() {
+  async function handleAddShipment() {
     if (!newShipment.trackingNumber || !newShipment.customer) return;
     const s: Shipment = {
       id: `SHP-${String(data.length + 1).padStart(3, "0")}`,
@@ -79,14 +80,19 @@ export default function Shipments() {
       amount: 0,
     };
     setData((prev) => [s, ...prev]);
-    setNewShipment({
-      trackingNumber: "",
-      customer: "",
-      driver: "",
-      platform: "",
-      status: "active",
-    });
+    setNewShipment({ trackingNumber: "", customer: "", driver: "", platform: "", status: "active" });
     setShowAddModal(false);
+    try {
+      const res = await fetch(`${API_BASE}/api/shipments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(s),
+      });
+      if (!res.ok) throw new Error("server error");
+      toast.success("تمت إضافة الشحنة بنجاح");
+    } catch {
+      toast.warning("تمت إضافة الشحنة محلياً — تعذّر الحفظ في قاعدة البيانات");
+    }
   }
 
   useEffect(() => {

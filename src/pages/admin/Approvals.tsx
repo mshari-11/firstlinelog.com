@@ -82,7 +82,7 @@ export default function Approvals() {
   const [newAmount, setNewAmount] = useState("");
   const [newPriority, setNewPriority] = useState("عادي");
 
-  function handleAddApproval() {
+  async function handleAddApproval() {
     if (!newDesc.trim()) {
       toast.error("يرجى كتابة وصف الطلب");
       return;
@@ -102,7 +102,17 @@ export default function Approvals() {
     setNewType("مالي");
     setNewAmount("");
     setNewPriority("عادي");
-    toast.success("تم إنشاء طلب الاعتماد");
+    try {
+      const res = await fetch(`${API_BASE}/api/approvals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(a),
+      });
+      if (!res.ok) throw new Error("server error");
+      toast.success("تم إنشاء طلب الاعتماد");
+    } catch {
+      toast.warning("تم إنشاء الطلب محلياً — تعذّر الحفظ في الخادم");
+    }
   }
 
   useEffect(() => {

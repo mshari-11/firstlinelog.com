@@ -4,6 +4,7 @@
  * normalize the data, detect variances against internal records.
  */
 import { useState, useCallback, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
 import {
@@ -407,6 +408,7 @@ export default function Reconciliation() {
         setResults(null); // reset results when new file added
       } catch (err) {
         console.error("Failed to parse file:", err);
+        toast.error("تعذّر قراءة الملف — تأكد من أن الملف بصيغة Excel أو CSV صحيحة");
       } finally {
         setIsProcessing(false);
       }

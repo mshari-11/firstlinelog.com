@@ -1,8 +1,16 @@
 #!/bin/bash
 # حفظ حالة جلسة كلود كود تلقائياً قبل ضغط السياق أو عند نهاية الجلسة
 
+# حلّ الروابط الرمزية للوصول للمسار الحقيقي للسكربت (readlink -f غير محمول)
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+  LINK_DIR=$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)
+  SCRIPT_PATH=$(readlink -- "$SCRIPT_PATH")
+  [ "${SCRIPT_PATH#/}" = "$SCRIPT_PATH" ] && SCRIPT_PATH="$LINK_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR=$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)
+
 # جذر المشروع: من git toplevel، وإلا من موقع السكربت نفسه (المجلد الأب لـ scripts/)
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null) || PROJECT_DIR=$(dirname -- "$SCRIPT_DIR")
 
 SESSIONS_FILE="$PROJECT_DIR/CLAUDE_SESSIONS.md"

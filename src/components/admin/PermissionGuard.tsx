@@ -15,7 +15,8 @@ export function PermissionGuard({ permission, children }: Props) {
   const { hasPermission, loading, user } = useAuth();
 
   if (loading) return null;
-  if (user?.role === "staff" && user.is_active === false) {
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (user.role === "staff" && user.is_active === false) {
     return <Navigate to="/admin/login" replace />;
   }
   if (!hasPermission(permission)) {

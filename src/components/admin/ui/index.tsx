@@ -629,7 +629,7 @@ export function IconButton({
 // ─── Button ───────────────────────────────────────────────────────────────────
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "ghost" | "danger";
+  variant?: "primary" | "ghost" | "danger" | "brand";
   icon?: React.ElementType;
   onClick?: () => void;
   disabled?: boolean;

@@ -213,10 +213,12 @@ export default function SLAConfig() {
     if (supabase) {
       try {
         await supabase.schema("admin").from("sla_rules").delete().eq("id", id);
-      } catch { /* continue */ }
+      } catch {
+        toast.error("تعذّر حذف القاعدة من قاعدة البيانات");
+      }
     }
     setRules(prev => prev.filter(r => r.id !== id));
-    toast.success("تم حذف القاعدة");
+    toast.success("تم حذف القاعدة محلياً");
   }
 
   // ─── Toggle Rule ────────────────────────────────────────────────────────
@@ -228,7 +230,9 @@ export default function SLAConfig() {
     if (supabase) {
       try {
         await supabase.schema("admin").from("sla_rules").update({ is_active: newActive }).eq("id", id);
-      } catch { /* silent */ }
+      } catch {
+        toast.error("تعذّر مزامنة التغيير مع قاعدة البيانات");
+      }
     }
     toast.success(newActive ? "تم تفعيل القاعدة" : "تم تعطيل القاعدة");
   }

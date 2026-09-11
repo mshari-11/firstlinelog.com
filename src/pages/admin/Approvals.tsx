@@ -96,6 +96,15 @@ export default function Approvals() {
       status: "pending",
       createdAt: new Date().toISOString(),
     };
+    try {
+      await fetch(`${API_BASE}/api/approvals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...a, action: "create" }),
+      });
+    } catch {
+      /* keep local fallback */
+    }
     setData((prev) => [a, ...prev]);
     setShowAddModal(false);
     setNewDesc("");

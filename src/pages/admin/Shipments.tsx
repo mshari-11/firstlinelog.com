@@ -79,6 +79,15 @@ export default function Shipments() {
       ...newShipment,
       amount: 0,
     };
+    try {
+      await fetch(`${API_BASE}/api/shipments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(s),
+      });
+    } catch {
+      /* keep local fallback */
+    }
     setData((prev) => [s, ...prev]);
     setNewShipment({ trackingNumber: "", customer: "", driver: "", platform: "", status: "active" });
     setShowAddModal(false);

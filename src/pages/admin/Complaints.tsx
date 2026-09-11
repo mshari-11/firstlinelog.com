@@ -244,29 +244,36 @@ export default function Complaints() {
     setEditingItem(c);
     setShowAddModal(true);
   }
-  function handleSaveComplaint() {
+  async function handleSaveComplaint() {
     if (!complaintForm.customer_name.trim() || !complaintForm.title.trim())
       return;
     const targetDept = TICKET_DEPARTMENT[complaintForm.category] || TICKET_DEPARTMENT.other;
     if (editingItem) {
+      const updated = {
+        customer_name: complaintForm.customer_name,
+        customer_phone: complaintForm.customer_phone,
+        customer_email: complaintForm.customer_email,
+        order_id: complaintForm.order_id,
+        title: complaintForm.title,
+        category: complaintForm.category,
+        priority: complaintForm.priority,
+        description: complaintForm.description,
+        department_id: targetDept,
+        target_department: targetDept,
+        updatedAt: new Date().toISOString(),
+      };
+      try {
+        await fetch(`${API_BASE}/api/complaints/${editingItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated),
+        });
+      } catch {
+        /* keep local fallback */
+      }
       setComplaints((prev) =>
         prev.map((c) =>
-          c.id === editingItem.id
-            ? {
-                ...c,
-                customer_name: complaintForm.customer_name,
-                customer_phone: complaintForm.customer_phone,
-                customer_email: complaintForm.customer_email,
-                order_id: complaintForm.order_id,
-                title: complaintForm.title,
-                category: complaintForm.category,
-                priority: complaintForm.priority,
-                description: complaintForm.description,
-                department_id: targetDept,
-                target_department: targetDept,
-                updatedAt: new Date().toISOString(),
-              }
-            : c,
+          c.id === editingItem.id ? { ...c, ...updated } : c,
         ),
       );
     } else {
@@ -286,6 +293,15 @@ export default function Complaints() {
         assigned_to: targetDept,
         createdAt: new Date().toISOString(),
       };
+      try {
+        await fetch(`${API_BASE}/api/complaints`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newComplaint),
+        });
+      } catch {
+        /* keep local fallback */
+      }
       setComplaints((prev) => [newComplaint, ...prev]);
     }
     setShowAddModal(false);

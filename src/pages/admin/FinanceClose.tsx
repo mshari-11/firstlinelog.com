@@ -111,10 +111,6 @@ export default function FinanceClose() {
   const todayRecord = records.find(
     (r) => r.close_date === new Date().toISOString().slice(0, 10),
   );
-  const totalRevenue = records
-    .filter((r) => r.status === "closed")
-    .reduce((s, r) => s + r.total_revenue, 0);
-
   function fmt(n: number) {
     return n.toLocaleString("ar-SA", { minimumFractionDigits: 0 });
   }

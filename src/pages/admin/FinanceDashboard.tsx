@@ -4,7 +4,6 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   DollarSign,
@@ -160,7 +159,6 @@ function QuickActionButton({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function FinanceDashboard() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<FinanceStats>({
     totalRevenue: 0,

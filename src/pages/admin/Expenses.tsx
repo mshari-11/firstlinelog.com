@@ -3,7 +3,6 @@
  * Add, track, and analyze business expenses
  */
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/admin/auth";
 import { supabase } from "@/lib/supabase";
 import {
   PieChart as RechartsPie,
@@ -373,7 +372,6 @@ function ExpenseModal({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function Expenses() {
-  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expenseCategoryData, setExpenseCategoryData] = useState(

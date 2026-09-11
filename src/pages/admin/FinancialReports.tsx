@@ -3,20 +3,12 @@
  * Income statement, P&L, revenue analysis, city performance reports
  */
 import { useState } from "react";
-import { useAuth } from "@/lib/admin/auth";
 import { exportToPDF, exportToExcel } from "@/lib/exportUtils";
 import {
   FileText,
   Download,
   Printer,
 } from "lucide-react";
-
-// ─── Report Types ─────────────────────────────────────────────────────────────
-type ReportType =
-  | "income-statement"
-  | "pl-report"
-  | "revenue-analysis"
-  | "city-performance";
 
 interface ReportData {
   title: string;
@@ -965,7 +957,6 @@ function CityPerformanceView({ data }: { data: any }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function FinancialReports() {
-  const { user } = useAuth();
   const [selectedReport, setSelectedReport] = useState<ReportData | null>(null);
 
   const reports: ReportData[] = [

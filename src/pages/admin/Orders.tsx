@@ -761,7 +761,7 @@ export default function AdminOrders() {
             <IconButton icon={FileSpreadsheet} onClick={downloadExcel} title="تصدير Excel" />
             <IconButton icon={Printer} onClick={() => window.print()} title="طباعة" />
             <Button
-              variant="brand"
+              variant="primary"
               icon={RefreshCw}
               onClick={() => fetchOrders()}
               disabled={loading}
@@ -778,7 +778,7 @@ export default function AdminOrders() {
           <Package size={48} style={{ margin: "0 auto 1rem", opacity: 0.3 }} />
           <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>لا توجد بيانات طلبات</h3>
           <p style={{ color: "#718096", marginBottom: "1rem" }}>اضغط "سحب البيانات" لتحميل الطلبات من قاعدة البيانات</p>
-          <Button variant="brand" icon={RefreshCw} onClick={() => fetchOrders()}>سحب البيانات</Button>
+          <Button variant="primary" icon={RefreshCw} onClick={() => fetchOrders()}>سحب البيانات</Button>
         </Card>
       )}
 
